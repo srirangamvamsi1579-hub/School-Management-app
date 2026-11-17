@@ -279,7 +279,7 @@ Operations → Website & Links → **Links for the school website** gives each s
 
 One store app serves every school. People enter the school code once. Details and the release checklist are in `docs/MOBILE_STORE_CHECKLIST.md`.
 
-- **Minimal features, switched per school:** Platform Console → Schools & Plans → **Mobile app** switches the app on for a school and picks its screens. New schools start with the app off. Home and Account are always on, so account deletion stays reachable.
+- **Minimal features, switched per school:** Platform Console → Schools & Plans → **Mobile app** switches the app on for a school (from release 6 the screens are chosen per role in Web & App Screens). New schools start with the app off. Home and Account are always on, so account deletion stays reachable.
 - **Same access rules as the website:** a tab shows only if the school offers it on the app **and** the person's plan, role, designation and personal grants allow it on the web.
   - Parent: Home, Requests, Fees, Account.
   - Teacher: Home, Attendance, Approvals, Meetings, Account.
@@ -372,7 +372,7 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 - **Every menu explained:** every main menu and sub-menu, with what it is for, how to use it, who can open it, the plan it comes with, and where it shows. Each has a **Try** button.
 - **What each role sees** on the website and in the app, with a sign-in button per role.
 - **Getting started:** links, demo accounts and tips.
-- **Printable manual:** `docs/USER_GUIDE.md`, generated from the same content (`node app/scripts/user-guide.mjs`), and a shareable doc.
+- **Printable manual:** `docs/USER_GUIDE.md`, generated from the same content (`node app/scripts/user-guide.mjs`), and the shareable [User Guide doc](https://claude.ai/artifact/6ALh8LqsnVisEpf9Leq1LL) with screenshots.
 
 ## Database schema summary
 
@@ -536,7 +536,7 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 
 One-time setup: create the dev, preprod and prod environments in GitHub, add required reviewers to preprod and prod, and add the secret `AWS_DEPLOY_ROLE_ARN` (an IAM role for GitHub OIDC).
 
-**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the eleven migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
+**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the twelve migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
 **Automated tests (release 6).** See `docs/TEST_REPORT.md`: 35 app tests, 25 SQL checks (007–012), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 7 web end-to-end tests (including every step of every guided demo) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
 
@@ -552,7 +552,7 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - [ ] Parent: Meet or call a teacher → pick the Maths teacher; that teacher: Parent Meetings → Reply → confirm a time
 - [ ] Parent: Other request → Bonafide certificate; Front Office: Office Requests → Mark done
 - [ ] Admin: Website & Links → copy the admission form snippet; open `#/p/apply` signed out and send an enquiry; see it in Admissions
-- [ ] Platform team: Schools & Plans → Mobile app → switch Fees off for Green Valley → Preview the mobile app as the parent; the Fees tab is gone
+- [ ] Admin: Web & App Screens → Parent → Fee Dues & Pay "Website only" → send; Principal approves → phone preview as the parent: the Fees tab is gone
 - [ ] Phone preview (`#/p/mobile`): school code GVS → each demo account → check the tabs; Account → Delete my account
 - [ ] Parent: Pickup & Leave Requests → Approved pickup list → Add a person (with photo); Front Office: Gate Desk → Approve pickup people; the parent can now choose them for a pickup
 - [ ] Transport: Routes, Stops & Timings → edit a stop time; Driver Route Sheets → Route R3 → What the driver sees → Send to all drivers
