@@ -4,6 +4,7 @@ import { Page, Card, Field, Input, Select, Status, Modal, Html, Stat, Tabs, prin
 import { inr, num, dmy, dmon } from '../lib/format.js';
 import { fullName, classLabel, guardianOf, openInvoices, balance, recordPayment, sendFeeRequests, receiveNotification, applyToMessage, renderFor, wordsINR, tenantOf, log } from '../lib/logic.js';
 import { GROUPS, BASE_FEE, PREV_FEE, BAND_TOTAL } from '../data/seed.js';
+import { myChildren } from './Requests.jsx';
 
 const findStudent = (db, q) => db.students.filter((s) => (fullName(s) + ' ' + s.admNo).toLowerCase().includes(q.toLowerCase())).slice(0, 8);
 
@@ -223,8 +224,8 @@ export function Concessions() {
 
 // Parent: dues and the page the pay link opens
 export function ParentFees() {
-  const { db, run, notify } = useStore();
-  const kid = db.students.find((s) => s.admNo === 'ADM-2025-0231');
+  const { db, run, notify, session } = useStore();
+  const kid = myChildren(db, session)[0] || db.students.find((s) => s.admNo === 'ADM-2025-0231');
   const invs = db.invoices.filter((i) => i.studentId === kid.id);
   const open = invs.filter((i) => i.status !== 'PAID');
   const [step, setStep] = useState(null);

@@ -3,13 +3,13 @@
 import { createContext, useContext, useState, useCallback, useEffect, createElement } from 'react';
 import { buildSeed } from './seed.js';
 
-const KEY = 'school-app-demo-v2';
+const KEY = 'school-app-demo-v3';
 const Ctx = createContext(null);
 
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) { const d = JSON.parse(raw); if (d.version === 2) return d; }
+    if (raw) { const d = JSON.parse(raw); if (d.version === 3) return d; }
   } catch (e) { /* storage blocked — run from memory only */ }
   return buildSeed();
 }

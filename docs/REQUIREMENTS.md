@@ -1,6 +1,6 @@
 # School Management Platform — Requirements
 
-Updated 17 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
+Updated 17 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
 
 One platform runs Indian K-12 schools of every size, from under 250 to over 1,000 students. Each school gets only the modules its plan includes, and every person sees only the menus their role allows.
 
@@ -55,16 +55,17 @@ Seven roles see different menus. Four plans decide which modules a school has. A
 
 ## Screens by module
 
-12 modules hold 52 screens plus the sign-in pages, and all of them open in the test build. Column-level detail per screen is in the client review PDF (`docs/School_Platform_Client_Review.pdf`), and the visual designs are on the design canvas.
+13 modules hold 62 screens plus the sign-in pages, and all of them open in the test build. Column-level detail per screen is in the client review PDF (`docs/School_Platform_Client_Review.pdf`), and the visual designs are on the design canvas.
 
 | Module | Screens | Key fields and actions |
 | --- | --- | --- |
 | Dashboard | Dashboard | Students vs plan limit, staff, fees collected, overdue, needs-attention list, recent activity |
-| Students | Insights, All Students, Admissions & Enquiries, New Admission, Attendance, Promote / Transfer, Documents & ID Cards | Admission no. (generated), name, gender, DOB, class-section, house, guardian name/relation/mobile/email, transport band |
+| Students | Insights, All Students, Admissions & Enquiries, New Admission, Attendance, Coordinator Desk, Gate Desk, Promote / Transfer, Documents & ID Cards | Admission no. (generated), name, gender, DOB, class-section, house, guardian name/relation/mobile/email, transport band |
 | Staff | Insights, All Staff, Add Staff, Staff Attendance, Leave Requests | Employee code, short code (timetable), department, designation, mobile, email, basic pay |
 | Academics | Classes & Sections, Boards Syllabus & Textbooks, Timetable | Board, chapters, topics; timetable cells "SUBJECT TEACHER", grade-wide blocks, teacher clash check |
 | Exams | Question Papers, Approved Papers, Question Bank, Paper Formats, Co-Scholastic Grades, Assessment Profiles | Format, chapters, difficulty mix, Sets A/B/C; approve and lock; print; A/B/C grades; subject comments and appreciation card |
 | Fees | Insights, Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions | Grades, instalment, due date; source, UTR, narration, amount, match status; invoice and receipt in the school's template |
+| Transport | Daily Bus Manifest, Pickup & Drop Changes, Routes & Riders | Date, morning/afternoon trip, route; riders by stop with Will board / Not boarding / Absent / Check and the reason |
 | Data Analytics | Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel | Grade, sections, term, subject filters; Power BI pages |
 | Payroll | Run Payroll, Payslips | Basic, HRA, DA, transport, PF, TDS, net; approve and post |
 | Accounts | Bank & Payment Details, Account Statement, Income & Expenses | Holder, bank, branch, account (encrypted), IFSC, UPI ID, QR; ledger with running balance |
@@ -139,9 +140,77 @@ A separate **Data Analytics** menu (Growth plan and above) embeds Power BI repor
 
 The teacher index is a starting point for a conversation, not an appraisal score on its own: class mix, section size and attendance sit beside it. Marks come from `exam_results` (Term 1, Term 2 and any periodic tests); subject teachers per section from `section_subject_teachers`.
 
+## Added 17 Nov 2026 (release 3)
+
+- **SMS framework, connect later.** Every SMS (OTP, gate code, pickup/drop notice, fee reminder, absence alert) already goes through one queue. A vendor (MSG91, Amazon SNS, Gupshup, Twilio) or the school's own SMS API is connected from a settings screen when ready, with no code change.
+- **Parents maintain their own accounts;** the school manages them in the back office (edit details, link children, close/delete).
+- **Teacher performance is hidden from teachers** unless the Principal or the Head of Teaching Staff shares it; teachers then see their own results only, view-only.
+- **Pickup, drop and early-leave requests** from parents go to the class's primary and secondary coordinators, the gate and the transport team, and feed a daily bus manifest for the morning pickup and afternoon drop.
+
+## Parent requests, coordinators and the gate
+
+```
+Parent request → Before cut-off and not early leave? ──yes──→ Confirmed → Gate desk (code + photo ID, hand over)
+                         │ no                                   ↑        → Bus manifest (06:30 / 14:30, live updates)
+                         ↓                                      │        → Parent: gate code by email + SMS
+                 Coordinator desk (primary or secondary) ──approve┘
+                         └──decline──→ Parent told, with the reason
+```
+
+| Request (My Space → Pickup & Leave Requests) | Trips affected | Needs | Confirmed |
+| --- | --- | --- | --- |
+| In-person pickup after school | Afternoon drop | Name, relation and mobile of the person collecting | At once if sent by 12:00 the same day; later, by a coordinator |
+| In-person drop in the morning | Morning pickup | — | At once if sent by 20:00 the evening before; later, by a coordinator |
+| Early leave | Afternoon drop | Time before 15:00, reason, the person collecting | Always by a coordinator |
+| Own transport (one day or a date range) | Both | — | At once before the cut-offs |
+
+- **Class coordinators:** Academics → Class Coordinators. Each section has a primary and a secondary coordinator (different people), set by the Principal or Admin. Both get every request for the section by email and see it on Students → **Coordinator Desk**; either can approve or decline (decline needs a reason, which goes to the parent).
+- **Gate code:** approving a pickup or early leave creates a 4-digit gate code sent to the parent by email and SMS. Only a hash is stored.
+- **Gate Desk (Front Office):** today's collections in time order. Staff check photo ID, enter the code and hand the child over. The time is recorded, and the coordinators and manifest update. A wrong code or an unapproved request means *do not release*.
+- **Parents** see status and the gate code, and can cancel until the child is handed over.
+
+## Transport
+
+A new **Transport** menu and **Transport team** role (e.g. the Transport In-charge and bus attendants).
+
+- **Daily Bus Manifest:** pick a date, the morning pickup or the afternoon drop, and a route. Every rider is listed by stop in boarding order with a status:
+  - **Will board**
+  - **Not boarding**, with the reason: own transport, parent dropping or collecting in person (with who), left early at a given time with the named collector, or leaving early at a set time
+  - **Absent** (from attendance)
+  - **Check**: a request is waiting for a coordinator
+- The attendant marks Boarded or No-show. **Send to transport team** emails the manifest; in production it goes automatically at 06:30 and 14:30, and later changes are pushed as they happen.
+- **Pickup & Drop Changes:** every request that affects the bus, today and coming days. Front Office sees it too.
+- **Routes & Riders:** who normally rides each bus, by stop.
+
+## SMS gateway (Operations → SMS Gateway)
+
+1. **Provider:** our own SMS API (any HTTPS endpoint with a body template), MSG91 (Flow API v5), Amazon SNS (India DLT entity and template attributes), Gupshup or Twilio. Keys live in AWS Secrets Manager; only the reference is saved.
+2. **DLT templates:** the text for each message (must match the DLT registration exactly) and its DLT template ID; MSG91 flow IDs where needed.
+3. **Test and go live:** a dry run shows the exact request that will be sent. Going live sends everything still queued, except OTPs, which expire because they are only valid for 10 minutes.
+
+Server side: `services/sms/dispatcher.mjs` sends queued messages with retries; `services/sms/webhook.mjs` records delivery reports. See `services/sms/README.md`.
+
+## Account self-service
+
+- **My Account (everyone):**
+  - Change name.
+  - Change Gmail or mobile, verified with a code to the new address.
+  - Change password (current password required).
+  - Notification choices; safety messages are always sent.
+  - Parents: their linked children, and asking to link a sibling.
+  - Asking to close the account.
+- **School back office (Operations → Users):**
+  - Edit anyone's name, email, mobile and linked children.
+  - Handle link and close requests.
+  - Delete an account (type DELETE to confirm): sign-in and contact details are erased; fees, marks and receipts stay.
+
+## Teacher performance visibility
+
+Teachers never see the Teacher Performance report. On that page the Principal (role) or the Head of Teaching Staff (designation) can switch on **Share with teachers**. Each teacher then gets My Space → **My Teaching Performance**: their own subjects and sections only, view-only. Switching it off removes the screen. Every change is logged.
+
 ## Database schema summary
 
-PostgreSQL 15+, seven migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
+PostgreSQL 15+, eight migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
 
 | File | Adds | Key tables, views and functions |
 | --- | --- | --- |
@@ -152,6 +221,7 @@ PostgreSQL 15+, seven migration files loaded in order. Every table carries `tena
 | 005_payments_timetable_web.sql | Fees, timetable, website | school_bank_accounts, fee_request_campaigns, fee_request_messages, payment_notifications, email_outbox; bell_periods, timetable_entries, timetable_entry_teachers; website_connections, menu_links; payment_plans, transport_bands; assessment_profiles; apply_payment(), match_payment_notification(), amount_in_words_inr() |
 | 006_templates_import.sql | Templates and import | template_categories, template_fields, doc_templates, doc_template_versions, template_defaults; import_targets, import_target_fields, import_profiles, import_column_maps, import_value_maps, import_jobs, import_rows; resolve_template(), render_template(), map_and_validate_import(), commit_student_import(), rollback_student_import() |
 | 007_auth_admissions_analytics.sql | Sign-up, user management, admissions, analytics | users (Pending status, login type, verified flags, requested role, designation), otp_requests, sms_gateway_config, designation_menu_access, user_menu_grants, user_role_changes; admission_enquiries, admission_status_history; exam_terms, exam_results, section_subject_teachers, transport_routes, transport_trips; request_otp(), verify_otp(), set_user_role(), enrol_applicant(); v_user_screens, v_admissions_by_grade_status, v_student_term_scores, v_grade_rankings, v_teacher_subject_performance, v_transport_route_summary |
+| 008_requests_transport_sms.sql | SMS framework, accounts, coordinators, requests, transport | sms_gateway_config (provider, status, endpoint, secret ARN), sms_templates, sms_outbox, sms_delivery_reports; user_children, notification_prefs, account_requests; tenant_settings; class_coordinators; parent_requests, parent_request_history; boarding_log; queue_sms(), close_account(), set_teacher_perf_visibility(), decide_parent_request(), hand_over_student(), trip_manifest(); v_my_teaching_performance; Transport team role |
 
 The test build keeps the same entities in browser memory (`app/src/data`) and runs the same rules in JavaScript (`app/src/lib/logic.js`).
 
@@ -218,6 +288,21 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 2. Pass mark 33%; distinction 75%.
 3. Teachers see rankings only for their own classes in Power BI.
 
+**Pickup, drop and early leave**
+
+1. Cut-offs: morning-trip changes by 20:00 the evening before; afternoon-trip changes by 12:00 the same day. Before the cut-off they are confirmed at once; after it, a coordinator must approve. Early leave always needs a coordinator.
+2. Early leave is before 15:00, on one day, with a named collector and 10-digit mobile; one request of a kind per child per day.
+3. Only the section's primary or secondary coordinator (or the Principal) can approve; declining needs a reason.
+4. A child is released at the gate only for an approved request with the matching 4-digit code; hand-over time and staff are recorded.
+5. Manifest order of precedence: Absent → Not boarding (approved request) → Check (request waiting) → Will board.
+
+**SMS and accounts**
+
+1. Nothing is sent by SMS until a provider is live; SMS waits in the queue. Keys are never stored in the app or database.
+2. Changing email or mobile needs a code sent to the new one; changing a password needs the current one.
+3. Only people who manage users can delete accounts; deletion erases sign-in and contact details, not school records.
+4. Teacher performance is visible to teachers only while shared by the Principal or Head of Teaching Staff, and then only their own results.
+
 ## Templates and data import
 
 **Templates (Operations → Templates).** Eight document types ship with a standard template: fee invoice, fee receipt, fee request email, payment confirmation email, fee reminder SMS, payslip, admission letter and appreciation card. The database seeds 16 types; the rest (timetable, assessment profile, question paper, ID card and others) follow.
@@ -253,10 +338,17 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 
 **Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the six migrations, SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
-**Automated tests.** `npm test` runs 14 checks on the business rules (including sign-in, sign-up and OTP, designation access, top/bottom 6, transport, teacher performance and admissions), and `database/tests/007_checks.sql` tests the new SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all seven roles with no errors.
+**Automated tests.** `npm test` runs 19 checks on the business rules (including requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql` and `008_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
 
 **User-testing script.**
 
+- [ ] Parent (rohit.s@example.com): Pickup & Leave Requests → Early leave tomorrow → the class coordinators get it
+- [ ] Coordinator (sonia.teacher@example.com): Coordinator Desk → Approve; the parent sees the gate code
+- [ ] Front Office (mobile 9845011200): Gate Desk → enter the code → Hand over
+- [ ] Transport (transport@greenvalley.example.in): Daily Bus Manifest → morning and afternoon, today and tomorrow
+- [ ] Head of Teaching Staff (murali.hots@example.com): Teacher Performance → Share with teachers; then the teacher sees My Teaching Performance
+- [ ] Parent: My Account → change mobile, change password, ask to close the account; Admin handles it in Users
+- [ ] Admin: Operations → SMS Gateway → choose MSG91 or Amazon SNS → fill DLT IDs → Dry run
 - [ ] Anyone: Create account with a Gmail → read the code in the test inbox → set a password → try to sign in (waiting for approval)
 - [ ] Anyone: Create account with a mobile number (code shown on screen until SMS is connected)
 - [ ] Admin: Users → Review the new sign-up → pick the role → Active; the person can now sign in
@@ -284,3 +376,6 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - Can parents sign up themselves, or only accounts the school creates? (Both are built; self sign-up is a plan function.)
 - Should the teacher index be shown to teachers themselves, or only to the Principal?
 - Admission fee and offer expiry: is 7 days right, and does an unaccepted offer move to Opted out automatically?
+- Are the cut-offs right (20:00 the evening before for the morning bus, 12:00 for the afternoon bus)? Dismissal is assumed to be 15:00.
+- Should bus attendants use a phone app to mark Boarded / No-show, with GPS for on-time reporting?
+- Who besides the parent may collect a child (authorised list per child, photos)?

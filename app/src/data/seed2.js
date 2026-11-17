@@ -1,12 +1,13 @@
 // Demo data for accounts, admissions, marks and transport (all fictional).
 import { rng } from '../lib/format.js';
 import { hashPassword } from '../lib/auth.js';
+import { extendSeed3 } from './seed3.js';
 
 export const SUBJECTS = ['English', 'Mathematics', 'Science', 'Social Science', 'Second Language'];
 export const SUBJECT_DEPT = { English: 'English', Mathematics: 'Mathematics', Science: 'Science', 'Social Science': 'Social Science', 'Second Language': 'Languages' };
 export const TERMS = ['Term 1', 'Term 2'];
 export const ADM_STATUSES = ['Enquiry', 'Submitted', 'In review', 'Offered', 'Enrolled', 'Opted out'];
-export const DESIGNATIONS = ['Principal', 'Vice Principal', 'Coordinator', 'PGT', 'TGT', 'PRT', 'Accountant', 'Office Assistant', 'Admissions Officer', 'IT Administrator'];
+export const DESIGNATIONS = ['Principal', 'Vice Principal', 'Head of Teaching Staff', 'Coordinator', 'Transport In-charge', 'PGT', 'TGT', 'PRT', 'Accountant', 'Office Assistant', 'Admissions Officer', 'IT Administrator'];
 
 const DEMO_PW = 'Demo@123';
 
@@ -97,5 +98,5 @@ export function extendSeed(db) {
       interview: status === 'In review' || status === 'Offered' ? '2026-11-24' : '', reason: status === 'Opted out' ? pick(['Chose another school', 'Fees', 'Distance', 'Relocated']) : '',
       docs: { birthCert: status !== 'Enquiry', photo: status !== 'Enquiry', reportCard: grade > 1 && ['In review', 'Offered', 'Enrolled'].includes(status) }, year: '2027-28' };
   });
-  return db;
+  return extendSeed3(db);
 }

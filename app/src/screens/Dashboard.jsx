@@ -3,6 +3,7 @@ import { Page, Card, Stat, Bars, Progress, Status } from '../components/ui.jsx';
 import { inr, num, dmon } from '../lib/format.js';
 import { classOf, balance, fullName, classLabel, tenantOf } from '../lib/logic.js';
 import { PLANS } from '../data/menu.js';
+import { myChildren } from './Requests.jsx';
 
 function feeFigures(db) {
   const billed = db.invoices.reduce((a, i) => a + i.net, 0);
@@ -38,6 +39,7 @@ export function Dashboard({ go }) {
             <li>Installment III due 10 Dec — {db.invoices.filter((i) => i.instalment === 'Installment III' && i.status !== 'PAID').length} unpaid</li>
             {session.role === 'ADMIN' && db.users?.some((u) => u.status === 'PENDING') && <li>{db.users.filter((u) => u.status === 'PENDING').length} new account(s) waiting for approval <button className="btn sm" onClick={() => go('OPS_USERS')}>Review</button></li>}
             {['ADMIN', 'PRINCIPAL', 'FRONT_OFFICE'].includes(session.role) && db.enquiries && <li>{db.enquiries.filter((e) => ['Submitted', 'In review'].includes(e.status)).length} admission applications waiting on the school <button className="btn sm" onClick={() => go('STU_ADMISSIONS')}>Open</button></li>}
+            {['ADMIN', 'PRINCIPAL', 'TEACHER'].includes(session.role) && db.requests && <li>{db.requests.filter((r) => r.status === 'Submitted').length} pickup / early-leave request(s) waiting for a class coordinator <button className="btn sm" onClick={() => go('STU_REQUESTS')}>Open</button></li>}
             {db.bank.pending && <li>Bank details change waiting for Principal approval</li>}
           </ul>
         </Card>
@@ -51,17 +53,18 @@ export function Dashboard({ go }) {
 }
 
 function ParentHome({ go }) {
-  const { db } = useStore();
-  const kid = db.students.find((s) => s.admNo === 'ADM-2025-0231');
+  const { db, session } = useStore();
+  const kid = myChildren(db, session)[0] || db.students.find((s) => s.admNo === 'ADM-2025-0231');
+  const u = db.users.find((x) => x.id === session.userId);
   const due = db.invoices.filter((i) => i.studentId === kid.id && i.status !== 'PAID');
   return (
-    <Page title="Welcome, Rohit" sub={`${fullName(kid)} · ${classLabel(db, kid)}`}>
+    <Page title={`Welcome, ${(u?.name || session.name || 'Rohit').split(' ')[0]}`} sub={`${fullName(kid)} · ${classLabel(db, kid)}`}>
       <div className="grid g3">
         <Stat label="Attendance" value={kid.attendance + '%'} />
         <Stat label="Fees due" value={inr(due.reduce((a, i) => a + balance(i), 0))} sub={due[0] ? 'Next: ' + dmon(due[0].due) : 'All paid'} />
         <Stat label="House" value={kid.house} />
       </div>
-      <div className="row" style={{ marginTop: 16 }}><button className="btn pri" onClick={() => go('SELF_FEES')}>Pay fees</button><button className="btn" onClick={() => go('SELF_CHILD')}>View profile</button><button className="btn" onClick={() => go('ACA_TIMETABLE')}>Timetable</button></div>
+      <div className="row" style={{ marginTop: 16 }}><button className="btn pri" onClick={() => go('SELF_FEES')}>Pay fees</button><button className="btn" onClick={() => go('SELF_REQUESTS')}>Pickup / early leave request</button><button className="btn" onClick={() => go('SELF_CHILD')}>View profile</button><button className="btn" onClick={() => go('ACA_TIMETABLE')}>Timetable</button></div>
     </Page>
   );
 }

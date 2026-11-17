@@ -12,7 +12,8 @@ const WHAT = {
   ACCOUNTANT: 'Fees, fee emails, payment matching, payroll, statements',
   TEACHER: 'Attendance, timetable, question papers, grades, top/bottom report',
   FRONT_OFFICE: 'Admissions & enquiries, documents, fee counter',
-  PARENT: 'Child profile, timetable, fee dues and pay',
+  PARENT: 'Child profile, pickup / early-leave requests, fee dues and pay, my account',
+  TRANSPORT: 'Daily bus manifests, pickup & drop changes, routes',
   PLATFORM: 'Your company: schools, plans, add-ons, switching modules on/off'
 };
 
@@ -116,7 +117,7 @@ function SignIn({ onPeek, onSignup }) {
       </>}
       {(mode === 'otp' || mode === 'forgot') && <>
         {!sent ? <div className="row" style={{ marginTop: 12 }}><button className="btn pri" disabled={!type} onClick={() => askCode(mode === 'otp' ? 'SIGNIN' : 'RESET')}>Send code {type === 'MOBILE' ? 'by SMS' : 'to my email'}</button><button className="btn" onClick={() => setMode('password')}>Back</button></div> : <>
-          <p className="small">{sent.channel === 'SMS' ? <>SMS codes are planned but the SMS gateway isn't connected yet, so the code is shown here for testing: <b>{sent.code}</b></> : <>We sent a 6-digit code to <b>{sent.to}</b>. Open it in the test inbox on the right.</>}</p>
+          <p className="small">{sent.channel === 'SMS' ? (sent.status === 'GATEWAY_PENDING' ? <>SMS isn't connected yet (Operations → SMS Gateway), so the code is shown here for testing: <b>{sent.code}</b></> : <>We sent a 6-digit code by SMS to {sent.to}.</>) : <>We sent a 6-digit code to <b>{sent.to}</b>. Open it in the test inbox on the right.</>}</p>
           <Field label="6-digit code"><Input inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value)} /></Field>
           {mode === 'forgot' && <div style={{ marginTop: 10 }}><Field label="New password"><Input type="password" autoComplete="new-password" value={newPw} onChange={(e) => setNewPw(e.target.value)} /></Field></div>}
           <div className="row" style={{ marginTop: 12 }}><button className="btn pri" disabled={code.length !== 6} onClick={mode === 'otp' ? doOtp : doReset}>{mode === 'otp' ? 'Verify and sign in' : 'Save new password'}</button>
@@ -125,7 +126,7 @@ function SignIn({ onPeek, onSignup }) {
       </>}
       {err && <div className="note warn" style={{ marginTop: 12 }} role="alert">{err}</div>}
       <p className="small" style={{ marginTop: 16 }}>New here? <button className="btn sm" onClick={onSignup}>Create an account</button></p>
-      <p className="small muted">Demo accounts use the password <b>Demo@123</b> — e.g. admin@greenvalley.example.in, sonia.teacher@example.com, meera.vp@example.com (Vice Principal) or mobile 9845011200.</p>
+      <p className="small muted">Demo accounts use the password <b>Demo@123</b> — e.g. admin@greenvalley.example.in, sonia.teacher@example.com, meera.vp@example.com (Vice Principal) transport@greenvalley.example.in or mobile 9845011200.</p>
     </div>
   );
 }
@@ -184,8 +185,9 @@ function SignUp({ onPeek, onDone }) {
       </>}
       {step === 3 && <>
         <h2>Verify it's you</h2>
-        {sent?.channel === 'SMS'
-          ? <div className="note warn small">OTP by SMS is set up as a workflow but the SMS gateway isn't connected yet (planned). For testing, your code is <b>{sent.code}</b>.</div>
+        {sent?.channel === 'SMS' && sent.status === 'GATEWAY_PENDING'
+          ? <div className="note warn small">OTP by SMS is ready but no SMS provider is connected yet. For testing, your code is <b>{sent.code}</b>.</div>
+          : sent?.channel === 'SMS' ? <p className="small">We sent a 6-digit code by SMS to <b>{sent.to}</b>.</p>
           : <p className="small">Enter the 6-digit code we sent to <b>{sent?.to}</b> (see the test inbox).</p>}
         <div style={{ marginTop: 10 }}><Field label="Code"><Input inputMode="numeric" maxLength={6} value={code} onChange={(e) => { setCode(e.target.value); setErr(''); }} /></Field></div>
         <div className="row" style={{ marginTop: 14, justifyContent: 'space-between' }}><button className="btn" onClick={() => setStep(2)}>Change</button><button className="btn pri" disabled={code.length !== 6} onClick={next3}>Verify</button></div>
@@ -225,7 +227,7 @@ function SignUp({ onPeek, onDone }) {
 
 function Demo() {
   const { db, login } = useStore();
-  const userFor = (code) => db.users.find((u) => u.role === code && u.status === 'ACTIVE' && u.designation !== 'Vice Principal');
+  const userFor = (code) => db.users.find((u) => u.role === code && u.status === 'ACTIVE' && !['Vice Principal', 'Head of Teaching Staff'].includes(u.designation));
   return (
     <div>
       <p className="muted small">For quick testing: sign in as a demo account for each role without a password.</p>
@@ -234,6 +236,8 @@ function Demo() {
           <button key={r.code} onClick={() => login({ role: r.code, userId: u?.id, name: u?.name || r.user })}>
             <div className="b">{r.name}</div><div className="small muted">{u?.name || r.user}</div><div className="small" style={{ marginTop: 6 }}>{WHAT[r.code]}</div>
           </button>); })}
+        {(() => { const h = db.users.find((u) => u.designation === 'Head of Teaching Staff'); return h && <button onClick={() => login({ role: h.role, userId: h.id, name: h.name })}>
+          <div className="b">Teacher + Head of Teaching Staff</div><div className="small muted">{h.name}</div><div className="small" style={{ marginTop: 6 }}>Can share teacher performance with teachers (view only)</div></button>; })()}
         {(() => { const vp = db.users.find((u) => u.designation === 'Vice Principal'); return vp && <button onClick={() => login({ role: vp.role, userId: vp.id, name: vp.name })}>
           <div className="b">Teacher + Vice Principal</div><div className="small muted">{vp.name}</div><div className="small" style={{ marginTop: 6 }}>Teacher role, but the designation opens Users, Roles, Admissions and analytics</div></button>; })()}
       </div>

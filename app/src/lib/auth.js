@@ -2,6 +2,7 @@
 // Production: Amazon Cognito user pool per client (school) — passwords hashed by Cognito, email codes via SES,
 // SMS codes via an Indian DLT-registered SMS gateway. The flow and statuses below are the same.
 import { ACCESS } from '../data/menu.js';
+import { queueSms } from './sms.js';
 
 // Demo-only hash (FNV-1a, 2,000 rounds with salt). Never used in production — Cognito stores passwords.
 export function hashPassword(pw, salt) {
@@ -39,7 +40,7 @@ export const findUser = (db, id) => db.users.find((u) => u.login === normId(id) 
 export function sendOtp(db, { to, channel, purpose, schoolName }) {
   const code = String(Math.floor(100000 + Math.random() * 900000));
   const req = { id: 'O' + (db.otp.length + 1), to, channel, purpose, code, at: Date.now(), expires: Date.now() + 10 * 60000, tries: 0,
-    status: channel === 'SMS' ? 'GATEWAY_PENDING' : 'SENT' };
+    status: 'SENT' };
   db.otp.unshift(req);
   db.otp = db.otp.slice(0, 50);
   if (channel === 'EMAIL') {
@@ -47,8 +48,8 @@ export function sendOtp(db, { to, channel, purpose, schoolName }) {
       subject: `${code} is your ${schoolName} verification code`,
       body: `<p>Your verification code is</p><p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p><p>It expires in 10 minutes. If you didn't ask for this, ignore this email.</p><p>${schoolName}</p>` });
   } else {
-    db.outbox.unshift({ id: 'M' + (db.outbox.length + 1), to: '+91 ' + to, kind: 'OTP SMS (gateway not connected)', status: 'NO_EMAIL', at: new Date().toISOString(), related: req.id,
-      subject: 'SMS', body: `${code} is your ${schoolName} OTP. Valid 10 min. Do not share.` });
+    const sms = queueSms(db, { to, purpose: 'OTP', vars: { code }, related: req.id, schoolName });
+    req.status = sms.status === 'QUEUED_NO_GATEWAY' ? 'GATEWAY_PENDING' : 'SENT';
   }
   return req;
 }
@@ -114,7 +115,7 @@ export function setPassword(db, u, password) {
 }
 
 // ---------- Roles ----------
-export const BUILT_IN = [['ADMIN', 'Admin'], ['PRINCIPAL', 'Principal'], ['ACCOUNTANT', 'Accountant'], ['TEACHER', 'Teacher'], ['FRONT_OFFICE', 'Front Office'], ['PARENT', 'Parent'], ['PLATFORM', 'Platform team']];
+export const BUILT_IN = [['ADMIN', 'Admin'], ['PRINCIPAL', 'Principal'], ['ACCOUNTANT', 'Accountant'], ['TEACHER', 'Teacher'], ['FRONT_OFFICE', 'Front Office'], ['PARENT', 'Parent'], ['TRANSPORT', 'Transport team'], ['PLATFORM', 'Platform team']];
 export const allRoles = (db) => [...BUILT_IN.map(([code, name]) => ({ code, name, builtIn: true })), ...(db.customRoles || [])];
 export const roleName = (db, code) => allRoles(db).find((r) => r.code === code)?.name || code || '—';
 
@@ -122,6 +123,9 @@ export const roleName = (db, code) => allRoles(db).find((r) => r.code === code)?
 export function screensFor(db, user, role) {
   const base = db.perms?.[role] || ACCESS[role] || [];
   const extra = [...(user && db.designationAccess?.[user.designation] || []), ...(user?.extra || [])];
+  // Teachers see their own performance only when the Principal / Head of Teaching Staff has shared it
+  if (role === 'TEACHER' && db.settings?.teacherPerfShared) extra.push('SELF_MYPERF');
   return [...new Set([...base, ...extra])];
 }
+export const canSharePerf = (db, user, role) => role === 'PRINCIPAL' || user?.designation === 'Head of Teaching Staff';
 export const canManageUsers = (db, user, role) => role === 'ADMIN' || screensFor(db, user, role).includes('OPS_USERS');

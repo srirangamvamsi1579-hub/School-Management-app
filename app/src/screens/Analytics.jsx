@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useStore } from '../data/store.js';
-import { Page, Card, Select, Stat, Bars, Progress } from '../components/ui.jsx';
+import { Page, Card, Select, Stat, Bars, Progress, Switch } from '../components/ui.jsx';
+import { canSharePerf } from '../lib/auth.js';
+import { log } from '../lib/logic.js';
 import { inr, num } from '../lib/format.js';
 import { SUBJECTS, TERMS } from '../data/seed2.js';
 import { rankReport, transportReport, teacherPerformance, admissionsSummary, PASS } from '../lib/analytics.js';
@@ -74,12 +76,20 @@ export function TransportReports() {
 }
 
 export function TeacherPerformance() {
-  const { db } = useStore();
+  const { db, run, notify, session } = useStore();
+  const me = db.users.find((u) => u.id === session.userId);
+  const canShare = canSharePerf(db, me, session.role);
+  const shared = db.settings?.teacherPerfShared;
+  const toggle = () => { run((d) => { d.settings.teacherPerfShared = !shared; d.settings.teacherPerfBy = (me?.name || session.name || session.role) + (session.role === 'PRINCIPAL' ? ' (Principal)' : ' (Head of Teaching Staff)'); d.settings.teacherPerfAt = new Date().toISOString(); log(d, me?.name || session.role, shared ? 'Teacher performance hidden from teachers' : 'Teacher performance shared with teachers', 'view only, own classes'); }); notify(shared ? 'Hidden from teachers' : 'Shared — each teacher sees only their own results'); };
   const [classId, setClassId] = useState('');
   const [subject, setSubject] = useState('ALL');
   const rows = teacherPerformance(db, { classId, subject });
   return <Page title="Teacher performance" sub="How each teacher's students are doing in the subject they teach, compared with the same grade and subject across the school, and Term 1 → Term 2.">
     <Pbi code="ANL_TEACHER" />
+    <Card title="Visibility to teachers">
+      <div className="row"><Switch on={!!shared} label="Share with teachers" onClick={canShare ? toggle : undefined} /><span><b>{shared ? 'Shared' : 'Not shared'}</b> — {shared ? `each teacher sees their own results only, view-only, under My Space → My Teaching Performance (shared by ${db.settings.teacherPerfBy})` : 'teachers cannot see this report or their own results'}.</span></div>
+      {!canShare && <p className="small muted" style={{ marginTop: 6 }}>Only the Principal or the Head of Teaching Staff can change this.</p>}
+    </Card>
     <Card><div className="row"><GradeFilter db={db} classId={classId} setClassId={setClassId} all /><label className="f">Subject<Select value={subject} onChange={(e) => setSubject(e.target.value)} options={[['ALL', 'All subjects'], ...SUBJECTS]} /></label></div></Card>
     <div className="note small" style={{ marginBottom: 12 }}>Index: 50 = in line with the grade average. Each mark above or below the grade average moves it 3 points; each mark of improvement since Term 1 adds 1. Use it to start a conversation, not as a rating on its own — class mix and section size matter.</div>
     <div className="tw"><table className="t"><thead><tr><th>Teacher</th><th>Subject</th><th>Sections</th><th className="num">Students</th><th className="num">Term 1 avg</th><th className="num">Term 2 avg</th><th className="num">Change</th><th className="num">vs grade</th><th className="num">Pass %</th><th className="num">≥ 75%</th><th style={{ width: 140 }}>Index</th></tr></thead>
