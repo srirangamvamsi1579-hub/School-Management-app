@@ -1,6 +1,7 @@
 // Demo data for user testing. All names are fictional.
 import { rng, roman } from '../lib/format.js';
 import { STANDARD_TEMPLATES } from './templates.js';
+import { extendSeed } from './seed2.js';
 
 const FIRST_M = ['Aarav', 'Kabir', 'Arjun', 'Ishaan', 'Rohan', 'Vihaan', 'Aditya', 'Reyansh', 'Krishna', 'Dev', 'Nikhil', 'Farhan', 'Siddharth', 'Yash', 'Aryan'];
 const FIRST_F = ['Diya', 'Aditi', 'Kavya', 'Neha', 'Isha', 'Ananya', 'Meher', 'Pooja', 'Saanvi', 'Myra', 'Riya', 'Tara', 'Zoya', 'Avni', 'Sara'];
@@ -204,5 +205,5 @@ export function buildSeed() {
     transforms: { first_name: 'FIRST_WORD', last_name: 'AFTER_FIRST_WORD', dob: 'DATE', guardian_mobile: 'PHONE_IN', section: 'UPPER', guardian_name: 'TITLE' },
     values: { gender: { Boy: 'Male', Girl: 'Female', M: 'Male', F: 'Female' }, class: { '8th': 'Grade VIII', VIII: 'Grade VIII', '9th': 'Grade IX' } } }];
 
-  return db;
+  return extendSeed(db);
 }

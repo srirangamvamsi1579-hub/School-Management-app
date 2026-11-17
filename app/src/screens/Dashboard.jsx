@@ -36,6 +36,8 @@ export function Dashboard({ go }) {
             <li>{unmatched} incoming payment(s) waiting for a person to match {unmatched > 0 && <button className="btn sm" onClick={() => go('FEE_MATCHING')}>Open</button>}</li>
             <li>{db.questions.filter((q) => q.status === 'In review').length} questions waiting for review</li>
             <li>Installment III due 10 Dec — {db.invoices.filter((i) => i.instalment === 'Installment III' && i.status !== 'PAID').length} unpaid</li>
+            {session.role === 'ADMIN' && db.users?.some((u) => u.status === 'PENDING') && <li>{db.users.filter((u) => u.status === 'PENDING').length} new account(s) waiting for approval <button className="btn sm" onClick={() => go('OPS_USERS')}>Review</button></li>}
+            {['ADMIN', 'PRINCIPAL', 'FRONT_OFFICE'].includes(session.role) && db.enquiries && <li>{db.enquiries.filter((e) => ['Submitted', 'In review'].includes(e.status)).length} admission applications waiting on the school <button className="btn sm" onClick={() => go('STU_ADMISSIONS')}>Open</button></li>}
             {db.bank.pending && <li>Bank details change waiting for Principal approval</li>}
           </ul>
         </Card>

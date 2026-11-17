@@ -9,6 +9,7 @@ export const PLANS = [
   { code: 'ENTERPRISE', name: 'Enterprise', rank: 4, range: '1,000+', cap: null }
 ];
 
+// Demo sign-in shortcuts (the real sign-in uses accounts — see lib/auth.js)
 export const ROLES = [
   { code: 'ADMIN', name: 'Admin', user: 'Admin user' },
   { code: 'PRINCIPAL', name: 'Principal', user: 'Dr. Kavita Menon' },
@@ -23,7 +24,7 @@ export const ROLES = [
 export const MENU = [
   { code: 'DASHBOARD', label: 'Dashboard', icon: 'home', min: 1, items: [['DASH', 'Dashboard', 1]] },
   { code: 'STUDENTS', label: 'Students', icon: 'users', min: 1, items: [
-    ['STU_INS', 'Insights', 2], ['STU_LIST', 'All Students', 1], ['STU_ADMIT', 'New Admission', 1], ['STU_ATT', 'Attendance', 1],
+    ['STU_INS', 'Insights', 2], ['STU_LIST', 'All Students', 1], ['STU_ADMISSIONS', 'Admissions & Enquiries', 1], ['STU_ADMIT', 'New Admission', 1], ['STU_ATT', 'Attendance', 1],
     ['STU_PROMOTE', 'Promote / Transfer', 2], ['STU_DOCS', 'Documents & ID Cards', 1]] },
   { code: 'STAFF', label: 'Staff', icon: 'brief', min: 1, items: [
     ['STF_INS', 'Insights', 2], ['STF_LIST', 'All Staff', 1], ['STF_ADD', 'Add Staff', 1], ['STF_ATT', 'Staff Attendance', 1], ['STF_LEAVE', 'Leave Requests', 1]] },
@@ -35,6 +36,8 @@ export const MENU = [
   { code: 'FEES', label: 'Fees', icon: 'receipt', min: 1, items: [
     ['FEE_INS', 'Insights', 2], ['FEE_COLLECT', 'Collect Fee', 1], ['FEE_REQUESTS', 'Fee Request Emails', 1], ['FEE_MATCHING', 'Payment Matching', 2],
     ['FEE_DUES', 'Dues & Reminders', 1], ['FEE_RECEIPTS', 'Receipts', 1], ['FEE_STRUCT', 'Fee Structure', 1], ['FEE_CONC', 'Concessions', 2]] },
+  { code: 'ANALYTICS', label: 'Data Analytics', icon: 'chart', min: 2, items: [
+    ['ANL_HOME', 'Report Catalogue', 2], ['ANL_RANK', 'Top & Bottom Performers', 2], ['ANL_TRANSPORT', 'Transport Reports', 2], ['ANL_TEACHER', 'Teacher Performance', 2], ['ANL_ADMISSIONS', 'Admissions Funnel', 2]] },
   { code: 'PAYROLL', label: 'Payroll', icon: 'wallet', min: 2, items: [['PAY_RUN', 'Run Payroll', 2], ['PAY_SLIPS', 'Payslips', 2]] },
   { code: 'ACCOUNTS', label: 'Accounts', icon: 'chart', min: 1, items: [
     ['ACC_BANK', 'Bank & Payment Details', 1], ['ACC_STMT', 'Account Statement', 3], ['ACC_EXP', 'Income & Expenses', 3]] },
@@ -50,14 +53,14 @@ const ALL = MENU.flatMap((m) => m.items.map((i) => i[0])).filter((c) => c[0] !==
 
 export const ACCESS = {
   ADMIN: ALL.filter((c) => !['SELF_CHILD', 'SELF_FEES', 'PLT_SCHOOLS'].includes(c)),
-  PRINCIPAL: ['DASH', 'STU_INS', 'STU_LIST', 'STU_ATT', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE',
+  PRINCIPAL: ['DASH', 'STU_INS', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ATT', 'ANL_HOME', 'ANL_RANK', 'ANL_TRANSPORT', 'ANL_TEACHER', 'ANL_ADMISSIONS', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE',
     'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_FORMATS', 'EXM_COSCH', 'EXM_PROFILE', 'FEE_INS', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_STRUCT', 'FEE_CONC',
     'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
-  ACCOUNTANT: ['DASH', 'STU_LIST', 'STF_LIST', 'FEE_INS', 'FEE_COLLECT', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_RECEIPTS', 'FEE_STRUCT', 'FEE_CONC',
+  ACCOUNTANT: ['DASH', 'STU_LIST', 'STF_LIST', 'ANL_HOME', 'ANL_TRANSPORT', 'FEE_INS', 'FEE_COLLECT', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_RECEIPTS', 'FEE_STRUCT', 'FEE_CONC',
     'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'OPS_OUTBOX', 'SELF_PAYSLIP', 'SELF_PREFS'],
-  TEACHER: ['DASH', 'STU_LIST', 'STU_ATT', 'STF_LEAVE', 'ACA_SYLLABUS', 'ACA_TIMETABLE', 'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_COSCH', 'EXM_PROFILE',
+  TEACHER: ['DASH', 'STU_LIST', 'STU_ATT', 'ANL_RANK', 'STF_LEAVE', 'ACA_SYLLABUS', 'ACA_TIMETABLE', 'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_COSCH', 'EXM_PROFILE',
     'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
-  FRONT_OFFICE: ['DASH', 'STU_LIST', 'STU_ADMIT', 'STU_DOCS', 'FEE_COLLECT', 'FEE_DUES', 'FEE_RECEIPTS', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
+  FRONT_OFFICE: ['DASH', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ADMIT', 'ANL_ADMISSIONS', 'STU_DOCS', 'FEE_COLLECT', 'FEE_DUES', 'FEE_RECEIPTS', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
   PARENT: ['DASH', 'ACA_TIMETABLE', 'SELF_CHILD', 'SELF_FEES', 'SELF_PREFS'],
   PLATFORM: ['PLT_SCHOOLS']
 };

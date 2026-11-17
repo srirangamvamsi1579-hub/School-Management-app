@@ -1,18 +1,18 @@
 # School Management Platform
 
-Multi-school SaaS for Indian K-12 schools (≤250 to 1,000+ students): students, staff, academics and timetable, exams and question papers, fees with automatic payment matching, payroll, accounts, templates, data import and per-school branding. Modules switch on per school by plan, AWS-console style, and every user sees only the menus their role allows.
+Multi-school SaaS for Indian K-12 schools (≤250 to 1,000+ students): own sign-in page per school with Gmail/mobile sign-up, user and role management, admissions pipeline, students, staff, academics and timetable, exams and question papers, fees with automatic payment matching, payroll, accounts, Data Analytics (Power BI), templates, data import and per-school branding. Modules switch on per school by plan, AWS-console style, and every user sees only the menus their role allows.
 
-**Try it:** [User-testing build](https://claude.ai/artifact/Ty6v98Gsnmu9HwVa6Qzqy2) (data stays in your browser; pick a school and any role).
+**Try it:** [User-testing build](https://claude.ai/artifact/Ty6v98Gsnmu9HwVa6Qzqy2) or the public copy at https://srirangamvamsi1579-hub.github.io/School-Management-app/ (data stays in your browser).
 
 ## What's in this repo
 
 | Folder | Contents |
 | --- | --- |
-| `app/` | React + Vite web app for user testing. In-memory demo data, all 46 screens, installable as a PWA. |
-| `database/` | PostgreSQL schema: six migrations, run in order (see `database/README.md`). |
+| `app/` | React + Vite web app for user testing. In-memory demo data, sign-in and sign-up pages, all 52 screens, installable as a PWA. |
+| `database/` | PostgreSQL schema: seven migrations, run in order, plus SQL checks (see `database/README.md`). |
 | `deploy/aws/` | CloudFormation (S3 + CloudFront + HTTPS) and `deploy.sh`. |
 | `.github/workflows/` | CI/CD: test → dev → pre-prod (approval) → prod (approval). |
-| `docs/` | `REQUIREMENTS.md` (expectations, screens, schema, rules), client review PDF with every menu and column. |
+| `docs/` | `REQUIREMENTS.md` (expectations, screens, schema, rules), `powerbi/REPORTS.md` (report pages, DAX, security), client review PDF. |
 | `design/` | Screen designs (design canvas source files) and the link to the live canvas. |
 | `tools/pdf/` | Script that regenerates the client review PDF. |
 
@@ -27,7 +27,7 @@ npm run build        # static site in app/dist  → any web host
 npm run build:single # one self-contained file: app/dist-single/index.html
 ```
 
-Sign in as **Admin, Principal, Accountant, Teacher, Front Office, Parent** or **Platform team**. Change the school on the sign-in page to see how the plan (Starter → Enterprise) changes the menus. "Reset demo data" in the top bar starts over.
+Sign in with a demo account (password `Demo@123`): admin@greenvalley.example.in, principal@greenvalley.example.in, sana.accounts@example.com, sonia.teacher@example.com, meera.vp@example.com (Teacher + Vice Principal), mobile 9845011200 (Front Office) or rohit.s@example.com (Parent). Or use **Demo quick access**, or **Create account** to try the sign-up flow (codes appear in the "Test inbox" panel). Change the school on the sign-in page to see how the plan (Starter → Enterprise) changes the menus. "Reset demo data" in the top bar starts over.
 
 ## Host it
 
@@ -40,6 +40,7 @@ Sign in as **Admin, Principal, Accountant, Teacher, Front Office, Parent** or **
 ```bash
 createdb school
 for f in database/00*.sql; do psql -d school -v ON_ERROR_STOP=1 -f "$f"; done
+psql -d school -f database/tests/007_checks.sql   # optional checks, rolled back
 ```
 
 Every table has `tenant_id` with row-level security. The application must connect as a non-owner role and run `SET app.tenant_id = '<id>'` per request.
@@ -50,6 +51,6 @@ The web app is responsive and installable (PWA) on iOS and Android today. Store 
 
 ## Status
 
-User-testing build. Sign-in, email/SMS sending, the payment gateway, OCR for photo imports and Power BI embedding are simulated in the browser; `docs/REQUIREMENTS.md` lists the production services for each.
+User-testing build. Real email/SMS sending (codes and emails appear in the test inbox and outbox), the payment gateway, OCR for photo imports and Power BI embedding are simulated in the browser; `docs/REQUIREMENTS.md` lists the production services for each.
 
 All names and data in the demo are fictional.

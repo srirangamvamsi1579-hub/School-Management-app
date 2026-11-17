@@ -3,6 +3,7 @@ import { useStore } from './data/store.js';
 import { MENU, PLANS, ROLES, LABEL, MODULE_OF, canSee } from './data/menu.js';
 import { applyTheme } from './lib/theme.js';
 import { tenantOf } from './lib/logic.js';
+import { screensFor, roleName } from './lib/auth.js';
 import Login from './screens/Login.jsx';
 import { SCREENS, Placeholder } from './screens/index.js';
 
@@ -17,12 +18,14 @@ export default function App() {
   const tenant = tenantOf(db);
   const rank = PLANS.find((p) => p.code === tenant.plan).rank;
   const role = session?.role;
+  const me = db.users?.find((u) => u.id === session?.userId) || null;
+  const perms = useMemo(() => (role ? { [role]: screensFor(db, me, role) } : null), [db.perms, db.designationAccess, me, role]);
   const visible = useMemo(() => (role ? MENU.map((m) => ({ ...m, items: m.items.filter((i, k, arr) => {
-    if (i[0][0] !== '#') return canSee(i[0], role, rank, tenant.overrides, db.perms);
+    if (i[0][0] !== '#') return canSee(i[0], role, rank, tenant.overrides, perms);
     const next = arr.slice(k + 1).find((x) => x[0][0] === '#');
     const until = next ? arr.indexOf(next) : arr.length;
-    return arr.slice(k + 1, until).some((x) => canSee(x[0], role, rank, tenant.overrides, db.perms));
-  }) })).filter((m) => m.items.some((i) => i[0][0] !== '#')) : []), [role, rank, tenant, db.perms]);
+    return arr.slice(k + 1, until).some((x) => canSee(x[0], role, rank, tenant.overrides, perms));
+  }) })).filter((m) => m.items.some((i) => i[0][0] !== '#')) : []), [role, rank, tenant, perms]);
   const links = db.links.filter((l) => role && l.roles.includes(role));
 
   useEffect(() => {
@@ -77,7 +80,7 @@ export default function App() {
           <span className="crumbs">{MODULE_OF[screen]} / <b style={{ color: 'var(--ink)' }}>{LABEL[screen]}</b></span>
           <span className="sp" />
           <span className="pill info">Test build · in-memory data</span>
-          <span className="small"><b>{user?.user}</b> · {user?.name}</span>
+          <span className="small"><b>{session.name || user?.user}</b> · {roleName(db, role)}{me?.designation ? ' · ' + me.designation : ''}</span>
           <button className="btn sm" onClick={() => { if (armed) { reset(); setArmed(false); } else { setArmed(true); setTimeout(() => setArmed(false), 4000); } }}>{armed ? 'Click again to reset' : 'Reset demo data'}</button>
           <button className="btn sm" onClick={logout}>Switch user</button>
         </header>

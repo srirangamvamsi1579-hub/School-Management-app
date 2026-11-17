@@ -17,7 +17,7 @@ export const Pill = ({ kind = '', children }) => <span className={'pill ' + kind
 
 const STATUS = { PAID: 'ok', AUTO: 'ok', Active: 'ok', ACTIVE: 'ok', Approved: 'ok', OK: 'ok', SENT: 'info', IMPORTED: 'ok', MANUAL: 'ok', Printed: 'ok',
   PARTIAL: 'warn', WAITING: 'warn', DUE: 'warn', 'In review': 'warn', WARNING: 'warn', SMS: 'warn', Draft: 'warn', 'Pending approval': 'warn', DRAFT: 'warn',
-  CONFIRMED: 'ok', 'On leave': 'warn', OVERDUE: 'bad', UNMATCHED: 'bad', ERROR: 'bad', NO_EMAIL: 'bad', DUPLICATE: 'bad', 'ROLLED BACK': '', Inactive: '' };
+  CONFIRMED: 'ok', LOCKED: 'bad', DISABLED: '', 'On leave': 'warn', OVERDUE: 'bad', UNMATCHED: 'bad', ERROR: 'bad', NO_EMAIL: 'bad', DUPLICATE: 'bad', 'ROLLED BACK': '', Inactive: '' };
 export const Status = ({ s }) => <Pill kind={STATUS[s] || ''}>{String(s).replace('_', ' ')}</Pill>;
 
 export function Field({ label, req, children, full }) {

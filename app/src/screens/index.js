@@ -10,6 +10,8 @@ import { QuestionPapers, ApprovedPapers, QuestionBank, PaperFormats, CoScholasti
 import { CollectFee, FeeRequests, PaymentMatching, Dues, Receipts, FeeStructure, Concessions, ParentFees } from './Fees.jsx';
 import { RunPayroll, Payslips, BankDetails, AccountStatement, Expenses } from './Accounts.jsx';
 import { DataImport } from './Import.jsx';
+import { Admissions } from './Admissions.jsx';
+import { ReportCatalogue, TopBottom, TransportReports, TeacherPerformance, AdmissionsFunnel } from './Analytics.jsx';
 import { Users, Roles, Templates, Appearance, WebsiteLinks, Outbox, Platform, MyPrefs } from './Operations.jsx';
 
 function MyChild() {
@@ -25,7 +27,8 @@ export function Placeholder({ code }) {
 
 export const SCREENS = {
   DASH: Dashboard, STU_INS: Insights, STF_INS: Insights, FEE_INS: Insights,
-  STU_LIST: StudentList, STU_ADMIT: Admission, STU_ATT: Attendance, STU_PROMOTE: Promote, STU_DOCS: Documents,
+  STU_LIST: StudentList, STU_ADMISSIONS: Admissions,
+  ANL_HOME: ReportCatalogue, ANL_RANK: TopBottom, ANL_TRANSPORT: TransportReports, ANL_TEACHER: TeacherPerformance, ANL_ADMISSIONS: AdmissionsFunnel, STU_ADMIT: Admission, STU_ATT: Attendance, STU_PROMOTE: Promote, STU_DOCS: Documents,
   STF_LIST: StaffList, STF_ADD: AddStaff, STF_ATT: StaffAttendance, STF_LEAVE: Leave,
   ACA_CLASS: Classes, ACA_SYLLABUS: Syllabus, ACA_TIMETABLE: Timetable,
   EXM_QP: QuestionPapers, EXM_APPROVED: ApprovedPapers, EXM_QB: QuestionBank, EXM_FORMATS: PaperFormats, EXM_COSCH: CoScholastic, EXM_PROFILE: AssessmentProfiles,
