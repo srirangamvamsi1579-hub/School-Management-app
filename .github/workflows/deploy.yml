@@ -1,7 +1,8 @@
 # Test → dev (automatic) → pre-prod (approval) → prod (approval)
 # Set up once in GitHub: Settings → Environments → create dev, preprod, prod;
 # add "Required reviewers" to preprod and prod. Add repository secret AWS_DEPLOY_ROLE_ARN
-# (an IAM role trusted for GitHub OIDC with CloudFormation, S3 and CloudFront rights).
+# (an IAM role trusted for GitHub OIDC with CloudFormation, S3 and CloudFront rights),
+# then set repository variable AWS_DEPLOY_ENABLED = true. Until then only the test job runs.
 name: build-and-deploy
 on:
   push:
@@ -28,7 +29,7 @@ jobs:
         with: { name: single-file-build, path: app/dist-single/index.html }
 
   dev:
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && vars.AWS_DEPLOY_ENABLED == 'true'
     needs: test
     runs-on: ubuntu-latest
     environment: { name: dev, url: '${{ steps.d.outputs.link }}' }
