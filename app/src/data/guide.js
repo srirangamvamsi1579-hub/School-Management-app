@@ -98,8 +98,8 @@ export const WORKFLOWS = [
     { as: 'U5', screen: 'STU_GATE', do: 'Under "Expected late arrivals today", click Arrived when the child comes in.', check: 'Coordinators are told.' },
     { as: 'U4', screen: 'STU_ATT', do: 'Open 8-A attendance for today.', check: 'Aarav shows "Late — dropped by parent".' }] },
   { id: 'meeting', title: 'Parent asks to meet a teacher', time: '2 min', roles: 'Parent, Teacher', steps: [
-    { as: 'U6', screen: 'SELF_REQUESTS', do: 'Click "Meet or call a teacher". Pick a teacher, Phone call, preferred date and time, topic "Maths homework". Send.', check: 'Waiting for teacher.' },
-    { as: 'U4', screen: 'STU_MEETINGS', do: 'Click Reply on the request addressed to you; pick a date and time → Confirm time. (Pick Sonia in step 1 so it lands here.)', check: 'Confirmed; the parent is emailed.' },
+    { as: 'U6', screen: 'SELF_REQUESTS', do: 'Click "Meet or call a teacher". Pick Sonia Mehta, Phone call, preferred date and time, topic "Maths homework". Send.', check: 'Waiting for teacher.' },
+    { as: 'U4', screen: 'STU_MEETINGS', do: 'Click Reply on the request; pick a date and time → Confirm time.', check: 'Confirmed; the parent is emailed.' },
     { as: 'U6', screen: 'SELF_REQUESTS', do: 'Back as the parent.', check: 'Shows Confirmed with the date and time.' }] },
   { id: 'office', title: 'Certificate request to the office', time: '1 min', roles: 'Parent, Front Office', steps: [
     { as: 'U6', screen: 'SELF_REQUESTS', do: 'Click "Other request". Bonafide / study certificate, needed by next week, details "Passport". Send.', check: 'With the office.' },
@@ -125,7 +125,7 @@ export const WORKFLOWS = [
     { public: '#/', do: 'Sign out (top right) → Create account. Use a Gmail address, read the code in the Test inbox, set a password, give the child’s admission number.', check: 'Account waiting for approval; details emailed (never the password).' },
     { as: 'U1', screen: 'OPS_USERS', do: 'Review the new sign-up → role Parent → Active.', check: 'The person can now sign in.' }] },
   { id: 'channels', title: 'Choose what shows on the website and in the app', time: '3 min', roles: 'Admin, Principal', steps: [
-    { as: 'U1', screen: 'OPS_CHANNELS', do: 'Role Teacher → Payslips → "Website only". Role Front Office → Gate Desk → "App only".', check: 'A draft starts; the preview shows the new phone tabs and website menu.' },
+    { as: 'U1', screen: 'OPS_CHANNELS', do: 'Role Teacher → Leave Requests → "Website + app". Role Front Office → Gate Desk → "App only".', check: 'A draft starts; the preview shows the new phone tabs and website menu.' },
     { as: 'U1', screen: 'OPS_CHANNELS', do: 'Send for approval with a note.', check: 'Status: Waiting for approval; the Principal is emailed.' },
     { as: 'U2', screen: 'OPS_CHANNELS', do: 'Check "What the draft changes" → Approve and publish.', check: 'Published as a new version; history kept.' },
     { as: 'U5', screen: 'STU_OFFICE', do: 'As Front Office on the website.', check: 'Gate Desk is gone from the website menu (it is app only now).' },

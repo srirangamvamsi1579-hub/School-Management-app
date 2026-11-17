@@ -16,7 +16,7 @@ const L = [];
 const p = (...x) => L.push(...x);
 
 p(`# User Guide — School Management Platform`, '',
-  `For schools, parents and our support team. It covers every menu and sub-menu, what each role sees on the website and in the mobile app, and step-by-step demos of the main workflows. The same guide is inside the app: **Help → User Guide & Demo**, where every demo runs with a guide bar that signs you in as the right person.`, '',
+  `For schools, parents and our support team. It covers every menu and sub-menu, what each role sees on the website and in the mobile app, and step-by-step demos of the main workflows. Shareable doc version with screenshots: https://claude.ai/artifact/6ALh8LqsnVisEpf9Leq1LL. The same guide is inside the app: **Help → User Guide & Demo**, where every demo runs with a guide bar that signs you in as the right person.`, '',
   `## 1. Getting started`, '',
   `| What | Where |`, `| --- | --- |`,
   `| Website (test build) | ${SITE} |`,

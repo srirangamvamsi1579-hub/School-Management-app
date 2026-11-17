@@ -1,6 +1,6 @@
 # User Guide — School Management Platform
 
-For schools, parents and our support team. It covers every menu and sub-menu, what each role sees on the website and in the mobile app, and step-by-step demos of the main workflows. The same guide is inside the app: **Help → User Guide & Demo**, where every demo runs with a guide bar that signs you in as the right person.
+For schools, parents and our support team. It covers every menu and sub-menu, what each role sees on the website and in the mobile app, and step-by-step demos of the main workflows. Shareable doc version with screenshots: https://claude.ai/artifact/6ALh8LqsnVisEpf9Leq1LL. The same guide is inside the app: **Help → User Guide & Demo**, where every demo runs with a guide bar that signs you in as the right person.
 
 ## 1. Getting started
 
@@ -132,9 +132,9 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 
 *Parent, Teacher · about 2 min*
 
-1. **Rohit Sharma (Parent of Aarav, 8-A) → Requests to School:** Click "Meet or call a teacher". Pick a teacher, Phone call, preferred date and time, topic "Maths homework". Send.  
+1. **Rohit Sharma (Parent of Aarav, 8-A) → Requests to School:** Click "Meet or call a teacher". Pick Sonia Mehta, Phone call, preferred date and time, topic "Maths homework". Send.  
    *You should see:* Waiting for teacher.
-2. **Sonia Mehta (Teacher, class coordinator 8-A) → Parent Meetings:** Click Reply on the request addressed to you; pick a date and time → Confirm time. (Pick Sonia in step 1 so it lands here.)  
+2. **Sonia Mehta (Teacher, class coordinator 8-A) → Parent Meetings:** Click Reply on the request; pick a date and time → Confirm time.  
    *You should see:* Confirmed; the parent is emailed.
 3. **Rohit Sharma (Parent of Aarav, 8-A) → Requests to School:** Back as the parent.  
    *You should see:* Shows Confirmed with the date and time.
@@ -207,7 +207,7 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 
 *Admin, Principal · about 3 min*
 
-1. **Admin user (Admin) → Web & App Screens:** Role Teacher → Payslips → "Website only". Role Front Office → Gate Desk → "App only".  
+1. **Admin user (Admin) → Web & App Screens:** Role Teacher → Leave Requests → "Website + app". Role Front Office → Gate Desk → "App only".  
    *You should see:* A draft starts; the preview shows the new phone tabs and website menu.
 2. **Admin user (Admin) → Web & App Screens:** Send for approval with a note.  
    *You should see:* Status: Waiting for approval; the Principal is emailed.
