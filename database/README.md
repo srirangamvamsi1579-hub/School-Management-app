@@ -13,6 +13,8 @@ Run the files in order. Each one builds on the one before.
 | 7 | `007_auth_admissions_analytics.sql` | Sign-up and sign-in support (Pending accounts, one-time codes with SMS gateway placeholder), user management (designation access, personal grants, role-change log, `set_user_role()`), admissions pipeline with status rules and `enrol_applicant()`, marks, subject teachers, transport routes and the Data Analytics views (`v_grade_rankings`, `v_teacher_subject_performance`, `v_transport_route_summary`, `v_admissions_by_grade_status`) |
 | 8 | `008_requests_transport_sms.sql` | SMS gateway framework (provider config, DLT templates, outbox, delivery reports), account self-service and deletion, teacher-performance sharing setting, class coordinators, parent pickup / drop / early-leave requests with cut-offs and gate codes, boarding log and `trip_manifest()`, Transport team role |
 | 9 | `009_route_sheets_collectors.sql` | No cut-off times; approved pickup people per child (photo, ID last 4, school verification); stop timings and per-route driver route sheets with private links; attendant boarding tracking as an optional platform-switched function |
+| 10 | `010_concurrency_fixes.sql` | Fixes found by the concurrency tests: collision-free receipt numbers (`doc_counters`), payment matching re-check and invoice locks, database-enforced one-request-per-day (btree_gist exclusion), seat lock on enrolment, hot-path indexes, `app_context()` for transaction-local school context |
+| 11 | `011_requests_website_mobile.sql` | Leave, late arrival, meet-a-teacher and office requests with the right decider; leave and late marks in attendance and the manifest; mobile app switches per school and `v_user_mobile_screens`; push devices removed on account deletion |
 
 ```bash
 createdb school
@@ -33,4 +35,8 @@ for f in 00*.sql; do psql -d school -v ON_ERROR_STOP=1 -f "$f"; done
 - SMS: nothing is sent until the school's gateway is LIVE; OTP text is blanked after sending; stale OTPs expire on go-live.
 - Admissions: only forward one step or to Opted out (reason required); an offer needs birth certificate and photo; every change is kept in `admission_status_history`.
 
-Tested on PostgreSQL 16: all nine files load cleanly into an empty database. `tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` check the rules (run after loading all files) (run after loading; they roll themselves back).
+Tested on PostgreSQL 16: all eleven files load cleanly into an empty database. `tests/007_checks.sql` to `011_checks.sql` check the rules (run after loading all files; they roll themselves back).
+
+**Concurrency and load:** `tests/concurrency/run.sh` builds a fresh database with 1,000 students and two schools, then fires simultaneous transactions as a non-superuser role (so row-level security applies): parallel payments, double matching, duplicate requests, double approvals and hand-overs, the last seat, double OTP use, school isolation over a connection pool, and a 100-user load test. Results: `docs/TEST_REPORT.md`.
+
+**API rule:** every request runs `BEGIN; SELECT app_context(:school, :user); …; COMMIT;`. The setting is transaction-local, so a pooled connection never carries one school's context into another request.

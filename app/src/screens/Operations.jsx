@@ -1,10 +1,11 @@
+import { WEBSITE_LINKS, linkFor, buttonSnippet, iframeSnippet } from '../lib/links.js';
 import { useState } from 'react';
 import { useStore } from '../data/store.js';
 import { Page, Card, Field, Input, Select, Status, Modal, Html, Tabs, Switch } from '../components/ui.jsx';
 import { dmon } from '../lib/format.js';
 import { log, resolveTemplate, renderFor, categoryName, tenantOf } from '../lib/logic.js';
 import { CATEGORIES, FIELDS, SAMPLE, renderTemplate, sanitize } from '../data/templates.js';
-import { MENU, ROLES, ACCESS, LABEL, PLANS, canSee, FUNCTIONS, funcOn } from '../data/menu.js';
+import { MENU, ROLES, ACCESS, LABEL, PLANS, canSee, FUNCTIONS, funcOn, MOBILE_SCREENS, mobileScreenOn } from '../data/menu.js';
 import { PRESETS, TEMPLATES, contrast, accessible } from '../lib/theme.js';
 import { allRoles, roleName, canManageUsers, accountEmail, createAccount, idType, isGmail, findUser } from '../lib/auth.js';
 import { DESIGNATIONS } from '../data/seed2.js';
@@ -278,6 +279,7 @@ export function WebsiteLinks() {
         </div>
       </Card>
     </div>
+    <WebsiteDeepLinks />
     <Card title="Menu links"><table className="t"><thead><tr><th>Label</th><th>Address</th><th>Under</th><th>Who sees it</th><th /></tr></thead>
       <tbody>{db.links.map((l) => <tr key={l.id}><td className="b">{l.label}</td><td><a href={l.url} target="_blank" rel="noreferrer">{l.url}</a></td><td>{l.under === 'TOP' ? 'Top' : MENU.find((m) => m.code === l.under)?.label}</td><td className="small">{l.roles.join(', ')}</td>
         <td><button className="btn sm danger" onClick={() => run((d) => { d.links = d.links.filter((x) => x.id !== l.id); })}>Remove</button></td></tr>)}</tbody></table></Card>
@@ -321,6 +323,14 @@ export function Platform() {
             {t.overrides[f.code] !== undefined && <span className="pill info">{t.overrides[f.code] ? 'Switched on' : 'Switched off'}</span>}</div>; })}
           <div className="row end" style={{ marginTop: 10 }}><button className="btn" onClick={() => mutate((d) => { d.tenants.find((y) => y.id === sel).overrides = {}; })}>Back to plan defaults</button></div>
         </Card>
+        <Card title="Mobile app (Play Store & App Store)" right={<Switch on={!!t.mobile?.enabled} label="Mobile app for this school" onClick={() => mutate((d) => { const x = d.tenants.find((y) => y.id === sel); x.mobile = { screens: {}, ...(x.mobile || {}), enabled: !x.mobile?.enabled }; })} />}>
+          <p className="small muted">One app in the stores serves every school; parents and staff enter the school code <b>{t.code}</b> once. Pick the few screens this school offers on phones. A person still sees only what their role, designation and this school's plan allow on the website.</p>
+          {t.mobile?.enabled ? <div className="grid g2">{MOBILE_SCREENS.map(([code, label, , , locked]) => { const on = mobileScreenOn(t, code); const webOn = code === 'M_HOME' || MENU.some((m) => m.items.some((i) => i[0] === code) && (t.overrides[code] ?? rank >= (MENU.find((mm) => mm.items.some((i) => i[0] === code)).items.find((i) => i[0] === code)[2])));
+            return <label key={code} className="row small" style={{ padding: '4px 0' }}><input type="checkbox" checked={on} disabled={!!locked} onChange={() => mutate((d) => { const x = d.tenants.find((y) => y.id === sel); x.mobile.screens = { ...x.mobile.screens, [code]: !on }; })} />
+              <span><b>{label}</b> <span className="muted">· {code === 'M_HOME' ? 'Summary for each role' : LABEL[code]}</span>{locked && code !== 'M_HOME' && <div className="muted">{locked}</div>}{!webOn && <div className="muted">Not in this school's plan — will not show</div>}</span></label>; })}</div>
+            : <p className="small">Switched off. People from this school who open the app are told to use the website.</p>}
+          <div className="row" style={{ marginTop: 8 }}><a className="btn sm" href="#/p/mobile" target="_blank" rel="noreferrer">Preview the mobile app</a><span className="small muted">Status: {t.mobile?.appStatus || 'Not published'}</span></div>
+        </Card>
       </div>
     </div>
   </Page>;
@@ -334,3 +344,24 @@ export function MyPrefs() {
 }
 
 export { LABEL };
+
+// Links and snippets the school pastes into its own website
+function WebsiteDeepLinks() {
+  const { db, notify } = useStore();
+  const [show, setShow] = useState('p/apply');
+  const here = typeof location !== 'undefined' && /^https?:/.test(location.href) ? location.href.split('#')[0] : null;
+  const copy = (text) => { try { navigator.clipboard.writeText(text); notify('Copied'); } catch (e) { notify('Select the text and copy it'); } };
+  const url = linkFor(db, show);
+  const label = WEBSITE_LINKS.find((l) => l[0] === show)[1];
+  return <Card title="Links for the school website" right={<span className="small muted">Each school gets its own addresses</span>}>
+    <p className="small muted">Put these on the school's website. A parent clicking “Requests to school” signs in and lands on that page; what they can see is still decided by their role. The admission form works without signing in.</p>
+    <div className="tw"><table className="t"><thead><tr><th>Page</th><th>For</th><th>Address</th><th /></tr></thead>
+      <tbody>{WEBSITE_LINKS.map(([path, name, who]) => <tr key={path}><td className="b">{name}</td><td className="small">{who}</td><td className="small"><code>{linkFor(db, path)}</code></td>
+        <td><div className="row"><button className="btn sm" onClick={() => copy(linkFor(db, path))}>Copy link</button><button className="btn sm" onClick={() => setShow(path)} aria-pressed={show === path}>Snippet</button>{here && <a className="btn sm" href={'#/' + path} target="_blank" rel="noreferrer">Try it</a>}</div></td></tr>)}</tbody></table></div>
+    <div className="grid g2" style={{ marginTop: 10 }}>
+      <Field label={`Button for “${label}”`}><textarea className="i" readOnly rows={4} value={buttonSnippet(url, label)} onFocus={(e) => e.target.select()} /></Field>
+      {show === 'p/apply' ? <Field label="Embed the form inside a website page"><textarea className="i" readOnly rows={4} value={iframeSnippet(url)} onFocus={(e) => e.target.select()} /></Field>
+        : <p className="small muted">Screens behind sign-in are linked, not embedded, so a parent's session is never shown inside another site.</p>}
+    </div>
+  </Card>;
+}

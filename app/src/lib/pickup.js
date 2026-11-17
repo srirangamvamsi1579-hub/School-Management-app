@@ -7,9 +7,20 @@ export const REQ_TYPES = {
   PICKUP: { name: 'In-person pickup after school', trips: ['PM'], short: 'Parent collecting in person' },
   DROP: { name: 'In-person drop in the morning', trips: ['AM'], short: 'Parent dropping in person' },
   EARLY_LEAVE: { name: 'Early leave (collected during the day)', trips: ['PM'], short: 'Left school early' },
-  OWN_TRANSPORT: { name: 'Coming and going by own transport', trips: ['AM', 'PM'], short: 'Own transport' }
+  OWN_TRANSPORT: { name: 'Coming and going by own transport', trips: ['AM', 'PM'], short: 'Own transport' },
+  LEAVE: { name: 'Leave (child will be absent)', trips: ['AM', 'PM'], short: 'On leave' },
+  LATE_ARRIVAL: { name: 'Late arrival — I will drop my child', trips: ['AM'], short: 'Parent dropping late' },
+  MEETING: { name: 'Meet or call a teacher', trips: [], short: 'Meeting request' },
+  OTHER: { name: 'Other request (certificate, document, query)', trips: [], short: 'Office request' }
 };
+export const GROUPS = [['Pickup & transport', ['PICKUP', 'DROP', 'EARLY_LEAVE', 'OWN_TRANSPORT']], ['Leave, late arrival & teachers', ['LEAVE', 'LATE_ARRIVAL', 'MEETING', 'OTHER']]];
 export const DISMISSAL = '15:00';
+export const SCHOOL_START = '08:45';
+export const MEET_MODES = ['In person at school', 'Phone call', 'Video call'];
+export const MEET_SLOTS = ['Before school (8:00–8:40)', 'Lunch break', 'After school (15:15–16:30)', 'Any time that suits the teacher'];
+export const OTHER_KINDS = ['Bonafide / study certificate', 'Transfer certificate', 'Lost ID card / new ID card', 'Fee query', 'Change of address or phone', 'Something else'];
+// Who decides each kind of request
+export const DECIDER = { PICKUP: 'AUTO', DROP: 'AUTO', OWN_TRANSPORT: 'AUTO', LATE_ARRIVAL: 'AUTO', EARLY_LEAVE: 'COORDINATOR', LEAVE: 'COORDINATOR', MEETING: 'TEACHER', OTHER: 'OFFICE' };
 // No cut-off times: bus changes are confirmed whenever they are sent and reach the driver's route sheet at once.
 // Early leave still needs a class coordinator, because a child leaves during the school day.
 
@@ -20,7 +31,18 @@ export const coordinatorsOf = (db, sectionId) => db.coordinators[sectionId] || {
 export const staffName = (db, id) => { const s = db.staff.find((x) => x.id === id); return s ? `${s.first} ${s.last}` : '—'; };
 export const sectionsCoordinatedBy = (db, staffId) => Object.entries(db.coordinators).filter(([, c]) => c.primary === staffId || c.secondary === staffId).map(([s]) => s);
 
-export const needsCoordinator = (type) => type === 'EARLY_LEAVE';
+export const needsCoordinator = (type) => DECIDER[type] === 'COORDINATOR';
+
+// Teachers a parent may ask to meet: the child's subject teachers and class coordinators (school contact only; no personal numbers shared)
+export function teachersFor(db, studentId) {
+  const s = db.students.find((x) => x.id === studentId);
+  const out = new Map();
+  Object.entries(db.subjectTeachers || {}).forEach(([key, tid]) => { const [sec, sub] = key.split(':'); if (sec === s.sectionId) out.set(tid, [...(out.get(tid) || []), sub]); });
+  const c = coordinatorsOf(db, s.sectionId);
+  [[c.primary, 'Class coordinator'], [c.secondary, 'Class coordinator (secondary)']].forEach(([id, l]) => { if (id) out.set(id, [...(out.get(id) || []), l]); });
+  return [...out].map(([id, subjects]) => ({ id, name: staffName(db, id), subjects })).filter((t) => t.name !== '—');
+}
+const schoolDays = (from, to) => { const out = []; for (let d = new Date(from + 'T00:00:00'); d <= new Date((to || from) + 'T00:00:00'); d.setDate(d.getDate() + 1)) if (d.getDay() !== 0) out.push(d.toISOString().slice(0, 10)); return out; };
 
 // ---------- Authorised (pre-approved) people who may collect a child ----------
 // The guardians on the child's record are always authorised. Others are added by the parent and verified by the school.
@@ -77,20 +99,36 @@ export function submitRequest(db, f, user) {
     if (!f.time || f.time >= DISMISSAL) throw new Error(`Early leave time must be before ${DISMISSAL}`);
     if (f.dateFrom === today() && f.time <= now()) throw new Error('That time has already passed');
   }
+  if (f.type === 'LEAVE' && !f.reason?.trim()) throw new Error('Give a reason for the leave');
+  if (f.type === 'LEAVE' && f.dateTo && schoolDays(f.dateFrom, f.dateTo).length > 30) throw new Error('Leave longer than 30 days needs a letter to the Principal');
+  if (f.type === 'LATE_ARRIVAL') {
+    if (!f.time || f.time <= SCHOOL_START || f.time >= DISMISSAL) throw new Error(`Arrival time must be after ${SCHOOL_START} and before ${DISMISSAL}`);
+    if (f.dateFrom === today() && f.time <= now()) throw new Error('That time has already passed');
+  }
+  if (f.type === 'MEETING') {
+    if (!teachersFor(db, s.id).some((t) => t.id === f.teacherId)) throw new Error('Choose one of your child\u2019s teachers');
+    if (!MEET_MODES.includes(f.mode)) throw new Error('Choose how you would like to meet');
+    if (!f.reason?.trim()) throw new Error('Say briefly what you would like to discuss');
+  }
+  if (f.type === 'OTHER' && (!OTHER_KINDS.includes(f.category) || !f.reason?.trim())) throw new Error('Choose what you need and add the details');
   if (['PICKUP', 'EARLY_LEAVE'].includes(f.type)) {
     const c = collectorsFor(db, s.id, { verifiedOnly: true }).find((x) => x.id === f.collectorId);
     if (!c) throw new Error('Choose a person from the child\u2019s approved pickup list');
     f = { ...f, collector: { id: c.id, name: c.name, relation: c.relation, mobile: c.mobile, photo: c.photo || null, idType: c.idType, idLast4: c.idLast4 } };
   }
-  if (db.requests.some((x) => x.studentId === s.id && x.type === f.type && ['Submitted', 'Approved'].includes(x.status) && covers(x, f.dateFrom))) throw new Error('There is already a request of this kind for that day');
+  if (db.requests.some((x) => x.studentId === s.id && x.type === f.type && ['Submitted', 'Approved'].includes(x.status) && covers(x, f.dateFrom) && (f.type !== 'MEETING' || x.teacherId === f.teacherId) && f.type !== 'OTHER')) throw new Error('There is already a request of this kind for that day');
   db.seq.request = (db.seq.request || 0) + 1;
-  const r = { id: 'Q' + db.seq.request, no: 'REQ-' + String(db.seq.request).padStart(5, '0'), studentId: s.id, userId: user?.id, type: f.type, dateFrom: f.dateFrom, dateTo: f.type === 'EARLY_LEAVE' ? f.dateFrom : (f.dateTo || f.dateFrom),
-    time: f.type === 'EARLY_LEAVE' ? f.time : '', reason: f.reason || '', collector: ['PICKUP', 'EARLY_LEAVE'].includes(f.type) ? f.collector : null,
+  const r = { id: 'Q' + db.seq.request, no: 'REQ-' + String(db.seq.request).padStart(5, '0'), studentId: s.id, userId: user?.id, type: f.type, dateFrom: f.dateFrom, dateTo: ['EARLY_LEAVE', 'LATE_ARRIVAL', 'MEETING', 'OTHER'].includes(f.type) ? f.dateFrom : (f.dateTo || f.dateFrom),
+    time: ['EARLY_LEAVE', 'LATE_ARRIVAL'].includes(f.type) ? f.time : '',
+    teacherId: f.type === 'MEETING' ? f.teacherId : null, mode: f.type === 'MEETING' ? f.mode : '', slot: f.type === 'MEETING' ? f.slot || MEET_SLOTS[3] : '', category: f.type === 'OTHER' ? f.category : '', reason: f.reason || '', collector: ['PICKUP', 'EARLY_LEAVE'].includes(f.type) ? f.collector : null,
     status: 'Submitted', gateCode: '', history: [{ status: 'Submitted', at: new Date().toISOString(), by: user?.name || 'Parent' }], createdAt: new Date().toISOString() };
   // Bus changes are confirmed straight away; early leave waits for a coordinator
-  if (!needsCoordinator(r.type)) approve(db, r, 'Confirmed automatically');
+  if (DECIDER[r.type] === 'AUTO') approve(db, r, 'Confirmed automatically');
   db.requests.unshift(r);
-  tellCoordinators(db, r, s, r.status === 'Approved' ? 'For your information' : 'Needs your approval');
+  if (r.type === 'MEETING') { const t = db.staff.find((x) => x.id === r.teacherId); notify(db, { to: t?.email, kind: 'Parent meeting request', related: r.no, subject: `Meeting request from ${fullName(s)}\u2019s parent (${classLabel(db, s)})`,
+    body: `<p>${user?.name || 'A parent'} would like a <b>${r.mode.toLowerCase()}</b> about: ${r.reason}</p><p>Preferred: ${r.dateFrom}, ${r.slot}. Please confirm a time in Students → Parent Meetings.</p>` }); }
+  else if (r.type === 'OTHER') db.users.filter((u) => ['FRONT_OFFICE', 'ADMIN'].includes(u.role) && u.status === 'ACTIVE' && u.email).forEach((u) => notify(db, { to: u.email, kind: 'Office request', related: r.no, subject: `${r.category}: ${fullName(s)} (${classLabel(db, s)})`, body: `<p>${r.reason}</p>` }));
+  else tellCoordinators(db, r, s, r.status === 'Approved' ? 'For your information' : 'Needs your approval');
   if (r.status === 'Approved') tellTransport(db, r, s);
   log(db, user?.name || 'Parent', 'Parent request', `${r.no} ${REQ_TYPES[r.type].name} · ${fullName(s)}`);
   return r;
@@ -102,20 +140,27 @@ function approve(db, r, by) {
   if (['PICKUP', 'EARLY_LEAVE'].includes(r.type)) r.gateCode = String(Math.floor(1000 + Math.random() * 9000));
 }
 
-export function decide(db, id, decision, { by, staffId, note = '' }) {
+export function decide(db, id, decision, { by, staffId, note = '', meetAt = null }) {
   const r = db.requests.find((x) => x.id === id);
   const s = db.students.find((x) => x.id === r.studentId);
   const c = coordinatorsOf(db, s.sectionId);
-  if (staffId && ![c.primary, c.secondary].includes(staffId)) throw new Error('Only this class’s coordinators can decide');
+  const who = DECIDER[r.type];
+  if (staffId && who === 'COORDINATOR' && ![c.primary, c.secondary].includes(staffId)) throw new Error('Only this class’s coordinators can decide');
+  if (staffId && who === 'TEACHER' && staffId !== r.teacherId) throw new Error('Only the teacher who was asked can reply');
   if (r.status !== 'Submitted') throw new Error('Already ' + r.status.toLowerCase());
-  if (decision === 'Approved') approve(db, r, by);
-  else { if (!note) throw new Error('Give a reason for declining'); r.status = 'Declined'; r.history.push({ status: 'Declined', at: new Date().toISOString(), by, note }); }
+  if (decision === 'Approved') {
+    if (who === 'TEACHER') { if (!meetAt?.date || !meetAt?.time) throw new Error('Pick the date and time for the meeting'); if (meetAt.date < today()) throw new Error('Pick today or a later date'); r.meetAt = meetAt; }
+    approve(db, r, by);
+    if (note) r.history.at(-1).note = note;
+    if (who === 'OFFICE') { r.status = 'Completed'; r.history.at(-1).status = 'Done'; }
+    if (r.type === 'LEAVE') schoolDays(r.dateFrom, r.dateTo).forEach((d) => { const k = s.sectionId + ':' + d; db.attendance[k] = { ...(db.attendance[k] || {}), [s.id]: 'L' }; });
+  } else { if (!note) throw new Error('Give a reason for declining'); r.status = 'Declined'; r.history.push({ status: 'Declined', at: new Date().toISOString(), by, note }); }
   const g = guardianOf(db, s);
   const school = tenantOf(db).name;
   notify(db, { to: g?.email, kind: 'Request update', related: r.no, subject: `${r.no} ${r.status.toLowerCase()} — ${fullName(s)}`,
-    body: `<p>Your request (${REQ_TYPES[r.type].name}, ${r.dateFrom}${r.time ? ' at ' + r.time : ''}) was <b>${r.status.toLowerCase()}</b> by the class coordinator.${note ? ' Note: ' + note : ''}</p>${r.gateCode ? `<p>Gate code for collection: <b style="font-size:20px">${r.gateCode}</b> — the person collecting shows this and photo ID at the gate.</p>` : ''}` });
+    body: `<p>Your request (${REQ_TYPES[r.type].name}, ${r.dateFrom}${r.time ? ' at ' + r.time : ''}) was <b>${r.status === 'Completed' ? 'completed' : r.status.toLowerCase()}</b> by ${who === 'TEACHER' ? staffName(db, r.teacherId) : who === 'OFFICE' ? 'the school office' : 'the class coordinator'}.${r.meetAt && r.status === 'Approved' ? ` Meeting: <b>${r.meetAt.date} at ${r.meetAt.time}</b> (${r.mode}).` : ''}${note ? ' Note: ' + note : ''}</p>${r.gateCode ? `<p>Gate code for collection: <b style="font-size:20px">${r.gateCode}</b> — the person collecting shows this and photo ID at the gate.</p>` : ''}` });
   if (r.gateCode && g?.mobile) queueSms(db, { to: g.mobile, purpose: 'GATE_CODE', vars: { student: s.first, time: r.time || DISMISSAL, code: r.gateCode, collector: r.collector?.name || '' }, related: r.no, schoolName: school });
-  if (r.status === 'Approved') tellTransport(db, r, s);
+  if (r.status === 'Approved' && who === 'COORDINATOR') tellTransport(db, r, s);
   log(db, by, 'Request ' + r.status.toLowerCase(), r.no);
   return r;
 }
@@ -124,7 +169,7 @@ export function cancelRequest(db, id, by) {
   const r = db.requests.find((x) => x.id === id);
   if (!['Submitted', 'Approved'].includes(r.status) || r.handedOverAt) throw new Error('This request can no longer be cancelled');
   r.status = 'Cancelled'; r.history.push({ status: 'Cancelled', at: new Date().toISOString(), by });
-  tellCoordinators(db, r, db.students.find((x) => x.id === r.studentId), 'Cancelled by parent');
+  if (!['MEETING', 'OTHER'].includes(r.type)) tellCoordinators(db, r, db.students.find((x) => x.id === r.studentId), 'Cancelled by parent');
   return r;
 }
 
@@ -141,19 +186,32 @@ export function handOver(db, id, code, by) {
   return r;
 }
 
+// Gate desk: a child the parent said they would drop late has arrived
+export function markArrived(db, id, by) {
+  const r = db.requests.find((x) => x.id === id);
+  if (r.type !== 'LATE_ARRIVAL' || r.status !== 'Approved') throw new Error('Not an expected late arrival');
+  r.arrivedAt = new Date().toISOString(); r.status = 'Completed'; r.history.push({ status: 'Arrived', at: r.arrivedAt, by });
+  const s = db.students.find((x) => x.id === r.studentId);
+  const k = s.sectionId + ':' + r.dateFrom; db.attendance[k] = { ...(db.attendance[k] || {}), [s.id]: 'LATE' };
+  tellCoordinators(db, r, s, 'Arrived');
+  return r;
+}
+
 // ---------- Bus manifest for a date and trip ----------
 export function manifest(db, date, trip) {
   const absent = (s) => (db.attendance[s.sectionId + ':' + date] || {})[s.id] === 'A';
+  const onLeave = (s) => (db.attendance[s.sectionId + ':' + date] || {})[s.id] === 'L';
   const rows = db.students.filter((s) => s.status === 'Active' && s.band).map((s) => {
     const reqs = db.requests.filter((r) => r.studentId === s.id && covers(r, date) && REQ_TYPES[r.type].trips.includes(trip) && !['Declined', 'Cancelled'].includes(r.status));
     const done = reqs.find((r) => ['Approved', 'Completed'].includes(r.status));
     const pending = reqs.find((r) => r.status === 'Submitted');
     let status = 'BOARD', reason = '';
     if (absent(s)) { status = 'ABSENT'; reason = 'Marked absent today'; }
+    else if (onLeave(s) && !done) { status = 'NOT_BOARDING'; reason = 'On leave (approved)'; }
     else if (done) {
       status = 'NOT_BOARDING';
       reason = done.type === 'EARLY_LEAVE' ? (done.handedOverAt ? `Left early at ${new Date(done.handedOverAt).toTimeString().slice(0, 5)} with ${done.collector.name} (${done.collector.relation})` : `Leaving early at ${done.time} with ${done.collector.name} (${done.collector.relation})`)
-        : done.type === 'PICKUP' ? `Collected in person by ${done.collector.name} (${done.collector.relation})` : REQ_TYPES[done.type].short;
+        : done.type === 'PICKUP' ? `Collected in person by ${done.collector.name} (${done.collector.relation})` : done.type === 'LEAVE' ? `On leave${done.reason ? ' — ' + done.reason : ''}` : done.type === 'LATE_ARRIVAL' ? `Parent dropping at ${done.time}` : REQ_TYPES[done.type].short;
     } else if (pending) { status = 'CHECK'; reason = `${REQ_TYPES[pending.type].short} — waiting for coordinator`; }
     const board = db.boarding[`${date}:${trip}:${s.id}`];
     return { id: s.id, name: fullName(s), cls: classLabel(db, s), routeId: s.routeId, stop: s.stop || '', stopNo: s.stopNo || 0, guardian: guardianOf(db, s)?.mobile, status, reason, board };

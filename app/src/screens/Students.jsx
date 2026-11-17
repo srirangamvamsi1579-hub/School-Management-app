@@ -121,17 +121,19 @@ export function Attendance() {
   const list = db.students.filter((s) => s.sectionId === sec && s.status === 'Active');
   const key = sec + ':' + new Date().toISOString().slice(0, 10);
   const marks = db.attendance[key] || {};
-  const toggle = (id) => mutate((d) => { d.attendance[key] = { ...(d.attendance[key] || {}), [id]: (d.attendance[key]?.[id] || 'P') === 'P' ? 'A' : 'P' }; });
+  // L (approved leave) and LATE (parent dropped late) come from parent requests; tapping cycles Present ↔ Absent
+  const toggle = (id) => mutate((d) => { const cur = d.attendance[key]?.[id] || 'P'; d.attendance[key] = { ...(d.attendance[key] || {}), [id]: cur === 'A' ? 'P' : 'A' }; });
+  const LBL = { P: 'Present', A: 'Absent', L: 'On leave (approved)', LATE: 'Late — dropped by parent' };
   return (
     <Page title="Attendance" sub="Everyone starts Present — tap a name to mark Absent. Absent students' guardians get an SMS when you submit.">
       <div className="row" style={{ marginBottom: 12 }}>
-        <Select value={sec} onChange={(e) => setSec(e.target.value)} options={db.sections.map((x) => [x.id, db.classes.find((c) => c.id === x.classId).name + '-' + x.name])} />
+        <Select aria-label="Class and section" value={sec} onChange={(e) => setSec(e.target.value)} options={db.sections.map((x) => [x.id, db.classes.find((c) => c.id === x.classId).name + '-' + x.name])} />
         <span className="muted">{new Date().toDateString()}</span>
       </div>
       <div className="grid g3">
-        {list.map((s) => { const a = (marks[s.id] || 'P') === 'A'; return (
-          <button key={s.id} className="card" style={{ textAlign: 'left', cursor: 'pointer', borderColor: a ? 'var(--bad)' : undefined, background: a ? 'var(--bad-bg)' : undefined }} onClick={() => toggle(s.id)}>
-            <div className="b">{s.roll}. {fullName(s)}</div><div className="small">{a ? 'Absent' : 'Present'}</div>
+        {list.map((s) => { const m = marks[s.id] || 'P'; const a = m === 'A'; return (
+          <button key={s.id} className="card" style={{ textAlign: 'left', cursor: 'pointer', borderColor: a ? 'var(--bad)' : m !== 'P' ? 'var(--warn)' : undefined, background: a ? 'var(--bad-bg)' : undefined }} onClick={() => toggle(s.id)}>
+            <div className="b">{s.roll}. {fullName(s)}</div><div className="small">{LBL[m] || m}</div>
           </button>); })}
       </div>
       <div className="row end"><button className="btn pri" onClick={() => { const n = Object.values(marks).filter((v) => v === 'A').length; mutate((d) => log(d, session.role, 'Attendance submitted', `${sec} · ${n} absent`)); notify(`Attendance saved · ${n} absent · SMS queued`); }}>Submit attendance</button></div>
@@ -145,7 +147,7 @@ export function Documents() {
   const list = db.students.filter((s) => s.sectionId === sec);
   return (
     <Page title="Documents & ID cards" sub="Print ID cards for a section. Uploaded documents (birth certificate, TC, photos) are kept in S3 in production." actions={<button className="btn pri" onClick={() => printPage()}>Print</button>}>
-      <div className="row noprint" style={{ marginBottom: 12 }}><Select value={sec} onChange={(e) => setSec(e.target.value)} options={db.sections.map((x) => [x.id, db.classes.find((c) => c.id === x.classId).name + '-' + x.name])} /></div>
+      <div className="row noprint" style={{ marginBottom: 12 }}><Select aria-label="Class and section" value={sec} onChange={(e) => setSec(e.target.value)} options={db.sections.map((x) => [x.id, db.classes.find((c) => c.id === x.classId).name + '-' + x.name])} /></div>
       <div className="grid g3">
         {list.map((s) => (
           <div key={s.id} className="card" style={{ borderTop: '6px solid var(--brand)' }}>

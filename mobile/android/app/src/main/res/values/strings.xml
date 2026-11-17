@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">YourApp School</string>
+    <string name="title_activity_main">YourApp School</string>
+    <string name="package_name">com.yourapp.school</string>
+    <string name="custom_url_scheme">com.yourapp.school</string>
+</resources>

@@ -17,7 +17,7 @@ const WHAT = {
   PLATFORM: 'Your company: schools, plans, add-ons, switching modules on/off'
 };
 
-export default function Login() {
+export default function Login({ next = null }) {
   const { db, mutate } = useStore();
   const [tab, setTab] = useState('signin');
   const [peek, setPeek] = useState('');           // address whose test inbox is shown
@@ -28,11 +28,13 @@ export default function Login() {
         <div className="row" style={{ gap: 14, marginBottom: 6 }}>
           <div className="logo" style={{ width: 46, height: 46, fontSize: 20 }}>{t.name[0]}</div>
           <div><h1 style={{ margin: 0 }}>{t.name}</h1><div className="muted small">{t.subdomain}.yourapp.com · each school (client) has its own sign-in page and accounts</div></div>
+          <span className="sp" /><a className="small" href="#/p/apply">Admission enquiry →</a>
         </div>
         <div className="row small" style={{ margin: '8px 0 14px' }}>
           <span className="muted">Test build — pretend this page is for:</span>
           <Select value={db.tenantId} onChange={(e) => mutate((d) => { d.tenantId = e.target.value; })} options={db.tenants.map((x) => [x.id, `${x.name} (${PLANS.find((p) => p.code === x.plan).name})`])} />
         </div>
+        {next && <div className="note" role="status" style={{ marginBottom: 10 }}>Sign in to continue to <b>{next}</b>.</div>}
         <Tabs tabs={[['signin', 'Sign in'], ['signup', 'Create account'], ['demo', 'Demo quick access']]} value={tab} onChange={setTab} />
         <div className={'grid' + (tab === 'demo' ? '' : ' g-side')} style={{ alignItems: 'start' }}>
           {tab === 'signin' && <SignIn onPeek={setPeek} onSignup={() => setTab('signup')} />}

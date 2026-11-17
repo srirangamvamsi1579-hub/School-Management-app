@@ -241,9 +241,94 @@ Only approved people can collect a child in person or for an early leave.
 
 Marking Boarded / No-show on the bus is a function the platform team switches on or off per school (Platform Console → Schools & Plans → Functions → *Bus attendant boarding tracking*). It is off by default on every plan; the demo school has it on. When it's off, the manifest and route sheets have no tick column, and the database refuses boarding records for that school. The Functions list also shows the other optional capabilities (self sign-up, SMS OTP, custom templates, custom roles, OCR import) with their plan defaults.
 
+## Added 17 Nov 2026 (release 5)
+
+### More requests from parents
+
+Parents raise everything from **Requests to School** (website and mobile app). The menu was renamed from Pickup & Leave Requests.
+
+| Request | Who handles it | What happens |
+| --- | --- | --- |
+| In-person pickup, in-person drop, own transport | Confirmed at once | Coordinators and the bus team are told; the route sheet updates |
+| Early leave | Class coordinator | Gate code sent to the parent; collector from the approved list |
+| **Leave (child will be absent)** | Class coordinator | Reason required, up to 30 days in the app (45 in the database). When approved, attendance shows *Leave* for each school day and the bus does not wait |
+| **Late arrival (parent drops the child)** | Confirmed at once | Time must be after 08:45 and before 15:00. The morning bus does not wait. The Gate Desk lists expected late arrivals; *Arrived* marks attendance *Late* |
+| **Meet or call a teacher** | The teacher asked | The parent picks one of the child's subject teachers or class coordinators, how (in person, phone, video), a preferred day and time, and the topic. The teacher confirms a date and time or declines with a note (Students → **Parent Meetings**). No personal phone numbers are shared |
+| **Other (certificate, TC, ID card, fee query, change of details)** | School office | Goes to Students → **Office Requests**; the office marks it done with a message, or declines |
+
+- Coordinators only see attendance and transport requests, not meetings or office work.
+- A parent can have one active request of a kind per child per day. Meetings are limited to one per teacher per day; office requests have no limit. The database enforces this even when the same request is sent twice at the same moment.
+
+### Website links
+
+Operations → Website & Links → **Links for the school website** gives each school its own addresses and ready-to-paste snippets.
+
+| Address | Purpose |
+| --- | --- |
+| `https://<school>.yourapp.com/#/s/SELF_REQUESTS` | Requests to school (also Pay fees, My child, Timetable, Parent meetings, Driver route sheets) |
+| `#/p/apply` | Public admission enquiry form, no sign-in; `#/p/apply?embed` for an iframe on the school website. Enquiries enter the Admissions pipeline with source *School website* |
+| `#/p/privacy` | Privacy policy |
+| `#/p/delete` | Delete an account without the app (code sent to the email or mobile) |
+
+- A link to a signed-in screen asks the visitor to sign in, then opens that screen.
+- If the person's role cannot see it, they get their home screen and a message. Access rules never change because of a link.
+- Signed-in screens are linked, never embedded in other sites.
+
+### Mobile app (Google Play and App Store)
+
+One store app serves every school. People enter the school code once. Details and the release checklist are in `docs/MOBILE_STORE_CHECKLIST.md`.
+
+- **Minimal features, switched per school:** Platform Console → Schools & Plans → **Mobile app** switches the app on for a school and picks its screens. New schools start with the app off. Home and Account are always on, so account deletion stays reachable.
+- **Same access rules as the website:** a tab shows only if the school offers it on the app **and** the person's plan, role, designation and personal grants allow it on the web.
+  - Parent: Home, Requests, Fees, Account.
+  - Teacher: Home, Attendance, Approvals, Meetings, Account.
+  - Gate: Home, Gate, Account.
+  - Transport: Home, Route sheet, Account.
+  - Admin and Accounts stay on the website.
+- **Phone features:** push notifications (with permission), works offline with a clear message, Android back button, native share, safe areas, 44 px touch targets, 16 px inputs.
+- **Accounts:**
+  - Parents can delete their own account in the app (password check) or on the web.
+  - Staff accounts are closed by the school office on request.
+  - Deleting an account removes its notification devices.
+- **Builds:**
+  - `mobile/` (Capacitor 8): Android targets API 36; iOS includes a privacy manifest, push entitlement and the encryption declaration.
+  - CI: `.github/workflows/mobile.yml` builds the Android bundle and iOS app, and uploads to Play internal testing or TestFlight when the keys are added.
+- **Preview:** `#/p/mobile` on the test link shows the app in a phone frame.
+
+### Testing and capacity
+
+The full results are in `docs/TEST_REPORT.md`.
+
+- **Concurrency:** 10 tests where many people act at the same moment found 5 faults. All are fixed in migration 010:
+  - receipt numbers collided when payments arrived together;
+  - one bank line could be receipted twice;
+  - a duplicate request could slip through;
+  - the last seat could be taken twice;
+  - the school setting has to be transaction-local on pooled connections.
+- **Load:** 100 people × 20 actions gave 0 errors, p95 under 1.6 s. With 300 people, data stayed correct, but the manifest and dues screens slowed to about 4 s on a 2-CPU test database. Production needs RDS Proxy, a read replica for manifests and reports, and a short manifest cache.
+- **Two browser tabs:** the test app merges changes made in another tab instead of overwriting them.
+- **Store readiness:** 12 automated checks modelled on Google's pre-launch report and Apple review all pass:
+  - crash crawl for every role;
+  - access rules;
+  - WCAG 2.1 AA;
+  - touch targets;
+  - phone-to-iPad layout;
+  - privacy policy;
+  - in-app and web account deletion;
+  - offline use;
+  - every request type;
+  - start-up speed and bundle size;
+  - native settings.
+- **Regression:** CI runs everything on every push (`.github/workflows/tests.yml`):
+  - 31 app tests;
+  - 22 SQL checks;
+  - 10 concurrency tests;
+  - 4 web end-to-end tests;
+  - 12 store checks.
+
 ## Database schema summary
 
-PostgreSQL 15+, nine migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
+PostgreSQL 15+, eleven migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
 
 | File | Adds | Key tables, views and functions |
 | --- | --- | --- |
@@ -256,6 +341,8 @@ PostgreSQL 15+, nine migration files loaded in order. Every table carries `tenan
 | 007_auth_admissions_analytics.sql | Sign-up, user management, admissions, analytics | users (Pending status, login type, verified flags, requested role, designation), otp_requests, sms_gateway_config, designation_menu_access, user_menu_grants, user_role_changes; admission_enquiries, admission_status_history; exam_terms, exam_results, section_subject_teachers, transport_routes, transport_trips; request_otp(), verify_otp(), set_user_role(), enrol_applicant(); v_user_screens, v_admissions_by_grade_status, v_student_term_scores, v_grade_rankings, v_teacher_subject_performance, v_transport_route_summary |
 | 008_requests_transport_sms.sql | SMS framework, accounts, coordinators, requests, transport | sms_gateway_config (provider, status, endpoint, secret ARN), sms_templates, sms_outbox, sms_delivery_reports; user_children, notification_prefs, account_requests; tenant_settings; class_coordinators; parent_requests, parent_request_history; boarding_log; queue_sms(), close_account(), set_teacher_perf_visibility(), decide_parent_request(), hand_over_student(), trip_manifest(); v_my_teaching_performance; Transport team role |
 | 009_route_sheets_collectors.sql | No cut-offs, approved pickup list, stop timings, route sheets, optional attendant tracking | authorised_collectors, v_approved_collectors, parent_requests.collector_id; pickup_points am/pm times, transport_routes school times and attendant; route_sheet_shares, share_route_sheets(), driver_route_sheet(); FN_ATTENDANT_TRACKING enforced on boarding_log; ROUTE_SHEET SMS template |
+| 010_concurrency_fixes.sql | Fixes from the concurrency tests | doc_counters + next_doc_no() (receipt numbers), apply_payment() re-checks and locks, one_active_request_per_day exclusion constraint (btree_gist), enrol_applicant() seat lock, hot-path indexes, app_context() (transaction-local school) |
+| 011_requests_website_mobile.sql | Leave, late arrival, meetings, office requests; mobile app | parent_requests new kinds and fields, request_decider(), decide_parent_request() by coordinator / teacher / office, mark_late_arrival(), trip_manifest() with leave and late drop-ins; STU_MEETINGS, STU_OFFICE menus; mobile_screen_catalog, tenant_mobile_app, tenant_mobile_screens, v_user_mobile_screens, push_devices |
 
 The test build keeps the same entities in browser memory (`app/src/data`) and runs the same rules in JavaScript (`app/src/lib/logic.js`).
 
@@ -375,9 +462,19 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 
 **Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the six migrations, SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
-**Automated tests.** `npm test` runs 21 checks on the business rules (including the approved pickup list, route sheets, the attendant-tracking switch, requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
+**Automated tests (release 5).** See `docs/TEST_REPORT.md`: 31 app tests, 22 SQL checks (007–011), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 4 web end-to-end tests (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
+
+**Earlier automated tests.** `npm test` ran 21 checks on the business rules (including the approved pickup list, route sheets, the attendant-tracking switch, requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
 
 **User-testing script.**
+
+- [ ] Parent: Requests to School → Leave for next week; Coordinator (Sonia) approves; Attendance shows *On leave*; the route sheet says *On leave*
+- [ ] Parent: Late arrival today at 10:30; Front Office: Gate Desk → Expected late arrivals → Arrived
+- [ ] Parent: Meet or call a teacher → pick the Maths teacher; that teacher: Parent Meetings → Reply → confirm a time
+- [ ] Parent: Other request → Bonafide certificate; Front Office: Office Requests → Mark done
+- [ ] Admin: Website & Links → copy the admission form snippet; open `#/p/apply` signed out and send an enquiry; see it in Admissions
+- [ ] Platform team: Schools & Plans → Mobile app → switch Fees off for Green Valley → Preview the mobile app as the parent; the Fees tab is gone
+- [ ] Phone preview (`#/p/mobile`): school code GVS → each demo account → check the tabs; Account → Delete my account
 
 - [ ] Parent: Pickup & Leave Requests → Approved pickup list → Add a person (with photo); Front Office: Gate Desk → Approve pickup people; the parent can now choose them for a pickup
 - [ ] Transport: Routes, Stops & Timings → edit a stop time; Driver Route Sheets → Route R3 → What the driver sees → Send to all drivers
@@ -419,3 +516,7 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - ~~Cut-off times~~ — decided: no cut-offs; a route sheet is shared with every driver instead.
 - Should bus attendants use a phone app to mark Boarded / No-show, with GPS for on-time reporting?
 - ~~Pre-approved collectors~~ — decided: yes, approved pickup list per child with photo and ID check.
+- Mobile app: publish one multi-school app under our company (recommended), or branded apps under each school's own developer account?
+- Push notifications: Firebase Cloud Messaging for both platforms, or APNs directly for iOS?
+- Google Play account: organisation (no 14-day closed test) — do we have a D-U-N-S number?
+- Which screens should be on the app by default for new schools (currently Requests, Fees, Attendance, Approvals, Meetings, Gate, Route sheet)?

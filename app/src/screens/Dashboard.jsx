@@ -64,7 +64,7 @@ function ParentHome({ go }) {
         <Stat label="Fees due" value={inr(due.reduce((a, i) => a + balance(i), 0))} sub={due[0] ? 'Next: ' + dmon(due[0].due) : 'All paid'} />
         <Stat label="House" value={kid.house} />
       </div>
-      <div className="row" style={{ marginTop: 16 }}><button className="btn pri" onClick={() => go('SELF_FEES')}>Pay fees</button><button className="btn" onClick={() => go('SELF_REQUESTS')}>Pickup / early leave request</button><button className="btn" onClick={() => go('SELF_CHILD')}>View profile</button><button className="btn" onClick={() => go('ACA_TIMETABLE')}>Timetable</button></div>
+      <div className="row" style={{ marginTop: 16 }}><button className="btn pri" onClick={() => go('SELF_FEES')}>Pay fees</button><button className="btn" onClick={() => go('SELF_REQUESTS')}>Requests to school</button><button className="btn" onClick={() => go('SELF_CHILD')}>View profile</button><button className="btn" onClick={() => go('ACA_TIMETABLE')}>Timetable</button></div>
     </Page>
   );
 }

@@ -5,3 +5,5 @@ app/dist-single/
 .DS_Store
 __pycache__/
 .env
+app/dist-mobile/
+app/tests/store/last-report.json

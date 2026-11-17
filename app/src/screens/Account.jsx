@@ -44,6 +44,16 @@ export function MyAccount() {
     run((d) => { const u = d.users.find((x) => x.id === me.id); setPassword(d, u, pw.next); log(d, u.name, 'Password changed', u.login); });
     notify('Password changed'); setPw({ cur: '', next: '', again: '' }); setErr('');
   };
+  // Parents created their own accounts, so they can delete them themselves (Google Play and App Store rule)
+  const selfDelete = me?.role === 'PARENT';
+  const [delPw, setDelPw] = useState('');
+  const deleteNow = () => {
+    if (me.pw !== hashPassword(delPw, me.salt)) { setErr('Password is not correct'); return; }
+    run((d) => { const school = tenantOf(d).name; const email = me.email;
+      if (email) d.outbox.unshift({ id: 'M' + (d.outbox.length + 1), to: email, kind: 'Account deleted', status: 'SENT', at: new Date().toISOString(), subject: `${school}: your account has been deleted`, body: '<p>Your account and contact details have been deleted as you asked. Records the school must keep by law stay with the school.</p>' });
+      deleteAccount(d, me.id, me.name + ' (self)'); log(d, 'Account holder', 'Account deleted by its owner', me.id); });
+    setDel(false); logout(); notify('Your account has been deleted');
+  };
   const request = (type, detail) => { run((d) => { d.accountRequests = d.accountRequests || []; d.accountRequests.unshift({ id: 'AR' + (d.accountRequests.length + 1), userId: me.id, type, detail, status: 'Pending', at: new Date().toISOString() }); log(d, me.name, 'Account request', `${type} ${detail}`); }); notify('Sent to the school office'); };
 
   return (
@@ -78,10 +88,11 @@ export function MyAccount() {
             <button className="btn" disabled={!/^ADM-\d{4}-\d{4}$/.test(link)} onClick={() => { request('LINK_CHILD', link); setLink(''); }}>Ask to link</button></div>
           <p className="small muted">The school checks and links siblings to your account.</p>
         </Card>}
-        <Card title="Close my account">
-          <p className="small">Your account is closed by the school office. Records the school must keep (fees, report cards) stay with the school; your sign-in and contact details are removed.</p>
+        <Card title="Delete my account">
+          {selfDelete ? <p className="small">Deletes your sign-in and your contact details straight away. Records the school must keep by law (fee receipts, report cards) stay with the school without your contact details.</p>
+            : <p className="small">Staff accounts are managed by the school. Your request goes to the school office, which closes the account and tells you by email.</p>}
           {pending.length > 0 && <div className="note small">Waiting for the school: {pending.map((r) => r.type === 'DELETE' ? 'account closure' : 'link ' + r.detail).join(', ')}</div>}
-          <button className="btn danger" disabled={pending.some((r) => r.type === 'DELETE')} onClick={() => setDel(true)}>Ask to close my account</button>
+          <button className="btn danger" disabled={pending.some((r) => r.type === 'DELETE')} onClick={() => { setDelPw(''); setDel(true); }}>{selfDelete ? 'Delete my account' : 'Ask to close my account'}</button>
         </Card>
       </div>
       {chg && <Modal title={`Change ${chg.field}`} onClose={() => setChg(null)} actions={chg.sent ? <button className="btn pri" disabled={code.length !== 6} onClick={confirmChange}>Confirm</button> : <button className="btn pri" onClick={startChange}>Send code</button>}>
@@ -91,8 +102,12 @@ export function MyAccount() {
           <Field label="6-digit code"><Input maxLength={6} value={code} onChange={(e) => setCode(e.target.value)} /></Field></div>}
         {err && <div className="note warn" style={{ marginTop: 8 }}>{err}</div>}
       </Modal>}
-      {del && <Modal title="Close my account?" onClose={() => setDel(false)} actions={<button className="btn danger" onClick={() => { request('DELETE', ''); setDel(false); }}>Send request</button>}>
-        <p>The school office will close your account and let you know by email. You can keep using the app until then.</p></Modal>}
+      {del && (selfDelete ? <Modal title="Delete your account?" onClose={() => setDel(false)} actions={<button className="btn danger" disabled={!delPw} onClick={deleteNow}>Delete permanently</button>}>
+        <p>This cannot be undone. You will be signed out on all devices. To use the app again you would create a new account.</p>
+        <Field label="Enter your password to confirm"><Input type="password" autoComplete="current-password" value={delPw} onChange={(e) => setDelPw(e.target.value)} /></Field>
+        {err && <div className="note warn" role="alert" style={{ marginTop: 8 }}>{err}</div>}</Modal>
+        : <Modal title="Close my account?" onClose={() => setDel(false)} actions={<button className="btn danger" onClick={() => { request('DELETE', ''); setDel(false); }}>Send request</button>}>
+        <p>The school office will close your account and let you know by email. You can keep using the app until then.</p></Modal>)}
       {err && !chg && <div className="note warn" role="alert">{err}</div>}
       <p className="small muted">Signed in since this session started · <button className="btn sm" onClick={logout}>Sign out</button></p>
     </Page>

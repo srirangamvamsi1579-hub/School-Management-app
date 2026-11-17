@@ -6,10 +6,15 @@ import { tenantOf } from './lib/logic.js';
 import { screensFor, roleName } from './lib/auth.js';
 import Login from './screens/Login.jsx';
 import { SCREENS, Placeholder } from './screens/index.js';
+import { PublicEnquiry, PrivacyPolicy, DeleteAccountRequest } from './screens/Public.jsx';
+import MobileApp from './mobile/MobileApp.jsx';
+import { parseHash } from './lib/links.js';
 
 export default function App() {
-  const { db, session, logout, toast, reset } = useStore();
-  const [screen, setScreen] = useState(null);
+  const { db, session, logout, toast, reset, notify } = useStore();
+  const [hash, setHash] = useState(() => (typeof location !== 'undefined' ? location.hash : ''));
+  const link = parseHash(hash);
+  const [screen, setScreen] = useState(() => (link?.kind === 's' ? link.code : null));
   const [navOpen, setNavOpen] = useState(false);
   const [openMods, setOpenMods] = useState({});
   const [armed, setArmed] = useState(false);
@@ -28,12 +33,22 @@ export default function App() {
   }) })).filter((m) => m.items.some((i) => i[0][0] !== '#')) : []), [role, rank, tenant, perms]);
   const links = db.links.filter((l) => role && l.roles.includes(role));
 
+  // Website links (#/s/SCREEN) open that screen after sign-in; the role's access rules still decide
+  useEffect(() => { const h = () => { setHash(location.hash); const l = parseHash(location.hash); if (l?.kind === 's') setScreen(l.code); }; window.addEventListener('hashchange', h); return () => window.removeEventListener('hashchange', h); }, []);
   useEffect(() => {
     const ok = visible.some((m) => m.items.some((i) => i[0] === screen));
-    if (!ok && visible.length) setScreen(visible[0].items.find((i) => i[0][0] !== '#')[0]);
+    if (!ok && visible.length) {
+      if (screen && LABEL[screen]) notify(`“${LABEL[screen]}” is not available for your account — opened your home screen`);
+      setScreen(visible[0].items.find((i) => i[0][0] !== '#')[0]);
+    }
   }, [visible, screen]);
+  useEffect(() => { if (session && screen && visible.some((m) => m.items.some((i) => i[0] === screen))) { try { history.replaceState(null, '', '#/s/' + screen); } catch (e) { /* sandboxed frame */ } } }, [screen, session, visible]);
 
-  if (!session) return <Login />;
+  if (link?.kind === 'p' && link.code === 'apply') return <PublicEnquiry embed={link.embed} />;
+  if (link?.kind === 'p' && link.code === 'privacy') return <PrivacyPolicy />;
+  if (link?.kind === 'p' && link.code === 'delete') return <DeleteAccountRequest />;
+  if (link?.kind === 'p' && link.code === 'mobile') return <MobileApp preview={window.innerWidth > 500} />;
+  if (!session) return <Login next={link?.kind === 's' ? LABEL[link.code] : null} />;
 
   const go = (code) => { setScreen(code); setNavOpen(false); };
   const Screen = SCREENS[screen] || Placeholder;

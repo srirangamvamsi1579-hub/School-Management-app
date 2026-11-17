@@ -1,0 +1,12 @@
+{
+  "appId": "com.yourapp.school",
+  "appName": "YourApp School",
+  "webDir": "../app/dist-mobile",
+  "android": { "allowMixedContent": false, "webContentsDebuggingEnabled": false },
+  "ios": { "contentInset": "never", "limitsNavigationsToAppBoundDomains": true },
+  "server": { "androidScheme": "https", "allowNavigation": ["*.yourapp.com"] },
+  "plugins": {
+    "PushNotifications": { "presentationOptions": ["badge", "sound", "alert"] },
+    "SplashScreen": { "launchShowDuration": 800, "backgroundColor": "#1d4ed8", "showSpinner": false }
+  }
+}

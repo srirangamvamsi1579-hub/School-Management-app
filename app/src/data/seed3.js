@@ -10,7 +10,9 @@ const STOPS = {
 
 export function extendSeed3(db) {
   const r = rng(43);
-  db.version = 4;
+  db.version = 5;
+  // Mobile app: on for two schools, so the console switch can be tried
+  db.tenants.forEach((t) => { t.mobile = { enabled: ['T1', 'T2'].includes(t.id), screens: {}, appStatus: t.id === 'T1' ? 'Live in test build' : 'Not published' }; });
   const today = new Date().toISOString().slice(0, 10);
   const tomorrow = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
 
@@ -52,6 +54,15 @@ export function extendSeed3(db) {
     mk(riders[7], 'DROP', { reason: 'Going with parent to work' }),
     mk(riders[11], 'OWN_TRANSPORT', { dateFrom: today, dateTo: tomorrow, reason: 'Bus route under repair near home' }),
     mk(riders[15], 'EARLY_LEAVE', { time: '11:00', reason: 'Medical check-up', collector: { name: 'Anil ' + riders[15].last, relation: 'Father', mobile: '9845099002' }, gateCode: '7390' })
+  );
+  // Leave, late arrival, a meeting request and an office request (release 5)
+  const nextWeek = new Date(Date.now() + 6 * 864e5).toISOString().slice(0, 10);
+  const pend = (by = 'Parent') => ({ status: 'Submitted', history: [{ status: 'Submitted', at: new Date().toISOString(), by }] });
+  db.requests.push(
+    mk(riders[5], 'LEAVE', { dateFrom: tomorrow, dateTo: nextWeek, reason: 'Family wedding out of town', ...pend() }),
+    mk(riders[9], 'LATE_ARRIVAL', { time: '10:30', reason: 'Eye test in the morning' }),
+    mk(aarav, 'MEETING', { dateFrom: tomorrow, dateTo: tomorrow, teacherId: 'E1', mode: 'In person at school', slot: 'After school (15:15–16:30)', reason: 'How Aarav is settling into Grade 8 and his Maths homework', ...pend('Rohit Sharma') }),
+    mk(aarav, 'OTHER', { dateFrom: nextWeek, dateTo: nextWeek, category: 'Bonafide / study certificate', reason: 'Needed for a passport application', ...pend('Rohit Sharma') })
   );
   // Stop timings: morning pickup (bus reaches school 08:45) and afternoon drop (leaves school 15:15)
   const AM_START = { R1: '07:35', R2: '07:30', R3: '07:25', R4: '07:10', R5: '07:05', R6: '07:00' };

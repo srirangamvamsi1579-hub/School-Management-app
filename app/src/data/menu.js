@@ -25,7 +25,7 @@ export const ROLES = [
 export const MENU = [
   { code: 'DASHBOARD', label: 'Dashboard', icon: 'home', min: 1, items: [['DASH', 'Dashboard', 1]] },
   { code: 'STUDENTS', label: 'Students', icon: 'users', min: 1, items: [
-    ['STU_INS', 'Insights', 2], ['STU_LIST', 'All Students', 1], ['STU_ADMISSIONS', 'Admissions & Enquiries', 1], ['STU_ADMIT', 'New Admission', 1], ['STU_ATT', 'Attendance', 1], ['STU_REQUESTS', 'Coordinator Desk', 1], ['STU_GATE', 'Gate Desk', 1],
+    ['STU_INS', 'Insights', 2], ['STU_LIST', 'All Students', 1], ['STU_ADMISSIONS', 'Admissions & Enquiries', 1], ['STU_ADMIT', 'New Admission', 1], ['STU_ATT', 'Attendance', 1], ['STU_REQUESTS', 'Coordinator Desk', 1], ['STU_MEETINGS', 'Parent Meetings', 1], ['STU_OFFICE', 'Office Requests', 1], ['STU_GATE', 'Gate Desk', 1],
     ['STU_PROMOTE', 'Promote / Transfer', 2], ['STU_DOCS', 'Documents & ID Cards', 1]] },
   { code: 'STAFF', label: 'Staff', icon: 'brief', min: 1, items: [
     ['STF_INS', 'Insights', 2], ['STF_LIST', 'All Staff', 1], ['STF_ADD', 'Add Staff', 1], ['STF_ATT', 'Staff Attendance', 1], ['STF_LEAVE', 'Leave Requests', 1]] },
@@ -48,7 +48,7 @@ export const MENU = [
     ['OPS_USERS', 'Users', 1], ['OPS_ROLES', 'Roles & Permissions', 1], ['OPS_TEMPLATES', 'Templates', 1], ['OPS_IMPORT', 'Data Import', 1],
     ['OPS_APPEARANCE', 'Appearance & Branding', 1], ['OPS_WEBSITE', 'Website & Links', 1], ['OPS_OUTBOX', 'Email & SMS Outbox', 1], ['OPS_SMS', 'SMS Gateway', 1]] },
   { code: 'SELF', label: 'My Space', icon: 'user', min: 1, items: [
-    ['SELF_CHILD', 'My Child', 1], ['SELF_REQUESTS', 'Pickup & Leave Requests', 1], ['SELF_FEES', 'Fee Dues & Pay', 1], ['SELF_PAYSLIP', 'My Payslips', 2], ['SELF_MYPERF', 'My Teaching Performance', 2], ['SELF_PROFILE', 'My Account', 1], ['SELF_PREFS', 'My Preferences', 1]] },
+    ['SELF_CHILD', 'My Child', 1], ['SELF_REQUESTS', 'Requests to School', 1], ['SELF_FEES', 'Fee Dues & Pay', 1], ['SELF_PAYSLIP', 'My Payslips', 2], ['SELF_MYPERF', 'My Teaching Performance', 2], ['SELF_PROFILE', 'My Account', 1], ['SELF_PREFS', 'My Preferences', 1]] },
   { code: 'PLATFORM', label: 'Platform Console', icon: 'cloud', min: 1, items: [['PLT_SCHOOLS', 'Schools & Plans', 1]] }
 ];
 
@@ -56,14 +56,14 @@ const ALL = MENU.flatMap((m) => m.items.map((i) => i[0])).filter((c) => c[0] !==
 
 export const ACCESS = {
   ADMIN: ALL.filter((c) => !['SELF_CHILD', 'SELF_FEES', 'SELF_REQUESTS', 'SELF_MYPERF', 'PLT_SCHOOLS'].includes(c)),
-  PRINCIPAL: ['DASH', 'STU_INS', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ATT', 'STU_REQUESTS', 'ACA_COORD', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'SELF_PROFILE', 'ANL_HOME', 'ANL_RANK', 'ANL_TRANSPORT', 'ANL_TEACHER', 'ANL_ADMISSIONS', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE',
+  PRINCIPAL: ['DASH', 'STU_INS', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'STU_OFFICE', 'ACA_COORD', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'SELF_PROFILE', 'ANL_HOME', 'ANL_RANK', 'ANL_TRANSPORT', 'ANL_TEACHER', 'ANL_ADMISSIONS', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE',
     'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_FORMATS', 'EXM_COSCH', 'EXM_PROFILE', 'FEE_INS', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_STRUCT', 'FEE_CONC',
     'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
   ACCOUNTANT: ['DASH', 'STU_LIST', 'STF_LIST', 'SELF_PROFILE', 'ANL_HOME', 'ANL_TRANSPORT', 'FEE_INS', 'FEE_COLLECT', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_RECEIPTS', 'FEE_STRUCT', 'FEE_CONC',
     'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'OPS_OUTBOX', 'SELF_PAYSLIP', 'SELF_PREFS'],
-  TEACHER: ['DASH', 'STU_LIST', 'STU_ATT', 'STU_REQUESTS', 'ANL_RANK', 'SELF_PROFILE', 'STF_LEAVE', 'ACA_SYLLABUS', 'ACA_TIMETABLE', 'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_COSCH', 'EXM_PROFILE',
+  TEACHER: ['DASH', 'STU_LIST', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'ANL_RANK', 'SELF_PROFILE', 'STF_LEAVE', 'ACA_SYLLABUS', 'ACA_TIMETABLE', 'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_COSCH', 'EXM_PROFILE',
     'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
-  FRONT_OFFICE: ['DASH', 'STU_LIST', 'STU_GATE', 'TRN_CHANGES', 'SELF_PROFILE', 'STU_ADMISSIONS', 'STU_ADMIT', 'ANL_ADMISSIONS', 'STU_DOCS', 'FEE_COLLECT', 'FEE_DUES', 'FEE_RECEIPTS', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
+  FRONT_OFFICE: ['DASH', 'STU_LIST', 'STU_GATE', 'STU_OFFICE', 'TRN_CHANGES', 'SELF_PROFILE', 'STU_ADMISSIONS', 'STU_ADMIT', 'ANL_ADMISSIONS', 'STU_DOCS', 'FEE_COLLECT', 'FEE_DUES', 'FEE_RECEIPTS', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
   PARENT: ['DASH', 'ACA_TIMETABLE', 'SELF_CHILD', 'SELF_REQUESTS', 'SELF_FEES', 'SELF_PROFILE', 'SELF_PREFS'],
   TRANSPORT: ['TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'ANL_TRANSPORT', 'SELF_PROFILE', 'SELF_PREFS'],
   PLATFORM: ['PLT_SCHOOLS']
@@ -100,4 +100,37 @@ export function funcOn(tenant, code) {
   const f = FUNCTIONS.find((x) => x.code === code);
   const rank = PLANS.find((p) => p.code === tenant.plan).rank;
   return !!f && f.minRank !== null && rank >= f.minRank;
+}
+
+// ---------- Mobile app (Play Store / App Store) ----------
+// A small set of screens, switched per school in the Platform Console. A person sees a tab only if
+// (1) the school has the mobile app on, (2) that screen is switched on for the mobile app, and
+// (3) the same web access rules allow it (plan, add-ons, role, designation, personal grants).
+// [code, tab label, icon, on by default, locked]
+export const MOBILE_SCREENS = [
+  ['M_HOME', 'Home', 'home', true, 'Always on'],
+  ['SELF_REQUESTS', 'Requests', 'send', true],
+  ['SELF_FEES', 'Fees', 'receipt', true],
+  ['SELF_CHILD', 'My child', 'user', false],
+  ['ACA_TIMETABLE', 'Timetable', 'calendar', false],
+  ['STU_ATT', 'Attendance', 'check', true],
+  ['STU_REQUESTS', 'Approvals', 'inbox', true],
+  ['STU_MEETINGS', 'Meetings', 'chat', true],
+  ['STU_GATE', 'Gate', 'shield', true],
+  ['TRN_SHEETS', 'Route sheet', 'bus', true],
+  ['TRN_MANIFEST', 'Manifest', 'list', false],
+  ['SELF_PROFILE', 'Account', 'user', true, 'Always on — store rules need account deletion inside the app']
+];
+export const mobileScreenOn = (tenant, code) => {
+  const m = MOBILE_SCREENS.find((x) => x[0] === code);
+  if (!m) return false;
+  if (m[4]) return true;
+  const v = tenant.mobile?.screens?.[code];
+  return v === undefined ? m[3] : !!v;
+};
+// Tabs for this person in the mobile app; the web rules are applied by canSee with their effective permissions
+export function mobileTabs(tenant, role, perms) {
+  if (!tenant.mobile?.enabled || role === 'PLATFORM') return [];
+  const rank = PLANS.find((p) => p.code === tenant.plan).rank;
+  return MOBILE_SCREENS.filter(([code]) => mobileScreenOn(tenant, code) && (code === 'M_HOME' || canSee(code, role, rank, tenant.overrides, perms)));
 }

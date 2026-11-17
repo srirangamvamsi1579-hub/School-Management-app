@@ -1,0 +1,32 @@
+# Full regression on every push: app unit tests, database checks, concurrency + load, web end-to-end.
+name: Tests
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: cd app && npm ci && npm test
+      - run: cd app && npm run build && npx playwright install --with-deps chromium && npm run test:e2e
+  database:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: postgres }
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    env: { PGHOST: localhost, PGPORT: 5432, PGUSER: postgres, PGPASSWORD: postgres }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Load migrations and run the SQL checks
+        run: |
+          psql -qc 'CREATE DATABASE school'
+          for f in database/0*.sql; do psql -d school -v ON_ERROR_STOP=1 -q -f "$f"; done
+          for t in database/tests/0*_checks.sql; do psql -d school -v ON_ERROR_STOP=1 -q -f "$t"; done
+      - name: Concurrency and load tests
+        run: cd database/tests/concurrency && npm ci && PGDATABASE_TEST=school_conc ./run.sh
