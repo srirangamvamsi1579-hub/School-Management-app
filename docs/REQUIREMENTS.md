@@ -1,6 +1,6 @@
 # School Management Platform — Requirements
 
-Updated 17 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
+Updated 17 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
 
 One platform runs Indian K-12 schools of every size, from under 250 to over 1,000 students. Each school gets only the modules its plan includes, and every person sees only the menus their role allows.
 
@@ -22,7 +22,7 @@ One platform runs Indian K-12 schools of every size, from under 250 to over 1,00
 8. **Easy onboarding.** Existing data comes in from Excel, CSV or photos of registers. Columns are mapped to app fields once and the mapping is saved.
 9. **Branding.** Each school picks a layout template, colours and fonts. Colours are checked for readability.
 10. **Website.** The app links to the school's existing website, or hosts a simple new one. Website pages can be added as menu items.
-11. **Mobile.** Parents and teachers use the app on phones. It is an installable web app (PWA) now; iOS and Android store apps come later from the same code (Capacitor).
+11. **Mobile.** Parents and staff use one store app (Google Play and App Store, built with Capacitor from the same code) with a small set of screens that each school switches on, under the same access rules as the website. The web app also installs as a PWA.
 12. **Own sign-in page per school.** Each client gets its own sign-in page and accounts. People create an account Gmail-style with a Gmail/email or mobile number, verify it with a one-time code, set a password and wait for the school to approve. Account details go to their Gmail. OTP by SMS is built as a workflow and switches on when an SMS gateway is connected.
 13. **User management.** An Admin, or anyone given the Users screen by designation or personally, approves sign-ups and changes roles, designations and status. Schools can add their own roles.
 14. **Admissions.** Enquiries and application forms move through Enquiry → Submitted → In review → Offered → Enrolled, or Opted out, with a summary by grade.
@@ -55,12 +55,12 @@ Seven roles see different menus. Four plans decide which modules a school has. A
 
 ## Screens by module
 
-13 modules hold 63 screens plus the sign-in pages, and all of them open in the test build. Column-level detail per screen is in the client review PDF (`docs/School_Platform_Client_Review.pdf`), and the visual designs are on the design canvas.
+13 modules hold 65 screens plus the sign-in pages, and all of them open in the test build. Column-level detail per screen is in the client review PDF (`docs/School_Platform_Client_Review.pdf`), and the visual designs are on the design canvas.
 
 | Module | Screens | Key fields and actions |
 | --- | --- | --- |
 | Dashboard | Dashboard | Students vs plan limit, staff, fees collected, overdue, needs-attention list, recent activity |
-| Students | Insights, All Students, Admissions & Enquiries, New Admission, Attendance, Coordinator Desk, Gate Desk, Promote / Transfer, Documents & ID Cards | Admission no. (generated), name, gender, DOB, class-section, house, guardian name/relation/mobile/email, transport band |
+| Students | Insights, All Students, Admissions & Enquiries, New Admission, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Gate Desk, Promote / Transfer, Documents & ID Cards | Admission no. (generated), name, gender, DOB, class-section, house, guardian name/relation/mobile/email, transport band |
 | Staff | Insights, All Staff, Add Staff, Staff Attendance, Leave Requests | Employee code, short code (timetable), department, designation, mobile, email, basic pay |
 | Academics | Classes & Sections, Boards Syllabus & Textbooks, Timetable | Board, chapters, topics; timetable cells "SUBJECT TEACHER", grade-wide blocks, teacher clash check |
 | Exams | Question Papers, Approved Papers, Question Bank, Paper Formats, Co-Scholastic Grades, Assessment Profiles | Format, chapters, difficulty mix, Sets A/B/C; approve and lock; print; A/B/C grades; subject comments and appreciation card |
@@ -70,7 +70,7 @@ Seven roles see different menus. Four plans decide which modules a school has. A
 | Payroll | Run Payroll, Payslips | Basic, HRA, DA, transport, PF, TDS, net; approve and post |
 | Accounts | Bank & Payment Details, Account Statement, Income & Expenses | Holder, bank, branch, account (encrypted), IFSC, UPI ID, QR; ledger with running balance |
 | Operations | Users, Roles & Permissions, Templates, Data Import, Appearance & Branding, Website & Links, Email & SMS Outbox | Permission grid; template versions and defaults; import mapping; theme; menu links |
-| My Space | My Child, Fee Dues & Pay, My Payslips, My Preferences | Parent pay page with online pay or bank transfer + UTR |
+| My Space | My Child, Requests to School, Fee Dues & Pay, My Payslips, My Teaching Performance, My Account, My Preferences | Parent pay page with online pay or bank transfer + UTR |
 | Platform Console | Schools & Plans | Plan per school, module and sub-menu switches, add-ons |
 
 ## Accounts and sign-in
@@ -420,6 +420,26 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 4. A child is released at the gate only for an approved request with the matching 4-digit code; hand-over time and staff are recorded.
 5. Manifest order of precedence: Absent → Not boarding (approved request) → Check (request waiting) → Will board.
 
+**Leave, late arrival, meetings and office requests (release 5)**
+
+1. Leave needs a reason; the class coordinator approves; approved leave marks attendance *Leave* on each school day (not Sundays) and the bus does not wait.
+2. Late arrival is after 08:45 and before 15:00 on one day, confirmed at once; the gate marks *Arrived* and attendance becomes *Late*.
+3. A meeting can be asked only of the child's subject teachers or class coordinators, at most one per teacher per day; only that teacher replies, with a date and time, or declines with a note.
+4. Office requests go to people with the Office Requests screen; any number may be open.
+5. All duplicate checks are enforced by the database, so two taps at the same moment cannot create two requests.
+
+**Mobile app and website links (release 5)**
+
+1. A mobile tab shows only if the school has the app on, the screen is on for the app, and the website rules allow it for that person.
+2. Home and Account can't be switched off; parents can delete their own account in the app or on the web.
+3. Deep links never widen access; signed-in screens are not embedded in other sites.
+
+**Simultaneous use (release 5)**
+
+1. Receipt numbers come from a locked per-school counter; a bank line is receipted once even if two people match it together.
+2. Enrolment locks the grade's sections, so the last seat is never given twice.
+3. The API sets the school per transaction (`app_context`), never per connection.
+
 **SMS and accounts**
 
 1. Nothing is sent by SMS until a provider is live; SMS waits in the queue. Keys are never stored in the app or database.
@@ -460,7 +480,7 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 
 One-time setup: create the dev, preprod and prod environments in GitHub, add required reviewers to preprod and prod, and add the secret `AWS_DEPLOY_ROLE_ARN` (an IAM role for GitHub OIDC).
 
-**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the six migrations, SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
+**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the eleven migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
 **Automated tests (release 5).** See `docs/TEST_REPORT.md`: 31 app tests, 22 SQL checks (007–011), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 4 web end-to-end tests (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
 
@@ -475,7 +495,6 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - [ ] Admin: Website & Links → copy the admission form snippet; open `#/p/apply` signed out and send an enquiry; see it in Admissions
 - [ ] Platform team: Schools & Plans → Mobile app → switch Fees off for Green Valley → Preview the mobile app as the parent; the Fees tab is gone
 - [ ] Phone preview (`#/p/mobile`): school code GVS → each demo account → check the tabs; Account → Delete my account
-
 - [ ] Parent: Pickup & Leave Requests → Approved pickup list → Add a person (with photo); Front Office: Gate Desk → Approve pickup people; the parent can now choose them for a pickup
 - [ ] Transport: Routes, Stops & Timings → edit a stop time; Driver Route Sheets → Route R3 → What the driver sees → Send to all drivers
 - [ ] Platform team: Schools & Plans → Functions → switch Bus attendant boarding tracking off for Green Valley; the Boarded / No-show column disappears
