@@ -96,7 +96,7 @@ test('1. Launches and every tab opens without errors, for every role (pre-launch
 });
 
 test('2. Access rules: each role sees only its own tabs; parents never see staff screens', async () => {
-  const expect = { PARENT: ['Home', 'Requests', 'Fees', 'Account'], TEACHER: ['Home', 'Attendance', 'Approvals', 'Meetings', 'Account'], FRONT_OFFICE: ['Home', 'Gate', 'Account'], TRANSPORT: ['Home', 'Route sheet', 'Account'] };
+  const expect = { PARENT: ['Home', 'Requests', 'Fees', 'My child', 'Account'], TEACHER: ['Home', 'Timetable', 'Attendance', 'Approvals', 'More'], FRONT_OFFICE: ['Home', 'Gate', 'Office', 'Bus changes', 'Account'], TRANSPORT: ['Home', 'Route sheet', 'Manifest', 'Bus changes', 'Account'] };
   for (const [role, want] of Object.entries(expect)) {
     const { ctx, page } = await phone(); await signIn(page, PEOPLE[role]);
     assert.deepEqual((await tabs(page)).map((x) => x.trim()), want, role);

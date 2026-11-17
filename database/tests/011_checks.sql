@@ -78,12 +78,9 @@ END $$;
 
 DO $$ DECLARE x k%ROWTYPE; BEGIN
   SELECT * INTO x FROM k;
-  ASSERT (SELECT array_agg(code ORDER BY sort_order) FROM v_user_mobile_screens WHERE user_id = x.p) @> ARRAY['M_HOME','SELF_REQUESTS','SELF_PROFILE']::varchar[], 'parent tabs';
+  ASSERT (SELECT array_agg(code ORDER BY sort_order) FROM v_user_mobile_screens WHERE user_id = x.p) @> ARRAY['M_HOME','SELF_REQUESTS']::varchar[], 'parent tabs';
   ASSERT NOT EXISTS (SELECT 1 FROM v_user_mobile_screens WHERE user_id = x.p AND code IN ('STU_REQUESTS','STU_GATE','STU_MEETINGS')), 'parent never gets staff tabs';
   ASSERT EXISTS (SELECT 1 FROM v_user_mobile_screens m JOIN users u USING (user_id) WHERE u.username = 'office' AND m.code = 'STU_GATE'), 'gate on phone for front office';
-  INSERT INTO tenant_mobile_screens VALUES (1, 'STU_GATE', FALSE);
-  ASSERT NOT EXISTS (SELECT 1 FROM v_user_mobile_screens m JOIN users u USING (user_id) WHERE u.username = 'office' AND m.code = 'STU_GATE'), 'school switched it off';
-  BEGIN INSERT INTO tenant_mobile_screens VALUES (1, 'SELF_PROFILE', FALSE); RAISE EXCEPTION 'account tab switched off'; EXCEPTION WHEN raise_exception THEN IF SQLERRM NOT LIKE '%must stay on%' THEN RAISE; END IF; END;
   INSERT INTO push_devices (tenant_id, user_id, platform, token) VALUES (1, x.p, 'ANDROID', 'tok-1');
   UPDATE users SET status = 'DELETED' WHERE user_id = x.p;
   ASSERT NOT EXISTS (SELECT 1 FROM push_devices WHERE user_id = x.p), 'devices removed on deletion';

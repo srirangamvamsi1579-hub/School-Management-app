@@ -10,6 +10,8 @@ import { QuestionPapers, ApprovedPapers, QuestionBank, PaperFormats, CoScholasti
 import { CollectFee, FeeRequests, PaymentMatching, Dues, Receipts, FeeStructure, Concessions, ParentFees } from './Fees.jsx';
 import { RunPayroll, Payslips, BankDetails, AccountStatement, Expenses } from './Accounts.jsx';
 import { DataImport } from './Import.jsx';
+import ChannelScreens from './Channels.jsx';
+import HelpGuide from './Guide.jsx';
 import { ParentRequests, CoordinatorDesk, GateDesk, ClassCoordinators, ParentMeetings, OfficeRequests, myChildren } from './Requests.jsx';
 import { BusManifest, TransportChanges, RoutesRiders, DriverRouteSheets } from './Transport.jsx';
 import { MyAccount, SmsGateway, MyPerformance } from './Account.jsx';
@@ -31,7 +33,7 @@ export function Placeholder({ code }) {
 
 export const SCREENS = {
   DASH: Dashboard, STU_INS: Insights, STF_INS: Insights, FEE_INS: Insights,
-  STU_LIST: StudentList, STU_REQUESTS: CoordinatorDesk, STU_MEETINGS: ParentMeetings, STU_OFFICE: OfficeRequests, STU_GATE: GateDesk, ACA_COORD: ClassCoordinators,
+  STU_LIST: StudentList, STU_REQUESTS: CoordinatorDesk, OPS_CHANNELS: ChannelScreens, HELP_GUIDE: HelpGuide, STU_MEETINGS: ParentMeetings, STU_OFFICE: OfficeRequests, STU_GATE: GateDesk, ACA_COORD: ClassCoordinators,
   TRN_MANIFEST: BusManifest, TRN_SHEETS: DriverRouteSheets, TRN_CHANGES: TransportChanges, TRN_ROUTES: RoutesRiders, OPS_SMS: SmsGateway,
   SELF_REQUESTS: ParentRequests, SELF_PROFILE: MyAccount, SELF_MYPERF: MyPerformance, STU_ADMISSIONS: Admissions,
   ANL_HOME: ReportCatalogue, ANL_RANK: TopBottom, ANL_TRANSPORT: TransportReports, ANL_TEACHER: TeacherPerformance, ANL_ADMISSIONS: AdmissionsFunnel, STU_ADMIT: Admission, STU_ATT: Attendance, STU_PROMOTE: Promote, STU_DOCS: Documents,

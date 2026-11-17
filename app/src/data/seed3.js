@@ -10,9 +10,12 @@ const STOPS = {
 
 export function extendSeed3(db) {
   const r = rng(43);
-  db.version = 5;
+  db.version = 6;
   // Mobile app: on for two schools, so the console switch can be tried
-  db.tenants.forEach((t) => { t.mobile = { enabled: ['T1', 'T2'].includes(t.id), screens: {}, appStatus: t.id === 'T1' ? 'Live in test build' : 'Not published' }; });
+  db.tenants.forEach((t) => { t.mobile = { enabled: ['T1', 'T2'].includes(t.id), appStatus: t.id === 'T1' ? 'Live in test build' : 'Not published' };
+    // Web & App Screens: everyone starts on the recommended layout (version 1)
+    t.channels = { published: {}, version: 1, draft: null, status: 'PUBLISHED',
+      history: [{ version: 1, at: new Date(Date.now() - 2 * 864e5).toISOString(), submittedBy: 'Platform team', approvedBy: 'Platform team', note: 'Recommended defaults', layout: {}, changes: [] }] }; });
   const today = new Date().toISOString().slice(0, 10);
   const tomorrow = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
 

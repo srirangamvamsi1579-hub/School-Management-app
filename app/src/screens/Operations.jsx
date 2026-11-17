@@ -5,7 +5,7 @@ import { Page, Card, Field, Input, Select, Status, Modal, Html, Tabs, Switch } f
 import { dmon } from '../lib/format.js';
 import { log, resolveTemplate, renderFor, categoryName, tenantOf } from '../lib/logic.js';
 import { CATEGORIES, FIELDS, SAMPLE, renderTemplate, sanitize } from '../data/templates.js';
-import { MENU, ROLES, ACCESS, LABEL, PLANS, canSee, FUNCTIONS, funcOn, MOBILE_SCREENS, mobileScreenOn } from '../data/menu.js';
+import { MENU, ROLES, ACCESS, LABEL, PLANS, canSee, FUNCTIONS, funcOn, mobileTabs } from '../data/menu.js';
 import { PRESETS, TEMPLATES, contrast, accessible } from '../lib/theme.js';
 import { allRoles, roleName, canManageUsers, accountEmail, createAccount, idType, isGmail, findUser } from '../lib/auth.js';
 import { DESIGNATIONS } from '../data/seed2.js';
@@ -323,13 +323,13 @@ export function Platform() {
             {t.overrides[f.code] !== undefined && <span className="pill info">{t.overrides[f.code] ? 'Switched on' : 'Switched off'}</span>}</div>; })}
           <div className="row end" style={{ marginTop: 10 }}><button className="btn" onClick={() => mutate((d) => { d.tenants.find((y) => y.id === sel).overrides = {}; })}>Back to plan defaults</button></div>
         </Card>
-        <Card title="Mobile app (Play Store & App Store)" right={<Switch on={!!t.mobile?.enabled} label="Mobile app for this school" onClick={() => mutate((d) => { const x = d.tenants.find((y) => y.id === sel); x.mobile = { screens: {}, ...(x.mobile || {}), enabled: !x.mobile?.enabled }; })} />}>
-          <p className="small muted">One app in the stores serves every school; parents and staff enter the school code <b>{t.code}</b> once. Pick the few screens this school offers on phones. A person still sees only what their role, designation and this school's plan allow on the website.</p>
-          {t.mobile?.enabled ? <div className="grid g2">{MOBILE_SCREENS.map(([code, label, , , locked]) => { const on = mobileScreenOn(t, code); const webOn = code === 'M_HOME' || MENU.some((m) => m.items.some((i) => i[0] === code) && (t.overrides[code] ?? rank >= (MENU.find((mm) => mm.items.some((i) => i[0] === code)).items.find((i) => i[0] === code)[2])));
-            return <label key={code} className="row small" style={{ padding: '4px 0' }}><input type="checkbox" checked={on} disabled={!!locked} onChange={() => mutate((d) => { const x = d.tenants.find((y) => y.id === sel); x.mobile.screens = { ...x.mobile.screens, [code]: !on }; })} />
-              <span><b>{label}</b> <span className="muted">· {code === 'M_HOME' ? 'Summary for each role' : LABEL[code]}</span>{locked && code !== 'M_HOME' && <div className="muted">{locked}</div>}{!webOn && <div className="muted">Not in this school's plan — will not show</div>}</span></label>; })}</div>
+        <Card title="Mobile app (Play Store & App Store)" right={<Switch on={!!t.mobile?.enabled} label="Mobile app for this school" onClick={() => mutate((d) => { const x = d.tenants.find((y) => y.id === sel); x.mobile = { ...(x.mobile || {}), enabled: !x.mobile?.enabled }; })} />}>
+          <p className="small muted">One app in the stores serves every school; parents and staff enter the school code <b>{t.code}</b> once. Which screens each role gets on the website and in the app is set in <b>Operations → Web & App Screens</b> (draft → approval → publish).</p>
+          {t.mobile?.enabled ? <div className="small">
+              <div>Layout: version {t.channels?.version || 1}{t.channels?.status === 'PENDING' ? ' · a change is waiting for approval' : t.channels?.draft ? ' · a draft is being edited' : ''}</div>
+              <ul style={{ paddingLeft: 18, margin: '6px 0' }}>{['PARENT', 'TEACHER', 'FRONT_OFFICE', 'TRANSPORT', 'PRINCIPAL'].map((r) => <li key={r}><b>{ROLES.find((x) => x.code === r).name}:</b> {mobileTabs(t, r, { [r]: db.perms?.[r] || ACCESS[r] }).map((x) => x[1]).join(', ')}</li>)}</ul></div>
             : <p className="small">Switched off. People from this school who open the app are told to use the website.</p>}
-          <div className="row" style={{ marginTop: 8 }}><a className="btn sm" href="#/p/mobile" target="_blank" rel="noreferrer">Preview the mobile app</a><span className="small muted">Status: {t.mobile?.appStatus || 'Not published'}</span></div>
+          <div className="row" style={{ marginTop: 8 }}><a className="btn sm" href="#/s/OPS_CHANNELS">Web & App Screens</a><a className="btn sm" href="#/p/mobile" target="_blank" rel="noreferrer">Preview the mobile app</a><span className="small muted">Status: {t.mobile?.appStatus || 'Not published'}</span></div>
         </Card>
       </div>
     </div>

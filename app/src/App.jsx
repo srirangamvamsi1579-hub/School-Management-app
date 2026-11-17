@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from './data/store.js';
-import { MENU, PLANS, ROLES, LABEL, MODULE_OF, canSee } from './data/menu.js';
+import { MENU, PLANS, ROLES, LABEL, MODULE_OF, canSee, onWeb } from './data/menu.js';
 import { applyTheme } from './lib/theme.js';
 import { tenantOf } from './lib/logic.js';
 import { screensFor, roleName } from './lib/auth.js';
@@ -8,6 +8,7 @@ import Login from './screens/Login.jsx';
 import { SCREENS, Placeholder } from './screens/index.js';
 import { PublicEnquiry, PrivacyPolicy, DeleteAccountRequest } from './screens/Public.jsx';
 import MobileApp from './mobile/MobileApp.jsx';
+import HelpGuide, { DemoBar } from './screens/Guide.jsx';
 import { parseHash } from './lib/links.js';
 
 export default function App() {
@@ -26,29 +27,41 @@ export default function App() {
   const me = db.users?.find((u) => u.id === session?.userId) || null;
   const perms = useMemo(() => (role ? { [role]: screensFor(db, me, role) } : null), [db.perms, db.designationAccess, me, role]);
   const visible = useMemo(() => (role ? MENU.map((m) => ({ ...m, items: m.items.filter((i, k, arr) => {
-    if (i[0][0] !== '#') return canSee(i[0], role, rank, tenant.overrides, perms);
+    // Website menu: allowed for the role (plan, add-ons, role, designation, grants) and not set to "app only"
+    const show = (c) => canSee(c, role, rank, tenant.overrides, perms) && onWeb(tenant, role, c);
+    if (i[0][0] !== '#') return show(i[0]);
     const next = arr.slice(k + 1).find((x) => x[0][0] === '#');
     const until = next ? arr.indexOf(next) : arr.length;
-    return arr.slice(k + 1, until).some((x) => canSee(x[0], role, rank, tenant.overrides, perms));
+    return arr.slice(k + 1, until).some((x) => show(x[0]));
   }) })).filter((m) => m.items.some((i) => i[0][0] !== '#')) : []), [role, rank, tenant, perms]);
   const links = db.links.filter((l) => role && l.roles.includes(role));
 
   // Website links (#/s/SCREEN) open that screen after sign-in; the role's access rules still decide
   useEffect(() => { const h = () => { setHash(location.hash); const l = parseHash(location.hash); if (l?.kind === 's') setScreen(l.code); }; window.addEventListener('hashchange', h); return () => window.removeEventListener('hashchange', h); }, []);
+  const [demoTick, setDemoTick] = useState(0);
+  useEffect(() => { const h = () => { setHash(location.hash.startsWith('#/p/') ? '' : location.hash); setDemoTick((n) => n + 1); }; window.addEventListener('demo-go', h); return () => window.removeEventListener('demo-go', h); }, []);
+  // Don't complain about the previous person's screen right after switching user (guided demo, Switch user)
+  const lastUser = useRef(session?.userId);
   useEffect(() => {
+    const switched = lastUser.current !== session?.userId; lastUser.current = session?.userId;
+    // A guided-demo step (or "Try") asked for a screen: open it once it is in this person's menu
+    let want = null; try { want = sessionStorage.getItem('demo-screen'); } catch (e) { /* ignore */ }
+    if (want && visible.some((m) => m.items.some((i) => i[0] === want))) { try { sessionStorage.removeItem('demo-screen'); } catch (e) { /* ignore */ } if (want !== screen) { setScreen(want); return; } }
     const ok = visible.some((m) => m.items.some((i) => i[0] === screen));
     if (!ok && visible.length) {
-      if (screen && LABEL[screen]) notify(`“${LABEL[screen]}” is not available for your account — opened your home screen`);
-      setScreen(visible[0].items.find((i) => i[0][0] !== '#')[0]);
+      if (screen && LABEL[screen] && !switched) notify(`“${LABEL[screen]}” is not available for your account on the website — opened your home screen`);
+      const home = role === 'PLATFORM' ? 'PLT_SCHOOLS' : visible[0].items.find((i) => i[0][0] !== '#')[0];
+      setScreen(home);
     }
-  }, [visible, screen]);
+  }, [visible, screen, demoTick]);
   useEffect(() => { if (session && screen && visible.some((m) => m.items.some((i) => i[0] === screen))) { try { history.replaceState(null, '', '#/s/' + screen); } catch (e) { /* sandboxed frame */ } } }, [screen, session, visible]);
 
   if (link?.kind === 'p' && link.code === 'apply') return <PublicEnquiry embed={link.embed} />;
   if (link?.kind === 'p' && link.code === 'privacy') return <PrivacyPolicy />;
   if (link?.kind === 'p' && link.code === 'delete') return <DeleteAccountRequest />;
   if (link?.kind === 'p' && link.code === 'mobile') return <MobileApp preview={window.innerWidth > 500} />;
-  if (!session) return <Login next={link?.kind === 's' ? LABEL[link.code] : null} />;
+  if (link?.kind === 'p' && link.code === 'guide' && !session) return <HelpGuide />;
+  if (!session) return <><Login next={link?.kind === 's' ? LABEL[link.code] : null} /><DemoBar /></>;
 
   const go = (code) => { setScreen(code); setNavOpen(false); };
   const Screen = SCREENS[screen] || Placeholder;
@@ -100,6 +113,7 @@ export default function App() {
           <button className="btn sm" onClick={logout}>Switch user</button>
         </header>
         <main className="content"><Screen go={go} code={screen} /></main>
+        <DemoBar />
       </div>
       {toast && <div className="toast" role="status">{toast.msg}</div>}
     </div>

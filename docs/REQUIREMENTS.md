@@ -1,6 +1,6 @@
 # School Management Platform — Requirements
 
-Updated 17 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
+Updated 17 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
 
 One platform runs Indian K-12 schools of every size, from under 250 to over 1,000 students. Each school gets only the modules its plan includes, and every person sees only the menus their role allows.
 
@@ -55,7 +55,7 @@ Seven roles see different menus. Four plans decide which modules a school has. A
 
 ## Screens by module
 
-13 modules hold 65 screens plus the sign-in pages, and all of them open in the test build. Column-level detail per screen is in the client review PDF (`docs/School_Platform_Client_Review.pdf`), and the visual designs are on the design canvas.
+14 modules hold 67 screens plus the sign-in pages, and all of them open in the test build. Column-level detail per screen is in the client review PDF (`docs/School_Platform_Client_Review.pdf`), and the visual designs are on the design canvas.
 
 | Module | Screens | Key fields and actions |
 | --- | --- | --- |
@@ -69,9 +69,10 @@ Seven roles see different menus. Four plans decide which modules a school has. A
 | Data Analytics | Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel | Grade, sections, term, subject filters; Power BI pages |
 | Payroll | Run Payroll, Payslips | Basic, HRA, DA, transport, PF, TDS, net; approve and post |
 | Accounts | Bank & Payment Details, Account Statement, Income & Expenses | Holder, bank, branch, account (encrypted), IFSC, UPI ID, QR; ledger with running balance |
-| Operations | Users, Roles & Permissions, Templates, Data Import, Appearance & Branding, Website & Links, Email & SMS Outbox | Permission grid; template versions and defaults; import mapping; theme; menu links |
+| Operations | Users, Roles & Permissions, Templates, Data Import, Web & App Screens, Appearance & Branding, Website & Links, Email & SMS Outbox | Permission grid; template versions and defaults; import mapping; theme; menu links |
 | My Space | My Child, Requests to School, Fee Dues & Pay, My Payslips, My Teaching Performance, My Account, My Preferences | Parent pay page with online pay or bank transfer + UTR |
-| Platform Console | Schools & Plans | Plan per school, module and sub-menu switches, add-ons |
+| Platform Console | Schools & Plans | Plan per school, module and sub-menu switches, add-ons, mobile app on/off |
+| Help | User Guide & Demo | Guided demos, every menu explained, what each role sees |
 
 ## Accounts and sign-in
 
@@ -326,9 +327,56 @@ The full results are in `docs/TEST_REPORT.md`.
   - 4 web end-to-end tests;
   - 12 store checks.
 
+## Added 17 Nov 2026 (release 6)
+
+### Web & App Screens: what shows on the website and in the app, per role
+
+Operations → **Web & App Screens**. For each role, each phone-ready screen is set to **Website + app**, **Website only** or **App only**.
+
+- **Website only:** screens not built for phones (setup, finance, exams and so on) always show on the website only.
+- **Always both:** Account stays on both, because store rules need account deletion inside the app.
+- **Who can open a screen** is still set in Roles & Permissions; this only decides *where* it shows.
+- **Designations and personal grants** follow the role's choice.
+
+| Step | Who | What happens |
+| --- | --- | --- |
+| 1. Edit a draft | Admin or platform team | Changes go into a draft. A side-by-side preview shows the role's website menu and phone tab bar. Nothing changes for users. |
+| 2. Send for approval | The editor | Optional note; the Principal is emailed. The draft is locked; the editor can take it back. |
+| 3. Approve and publish, or send back | Principal or platform team, **not the editor** | Publish creates a new numbered version and emails the Admins. Send back needs a reason. |
+| History | Anyone with the screen | Every version with who sent, who approved and what changed; *Restore as draft* reuses an older version (it goes through approval again). |
+
+The Platform Console's Mobile app card now only switches the app on or off for a school and summarises each role's tabs.
+
+### Recommended phone screens (version 1)
+
+Chosen so most roles fit the 5-tab phone bar; schools change them through the workflow above.
+
+| Role | Phone app tabs | Website only by default (phone-ready) |
+| --- | --- | --- |
+| Parent | Home, Requests, Fees, My child, Account | Timetable |
+| Teacher | Home, Timetable, Attendance, Approvals, Meetings, Account (Meetings and Account under More) | Leave, Payslips |
+| Front Office | Home, Gate, Office, Bus changes, Account | — |
+| Transport team | Home, Route sheet, Manifest, Bus changes, Account | — |
+| Principal | Home, Attendance, Approvals, Meetings, Office, Route sheet, Account | Leave, Manifest, Bus changes, Timetable, Payslips |
+| Accountant | Home, Payslips, Account | — |
+| Admin | Home, Account | All others |
+
+Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, Attendance, Coordinator Desk (Approvals), Parent Meetings, Gate Desk, Office Requests, Driver Route Sheets, Daily Bus Manifest, Pickup & Drop Changes, Leave Requests, My Payslips, My Account.
+
+### User guide and guided demos
+
+- **Help → User Guide & Demo** (every role), also before sign-in at `#/p/guide` and linked from the sign-in page.
+  - **14 guided demos** of the main workflows: leave, early leave with gate code, late arrival, meet a teacher, certificate request, website enquiry to enrolment, fee request to automatic matching, question paper, payroll, new account approval, Web & App Screens change, onboarding a school, a transport day, and results/teacher performance.
+  - Press Start: a bar at the bottom shows each step, signs in as the right demo person and opens the right screen.
+  - Steps show what to do and what you should see.
+- **Every menu explained:** every main menu and sub-menu, with what it is for, how to use it, who can open it, the plan it comes with, and where it shows. Each has a **Try** button.
+- **What each role sees** on the website and in the app, with a sign-in button per role.
+- **Getting started:** links, demo accounts and tips.
+- **Printable manual:** `docs/USER_GUIDE.md`, generated from the same content (`node app/scripts/user-guide.mjs`), and a shareable doc.
+
 ## Database schema summary
 
-PostgreSQL 15+, eleven migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
+PostgreSQL 15+, twelve migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
 
 | File | Adds | Key tables, views and functions |
 | --- | --- | --- |
@@ -342,6 +390,7 @@ PostgreSQL 15+, eleven migration files loaded in order. Every table carries `ten
 | 008_requests_transport_sms.sql | SMS framework, accounts, coordinators, requests, transport | sms_gateway_config (provider, status, endpoint, secret ARN), sms_templates, sms_outbox, sms_delivery_reports; user_children, notification_prefs, account_requests; tenant_settings; class_coordinators; parent_requests, parent_request_history; boarding_log; queue_sms(), close_account(), set_teacher_perf_visibility(), decide_parent_request(), hand_over_student(), trip_manifest(); v_my_teaching_performance; Transport team role |
 | 009_route_sheets_collectors.sql | No cut-offs, approved pickup list, stop timings, route sheets, optional attendant tracking | authorised_collectors, v_approved_collectors, parent_requests.collector_id; pickup_points am/pm times, transport_routes school times and attendant; route_sheet_shares, share_route_sheets(), driver_route_sheet(); FN_ATTENDANT_TRACKING enforced on boarding_log; ROUTE_SHEET SMS template |
 | 010_concurrency_fixes.sql | Fixes from the concurrency tests | doc_counters + next_doc_no() (receipt numbers), apply_payment() re-checks and locks, one_active_request_per_day exclusion constraint (btree_gist), enrol_applicant() seat lock, hot-path indexes, app_context() (transaction-local school) |
+| 012_web_app_screens.sql | Web & App Screens | role_channel_defaults, channel_layouts (DRAFT → PENDING → PUBLISHED, versions, two-person rule), channel_layout_entries; start/submit/approve/send_back_channel_layout(), screen_channel(); v_user_web_screens, v_user_mobile_screens (replaces the 011 per-school switches) |
 | 011_requests_website_mobile.sql | Leave, late arrival, meetings, office requests; mobile app | parent_requests new kinds and fields, request_decider(), decide_parent_request() by coordinator / teacher / office, mark_late_arrival(), trip_manifest() with leave and late drop-ins; STU_MEETINGS, STU_OFFICE menus; mobile_screen_catalog, tenant_mobile_app, tenant_mobile_screens, v_user_mobile_screens, push_devices |
 
 The test build keeps the same entities in browser memory (`app/src/data`) and runs the same rules in JavaScript (`app/src/lib/logic.js`).
@@ -428,6 +477,13 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 4. Office requests go to people with the Office Requests screen; any number may be open.
 5. All duplicate checks are enforced by the database, so two taps at the same moment cannot create two requests.
 
+**Web & App Screens (release 6)**
+
+1. Only phone-ready screens can be put in the app; Account is always on both.
+2. Only an Admin or the platform team edits; only the Principal or the platform team approves; the approver must be a different person; one open draft per school.
+3. A draft or pending change never affects users; publishing creates a new version and keeps the old one.
+4. "App only" removes the screen from that role's website menu; links to it from the website open the person's home screen.
+
 **Mobile app and website links (release 5)**
 
 1. A mobile tab shows only if the school has the app on, the screen is on for the app, and the website rules allow it for that person.
@@ -482,11 +538,14 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 
 **Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the eleven migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
-**Automated tests (release 5).** See `docs/TEST_REPORT.md`: 31 app tests, 22 SQL checks (007–011), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 4 web end-to-end tests (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
+**Automated tests (release 6).** See `docs/TEST_REPORT.md`: 35 app tests, 25 SQL checks (007–012), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 7 web end-to-end tests (including every step of every guided demo) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
 
 **Earlier automated tests.** `npm test` ran 21 checks on the business rules (including the approved pickup list, route sheets, the attendant-tracking switch, requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
 
-**User-testing script.**
+**User-testing script.** Easiest: open the guide (`#/p/guide`) and run the guided demos. Or step by step:
+
+- [ ] Admin: Web & App Screens → Front Office → Gate Desk "App only" → Send for approval; Principal approves; Front Office no longer has Gate Desk on the website, but has it in the phone preview
+- [ ] Anyone: Help → User Guide & Demo → run a guided demo with Start / Next step
 
 - [ ] Parent: Requests to School → Leave for next week; Coordinator (Sonia) approves; Attendance shows *On leave*; the route sheet says *On leave*
 - [ ] Parent: Late arrival today at 10:30; Front Office: Gate Desk → Expected late arrivals → Arrived
@@ -535,7 +594,7 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - ~~Cut-off times~~ — decided: no cut-offs; a route sheet is shared with every driver instead.
 - Should bus attendants use a phone app to mark Boarded / No-show, with GPS for on-time reporting?
 - ~~Pre-approved collectors~~ — decided: yes, approved pickup list per child with photo and ID check.
-- Mobile app: publish one multi-school app under our company (recommended), or branded apps under each school's own developer account?
 - Push notifications: Firebase Cloud Messaging for both platforms, or APNs directly for iOS?
 - Google Play account: organisation (no 14-day closed test) — do we have a D-U-N-S number?
-- Which screens should be on the app by default for new schools (currently Requests, Fees, Attendance, Approvals, Meetings, Gate, Route sheet)?
+- ~~Mobile app: one shared app or branded apps~~ — decided: one shared multi-school app.
+- Confirm the recommended phone screens per role (release 6 table) before the first store submission.

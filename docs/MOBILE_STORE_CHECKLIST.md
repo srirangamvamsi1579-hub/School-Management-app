@@ -14,25 +14,25 @@
 ## What a person sees in the app
 
 They see a tab only when all three of these are true:
-- The school has the mobile app switched on (Platform Console).
-- That screen is switched on for the app. Defaults:
-  - Home, Requests, Fees, Attendance, Approvals, Meetings, Gate, Route sheet and Account are on.
-  - My child, Timetable and Manifest are off.
+- The school has the mobile app switched on (Platform Console → Schools & Plans → Mobile app).
+- Their role's layout puts that screen in the app (**Operations → Web & App Screens**: Website + app / Website only / App only, changed through draft → approval by a different person → publish).
 - The same rules as the website allow it: plan, school add-ons or switch-offs, role, designation, and screens granted by name.
 
-Home and Account cannot be switched off, because account deletion must always be reachable in the app.
+Home and Account are always in the app, because account deletion must stay reachable.
 
-| Role | Tabs by default |
+| Role | Tabs (recommended layout) |
 |---|---|
-| Parent | Home · Requests (leave, late arrival, pickup or drop, early leave, own transport, meet a teacher, office request) · Fees · Account |
-| Teacher | Home · Attendance · Approvals (coordinator desk) · Meetings · Account |
-| Front office (gate) | Home · Gate · Account |
-| Transport team | Home · Route sheet · Account |
-| Principal | Home · Attendance · Approvals · Meetings · Route sheet · Account (the last two are under More) |
-| Admin, Accountant, Platform | Website only |
+| Parent | Home · Requests · Fees · My child · Account |
+| Teacher | Home · Timetable · Attendance · Approvals · More (Meetings, Account) |
+| Front office | Home · Gate · Office · Bus changes · Account |
+| Transport team | Home · Route sheet · Manifest · Bus changes · Account |
+| Principal | Home · Attendance · Approvals · Meetings · More (Office, Route sheet, Account) |
+| Accountant | Home · Payslips · Account |
+| Admin | Home · Account (everything else on the website) |
+| Platform team | Website only |
 
 Data rules are enforced in the database:
-- `v_user_mobile_screens` lists each person's tabs.
+- `screen_channel()` and `v_user_mobile_screens` give each person's tabs; `v_user_web_screens` their website menu.
 - Row-level security keeps each school's data separate.
 
 ## Builds

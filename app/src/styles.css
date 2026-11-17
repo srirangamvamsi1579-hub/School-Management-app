@@ -2,7 +2,7 @@
   --brand: #2147C7; --brand-ink: #fff; --brand-soft: #EAF0FF;
   --bg: #F5F6F8; --surface: #FFFFFF; --ink: #14171C; --ink-2: #4A5160; --ink-3: #6B7280; --line: #E3E6EB;
   --side-bg: #111827; --side-ink: #D1D5DB; --side-active: #1F2937; --side-head: #9CA3AF;
-  --ok: #157F3B; --ok-bg: #E7F6EC; --warn: #9A5B00; --warn-bg: #FFF4DE; --bad: #B42318; --bad-bg: #FDECEA; --info-bg: #EAF0FF;
+  --ok: #157F3B; --ok-bg: #E7F6EC; --warn: #7A4700; --warn-bg: #FFF4DE; --bad: #B42318; --bad-bg: #FDECEA; --info-bg: #EAF0FF;
   --radius: 10px; --pad: 14px; --font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 [data-mode="DARK"] { --bg: #0F1217; --surface: #171B22; --ink: #EEF0F3; --ink-2: #C3C8D1; --ink-3: #9AA1AD; --line: #2A303A; --brand-soft: #1C2540;
@@ -185,3 +185,20 @@ table.t tr:hover td { background: color-mix(in srgb, var(--brand-soft) 45%, tran
 .mobile .switch { width: 66px; height: 44px; border: 10px solid transparent; background-clip: padding-box; }
 .mobile .switch::after { top: 13px; left: 13px; }
 .mobile .switch.on::after { left: 29px; }
+
+/* Web & App Screens */
+.seg { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.steps { display: flex; gap: 8px; list-style: none; padding: 0; margin: 0 0 10px; flex-wrap: wrap; }
+.steps li { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
+.steps li.on { border-color: var(--brand); color: var(--brand); font-weight: 700; }
+.steps li.done { background: var(--ok-bg, #E7F6EC); color: var(--ink); }
+.phone-mini { display: flex; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin: 6px 0; background: var(--surface); }
+.phone-mini .m-tab { min-height: 52px; cursor: default; }
+/* Guided demo bar */
+.demo-bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: 14px; z-index: 40; width: min(760px, calc(100vw - 24px)); background: var(--surface); border: 2px solid var(--brand); border-radius: 14px; box-shadow: 0 12px 30px rgba(0,0,0,.18); padding: 12px 14px; }
+.demo-bar .row { gap: 8px; }
+.guide-step { border-left: 3px solid var(--line); padding: 6px 0 6px 12px; margin: 6px 0; }
+.guide-step.on { border-color: var(--brand); background: var(--bg); }
+.kbd { font-family: ui-monospace, monospace; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; font-size: 12px; }
+.demo-on .toast { bottom: 200px; }
+.demo-on .content, .demo-on .login { padding-bottom: 210px; }

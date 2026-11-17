@@ -46,27 +46,28 @@ export const MENU = [
     ['ACC_BANK', 'Bank & Payment Details', 1], ['ACC_STMT', 'Account Statement', 3], ['ACC_EXP', 'Income & Expenses', 3]] },
   { code: 'OPERATIONS', label: 'Operations', icon: 'shield', min: 1, items: [
     ['OPS_USERS', 'Users', 1], ['OPS_ROLES', 'Roles & Permissions', 1], ['OPS_TEMPLATES', 'Templates', 1], ['OPS_IMPORT', 'Data Import', 1],
-    ['OPS_APPEARANCE', 'Appearance & Branding', 1], ['OPS_WEBSITE', 'Website & Links', 1], ['OPS_OUTBOX', 'Email & SMS Outbox', 1], ['OPS_SMS', 'SMS Gateway', 1]] },
+    ['OPS_CHANNELS', 'Web & App Screens', 1], ['OPS_APPEARANCE', 'Appearance & Branding', 1], ['OPS_WEBSITE', 'Website & Links', 1], ['OPS_OUTBOX', 'Email & SMS Outbox', 1], ['OPS_SMS', 'SMS Gateway', 1]] },
   { code: 'SELF', label: 'My Space', icon: 'user', min: 1, items: [
     ['SELF_CHILD', 'My Child', 1], ['SELF_REQUESTS', 'Requests to School', 1], ['SELF_FEES', 'Fee Dues & Pay', 1], ['SELF_PAYSLIP', 'My Payslips', 2], ['SELF_MYPERF', 'My Teaching Performance', 2], ['SELF_PROFILE', 'My Account', 1], ['SELF_PREFS', 'My Preferences', 1]] },
-  { code: 'PLATFORM', label: 'Platform Console', icon: 'cloud', min: 1, items: [['PLT_SCHOOLS', 'Schools & Plans', 1]] }
+  { code: 'PLATFORM', label: 'Platform Console', icon: 'cloud', min: 1, items: [['PLT_SCHOOLS', 'Schools & Plans', 1]] },
+  { code: 'HELP', label: 'Help', icon: 'book', min: 1, items: [['HELP_GUIDE', 'User Guide & Demo', 1]] }
 ];
 
 const ALL = MENU.flatMap((m) => m.items.map((i) => i[0])).filter((c) => c[0] !== '#');
 
 export const ACCESS = {
   ADMIN: ALL.filter((c) => !['SELF_CHILD', 'SELF_FEES', 'SELF_REQUESTS', 'SELF_MYPERF', 'PLT_SCHOOLS'].includes(c)),
-  PRINCIPAL: ['DASH', 'STU_INS', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'STU_OFFICE', 'ACA_COORD', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'SELF_PROFILE', 'ANL_HOME', 'ANL_RANK', 'ANL_TRANSPORT', 'ANL_TEACHER', 'ANL_ADMISSIONS', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE',
+  PRINCIPAL: ['DASH', 'OPS_CHANNELS', 'HELP_GUIDE', 'STU_INS', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'STU_OFFICE', 'ACA_COORD', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'SELF_PROFILE', 'ANL_HOME', 'ANL_RANK', 'ANL_TRANSPORT', 'ANL_TEACHER', 'ANL_ADMISSIONS', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE',
     'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_FORMATS', 'EXM_COSCH', 'EXM_PROFILE', 'FEE_INS', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_STRUCT', 'FEE_CONC',
     'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
-  ACCOUNTANT: ['DASH', 'STU_LIST', 'STF_LIST', 'SELF_PROFILE', 'ANL_HOME', 'ANL_TRANSPORT', 'FEE_INS', 'FEE_COLLECT', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_RECEIPTS', 'FEE_STRUCT', 'FEE_CONC',
+  ACCOUNTANT: ['HELP_GUIDE', 'DASH', 'STU_LIST', 'STF_LIST', 'SELF_PROFILE', 'ANL_HOME', 'ANL_TRANSPORT', 'FEE_INS', 'FEE_COLLECT', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_RECEIPTS', 'FEE_STRUCT', 'FEE_CONC',
     'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'OPS_OUTBOX', 'SELF_PAYSLIP', 'SELF_PREFS'],
-  TEACHER: ['DASH', 'STU_LIST', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'ANL_RANK', 'SELF_PROFILE', 'STF_LEAVE', 'ACA_SYLLABUS', 'ACA_TIMETABLE', 'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_COSCH', 'EXM_PROFILE',
+  TEACHER: ['HELP_GUIDE', 'DASH', 'STU_LIST', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'ANL_RANK', 'SELF_PROFILE', 'STF_LEAVE', 'ACA_SYLLABUS', 'ACA_TIMETABLE', 'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_COSCH', 'EXM_PROFILE',
     'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
-  FRONT_OFFICE: ['DASH', 'STU_LIST', 'STU_GATE', 'STU_OFFICE', 'TRN_CHANGES', 'SELF_PROFILE', 'STU_ADMISSIONS', 'STU_ADMIT', 'ANL_ADMISSIONS', 'STU_DOCS', 'FEE_COLLECT', 'FEE_DUES', 'FEE_RECEIPTS', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
-  PARENT: ['DASH', 'ACA_TIMETABLE', 'SELF_CHILD', 'SELF_REQUESTS', 'SELF_FEES', 'SELF_PROFILE', 'SELF_PREFS'],
-  TRANSPORT: ['TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'ANL_TRANSPORT', 'SELF_PROFILE', 'SELF_PREFS'],
-  PLATFORM: ['PLT_SCHOOLS']
+  FRONT_OFFICE: ['HELP_GUIDE', 'DASH', 'STU_LIST', 'STU_GATE', 'STU_OFFICE', 'TRN_CHANGES', 'SELF_PROFILE', 'STU_ADMISSIONS', 'STU_ADMIT', 'ANL_ADMISSIONS', 'STU_DOCS', 'FEE_COLLECT', 'FEE_DUES', 'FEE_RECEIPTS', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
+  PARENT: ['HELP_GUIDE', 'DASH', 'ACA_TIMETABLE', 'SELF_CHILD', 'SELF_REQUESTS', 'SELF_FEES', 'SELF_PROFILE', 'SELF_PREFS'],
+  TRANSPORT: ['HELP_GUIDE', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'ANL_TRANSPORT', 'SELF_PROFILE', 'SELF_PREFS'],
+  PLATFORM: ['PLT_SCHOOLS', 'OPS_CHANNELS', 'HELP_GUIDE']
 };
 
 export const MIN_RANK = Object.fromEntries(MENU.flatMap((m) => m.items.filter((i) => i[0][0] !== '#').map((i) => [i[0], Math.max(i[2], m.min)])));
@@ -102,35 +103,53 @@ export function funcOn(tenant, code) {
   return !!f && f.minRank !== null && rank >= f.minRank;
 }
 
-// ---------- Mobile app (Play Store / App Store) ----------
-// A small set of screens, switched per school in the Platform Console. A person sees a tab only if
-// (1) the school has the mobile app on, (2) that screen is switched on for the mobile app, and
-// (3) the same web access rules allow it (plan, add-ons, role, designation, personal grants).
-// [code, tab label, icon, on by default, locked]
-export const MOBILE_SCREENS = [
-  ['M_HOME', 'Home', 'home', true, 'Always on'],
-  ['SELF_REQUESTS', 'Requests', 'send', true],
-  ['SELF_FEES', 'Fees', 'receipt', true],
-  ['SELF_CHILD', 'My child', 'user', false],
-  ['ACA_TIMETABLE', 'Timetable', 'calendar', false],
-  ['STU_ATT', 'Attendance', 'check', true],
-  ['STU_REQUESTS', 'Approvals', 'inbox', true],
-  ['STU_MEETINGS', 'Meetings', 'chat', true],
-  ['STU_GATE', 'Gate', 'shield', true],
-  ['TRN_SHEETS', 'Route sheet', 'bus', true],
-  ['TRN_MANIFEST', 'Manifest', 'list', false],
-  ['SELF_PROFILE', 'Account', 'user', true, 'Always on — store rules need account deletion inside the app']
-];
-export const mobileScreenOn = (tenant, code) => {
-  const m = MOBILE_SCREENS.find((x) => x[0] === code);
-  if (!m) return false;
-  if (m[4]) return true;
-  const v = tenant.mobile?.screens?.[code];
-  return v === undefined ? m[3] : !!v;
+// ---------- Website or mobile app, per role (Operations → Web & App Screens) ----------
+// Each school decides, for each role, whether a screen shows on the WEBSITE, in the MOBILE APP, or BOTH.
+// Only phone-ready screens (built and store-tested for phones) can go in the app; every other screen is website only.
+// Access itself is still decided by the plan, role, designation and personal grants — this only picks where it shows.
+// [code]: [tab label, icon]
+export const PHONE_READY = {
+  SELF_REQUESTS: ['Requests', 'send'], SELF_FEES: ['Fees', 'receipt'], SELF_CHILD: ['My child', 'user'], ACA_TIMETABLE: ['Timetable', 'calendar'],
+  STU_ATT: ['Attendance', 'check'], STU_REQUESTS: ['Approvals', 'inbox'], STU_MEETINGS: ['Meetings', 'chat'], STU_GATE: ['Gate', 'shield'],
+  STU_OFFICE: ['Office', 'inbox'], TRN_SHEETS: ['Route sheet', 'bus'], TRN_MANIFEST: ['Manifest', 'list'], TRN_CHANGES: ['Bus changes', 'bus'],
+  STF_LEAVE: ['Leave', 'calendar'], SELF_PAYSLIP: ['Payslips', 'receipt'], SELF_PROFILE: ['Account', 'settings']
 };
-// Tabs for this person in the mobile app; the web rules are applied by canSee with their effective permissions
-export function mobileTabs(tenant, role, perms) {
+export const CHANNELS = { BOTH: 'Website + app', WEB: 'Website only', APP: 'App only' };
+// Recommended defaults (17 Nov 2026), chosen so most roles fit the 5-tab phone bar. Anything not listed shows on the website only.
+export const RECOMMENDED = {
+  PARENT: { SELF_REQUESTS: 'BOTH', SELF_FEES: 'BOTH', SELF_CHILD: 'BOTH', SELF_PROFILE: 'BOTH' },
+  TEACHER: { STU_ATT: 'BOTH', STU_REQUESTS: 'BOTH', STU_MEETINGS: 'BOTH', ACA_TIMETABLE: 'BOTH', SELF_PROFILE: 'BOTH' },
+  FRONT_OFFICE: { STU_GATE: 'BOTH', STU_OFFICE: 'BOTH', TRN_CHANGES: 'BOTH', SELF_PROFILE: 'BOTH' },
+  TRANSPORT: { TRN_SHEETS: 'BOTH', TRN_MANIFEST: 'BOTH', TRN_CHANGES: 'BOTH', SELF_PROFILE: 'BOTH' },
+  PRINCIPAL: { STU_REQUESTS: 'BOTH', STU_MEETINGS: 'BOTH', STU_OFFICE: 'BOTH', STU_ATT: 'BOTH', TRN_SHEETS: 'BOTH', SELF_PROFILE: 'BOTH' },
+  ACCOUNTANT: { SELF_PAYSLIP: 'BOTH', SELF_PROFILE: 'BOTH' },
+  ADMIN: { SELF_PROFILE: 'BOTH' }
+};
+// Account must stay reachable in the app (store rules: account deletion) and on the website
+export const LOCKED_BOTH = ['SELF_PROFILE'];
+
+// Where a screen shows for a role, from a layout ({ ROLE: { CODE: channel } }); unlisted → recommended → website
+export function channelIn(layout, role, code) {
+  if (!PHONE_READY[code]) return 'WEB';
+  if (LOCKED_BOTH.includes(code)) return 'BOTH';
+  return layout?.[role]?.[code] || RECOMMENDED[role]?.[code] || 'WEB';
+}
+export const publishedLayout = (tenant) => tenant.channels?.published || {};
+export const onWeb = (tenant, role, code) => role === 'PLATFORM' || channelIn(publishedLayout(tenant), role, code) !== 'APP';
+export const onApp = (tenant, role, code) => channelIn(publishedLayout(tenant), role, code) !== 'WEB';
+
+// Tabs for this person in the mobile app: the school has the app on, the screen is set to the app for their role,
+// and the same web access rules allow it (plan, add-ons, role, designation, personal grants)
+export function mobileTabs(tenant, role, perms, layout = publishedLayout(tenant)) {
   if (!tenant.mobile?.enabled || role === 'PLATFORM') return [];
   const rank = PLANS.find((p) => p.code === tenant.plan).rank;
-  return MOBILE_SCREENS.filter(([code]) => mobileScreenOn(tenant, code) && (code === 'M_HOME' || canSee(code, role, rank, tenant.overrides, perms)));
+  const codes = Object.keys(PHONE_READY).filter((code) => channelIn(layout, role, code) !== 'WEB' && canSee(code, role, rank, tenant.overrides, perms));
+  // Account always last
+  codes.sort((a, b) => (a === 'SELF_PROFILE') - (b === 'SELF_PROFILE'));
+  return [['M_HOME', 'Home', 'home'], ...codes.map((c) => [c, ...PHONE_READY[c]])];
+}
+// Website menu codes for this person (same rules, minus screens set to app only)
+export function webScreens(tenant, role, perms, layout = publishedLayout(tenant)) {
+  const rank = PLANS.find((p) => p.code === tenant.plan).rank;
+  return MENU.flatMap((m) => m.items.map((i) => i[0])).filter((c) => c[0] !== '#' && canSee(c, role, rank, tenant.overrides, perms) && (role === 'PLATFORM' || channelIn(layout, role, c) !== 'APP'));
 }

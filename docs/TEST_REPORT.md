@@ -1,16 +1,16 @@
-# Test report — Release 5 (regression, concurrency, mobile store readiness)
+# Test report — Releases 5 and 6 (regression, concurrency, mobile store readiness)
 
-Date: 17 Nov 2026 · Build: `main` after release 5
+Date: 17 Nov 2026 · Build: `main` after release 6 (Web & App Screens, user guide)
 
 ## Summary
 
 | Suite | What it covers | Result |
 |---|---|---|
-| App unit tests (`app/tests/*.test.js`) | Fees, matching, roles, admissions, analytics, pickups, route sheets, SMS, new requests, mobile access rules, website links | **31 / 31 pass** |
-| Database checks (`database/tests/007–011_checks.sql`) | OTP, roles, admissions, analytics, SMS, accounts, visibility, requests, manifest, collectors, timings, route sheets, attendant switch, leave, late arrival, meetings, office requests, mobile screens | **22 / 22 pass** |
+| App unit tests (`app/tests/*.test.js`) | Fees, matching, roles, admissions, analytics, pickups, route sheets, SMS, new requests, mobile access rules, website links | **35 / 35 pass** |
+| Database checks (`database/tests/007–011_checks.sql`) | OTP, roles, admissions, analytics, SMS, accounts, visibility, requests, manifest, collectors, timings, route sheets, attendant switch, leave, late arrival, meetings, office requests, mobile screens | **25 / 25 pass** (012 adds defaults, workflow, channels) |
 | Concurrency + load (`database/tests/concurrency`) | Many people acting at the same moment against PostgreSQL with row-level security | **10 / 10 pass** (5 failed before the 010 fixes) |
-| Web end-to-end (`app/tests/e2e`) | 10 demo sign-ins open every screen; deep links; public admission form; two browser tabs at once | **4 / 4 pass** |
-| Mobile store readiness (`app/tests/store`) | Checks modelled on Google Play's pre-launch report and Apple App Review | **12 / 12 pass** (8 problems found and fixed on the way) |
+| Web end-to-end (`app/tests/e2e`) | 10 demo sign-ins open every screen; deep links; public admission form; two browser tabs at once | **7 / 7 pass** (adds: Web & App Screens approval in the browser; every step of all 14 guided demos) |
+| Mobile store readiness (`app/tests/store`) | Checks modelled on Google Play's pre-launch report and Apple App Review | **12 / 12 pass** (8 problems found and fixed in release 5; 3 more in release 6: an unlabeled day picker, a faded manifest row and an unfocusable timetable scroll area) |
 
 Everything runs in GitHub Actions: `.github/workflows/tests.yml` on every push, and `.github/workflows/mobile.yml` before any store build.
 

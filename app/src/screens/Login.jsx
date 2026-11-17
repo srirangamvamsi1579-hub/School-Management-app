@@ -28,7 +28,7 @@ export default function Login({ next = null }) {
         <div className="row" style={{ gap: 14, marginBottom: 6 }}>
           <div className="logo" style={{ width: 46, height: 46, fontSize: 20 }}>{t.name[0]}</div>
           <div><h1 style={{ margin: 0 }}>{t.name}</h1><div className="muted small">{t.subdomain}.yourapp.com · each school (client) has its own sign-in page and accounts</div></div>
-          <span className="sp" /><a className="small" href="#/p/apply">Admission enquiry →</a>
+          <span className="sp" /><a className="small" href="#/p/guide">User guide & demo</a><a className="small" href="#/p/apply" style={{ marginLeft: 12 }}>Admission enquiry →</a>
         </div>
         <div className="row small" style={{ margin: '8px 0 14px' }}>
           <span className="muted">Test build — pretend this page is for:</span>

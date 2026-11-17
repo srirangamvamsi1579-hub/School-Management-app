@@ -35,7 +35,7 @@ export function Timetable() {
 
   return (
     <Page title="Timetable" sub="Grade IX — built from the school's own daily sheet. Grade-wide blocks (electives, PT, assemblies) span all sections."
-      actions={<><Select value={day} onChange={(e) => setDay(e.target.value)} options={[['MON', 'Monday'], ['TUE', 'Tuesday'], ['WED', 'Wednesday'], ['THU', 'Thursday'], ['FRI', 'Friday']]} /><button className="btn" onClick={() => printPage()}>Print</button></>}>
+      actions={<><Select aria-label="Day" value={day} onChange={(e) => setDay(e.target.value)} options={[['MON', 'Monday'], ['TUE', 'Tuesday'], ['WED', 'Wednesday'], ['THU', 'Thursday'], ['FRI', 'Friday']]} /><button className="btn" onClick={() => printPage()}>Print</button></>}>
       {day !== 'FRI' && <div className="note" style={{ marginBottom: 12 }}>Only Friday is filled in for the test. Other days are entered the same way.</div>}
       {mine && <div className="note" style={{ marginBottom: 12 }}>Your periods (SON) are highlighted.</div>}
       <Card>

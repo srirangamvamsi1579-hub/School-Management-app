@@ -90,3 +90,80 @@ test('two tabs at once: changes from one tab appear in the other and neither ove
   assert.equal(await a.locator('table tbody tr').count(), before + 2, 'first tab sees the second tab’s request');
   await ctx.close();
 });
+
+test('web & app screens: admin drafts, principal approves, menus change on the website', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+  const { page, errors } = await open(ctx);
+  await demo(page, 'Admin');
+  await page.locator('nav.side button.item', { hasText: 'Web & App Screens' }).click();
+  await page.getByRole('button', { name: 'Front Office', exact: true }).click();
+  await page.getByRole('radiogroup', { name: 'Gate Desk: where it shows' }).getByRole('radio', { name: 'App only' }).click();
+  await page.getByText('Draft — not live yet').waitFor();
+  await page.getByRole('button', { name: /Send for approval \(1\)/ }).click();
+  await page.locator('.modal input').fill('Gate on the tablet');
+  await page.locator('.modal').getByRole('button', { name: 'Send' }).click();
+  await page.getByText('Waiting for approval').first().waitFor();
+  assert.ok(!(await page.getByRole('button', { name: 'Approve and publish' }).count()), 'the editor cannot approve');
+  // Principal approves
+  await page.evaluate(() => { sessionStorage.clear(); location.hash = '#/'; location.reload(); });
+  await demo(page, 'Principal');
+  await page.locator('nav.side button.item', { hasText: 'Web & App Screens' }).click();
+  await page.getByRole('button', { name: 'Approve and publish' }).click();
+  await page.locator('.modal').getByRole('button', { name: 'Publish' }).click();
+  await page.locator('.toast', { hasText: 'Published as version 2' }).waitFor();
+  // Front Office no longer has the Gate Desk on the website
+  await page.evaluate(() => { sessionStorage.clear(); location.hash = '#/'; location.reload(); });
+  await demo(page, 'Front Office');
+  const items = await page.locator('nav.side button.item').allInnerTexts();
+  assert.ok(!items.includes('Gate Desk'), 'gate desk is app only now');
+  assert.ok(items.includes('Office Requests'));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('guided demo walks through a workflow, switching people and screens', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+  const { page, errors } = await open(ctx, '#/p/guide');
+  await page.getByRole('heading', { name: /User guide/ }).waitFor();
+  await page.getByRole('button', { name: 'Start' }).first().click();          // Parent leave request workflow
+  const bar = page.getByRole('region', { name: 'Guided demo' });
+  await bar.getByText('step 1 of').waitFor();
+  await page.getByRole('heading', { name: 'Requests to school' }).waitFor();
+  await bar.getByRole('button', { name: 'Next step ›' }).click();
+  await page.getByRole('heading', { name: /Coordinator/ }).waitFor();
+  await bar.getByRole('button', { name: 'Next step ›' }).click();
+  await bar.getByRole('button', { name: 'Next step ›' }).click();
+  await page.getByRole('heading', { name: /route sheets/i }).waitFor();
+  await bar.getByRole('button', { name: 'Next step ›' }).click();
+  await bar.getByRole('button', { name: 'Finish ✓' }).click();
+  await page.getByRole('heading', { name: 'User Guide & Demo' }).waitFor();
+  assert.equal(await bar.count(), 0);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('every step of every guided demo opens the right screen for the right person', async () => {
+  const { WORKFLOWS } = await import('../../src/data/guide.js');
+  const { LABEL, MODULE_OF } = await import('../../src/data/menu.js');
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+  const { page, errors } = await open(ctx, '#/p/guide');
+  ctx.on('page', (p) => p.close());                                  // public steps open a new tab; not needed here
+  const bar = page.getByRole('region', { name: 'Guided demo' });
+  const bad = [];
+  for (const [w, wf] of WORKFLOWS.entries()) {
+    if (w > 0) { await page.locator('nav.side button.item', { hasText: 'User Guide & Demo' }).click(); await page.getByRole('heading', { name: 'User Guide & Demo' }).waitFor(); }
+    await page.getByRole('button', { name: 'Start' }).nth(w).click();
+    for (const [i, s] of wf.steps.entries()) {
+      if (i > 0) await bar.getByRole('button', { name: 'Next step ›' }).click();
+      await bar.getByText(`step ${i + 1} of`).waitFor();
+      if (s.public || s.needs) continue;            // public pages open in a new tab; 'needs' steps depend on an earlier action
+      try { await page.locator('.crumbs', { hasText: `${MODULE_OF[s.screen]} / ${LABEL[s.screen]}` }).waitFor({ timeout: 4000 }); }
+      catch (e) { bad.push(`${wf.id} step ${i + 1}: expected ${LABEL[s.screen]}`); }
+      if (await page.locator('.toast', { hasText: 'not available' }).count()) bad.push(`${wf.id} step ${i + 1}: not available toast`);
+    }
+    await bar.getByRole('button', { name: 'Finish ✓' }).click();
+  }
+  assert.deepEqual(bad, []);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

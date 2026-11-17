@@ -3,7 +3,7 @@
 // teacher only sees what their role and designation allow.
 import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '../data/store.js';
-import { MOBILE_SCREENS, mobileTabs, PLANS, LABEL } from '../data/menu.js';
+import { mobileTabs, PLANS, LABEL } from '../data/menu.js';
 import { tenantOf, fullName, classLabel, openInvoices, balance } from '../lib/logic.js';
 import { screensFor, signIn, roleName } from '../lib/auth.js';
 import { applyTheme } from '../lib/theme.js';
@@ -15,7 +15,7 @@ import { PrivacyPolicy, DeleteAccountRequest } from '../screens/Public.jsx';
 import { isNative, platform, enablePush, getPref, setPref, onBack, exitApp, onNetwork } from './native.js';
 
 const ICON = { home: 'M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z', send: 'M3 12l18-8-8 18-2-8z', receipt: 'M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6', user: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-8 9c0-4 4-6 8-6s8 2 8 6',
-  calendar: 'M4 6h16v15H4zM4 10h16M8 3v4M16 3v4', check: 'M4 12l5 5L20 6', inbox: 'M4 4h16v16H4zM4 13h5l1 3h4l1-3h5', chat: 'M4 5h16v11H9l-5 4z', shield: 'M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z', bus: 'M5 4h14v12H5zM5 11h14M8 19v-3M16 19v-3', list: 'M8 6h12M8 12h12M8 18h12M4 6h0M4 12h0M4 18h0', more: 'M5 12h.01M12 12h.01M19 12h.01' };
+  calendar: 'M4 6h16v15H4zM4 10h16M8 3v4M16 3v4', check: 'M4 12l5 5L20 6', inbox: 'M4 4h16v16H4zM4 13h5l1 3h4l1-3h5', chat: 'M4 5h16v11H9l-5 4z', shield: 'M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z', bus: 'M5 4h14v12H5zM5 11h14M8 19v-3M16 19v-3', list: 'M8 6h12M8 12h12M8 18h12M4 6h0M4 12h0M4 18h0', more: 'M5 12h.01M12 12h.01M19 12h.01', settings: 'M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z' };
 export const Icon = ({ name, size = 22 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={ICON[name] || ICON.list} /></svg>;
 
 export default function MobileApp({ preview = false }) {
@@ -31,7 +31,8 @@ export default function MobileApp({ preview = false }) {
   useEffect(() => onNetwork(setOnline), []);
   useEffect(() => { applyTheme(db.theme); }, [db.theme]);
   // Anything that scrolls sideways (wide tables) must be reachable by keyboard and screen readers
-  useEffect(() => { const fix = () => document.querySelectorAll('.mobile .tw, .mobile .card').forEach((el) => {
+  useEffect(() => { const fix = () => document.querySelectorAll('.mobile .tw, .mobile .card, .mobile .m-body div').forEach((el) => {
+      if (!el.matches('.tw, .card') && !/(auto|scroll)/.test(getComputedStyle(el).overflowX)) return;
       if (el.scrollWidth > el.clientWidth + 1) { if (!el.hasAttribute('tabindex')) { el.tabIndex = 0; el.setAttribute('role', 'region'); el.setAttribute('aria-label', (el.querySelector('h2')?.innerText || 'Table') + ' — scroll sideways'); } } });
     fix(); const mo = new MutationObserver(fix); mo.observe(document.body, { childList: true, subtree: true }); return () => mo.disconnect(); }, []);
   useEffect(() => onBack(() => { if (more) setMore(false); else if (tab !== 'M_HOME') setTab('M_HOME'); else exitApp(); }), [tab, more]);
