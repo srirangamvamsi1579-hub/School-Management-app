@@ -10,20 +10,45 @@ export const REQ_TYPES = {
   OWN_TRANSPORT: { name: 'Coming and going by own transport', trips: ['AM', 'PM'], short: 'Own transport' }
 };
 export const DISMISSAL = '15:00';
-export const CUTOFF = { AM: '20:00', PM: '12:00' };   // AM: by 8 pm the evening before; PM: by noon the same day
+// No cut-off times: bus changes are confirmed whenever they are sent and reach the driver's route sheet at once.
+// Early leave still needs a class coordinator, because a child leaves during the school day.
 
 const today = () => new Date().toISOString().slice(0, 10);
 const now = () => new Date().toTimeString().slice(0, 5);
-const addDays = (iso, n) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 export const covers = (r, date) => r.dateFrom <= date && date <= (r.dateTo || r.dateFrom);
 export const coordinatorsOf = (db, sectionId) => db.coordinators[sectionId] || {};
 export const staffName = (db, id) => { const s = db.staff.find((x) => x.id === id); return s ? `${s.first} ${s.last}` : '—'; };
 export const sectionsCoordinatedBy = (db, staffId) => Object.entries(db.coordinators).filter(([, c]) => c.primary === staffId || c.secondary === staffId).map(([s]) => s);
 
-// Is this request inside the cut-off for every trip it affects? Late ones need the coordinator.
-export function lateFor(r, at = new Date()) {
-  const d = at.toISOString().slice(0, 10), t = at.toTimeString().slice(0, 5);
-  return REQ_TYPES[r.type].trips.some((trip) => (trip === 'AM' ? (r.dateFrom === d || (r.dateFrom === addDays(d, 1) && t > CUTOFF.AM)) : r.dateFrom === d && t > CUTOFF.PM));
+export const needsCoordinator = (type) => type === 'EARLY_LEAVE';
+
+// ---------- Authorised (pre-approved) people who may collect a child ----------
+// The guardians on the child's record are always authorised. Others are added by the parent and verified by the school.
+export function collectorsFor(db, studentId, { verifiedOnly = false } = {}) {
+  const s = db.students.find((x) => x.id === studentId);
+  const g = guardianOf(db, s);
+  const own = g ? [{ id: 'G-' + g.id, studentId, name: g.name, relation: g.relation, mobile: g.mobile, status: 'VERIFIED', isGuardian: true }] : [];
+  const today = new Date().toISOString().slice(0, 10);
+  return own.concat((db.collectors || []).filter((c) => c.studentId === studentId && c.status !== 'REVOKED' && (!c.validUntil || c.validUntil >= today) && (!verifiedOnly || c.status === 'VERIFIED')));
+}
+export function addCollector(db, f, by) {
+  if (!f.name?.trim()) throw new Error('Name is required');
+  if (!/^[6-9]\d{9}$/.test(f.mobile || '')) throw new Error('10-digit mobile is required');
+  if (!f.photo) throw new Error('A photo is required so the gate can recognise them');
+  if (!/^\d{4}$/.test(f.idLast4 || '')) throw new Error('Last 4 digits of their photo ID are required');
+  if (collectorsFor(db, f.studentId).some((c) => c.mobile === f.mobile)) throw new Error('This person is already on the list');
+  db.seq.collector = (db.seq.collector || 0) + 1;
+  const c = { id: 'AC' + db.seq.collector, studentId: f.studentId, name: f.name.trim(), relation: f.relation, mobile: f.mobile, photo: f.photo, idType: f.idType, idLast4: f.idLast4,
+    validUntil: f.validUntil || '', status: 'PENDING', addedBy: by, addedAt: new Date().toISOString() };
+  db.collectors.push(c);
+  log(db, by, 'Authorised person added', `${c.name} for ${db.students.find((x) => x.id === f.studentId).admNo} — waiting for school check`);
+  return c;
+}
+export function verifyCollector(db, id, ok, by) {
+  const c = db.collectors.find((x) => x.id === id);
+  c.status = ok ? 'VERIFIED' : 'REVOKED'; c.verifiedBy = by; c.verifiedAt = new Date().toISOString();
+  log(db, by, ok ? 'Authorised person verified' : 'Authorised person rejected', c.name);
+  return c;
 }
 
 function notify(db, { to, subject, body, kind, related }) {
@@ -52,14 +77,18 @@ export function submitRequest(db, f, user) {
     if (!f.time || f.time >= DISMISSAL) throw new Error(`Early leave time must be before ${DISMISSAL}`);
     if (f.dateFrom === today() && f.time <= now()) throw new Error('That time has already passed');
   }
-  if (['PICKUP', 'EARLY_LEAVE'].includes(f.type) && !(f.collector?.name && /^[6-9]\d{9}$/.test(f.collector?.mobile || ''))) throw new Error('Name and 10-digit mobile of the person collecting are required');
+  if (['PICKUP', 'EARLY_LEAVE'].includes(f.type)) {
+    const c = collectorsFor(db, s.id, { verifiedOnly: true }).find((x) => x.id === f.collectorId);
+    if (!c) throw new Error('Choose a person from the child\u2019s approved pickup list');
+    f = { ...f, collector: { id: c.id, name: c.name, relation: c.relation, mobile: c.mobile, photo: c.photo || null, idType: c.idType, idLast4: c.idLast4 } };
+  }
   if (db.requests.some((x) => x.studentId === s.id && x.type === f.type && ['Submitted', 'Approved'].includes(x.status) && covers(x, f.dateFrom))) throw new Error('There is already a request of this kind for that day');
   db.seq.request = (db.seq.request || 0) + 1;
   const r = { id: 'Q' + db.seq.request, no: 'REQ-' + String(db.seq.request).padStart(5, '0'), studentId: s.id, userId: user?.id, type: f.type, dateFrom: f.dateFrom, dateTo: f.type === 'EARLY_LEAVE' ? f.dateFrom : (f.dateTo || f.dateFrom),
     time: f.type === 'EARLY_LEAVE' ? f.time : '', reason: f.reason || '', collector: ['PICKUP', 'EARLY_LEAVE'].includes(f.type) ? f.collector : null,
     status: 'Submitted', gateCode: '', history: [{ status: 'Submitted', at: new Date().toISOString(), by: user?.name || 'Parent' }], createdAt: new Date().toISOString() };
-  // Bus-only changes made before the cut-off are confirmed straight away; early leave and late changes wait for a coordinator
-  if (r.type !== 'EARLY_LEAVE' && !lateFor(r)) approve(db, r, 'Automatic (before cut-off)');
+  // Bus changes are confirmed straight away; early leave waits for a coordinator
+  if (!needsCoordinator(r.type)) approve(db, r, 'Confirmed automatically');
   db.requests.unshift(r);
   tellCoordinators(db, r, s, r.status === 'Approved' ? 'For your information' : 'Needs your approval');
   if (r.status === 'Approved') tellTransport(db, r, s);
@@ -143,4 +172,32 @@ export function sendManifest(db, date, trip, by) {
     subject: `${trip === 'AM' ? 'Morning pickup' : 'Afternoon drop'} manifest ${date}: ${m.boarding} boarding, ${m.notBoarding} not boarding`, body: html }));
   log(db, by, 'Manifest sent', `${date} ${trip}`);
   return m;
+}
+
+// ---------- Driver route sheet: one route, one day, with stop timings ----------
+export function routeSheet(db, routeId, date) {
+  const rt = db.routes.find((r) => r.id === routeId);
+  const am = manifest(db, date, 'AM').routes.find((r) => r.id === routeId);
+  const pm = manifest(db, date, 'PM').routes.find((r) => r.id === routeId);
+  const stops = (rt.stops || []).map((st) => ({ ...st,
+    morning: am.rows.filter((x) => x.stop === st.name), afternoon: pm.rows.filter((x) => x.stop === st.name) }));
+  return { route: rt, date, stops, am: { board: am.boarding, not: am.notBoarding, check: am.check }, pm: { board: pm.boarding, not: pm.notBoarding, check: pm.check },
+    changes: [...am.rows, ...pm.rows].filter((x) => x.status !== 'BOARD').length };
+}
+
+// Each driver gets only their own route's sheet (link by email / SMS); the link opens a read-only page for that day
+export function shareRouteSheets(db, date, by, routeIds = null) {
+  const school = tenantOf(db).name;
+  const sent = [];
+  db.routes.filter((r) => !routeIds || routeIds.includes(r.id)).forEach((r) => {
+    const sh = routeSheet(db, r.id, date);
+    const token = Math.random().toString(36).slice(2, 10);
+    const link = `https://${tenantOf(db).subdomain}.yourapp.com/route-sheet/${r.id}/${date}?t=${token}`;
+    db.routeShares.unshift({ routeId: r.id, date, token, to: r.driverMobile, at: new Date().toISOString(), by });
+    queueSms(db, { to: r.driverMobile, purpose: 'ROUTE_SHEET', vars: { route: r.id, date, board: sh.am.board + '/' + sh.pm.board, changes: sh.changes, link }, related: r.id + ' ' + date, schoolName: school });
+    sent.push(r.id);
+  });
+  db.routeShares = db.routeShares.slice(0, 200);
+  log(db, by, 'Route sheets shared', `${date} · ${sent.join(', ')}`);
+  return sent;
 }

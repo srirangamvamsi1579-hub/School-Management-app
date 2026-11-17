@@ -4,7 +4,7 @@ import { Page, Card, Field, Input, Select, Status, Modal, Html, Tabs, Switch } f
 import { dmon } from '../lib/format.js';
 import { log, resolveTemplate, renderFor, categoryName, tenantOf } from '../lib/logic.js';
 import { CATEGORIES, FIELDS, SAMPLE, renderTemplate, sanitize } from '../data/templates.js';
-import { MENU, ROLES, ACCESS, LABEL, PLANS, canSee } from '../data/menu.js';
+import { MENU, ROLES, ACCESS, LABEL, PLANS, canSee, FUNCTIONS, funcOn } from '../data/menu.js';
 import { PRESETS, TEMPLATES, contrast, accessible } from '../lib/theme.js';
 import { allRoles, roleName, canManageUsers, accountEmail, createAccount, idType, isGmail, findUser } from '../lib/auth.js';
 import { DESIGNATIONS } from '../data/seed2.js';
@@ -143,8 +143,8 @@ export function Roles() {
       <Card title="Who has this designation">{db.users.filter((u) => u.designation === desig).map((u) => <div key={u.id} className="small" style={{ padding: '4px 0' }}><b>{u.name}</b> · {roleName(db, u.role)}</div>)}
         {!db.users.some((u) => u.designation === desig) && <p className="small muted">Nobody yet.</p>}</Card>
     </div>}
-    {tab === 'new' && rank < 3 && <Card><p>Custom roles are part of the Professional plan and above (or as an add-on). Built-in roles and access by designation work on every plan.</p></Card>}
-    {tab === 'new' && rank >= 3 && <div className="grid g2">
+    {tab === 'new' && !funcOn(t, 'FN_CUSTOM_ROLES') && <Card><p>Custom roles are part of the Professional plan and above (or as an add-on). Built-in roles and access by designation work on every plan.</p></Card>}
+    {tab === 'new' && funcOn(t, 'FN_CUSTOM_ROLES') && <div className="grid g2">
       <Card title="Add a role">
         <Field label="Role name"><Input value={nr.name} onChange={(e) => setNr({ ...nr, name: e.target.value })} placeholder="e.g. Transport Manager, Librarian" /></Field>
         <div style={{ height: 10 }} /><Field label="Start with the permissions of"><Select value={nr.from} onChange={(e) => setNr({ ...nr, from: e.target.value })} options={allRoles(db).filter((r) => !['PLATFORM', 'ADMIN'].includes(r.code)).map((r) => [r.code, r.name])} /></Field>
@@ -312,7 +312,14 @@ export function Platform() {
             {isOn(m.code, m.min) && <div className="row" style={{ paddingLeft: 44, marginTop: 6 }}>{m.items.filter((i) => i[0][0] !== '#').map((i) => <label key={i[0]} className="row small" style={{ marginRight: 10 }}>
               <input type="checkbox" checked={isOn(i[0], i[2])} onChange={() => toggle(i[0], i[2])} />{i[1]}{t.overrides[i[0]] && rank < i[2] ? ' (add-on)' : ''}{!isOn(i[0], i[2]) && rank < i[2] ? <span className="muted"> · {PLANS[i[2] - 1].name}+</span> : ''}</label>)}</div>}
           </div>)}
-          <div className="row end"><button className="btn" onClick={() => mutate((d) => { d.tenants.find((y) => y.id === sel).overrides = {}; })}>Back to plan defaults</button></div>
+          <h3 style={{ marginTop: 16 }}>Functions</h3>
+          <p className="small muted">Optional capabilities inside modules. Ones marked “optional” are off unless you switch them on for this school.</p>
+          {FUNCTIONS.map((f) => { const on = funcOn(t, f.code); return <div key={f.code} className="row" style={{ padding: '6px 0', borderTop: '1px solid var(--line)' }}>
+            <Switch on={on} label={f.name} onClick={() => mutate((d) => { const x = d.tenants.find((y) => y.id === sel); x.overrides = { ...x.overrides, [f.code]: !on }; })} />
+            <span style={{ flex: 1 }}>{f.name} <span className="small muted">· {MENU.find((m) => m.code === f.module)?.label}</span></span>
+            <span className="pill">{f.minRank === null ? 'Optional — off by default' : `In ${PLANS[f.minRank - 1].name}+`}</span>
+            {t.overrides[f.code] !== undefined && <span className="pill info">{t.overrides[f.code] ? 'Switched on' : 'Switched off'}</span>}</div>; })}
+          <div className="row end" style={{ marginTop: 10 }}><button className="btn" onClick={() => mutate((d) => { d.tenants.find((y) => y.id === sel).overrides = {}; })}>Back to plan defaults</button></div>
         </Card>
       </div>
     </div>

@@ -9,6 +9,7 @@ export const PURPOSES = [
   ['FEE_REMINDER', 'Fee reminder', '{{school}}: Fee of {{amount}} for {{student}} is due {{date}}. Pay: {{link}}'],
   ['PICKUP_NOTICE', 'Pickup / drop change', '{{school}}: {{student}} will not take the bus ({{trip}}) on {{date}}. Reason: {{reason}}.'],
   ['GATE_CODE', 'Early leave gate code', '{{school}}: Early leave for {{student}} at {{time}} approved. Gate code {{code}}. Collector: {{collector}}.'],
+  ['ROUTE_SHEET', 'Driver route sheet', '{{school}} bus {{route}} {{date}}: boarding AM/PM {{board}}, changes {{changes}}. Sheet: {{link}}'],
   ['ABSENT_ALERT', 'Absence alert', '{{school}}: {{student}} is marked absent today ({{date}}). Contact the class coordinator if this is wrong.']
 ];
 

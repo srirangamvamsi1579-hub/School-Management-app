@@ -1,6 +1,6 @@
 # School Management Platform
 
-Multi-school SaaS for Indian K-12 schools (≤250 to 1,000+ students): own sign-in page per school with Gmail/mobile sign-up, account self-service, user and role management, admissions pipeline, parent pickup/drop/early-leave requests with class coordinators and a gate desk, transport bus manifests, an SMS gateway framework, students, staff, academics and timetable, exams and question papers, fees with automatic payment matching, payroll, accounts, Data Analytics (Power BI), templates, data import and per-school branding. Modules switch on per school by plan, AWS-console style, and every user sees only the menus their role allows.
+Multi-school SaaS for Indian K-12 schools (≤250 to 1,000+ students): own sign-in page per school with Gmail/mobile sign-up, account self-service, user and role management, admissions pipeline, parent pickup/drop/early-leave requests with class coordinators and a gate desk, transport bus manifests and per-route driver route sheets, an approved pickup list, an SMS gateway framework, students, staff, academics and timetable, exams and question papers, fees with automatic payment matching, payroll, accounts, Data Analytics (Power BI), templates, data import and per-school branding. Modules switch on per school by plan, AWS-console style, and every user sees only the menus their role allows.
 
 **Try it:** [User-testing build](https://claude.ai/artifact/Ty6v98Gsnmu9HwVa6Qzqy2) or the public copy at https://srirangamvamsi1579-hub.github.io/School-Management-app/ (data stays in your browser).
 
@@ -8,9 +8,9 @@ Multi-school SaaS for Indian K-12 schools (≤250 to 1,000+ students): own sign-
 
 | Folder | Contents |
 | --- | --- |
-| `app/` | React + Vite web app for user testing. In-memory demo data, sign-in and sign-up pages, all 62 screens, installable as a PWA. |
+| `app/` | React + Vite web app for user testing. In-memory demo data, sign-in and sign-up pages, all 63 screens, installable as a PWA. |
 | `services/sms/` | SMS dispatcher and delivery-report handling for when a vendor is connected (see its README). |
-| `database/` | PostgreSQL schema: eight migrations, run in order, plus SQL checks (see `database/README.md`). |
+| `database/` | PostgreSQL schema: nine migrations, run in order, plus SQL checks (see `database/README.md`). |
 | `deploy/aws/` | CloudFormation (S3 + CloudFront + HTTPS) and `deploy.sh`. |
 | `.github/workflows/` | CI/CD: test → dev → pre-prod (approval) → prod (approval). |
 | `docs/` | `REQUIREMENTS.md` (expectations, screens, schema, rules), `powerbi/REPORTS.md` (report pages, DAX, security), client review PDF. |
@@ -43,6 +43,7 @@ createdb school
 for f in database/00*.sql; do psql -d school -v ON_ERROR_STOP=1 -f "$f"; done
 psql -d school -f database/tests/007_checks.sql   # optional checks, rolled back
 psql -d school -f database/tests/008_checks.sql
+psql -d school -f database/tests/009_checks.sql
 ```
 
 Every table has `tenant_id` with row-level security. The application must connect as a non-owner role and run `SET app.tenant_id = '<id>'` per request.

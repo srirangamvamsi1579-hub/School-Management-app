@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildSeed } from '../src/data/seed.js';
-import { submitRequest, decide, handOver, cancelRequest, manifest, lateFor } from '../src/lib/pickup.js';
+import { submitRequest, decide, handOver, cancelRequest, manifest, collectorsFor, addCollector, verifyCollector, routeSheet, shareRouteSheets } from '../src/lib/pickup.js';
 import { buildRequest, configProblems, queueSms, flushQueue } from '../src/lib/sms.js';
 import { screensFor, canSharePerf, sendOtp } from '../src/lib/auth.js';
 
@@ -23,7 +23,8 @@ test('manifest: everyone boards unless absent or a request says otherwise', () =
 test('early leave: coordinator approves, gate code checked, manifest shows who collected', () => {
   const db = fresh(); const s = rider(db);
   const c = db.coordinators[s.sectionId];
-  const r = submitRequest(db, { studentId: s.id, type: 'EARLY_LEAVE', dateFrom: tomorrow, time: '11:30', reason: 'Doctor', collector: { name: 'Anil K', relation: 'Father', mobile: '9845000001' } }, { name: 'P' });
+  const g = collectorsFor(db, s.id)[0];
+  const r = submitRequest(db, { studentId: s.id, type: 'EARLY_LEAVE', dateFrom: tomorrow, time: '11:30', reason: 'Doctor', collectorId: g.id }, { name: 'P' });
   assert.equal(r.status, 'Submitted');
   assert.equal(manifest(db, tomorrow, 'PM').routes.flatMap((x) => x.rows).find((x) => x.id === s.id).status, 'CHECK');
   assert.ok(db.outbox.filter((m) => m.kind === 'Coordinator alert').length >= 2, 'both coordinators told');
@@ -35,18 +36,38 @@ test('early leave: coordinator approves, gate code checked, manifest shows who c
   assert.throws(() => handOver(db, r.id, '0000' === r.gateCode ? '1111' : '0000', 'Gate'), /does not match/);
   handOver(db, r.id, r.gateCode, 'Gate');
   const row = manifest(db, tomorrow, 'PM').routes.flatMap((x) => x.rows).find((x) => x.id === s.id);
-  assert.equal(row.status, 'NOT_BOARDING'); assert.match(row.reason, /Left early at .* with Anil K/);
+  assert.equal(row.status, 'NOT_BOARDING'); assert.match(row.reason, new RegExp('Left early at .* with ' + g.name));
   assert.throws(() => cancelRequest(db, r.id, 'P'), /no longer/);
 });
 
-test('cut-offs and validation', () => {
+test('no cut-offs; approved pickup list enforced; validation', () => {
   const db = fresh(); const s = rider(db);
-  assert.equal(lateFor({ type: 'DROP', dateFrom: today }), true, 'same-morning drop is late');
-  assert.throws(() => submitRequest(db, { studentId: s.id, type: 'EARLY_LEAVE', dateFrom: tomorrow, time: '15:30', collector: { name: 'A', relation: 'Father', mobile: '9845000001' } }, {}), /before 15:00/);
-  assert.throws(() => submitRequest(db, { studentId: s.id, type: 'PICKUP', dateFrom: tomorrow, collector: { name: '', mobile: '' } }, {}), /collecting/);
-  const ok = submitRequest(db, { studentId: s.id, type: 'PICKUP', dateFrom: tomorrow, collector: { name: 'A', relation: 'Father', mobile: '9845000001' } }, {});
-  assert.equal(ok.status, 'Approved', 'next-day pickup before cut-off confirmed at once');
-  assert.throws(() => submitRequest(db, { studentId: s.id, type: 'PICKUP', dateFrom: tomorrow, collector: { name: 'A', relation: 'Father', mobile: '9845000001' } }, {}), /already/);
+  const drop = submitRequest(db, { studentId: s.id, type: 'DROP', dateFrom: today }, {});
+  assert.equal(drop.status, 'Approved', 'same-morning drop confirmed straight away');
+  assert.throws(() => submitRequest(db, { studentId: s.id, type: 'EARLY_LEAVE', dateFrom: tomorrow, time: '15:30', collectorId: collectorsFor(db, s.id)[0].id }, {}), /before 15:00/);
+  assert.throws(() => submitRequest(db, { studentId: s.id, type: 'PICKUP', dateFrom: tomorrow, collectorId: 'nobody' }, {}), /approved pickup list/);
+  const c = addCollector(db, { studentId: s.id, name: 'Uncle Ravi', relation: 'Uncle / Aunt', mobile: '9845000077', photo: 'data:x', idType: 'PAN', idLast4: '1234' }, 'Parent');
+  assert.throws(() => submitRequest(db, { studentId: s.id, type: 'PICKUP', dateFrom: tomorrow, collectorId: c.id }, {}), /approved pickup list/, 'not usable until the school verifies');
+  assert.throws(() => addCollector(db, { studentId: s.id, name: 'X', mobile: '9845000078', idLast4: '1234' }, 'P'), /photo/);
+  verifyCollector(db, c.id, true, 'Front Office');
+  const ok = submitRequest(db, { studentId: s.id, type: 'PICKUP', dateFrom: tomorrow, collectorId: c.id }, {});
+  assert.equal(ok.status, 'Approved'); assert.equal(ok.collector.name, 'Uncle Ravi');
+  assert.throws(() => submitRequest(db, { studentId: s.id, type: 'PICKUP', dateFrom: tomorrow, collectorId: c.id }, {}), /already/);
+});
+
+test('driver route sheet: stop timings and each driver gets only their route', () => {
+  const db = fresh(); const s = rider(db);
+  submitRequest(db, { studentId: s.id, type: 'OWN_TRANSPORT', dateFrom: tomorrow }, {});
+  const sh = routeSheet(db, s.routeId, tomorrow);
+  assert.ok(sh.stops.every((st) => st.am < sh.route.schoolArrive && st.pm > sh.route.schoolLeave));
+  const mine = sh.stops.flatMap((st) => st.afternoon).find((x) => x.id === s.id);
+  assert.equal(mine.status, 'NOT_BOARDING');
+  assert.equal(sh.stops.flatMap((st) => st.morning).length, db.students.filter((x) => x.routeId === s.routeId).length);
+  const sent = shareRouteSheets(db, tomorrow, 'T');
+  assert.equal(sent.length, db.routes.length);
+  const sms = db.smsQueue.filter((m) => m.purpose === 'ROUTE_SHEET');
+  assert.equal(sms.length, db.routes.length);
+  assert.ok(db.routes.every((r) => sms.some((m) => m.to === r.driverMobile && m.text.includes(r.id))));
 });
 
 test('SMS framework: queued without provider, vendor requests, go live flushes non-OTP', () => {
@@ -74,4 +95,12 @@ test('teacher performance is hidden from teachers until shared', () => {
   assert.ok(canSharePerf(db, hots, 'TEACHER')); assert.ok(canSharePerf(db, null, 'PRINCIPAL')); assert.ok(!canSharePerf(db, t, 'TEACHER'));
   db.settings.teacherPerfShared = true;
   assert.ok(screensFor(db, t, 'TEACHER').includes('SELF_MYPERF')); assert.ok(!screensFor(db, t, 'TEACHER').includes('ANL_TEACHER'));
+});
+
+test('attendant tracking is optional: off by default, switched on per school', async () => {
+  const { funcOn } = await import('../src/data/menu.js');
+  const db = fresh();
+  assert.equal(funcOn(db.tenants.find((t) => t.id === 'T4'), 'FN_ATTENDANT_TRACKING'), false, 'off even on Enterprise');
+  assert.equal(funcOn(db.tenants.find((t) => t.id === 'T1'), 'FN_ATTENDANT_TRACKING'), true, 'switched on for the demo school');
+  assert.equal(funcOn(db.tenants.find((t) => t.id === 'T2'), 'FN_CUSTOM_ROLES'), false);
 });

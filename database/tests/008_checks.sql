@@ -1,4 +1,4 @@
--- Checks for 008: run on a database with 001-008 loaded. One transaction, rolled back.
+-- Checks for 008: run on a database with all migrations loaded. One transaction, rolled back.
 -- psql -d school -f database/tests/008_checks.sql   (expect NOTICE lines: SMS ok, Accounts ok, Visibility ok, Requests ok, Manifest ok)
 \set ON_ERROR_STOP 1
 SET client_min_messages = notice;
@@ -17,6 +17,8 @@ INSERT INTO pickup_points (tenant_id, name, band_id, route_id, stop_order) SELEC
 INSERT INTO enrollments (tenant_id, student_id, year_id, section_id, pickup_point_id)
 SELECT 1, st.student_id, (SELECT year_id FROM academic_years), (SELECT section_id FROM sections), (SELECT point_id FROM pickup_points) FROM students st;
 INSERT INTO class_coordinators SELECT 1, (SELECT year_id FROM academic_years), (SELECT section_id FROM sections), v.l, (SELECT staff_id FROM staff WHERE employee_code = v.c) FROM (VALUES ('PRIMARY','E1'),('SECONDARY','E2')) v(l,c);
+INSERT INTO guardians (tenant_id, full_name, relation, phone) VALUES (1, 'Rohit', 'FATHER', '9812344410');
+INSERT INTO student_guardians (tenant_id, student_id, guardian_id, is_primary) SELECT 1, student_id, (SELECT guardian_id FROM guardians), TRUE FROM students WHERE admission_no = 'ADM-1';
 INSERT INTO user_children SELECT 1, (SELECT user_id FROM users WHERE username='parent'), student_id FROM students WHERE admission_no = 'ADM-1';
 
 DO $$ DECLARE r RECORD; BEGIN
@@ -53,14 +55,14 @@ DO $$ BEGIN
 END $$;
 
 -- requests (requested_by = admin, since the parent account was closed above)
-INSERT INTO parent_requests (tenant_id, ref_no, student_id, requested_by, kind, date_from, date_to, leave_time, reason, collector_name, collector_relation, collector_phone)
-SELECT 1, 'REQ-1', (SELECT student_id FROM students WHERE admission_no='ADM-1'), (SELECT user_id FROM users WHERE username='admin'), 'EARLY_LEAVE', CURRENT_DATE + 1, CURRENT_DATE + 1, '11:30', 'Doctor', 'Rohit', 'Father', '9812344410';
+INSERT INTO parent_requests (tenant_id, ref_no, student_id, requested_by, kind, date_from, date_to, leave_time, reason, collector_id)
+SELECT 1, 'REQ-1', (SELECT student_id FROM students WHERE admission_no='ADM-1'), (SELECT user_id FROM users WHERE username='admin'), 'EARLY_LEAVE', CURRENT_DATE + 1, CURRENT_DATE + 1, '11:30', 'Doctor', -(SELECT guardian_id FROM guardians);
 INSERT INTO parent_requests (tenant_id, ref_no, student_id, requested_by, kind, date_from, date_to)
 SELECT 1, 'REQ-2', (SELECT student_id FROM students WHERE admission_no='ADM-2'), (SELECT user_id FROM users WHERE username='admin'), 'OWN_TRANSPORT', CURRENT_DATE + 2, CURRENT_DATE + 3;
 DO $$ DECLARE rid INT; code TEXT; BEGIN
   SELECT request_id INTO rid FROM parent_requests WHERE ref_no = 'REQ-1';
   ASSERT (SELECT status FROM parent_requests WHERE request_id = rid) = 'SUBMITTED', 'early leave waits';
-  ASSERT (SELECT status FROM parent_requests WHERE ref_no = 'REQ-2') = 'APPROVED', 'own transport ahead of cut-off approved';
+  ASSERT (SELECT status FROM parent_requests WHERE ref_no = 'REQ-2') = 'APPROVED', 'own transport confirmed at once';
   BEGIN PERFORM decide_parent_request(rid, (SELECT staff_id FROM staff WHERE employee_code='E3'), TRUE); RAISE EXCEPTION 'non-coordinator decided'; EXCEPTION WHEN raise_exception THEN IF SQLERRM NOT LIKE 'Only this class%' THEN RAISE; END IF; END;
   code := decide_parent_request(rid, (SELECT staff_id FROM staff WHERE employee_code='E2'), TRUE);
   ASSERT code ~ '^\d{4}$';
@@ -69,7 +71,7 @@ DO $$ DECLARE rid INT; code TEXT; BEGIN
   ASSERT (SELECT status FROM parent_requests WHERE request_id = rid) = 'COMPLETED';
   BEGIN INSERT INTO parent_requests (tenant_id, ref_no, student_id, requested_by, kind, date_from, date_to, leave_time, collector_name, collector_phone)
         SELECT 1, 'REQ-3', student_id, 1, 'EARLY_LEAVE', CURRENT_DATE + 1, CURRENT_DATE + 1, '15:30', 'X', '9812344410' FROM students WHERE admission_no='ADM-2';
-        RAISE EXCEPTION 'late early-leave accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
+        RAISE EXCEPTION 'late early-leave accepted'; EXCEPTION WHEN check_violation OR raise_exception THEN IF SQLERRM LIKE 'late early%' THEN RAISE; END IF; END;
   RAISE NOTICE 'Requests ok';
 END $$;
 

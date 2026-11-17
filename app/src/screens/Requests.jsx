@@ -3,7 +3,7 @@ import { useStore } from '../data/store.js';
 import { Page, Card, Field, Input, Select, Modal, Stat, Tabs } from '../components/ui.jsx';
 import { dmy } from '../lib/format.js';
 import { fullName, classLabel, guardianOf } from '../lib/logic.js';
-import { REQ_TYPES, CUTOFF, DISMISSAL, submitRequest, decide, cancelRequest, handOver, coordinatorsOf, staffName, sectionsCoordinatedBy, lateFor } from '../lib/pickup.js';
+import { REQ_TYPES, DISMISSAL, submitRequest, decide, cancelRequest, handOver, coordinatorsOf, staffName, sectionsCoordinatedBy, collectorsFor, addCollector, verifyCollector } from '../lib/pickup.js';
 
 const KIND = { Submitted: 'warn', Approved: 'ok', Completed: 'ok', Declined: 'bad', Cancelled: '' };
 export const ReqStatus = ({ s }) => <span className={'pill ' + (KIND[s] || '')}>{s === 'Submitted' ? 'Waiting for coordinator' : s}</span>;
@@ -25,7 +25,7 @@ export function ParentRequests() {
   const [err, setErr] = useState('');
   const g = kids[0] && guardianOf(db, kids[0]);
   const list = db.requests.filter((r) => kids.some((k) => k.id === r.studentId));
-  const start = (type) => { setErr(''); setForm({ type, studentId: kids[0]?.id, dateFrom: today(), dateTo: '', time: '12:00', reason: '', collector: { name: g?.name || me?.name || '', relation: g?.relation || 'Father', mobile: g?.mobile || '' } }); };
+  const start = (type) => { setErr(''); setForm({ type, studentId: kids[0]?.id, dateFrom: today(), dateTo: '', time: '12:00', reason: '', collectorId: g ? 'G-' + g.id : '' }); };
   const save = () => {
     try { const r = run((d) => submitRequest(d, form, me || { name: session.name })); notify(r.status === 'Approved' ? `${r.no} confirmed — coordinators and transport informed` : `${r.no} sent to the class coordinators`); setForm(null); }
     catch (x) { setErr(x.message); }
@@ -37,9 +37,10 @@ export function ParentRequests() {
     <Page title="Pickup & leave requests" sub="Tell the school when you will collect or drop your child yourself, need them to leave early, or will use your own transport. The class coordinators and the bus team see it straight away.">
       <div className="grid g4" style={{ marginBottom: 14 }}>
         {Object.entries(REQ_TYPES).map(([key, t]) => <button key={key} className="card" style={{ textAlign: 'left', cursor: 'pointer', marginBottom: 0 }} onClick={() => start(key)}>
-          <div className="b">{t.name}</div><div className="small muted" style={{ marginTop: 4 }}>{key === 'EARLY_LEAVE' ? 'Needs coordinator approval; gate code sent to you' : key === 'PICKUP' ? `Before ${CUTOFF.PM} same day: confirmed at once` : key === 'DROP' ? `Before ${CUTOFF.AM} the evening before: confirmed at once` : 'One day or a date range'}</div></button>)}
+          <div className="b">{t.name}</div><div className="small muted" style={{ marginTop: 4 }}>{key === 'EARLY_LEAVE' ? 'Needs coordinator approval; gate code sent to you' : key === 'OWN_TRANSPORT' ? 'One day or a date range; confirmed at once' : 'Confirmed at once; the driver\u2019s route sheet updates'}</div></button>)}
       </div>
       <Card title={`Class coordinators — ${classLabel(db, k)}`}><p className="small">Primary: <b>{staffName(db, c.primary)}</b> · Secondary: <b>{staffName(db, c.secondary)}</b>{k.routeId ? <> · Bus {k.routeId}, stop {k.stop}</> : ' · Does not use school transport'}</p></Card>
+      <Collectors kids={kids} />
       <Card title="My requests">
         {list.length === 0 ? <p className="muted">None yet.</p> : <div className="tw"><table className="t"><thead><tr><th>Ref</th><th>Child</th><th>Request</th><th>When</th><th>Collected by</th><th>Status</th><th>Gate code</th><th /></tr></thead>
           <tbody>{list.map((r) => { const s = db.students.find((x) => x.id === r.studentId); return <tr key={r.id}><td>{r.no}</td><td>{s.first}</td><td>{REQ_TYPES[r.type].name}</td><td>{when(r)}</td><td className="small">{r.collector ? `${r.collector.name} (${r.collector.relation})` : '—'}</td>
@@ -53,14 +54,11 @@ export function ParentRequests() {
           {form.type === 'OWN_TRANSPORT' && <Field label="To (leave blank for one day)"><Input type="date" min={form.dateFrom} value={form.dateTo} onChange={(e) => setForm({ ...form, dateTo: e.target.value })} /></Field>}
           {form.type === 'EARLY_LEAVE' && <Field label={`Leave at (before ${DISMISSAL})`} req><Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} /></Field>}
           <Field label="Reason" full><Input value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} placeholder="e.g. doctor's appointment" /></Field>
-          {['PICKUP', 'EARLY_LEAVE'].includes(form.type) && <>
-            <Field label="Person collecting" req><Input value={form.collector.name} onChange={(e) => setForm({ ...form, collector: { ...form.collector, name: e.target.value } })} /></Field>
-            <Field label="Relation"><Select value={form.collector.relation} onChange={(e) => setForm({ ...form, collector: { ...form.collector, relation: e.target.value } })} options={['Father', 'Mother', 'Guardian', 'Grandparent', 'Uncle / Aunt', 'Driver (authorised)']} /></Field>
-            <Field label="Their mobile" req><Input maxLength={10} value={form.collector.mobile} onChange={(e) => setForm({ ...form, collector: { ...form.collector, mobile: e.target.value } })} /></Field>
-          </>}
+          {['PICKUP', 'EARLY_LEAVE'].includes(form.type) && <Field label="Person collecting (approved list)" req full>
+            <Select value={form.collectorId} onChange={(e) => setForm({ ...form, collectorId: e.target.value })} options={[['', 'Choose…'], ...collectorsFor(db, form.studentId, { verifiedOnly: true }).map((c) => [c.id, `${c.name} (${c.relation})${c.isGuardian ? ' · guardian on record' : ''}`])]} /></Field>}
         </div>
         <p className="small muted" style={{ marginTop: 10 }}>{form.type === 'EARLY_LEAVE' ? 'The coordinator approves it; you then get a 4-digit gate code. The person collecting shows the code and photo ID at the gate.'
-          : lateFor({ ...form, dateTo: form.dateTo || form.dateFrom }) ? 'This is after the cut-off, so a coordinator must confirm it. Please also call the school office.' : 'This is before the cut-off, so it is confirmed straight away and the bus team is told.'}</p>
+          : 'Confirmed straight away. The class coordinators are told and the driver\u2019s route sheet updates.'}{['PICKUP', 'EARLY_LEAVE'].includes(form.type) && ' Only people on the child\u2019s approved pickup list can collect; add others below and the school will verify them.'}</p>
         {err && <div className="note warn" role="alert">{err}</div>}
       </Modal>}
     </Page>
@@ -102,17 +100,20 @@ export function CoordinatorDesk() {
 export function GateDesk() {
   const { db, run, notify, session } = useStore();
   const [codes, setCodes] = useState({});
+  const [tab, setTab] = useState('today');
+  const waiting = (db.collectors || []).filter((c) => c.status === 'PENDING').length;
   const list = db.requests.filter((r) => ['PICKUP', 'EARLY_LEAVE'].includes(r.type) && r.dateFrom <= today() && today() <= r.dateTo && ['Approved', 'Completed', 'Submitted'].includes(r.status))
     .sort((a, b) => (a.time || DISMISSAL).localeCompare(b.time || DISMISSAL));
   const go = (r) => { try { run((d) => handOver(d, r.id, codes[r.id] || '', session.name || session.role)); notify('Handed over — coordinators and parent records updated'); } catch (x) { notify(x.message); } };
   return (
-    <Page title="Gate desk" sub="Today's early leaves and in-person pickups. Check photo ID, enter the 4-digit code the collector gives you, then hand the child over.">
-      <div className="tw"><table className="t"><thead><tr><th>Time</th><th>Student</th><th>Type</th><th>Collector</th><th>Status</th><th style={{ width: 230 }}>Gate code</th></tr></thead>
+    <Page title="Gate desk" sub="Today's early leaves and in-person pickups. Match the face to the photo, check the photo ID, enter the 4-digit code the collector gives you, then hand the child over.">
+      <Tabs tabs={[['today', 'Today\u2019s collections'], ['verify', `Approve pickup people (${waiting})`]]} value={tab} onChange={setTab} />
+      {tab === 'verify' ? <VerifyCollectors /> : <div className="tw"><table className="t"><thead><tr><th>Time</th><th>Student</th><th>Type</th><th>Collector</th><th>Status</th><th style={{ width: 230 }}>Gate code</th></tr></thead>
         <tbody>{list.length === 0 ? <tr><td colSpan={6} className="muted">No collections today.</td></tr> : list.map((r) => { const s = db.students.find((x) => x.id === r.studentId); return <tr key={r.id}>
           <td className="b">{r.time || DISMISSAL}</td><td className="b">{fullName(s)}<div className="small muted">{classLabel(db, s)}</div></td><td>{r.type === 'PICKUP' ? 'Pickup at dismissal' : 'Early leave'}</td>
-          <td>{r.collector?.name} ({r.collector?.relation})<div className="small muted">{r.collector?.mobile}</div></td><td><ReqStatus s={r.status} /></td>
+          <td><div className="row"><Photo c={(db.collectors || []).find((c) => c.id === r.collector?.id) || r.collector} size={48} /><div>{r.collector?.name} ({r.collector?.relation})<div className="small muted">{r.collector?.mobile}{r.collector?.idLast4 ? ` · ${r.collector.idType} ••••${r.collector.idLast4}` : ''}</div></div></div></td><td><ReqStatus s={r.status} /></td>
           <td>{r.status === 'Approved' ? <div className="row"><Input aria-label="Gate code" maxLength={4} style={{ width: 80 }} value={codes[r.id] || ''} onChange={(e) => setCodes({ ...codes, [r.id]: e.target.value })} /><button className="btn sm pri" disabled={(codes[r.id] || '').length !== 4} onClick={() => go(r)}>Hand over</button></div>
-            : r.status === 'Completed' ? <span className="small">Handed over {new Date(r.handedOverAt).toTimeString().slice(0, 5)}</span> : <span className="small muted">Not approved yet — do not release</span>}</td></tr>; })}</tbody></table></div>
+            : r.status === 'Completed' ? <span className="small">Handed over {new Date(r.handedOverAt).toTimeString().slice(0, 5)}</span> : <span className="small muted">Not approved yet — do not release</span>}</td></tr>; })}</tbody></table></div>}
     </Page>
   );
 }
@@ -135,4 +136,54 @@ export function ClassCoordinators() {
       {session.role !== 'ADMIN' && session.role !== 'PRINCIPAL' && <p className="small muted">Only the Principal or Admin can change coordinators.</p>}
     </Page>
   );
+}
+
+// ---------- Approved pickup list (parent side) ----------
+const RELS = ['Mother', 'Father', 'Guardian', 'Grandparent', 'Uncle / Aunt', 'Elder sibling (18+)', 'Family driver', 'Neighbour'];
+const ID_TYPES = ['Aadhaar', 'Driving licence', 'Passport', 'Voter ID', 'PAN'];
+export const Photo = ({ c, size = 40 }) => c?.photo ? <img src={c.photo} alt={'Photo of ' + c.name} style={{ width: size, height: size, borderRadius: size / 2, objectFit: 'cover', flex: 'none' }} />
+  : <div className="logo" style={{ width: size, height: size, borderRadius: size / 2, fontSize: size / 2.6 }} aria-hidden="true">{(c?.name || '?').split(' ').map((x) => x[0]).slice(0, 2).join('')}</div>;
+const CST = { VERIFIED: ['ok', 'Approved'], PENDING: ['warn', 'Waiting for school check'], REVOKED: ['bad', 'Not approved'] };
+
+function Collectors({ kids }) {
+  const { db, run, notify, session } = useStore();
+  const [sid, setSid] = useState(kids[0].id);
+  const [f, setF] = useState(null);
+  const [err, setErr] = useState('');
+  const list = collectorsFor(db, sid);
+  const onPhoto = (e) => { const file = e.target.files[0]; if (!file) return; if (file.size > 3e6) { setErr('Photo must be under 3 MB'); return; } const rd = new FileReader(); rd.onload = () => setF({ ...f, photo: rd.result }); rd.readAsDataURL(file); };
+  const save = () => { try { run((d) => addCollector(d, { ...f, studentId: sid }, session.name || 'Parent')); notify('Added — the school will check their ID'); setF(null); setErr(''); } catch (x) { setErr(x.message); } };
+  return (
+    <Card title="Approved pickup list" right={<div className="row">{kids.length > 1 && <Select value={sid} onChange={(e) => setSid(e.target.value)} options={kids.map((k) => [k.id, k.first])} />}<button className="btn sm pri" onClick={() => { setErr(''); setF({ name: '', relation: 'Mother', mobile: '', idType: 'Aadhaar', idLast4: '', validUntil: '', photo: '' }); }}>Add a person</button></div>}>
+      <p className="small muted">Only these people can collect {db.students.find((s) => s.id === sid).first} in person or for an early leave. The school checks each person's photo ID once before they are approved.</p>
+      <div className="grid g3">{list.map((c) => <div key={c.id} className="row" style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
+        <Photo c={c} /><div style={{ flex: 1 }}><div className="b small">{c.name}</div><div className="small muted">{c.relation} · {c.mobile}{c.validUntil ? ' · until ' + dmy(c.validUntil) : ''}</div>
+          <span className={'pill ' + (c.isGuardian ? 'ok' : CST[c.status][0])}>{c.isGuardian ? 'Guardian on record' : CST[c.status][1]}</span></div>
+        {!c.isGuardian && <button className="btn sm" aria-label={'Remove ' + c.name} onClick={() => run((d) => { const x = d.collectors.find((y) => y.id === c.id); x.status = 'REVOKED'; x.removedBy = session.name; })}>Remove</button>}</div>)}</div>
+      {f && <Modal title="Add a person to the pickup list" onClose={() => setF(null)} actions={<button className="btn pri" onClick={save}>Add</button>}>
+        <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
+          <Field label="Full name" req><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></Field>
+          <Field label="Relation"><Select value={f.relation} onChange={(e) => setF({ ...f, relation: e.target.value })} options={RELS} /></Field>
+          <Field label="Mobile" req><Input maxLength={10} value={f.mobile} onChange={(e) => setF({ ...f, mobile: e.target.value.replace(/\D/g, '') })} /></Field>
+          <Field label="Valid until (optional)"><Input type="date" value={f.validUntil} onChange={(e) => setF({ ...f, validUntil: e.target.value })} /></Field>
+          <Field label="Photo ID type"><Select value={f.idType} onChange={(e) => setF({ ...f, idType: e.target.value })} options={ID_TYPES} /></Field>
+          <Field label="Last 4 digits of the ID" req><Input maxLength={4} value={f.idLast4} onChange={(e) => setF({ ...f, idLast4: e.target.value.replace(/\D/g, '') })} /></Field>
+          <Field label="Photo of the person" req full><div className="row">{f.photo && <Photo c={{ ...f }} size={56} />}<input type="file" accept="image/*" onChange={onPhoto} aria-label="Photo" /></div></Field>
+        </div>
+        <p className="small muted">Only the last 4 digits of the ID are kept. The gate sees the photo when they come.</p>
+        {err && <div className="note warn" role="alert">{err}</div>}
+      </Modal>}
+    </Card>
+  );
+}
+
+// ---------- School side: verify people parents have added ----------
+export function VerifyCollectors() {
+  const { db, run, notify, session } = useStore();
+  const list = (db.collectors || []).filter((c) => c.status === 'PENDING');
+  if (!list.length) return <p className="muted small">No one waiting to be checked.</p>;
+  return <div className="tw"><table className="t"><thead><tr><th>Person</th><th>For student</th><th>Relation</th><th>Mobile</th><th>Photo ID</th><th>Added by</th><th /></tr></thead>
+    <tbody>{list.map((c) => { const s = db.students.find((x) => x.id === c.studentId); return <tr key={c.id}><td><div className="row"><Photo c={c} /><b>{c.name}</b></div></td><td>{fullName(s)}<div className="small muted">{classLabel(db, s)}</div></td>
+      <td>{c.relation}</td><td>{c.mobile}</td><td>{c.idType} ••••{c.idLast4}</td><td className="small">{c.addedBy}</td>
+      <td><div className="row"><button className="btn sm pri" onClick={() => { run((d) => verifyCollector(d, c.id, true, session.name || session.role)); notify('Approved'); }}>ID checked — approve</button><button className="btn sm" onClick={() => { run((d) => verifyCollector(d, c.id, false, session.name || session.role)); notify('Not approved'); }}>Reject</button></div></td></tr>; })}</tbody></table></div>;
 }

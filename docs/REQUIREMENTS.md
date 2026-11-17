@@ -1,6 +1,6 @@
 # School Management Platform — Requirements
 
-Updated 17 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
+Updated 17 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
 
 One platform runs Indian K-12 schools of every size, from under 250 to over 1,000 students. Each school gets only the modules its plan includes, and every person sees only the menus their role allows.
 
@@ -55,7 +55,7 @@ Seven roles see different menus. Four plans decide which modules a school has. A
 
 ## Screens by module
 
-13 modules hold 62 screens plus the sign-in pages, and all of them open in the test build. Column-level detail per screen is in the client review PDF (`docs/School_Platform_Client_Review.pdf`), and the visual designs are on the design canvas.
+13 modules hold 63 screens plus the sign-in pages, and all of them open in the test build. Column-level detail per screen is in the client review PDF (`docs/School_Platform_Client_Review.pdf`), and the visual designs are on the design canvas.
 
 | Module | Screens | Key fields and actions |
 | --- | --- | --- |
@@ -150,19 +150,19 @@ The teacher index is a starting point for a conversation, not an appraisal score
 ## Parent requests, coordinators and the gate
 
 ```
-Parent request → Before cut-off and not early leave? ──yes──→ Confirmed → Gate desk (code + photo ID, hand over)
-                         │ no                                   ↑        → Bus manifest (06:30 / 14:30, live updates)
-                         ↓                                      │        → Parent: gate code by email + SMS
-                 Coordinator desk (primary or secondary) ──approve┘
+Parent request (approved people only) → Early leave? ──no──→ Confirmed → Gate desk (photo, ID, code; hand over)
+                                            │ yes                ↑        → Bus manifest + each driver's route sheet
+                                            ↓                    │        → Parent: gate code by email + SMS
+                         Coordinator desk (primary or secondary) ──approve┘
                          └──decline──→ Parent told, with the reason
 ```
 
 | Request (My Space → Pickup & Leave Requests) | Trips affected | Needs | Confirmed |
 | --- | --- | --- | --- |
-| In-person pickup after school | Afternoon drop | Name, relation and mobile of the person collecting | At once if sent by 12:00 the same day; later, by a coordinator |
-| In-person drop in the morning | Morning pickup | — | At once if sent by 20:00 the evening before; later, by a coordinator |
-| Early leave | Afternoon drop | Time before 15:00, reason, the person collecting | Always by a coordinator |
-| Own transport (one day or a date range) | Both | — | At once before the cut-offs |
+| In-person pickup after school | Afternoon drop | A person from the child's approved pickup list | At once, any time |
+| In-person drop in the morning | Morning pickup | — | At once, any time |
+| Early leave | Afternoon drop | Time before 15:00, reason, a person from the approved pickup list | By a class coordinator |
+| Own transport (one day or a date range) | Both | — | At once, any time |
 
 - **Class coordinators:** Academics → Class Coordinators. Each section has a primary and a secondary coordinator (different people), set by the Principal or Admin. Both get every request for the section by email and see it on Students → **Coordinator Desk**; either can approve or decline (decline needs a reason, which goes to the parent).
 - **Gate code:** approving a pickup or early leave creates a 4-digit gate code sent to the parent by email and SMS. Only a hash is stored.
@@ -208,9 +208,42 @@ Server side: `services/sms/dispatcher.mjs` sends queued messages with retries; `
 
 Teachers never see the Teacher Performance report. On that page the Principal (role) or the Head of Teaching Staff (designation) can switch on **Share with teachers**. Each teacher then gets My Space → **My Teaching Performance**: their own subjects and sections only, view-only. Switching it off removes the screen. Every change is logged.
 
+## Added 17 Nov 2026 (release 4)
+
+### No cut-off times
+
+Decided 17 Nov 2026. Pickup, drop and own-transport changes are confirmed whenever they are sent and appear on the driver's route sheet straight away. Early leave still needs a class coordinator, because the child leaves during the school day.
+
+### Approved pickup list
+
+Only approved people can collect a child in person or for an early leave.
+
+- **The guardian on the student's record** is always on the list.
+- **Others** (mother, grandparent, family driver and so on) are added by the parent on Pickup & Leave Requests. Each needs:
+  - name, relation and mobile
+  - a photo
+  - photo ID type and its **last 4 digits only**
+  - an optional valid-until date
+- **School check:** new people show *Waiting for school check* until Front Office checks the ID and approves them (Gate Desk → Approve pickup people).
+- **Removing:** parents can remove someone at any time.
+- **At the gate:** the request form only offers approved people. The Gate Desk shows the collector's photo and ID type beside the gate code.
+
+### Driver route sheets and stop timings
+
+- **Transport → Routes, Stops & Timings:** for each route, the bus, driver and driver mobile, the attendant, when the bus reaches school (morning) and leaves school (afternoon), and the time at each stop for the morning pickup and afternoon drop. Times are checked: morning stops in order and before school; afternoon drops after the bus leaves.
+- **Transport → Driver Route Sheets:** one sheet per route (Route #) for a chosen day. It shows the morning pickup and the afternoon drop by stop and time, every child with ✓ boards or ✗ do not wait (and why), and ? where a request still needs the coordinator.
+  - **Send to all drivers:** each driver gets only their own route's sheet, as an SMS with a private link (read-only page for that route and day, refreshes when a parent changes a pickup or drop).
+  - **Send this route** re-sends one route.
+  - **What the driver sees** previews the phone view.
+  - **Download all (Excel):** one tab per route.
+
+### Attendant boarding tracking is optional
+
+Marking Boarded / No-show on the bus is a function the platform team switches on or off per school (Platform Console → Schools & Plans → Functions → *Bus attendant boarding tracking*). It is off by default on every plan; the demo school has it on. When it's off, the manifest and route sheets have no tick column, and the database refuses boarding records for that school. The Functions list also shows the other optional capabilities (self sign-up, SMS OTP, custom templates, custom roles, OCR import) with their plan defaults.
+
 ## Database schema summary
 
-PostgreSQL 15+, eight migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
+PostgreSQL 15+, nine migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
 
 | File | Adds | Key tables, views and functions |
 | --- | --- | --- |
@@ -222,6 +255,7 @@ PostgreSQL 15+, eight migration files loaded in order. Every table carries `tena
 | 006_templates_import.sql | Templates and import | template_categories, template_fields, doc_templates, doc_template_versions, template_defaults; import_targets, import_target_fields, import_profiles, import_column_maps, import_value_maps, import_jobs, import_rows; resolve_template(), render_template(), map_and_validate_import(), commit_student_import(), rollback_student_import() |
 | 007_auth_admissions_analytics.sql | Sign-up, user management, admissions, analytics | users (Pending status, login type, verified flags, requested role, designation), otp_requests, sms_gateway_config, designation_menu_access, user_menu_grants, user_role_changes; admission_enquiries, admission_status_history; exam_terms, exam_results, section_subject_teachers, transport_routes, transport_trips; request_otp(), verify_otp(), set_user_role(), enrol_applicant(); v_user_screens, v_admissions_by_grade_status, v_student_term_scores, v_grade_rankings, v_teacher_subject_performance, v_transport_route_summary |
 | 008_requests_transport_sms.sql | SMS framework, accounts, coordinators, requests, transport | sms_gateway_config (provider, status, endpoint, secret ARN), sms_templates, sms_outbox, sms_delivery_reports; user_children, notification_prefs, account_requests; tenant_settings; class_coordinators; parent_requests, parent_request_history; boarding_log; queue_sms(), close_account(), set_teacher_perf_visibility(), decide_parent_request(), hand_over_student(), trip_manifest(); v_my_teaching_performance; Transport team role |
+| 009_route_sheets_collectors.sql | No cut-offs, approved pickup list, stop timings, route sheets, optional attendant tracking | authorised_collectors, v_approved_collectors, parent_requests.collector_id; pickup_points am/pm times, transport_routes school times and attendant; route_sheet_shares, share_route_sheets(), driver_route_sheet(); FN_ATTENDANT_TRACKING enforced on boarding_log; ROUTE_SHEET SMS template |
 
 The test build keeps the same entities in browser memory (`app/src/data`) and runs the same rules in JavaScript (`app/src/lib/logic.js`).
 
@@ -290,8 +324,11 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 
 **Pickup, drop and early leave**
 
-1. Cut-offs: morning-trip changes by 20:00 the evening before; afternoon-trip changes by 12:00 the same day. Before the cut-off they are confirmed at once; after it, a coordinator must approve. Early leave always needs a coordinator.
-2. Early leave is before 15:00, on one day, with a named collector and 10-digit mobile; one request of a kind per child per day.
+1. No cut-off times: pickup, drop and own-transport changes are confirmed whenever they are sent. Early leave always needs a coordinator. Pickups and early leaves need a person from the child's approved pickup list.
+2. Early leave is before 15:00, on one day; one request of a kind per child per day.
+6. Approved pickup people need a photo and the last 4 digits of a photo ID, and are usable only after the school checks the ID.
+7. Stop timings: morning stops in order and before the bus reaches school; afternoon drops after it leaves. Each driver receives only their own route's sheet.
+8. Attendant boarding tracking works only where the platform team has switched it on.
 3. Only the section's primary or secondary coordinator (or the Principal) can approve; declining needs a reason.
 4. A child is released at the gate only for an approved request with the matching 4-digit code; hand-over time and staff are recorded.
 5. Manifest order of precedence: Absent → Not boarding (approved request) → Check (request waiting) → Will board.
@@ -338,10 +375,13 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 
 **Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the six migrations, SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
-**Automated tests.** `npm test` runs 19 checks on the business rules (including requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql` and `008_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
+**Automated tests.** `npm test` runs 21 checks on the business rules (including the approved pickup list, route sheets, the attendant-tracking switch, requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
 
 **User-testing script.**
 
+- [ ] Parent: Pickup & Leave Requests → Approved pickup list → Add a person (with photo); Front Office: Gate Desk → Approve pickup people; the parent can now choose them for a pickup
+- [ ] Transport: Routes, Stops & Timings → edit a stop time; Driver Route Sheets → Route R3 → What the driver sees → Send to all drivers
+- [ ] Platform team: Schools & Plans → Functions → switch Bus attendant boarding tracking off for Green Valley; the Boarded / No-show column disappears
 - [ ] Parent (rohit.s@example.com): Pickup & Leave Requests → Early leave tomorrow → the class coordinators get it
 - [ ] Coordinator (sonia.teacher@example.com): Coordinator Desk → Approve; the parent sees the gate code
 - [ ] Front Office (mobile 9845011200): Gate Desk → enter the code → Hand over
@@ -376,6 +416,6 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - Can parents sign up themselves, or only accounts the school creates? (Both are built; self sign-up is a plan function.)
 - Should the teacher index be shown to teachers themselves, or only to the Principal?
 - Admission fee and offer expiry: is 7 days right, and does an unaccepted offer move to Opted out automatically?
-- Are the cut-offs right (20:00 the evening before for the morning bus, 12:00 for the afternoon bus)? Dismissal is assumed to be 15:00.
+- ~~Cut-off times~~ — decided: no cut-offs; a route sheet is shared with every driver instead.
 - Should bus attendants use a phone app to mark Boarded / No-show, with GPS for on-time reporting?
-- Who besides the parent may collect a child (authorised list per child, photos)?
+- ~~Pre-approved collectors~~ — decided: yes, approved pickup list per child with photo and ID check.

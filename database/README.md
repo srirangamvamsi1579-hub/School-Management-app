@@ -12,6 +12,7 @@ Run the files in order. Each one builds on the one before.
 | 6 | `006_templates_import.sql` | Document templates (standard / uploaded / custom, versions, defaults by school, role, user); data import (targets, synonyms, saved mappings, value maps, jobs, rows, commit, rollback) |
 | 7 | `007_auth_admissions_analytics.sql` | Sign-up and sign-in support (Pending accounts, one-time codes with SMS gateway placeholder), user management (designation access, personal grants, role-change log, `set_user_role()`), admissions pipeline with status rules and `enrol_applicant()`, marks, subject teachers, transport routes and the Data Analytics views (`v_grade_rankings`, `v_teacher_subject_performance`, `v_transport_route_summary`, `v_admissions_by_grade_status`) |
 | 8 | `008_requests_transport_sms.sql` | SMS gateway framework (provider config, DLT templates, outbox, delivery reports), account self-service and deletion, teacher-performance sharing setting, class coordinators, parent pickup / drop / early-leave requests with cut-offs and gate codes, boarding log and `trip_manifest()`, Transport team role |
+| 9 | `009_route_sheets_collectors.sql` | No cut-off times; approved pickup people per child (photo, ID last 4, school verification); stop timings and per-route driver route sheets with private links; attendant boarding tracking as an optional platform-switched function |
 
 ```bash
 createdb school
@@ -28,8 +29,8 @@ for f in 00*.sql; do psql -d school -v ON_ERROR_STOP=1 -f "$f"; done
 - Templates: every save creates a new version.
 - Accounts: one-time codes are stored only as a hash, expire in 10 minutes, allow 5 tries; SMS codes stay `GATEWAY_PENDING` until `sms_gateway_config.is_active`.
 - Users: only an Admin or someone with the Users screen (by role, designation or grant) can change roles; nobody changes their own; only an Admin gives Admin.
-- Parent requests: cut-offs and auto-approval in a trigger; only the section's coordinators decide; release at the gate needs the matching code (hash stored).
+- Parent requests: bus changes auto-confirmed (no cut-offs, 009); pickups and early leaves need a person on the approved list; only the section's coordinators decide; release at the gate needs the matching code (hash stored).
 - SMS: nothing is sent until the school's gateway is LIVE; OTP text is blanked after sending; stale OTPs expire on go-live.
 - Admissions: only forward one step or to Opted out (reason required); an offer needs birth certificate and photo; every change is kept in `admission_status_history`.
 
-Tested on PostgreSQL 16: all eight files load cleanly into an empty database. `tests/007_checks.sql` and `tests/008_checks.sql` check the rules (run after loading; they roll themselves back).
+Tested on PostgreSQL 16: all nine files load cleanly into an empty database. `tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` check the rules (run after loading all files) (run after loading; they roll themselves back).

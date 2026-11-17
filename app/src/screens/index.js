@@ -11,7 +11,7 @@ import { CollectFee, FeeRequests, PaymentMatching, Dues, Receipts, FeeStructure,
 import { RunPayroll, Payslips, BankDetails, AccountStatement, Expenses } from './Accounts.jsx';
 import { DataImport } from './Import.jsx';
 import { ParentRequests, CoordinatorDesk, GateDesk, ClassCoordinators, myChildren } from './Requests.jsx';
-import { BusManifest, TransportChanges, RoutesRiders } from './Transport.jsx';
+import { BusManifest, TransportChanges, RoutesRiders, DriverRouteSheets } from './Transport.jsx';
 import { MyAccount, SmsGateway, MyPerformance } from './Account.jsx';
 import { Admissions } from './Admissions.jsx';
 import { ReportCatalogue, TopBottom, TransportReports, TeacherPerformance, AdmissionsFunnel } from './Analytics.jsx';
@@ -32,7 +32,7 @@ export function Placeholder({ code }) {
 export const SCREENS = {
   DASH: Dashboard, STU_INS: Insights, STF_INS: Insights, FEE_INS: Insights,
   STU_LIST: StudentList, STU_REQUESTS: CoordinatorDesk, STU_GATE: GateDesk, ACA_COORD: ClassCoordinators,
-  TRN_MANIFEST: BusManifest, TRN_CHANGES: TransportChanges, TRN_ROUTES: RoutesRiders, OPS_SMS: SmsGateway,
+  TRN_MANIFEST: BusManifest, TRN_SHEETS: DriverRouteSheets, TRN_CHANGES: TransportChanges, TRN_ROUTES: RoutesRiders, OPS_SMS: SmsGateway,
   SELF_REQUESTS: ParentRequests, SELF_PROFILE: MyAccount, SELF_MYPERF: MyPerformance, STU_ADMISSIONS: Admissions,
   ANL_HOME: ReportCatalogue, ANL_RANK: TopBottom, ANL_TRANSPORT: TransportReports, ANL_TEACHER: TeacherPerformance, ANL_ADMISSIONS: AdmissionsFunnel, STU_ADMIT: Admission, STU_ATT: Attendance, STU_PROMOTE: Promote, STU_DOCS: Documents,
   STF_LIST: StaffList, STF_ADD: AddStaff, STF_ATT: StaffAttendance, STF_LEAVE: Leave,

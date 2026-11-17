@@ -66,7 +66,7 @@ export function buildSeed() {
   const db = {
     version: 1,
     tenants: [
-      { id: 'T1', code: 'GVS', name: 'Green Valley School', subdomain: 'greenvalley', plan: 'PROFESSIONAL', status: 'Active', overrides: {}, renews: '2027-03-31' },
+      { id: 'T1', code: 'GVS', name: 'Green Valley School', subdomain: 'greenvalley', plan: 'PROFESSIONAL', status: 'Active', overrides: { FN_ATTENDANT_TRACKING: true }, renews: '2027-03-31' },
       { id: 'T2', code: 'SPS', name: 'Sunrise Public School', subdomain: 'sunrise', plan: 'STARTER', status: 'Active', overrides: { PAYROLL: true, PAY_RUN: true, PAY_SLIPS: true }, renews: '2027-06-30' },
       { id: 'T3', code: 'SMA', name: 'St. Mary’s Academy', subdomain: 'stmarys', plan: 'GROWTH', status: 'Active', overrides: {}, renews: '2027-01-31' },
       { id: 'T4', code: 'LVI', name: 'Lakeview International', subdomain: 'lakeview', plan: 'ENTERPRISE', status: 'Active', overrides: {}, renews: '2027-03-31' }

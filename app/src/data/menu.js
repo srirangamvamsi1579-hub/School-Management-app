@@ -38,7 +38,7 @@ export const MENU = [
     ['FEE_INS', 'Insights', 2], ['FEE_COLLECT', 'Collect Fee', 1], ['FEE_REQUESTS', 'Fee Request Emails', 1], ['FEE_MATCHING', 'Payment Matching', 2],
     ['FEE_DUES', 'Dues & Reminders', 1], ['FEE_RECEIPTS', 'Receipts', 1], ['FEE_STRUCT', 'Fee Structure', 1], ['FEE_CONC', 'Concessions', 2]] },
   { code: 'TRANSPORT', label: 'Transport', icon: 'bus', min: 1, items: [
-    ['TRN_MANIFEST', 'Daily Bus Manifest', 1], ['TRN_CHANGES', 'Pickup & Drop Changes', 1], ['TRN_ROUTES', 'Routes & Riders', 1]] },
+    ['TRN_MANIFEST', 'Daily Bus Manifest', 1], ['TRN_SHEETS', 'Driver Route Sheets', 1], ['TRN_CHANGES', 'Pickup & Drop Changes', 1], ['TRN_ROUTES', 'Routes, Stops & Timings', 1]] },
   { code: 'ANALYTICS', label: 'Data Analytics', icon: 'chart', min: 2, items: [
     ['ANL_HOME', 'Report Catalogue', 2], ['ANL_RANK', 'Top & Bottom Performers', 2], ['ANL_TRANSPORT', 'Transport Reports', 2], ['ANL_TEACHER', 'Teacher Performance', 2], ['ANL_ADMISSIONS', 'Admissions Funnel', 2]] },
   { code: 'PAYROLL', label: 'Payroll', icon: 'wallet', min: 2, items: [['PAY_RUN', 'Run Payroll', 2], ['PAY_SLIPS', 'Payslips', 2]] },
@@ -56,7 +56,7 @@ const ALL = MENU.flatMap((m) => m.items.map((i) => i[0])).filter((c) => c[0] !==
 
 export const ACCESS = {
   ADMIN: ALL.filter((c) => !['SELF_CHILD', 'SELF_FEES', 'SELF_REQUESTS', 'SELF_MYPERF', 'PLT_SCHOOLS'].includes(c)),
-  PRINCIPAL: ['DASH', 'STU_INS', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ATT', 'STU_REQUESTS', 'ACA_COORD', 'TRN_MANIFEST', 'TRN_CHANGES', 'TRN_ROUTES', 'SELF_PROFILE', 'ANL_HOME', 'ANL_RANK', 'ANL_TRANSPORT', 'ANL_TEACHER', 'ANL_ADMISSIONS', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE',
+  PRINCIPAL: ['DASH', 'STU_INS', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ATT', 'STU_REQUESTS', 'ACA_COORD', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'SELF_PROFILE', 'ANL_HOME', 'ANL_RANK', 'ANL_TRANSPORT', 'ANL_TEACHER', 'ANL_ADMISSIONS', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE',
     'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_FORMATS', 'EXM_COSCH', 'EXM_PROFILE', 'FEE_INS', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_STRUCT', 'FEE_CONC',
     'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
   ACCOUNTANT: ['DASH', 'STU_LIST', 'STF_LIST', 'SELF_PROFILE', 'ANL_HOME', 'ANL_TRANSPORT', 'FEE_INS', 'FEE_COLLECT', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_RECEIPTS', 'FEE_STRUCT', 'FEE_CONC',
@@ -65,7 +65,7 @@ export const ACCESS = {
     'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
   FRONT_OFFICE: ['DASH', 'STU_LIST', 'STU_GATE', 'TRN_CHANGES', 'SELF_PROFILE', 'STU_ADMISSIONS', 'STU_ADMIT', 'ANL_ADMISSIONS', 'STU_DOCS', 'FEE_COLLECT', 'FEE_DUES', 'FEE_RECEIPTS', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
   PARENT: ['DASH', 'ACA_TIMETABLE', 'SELF_CHILD', 'SELF_REQUESTS', 'SELF_FEES', 'SELF_PROFILE', 'SELF_PREFS'],
-  TRANSPORT: ['TRN_MANIFEST', 'TRN_CHANGES', 'TRN_ROUTES', 'ANL_TRANSPORT', 'SELF_PROFILE', 'SELF_PREFS'],
+  TRANSPORT: ['TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'ANL_TRANSPORT', 'SELF_PROFILE', 'SELF_PREFS'],
   PLATFORM: ['PLT_SCHOOLS']
 };
 
@@ -83,4 +83,21 @@ export function canSee(code, role, rank, overrides = {}, perms = null) {
   if (!modOn && role !== 'PLATFORM') return false;
   const on = overrides[code] !== undefined ? overrides[code] : rank >= (MIN_RANK[code] || 1);
   return on || role === 'PLATFORM';
+}
+
+// Functions inside modules (not menus). minRank = plan from which it is on by default; null = off unless
+// the platform team switches it on for the school (Platform Console → Schools & Plans → Functions).
+export const FUNCTIONS = [
+  { code: 'FN_ATTENDANT_TRACKING', module: 'TRANSPORT', name: 'Bus attendant boarding tracking (Boarded / No-show)', minRank: null },
+  { code: 'FN_SELF_SIGNUP', module: 'OPERATIONS', name: 'Self sign-up with Gmail or mobile', minRank: 1 },
+  { code: 'FN_SMS_OTP', module: 'OPERATIONS', name: 'OTP and alerts by SMS (needs an SMS provider)', minRank: 2 },
+  { code: 'FN_CUSTOM_TEMPLATES', module: 'OPERATIONS', name: 'Edit and upload own templates', minRank: 2 },
+  { code: 'FN_CUSTOM_ROLES', module: 'OPERATIONS', name: 'Custom roles', minRank: 3 },
+  { code: 'FN_IMAGE_IMPORT', module: 'OPERATIONS', name: 'Import from photos / scans (OCR)', minRank: 3 }
+];
+export function funcOn(tenant, code) {
+  if (tenant.overrides?.[code] !== undefined) return !!tenant.overrides[code];
+  const f = FUNCTIONS.find((x) => x.code === code);
+  const rank = PLANS.find((p) => p.code === tenant.plan).rank;
+  return !!f && f.minRank !== null && rank >= f.minRank;
 }

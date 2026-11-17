@@ -10,7 +10,7 @@ const STOPS = {
 
 export function extendSeed3(db) {
   const r = rng(43);
-  db.version = 3;
+  db.version = 4;
   const today = new Date().toISOString().slice(0, 10);
   const tomorrow = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
 
@@ -45,7 +45,7 @@ export function extendSeed3(db) {
   db.requests = []; db.boarding = {}; db.seq.request = 0;
   const riders = db.students.filter((s) => s.routeId && s.id !== aarav.id);
   const mk = (s, type, extra) => { db.seq.request += 1; return { id: 'Q' + db.seq.request, no: 'REQ-' + String(db.seq.request).padStart(5, '0'), studentId: s.id, userId: null, type, dateFrom: today, dateTo: today, time: '', reason: '', collector: null,
-    status: 'Approved', gateCode: '', history: [{ status: 'Submitted', at: new Date().toISOString(), by: 'Parent' }, { status: 'Approved', at: new Date().toISOString(), by: 'Automatic (before cut-off)' }], createdAt: new Date().toISOString(), ...extra }; };
+    status: 'Approved', gateCode: '', history: [{ status: 'Submitted', at: new Date().toISOString(), by: 'Parent' }, { status: 'Approved', at: new Date().toISOString(), by: 'Confirmed automatically' }], createdAt: new Date().toISOString(), ...extra }; };
   db.requests.push(
     mk(aarav, 'PICKUP', { reason: 'Dentist appointment at 4 pm', collector: { name: 'Rohit Sharma', relation: 'Father', mobile: '9812344410' }, gateCode: '4821' }),
     mk(riders[3], 'EARLY_LEAVE', { time: '12:30', reason: 'Family function', collector: { name: 'Meena ' + riders[3].last, relation: 'Mother', mobile: '9845099001' }, status: 'Submitted', history: [{ status: 'Submitted', at: new Date().toISOString(), by: 'Parent' }] }),
@@ -53,6 +53,29 @@ export function extendSeed3(db) {
     mk(riders[11], 'OWN_TRANSPORT', { dateFrom: today, dateTo: tomorrow, reason: 'Bus route under repair near home' }),
     mk(riders[15], 'EARLY_LEAVE', { time: '11:00', reason: 'Medical check-up', collector: { name: 'Anil ' + riders[15].last, relation: 'Father', mobile: '9845099002' }, gateCode: '7390' })
   );
+  // Stop timings: morning pickup (bus reaches school 08:45) and afternoon drop (leaves school 15:15)
+  const AM_START = { R1: '07:35', R2: '07:30', R3: '07:25', R4: '07:10', R5: '07:05', R6: '07:00' };
+  const toMin = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3)); const toTime = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  const DRIVER_MOB = ['9845022001', '9845022002', '9845022003', '9845022004', '9845022005', '9845022006'];
+  const ATTENDANTS = ['Lakshmi B', 'Savitha R', 'Geetha N', 'Parvathi K', 'Shobha M', 'Revathi S'];
+  db.routes.forEach((r, i) => {
+    const gap = Math.round((toMin('08:45') - 15 - toMin(AM_START[r.id])) / 3);
+    r.schoolArrive = '08:45'; r.schoolLeave = '15:15'; r.driverMobile = DRIVER_MOB[i]; r.attendant = ATTENDANTS[i];
+    r.stops = STOPS[r.id].map((name, k) => ({ name, order: k + 1, am: toTime(toMin(AM_START[r.id]) + k * gap), pm: toTime(toMin('15:15') + 15 + (2 - k) * gap) }));
+  });
+  db.routeShares = [];
+  db.seq.collector = 0;
+
+  // Approved pickup people (besides the guardian on record)
+  const ph = (initials, hue) => 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="hsl(${hue},45%,80%)"/><circle cx="40" cy="30" r="15" fill="hsl(${hue},35%,45%)"/><path d="M12 80c4-20 52-20 56 0z" fill="hsl(${hue},35%,45%)"/><text x="40" y="76" font-size="11" text-anchor="middle" font-family="Arial" fill="#fff">${initials}</text></svg>`);
+  db.collectors = [
+    { id: 'AC1', studentId: aarav.id, name: 'Meena Sharma', relation: 'Mother', mobile: '9812344411', photo: ph('MS', 330), idType: 'Aadhaar', idLast4: '4417', validUntil: '', status: 'VERIFIED', addedBy: 'Rohit Sharma', verifiedBy: 'Anita Rao' },
+    { id: 'AC2', studentId: aarav.id, name: 'Kamala Sharma', relation: 'Grandparent', mobile: '9812344412', photo: ph('KS', 200), idType: 'Voter ID', idLast4: '8820', validUntil: '', status: 'VERIFIED', addedBy: 'Rohit Sharma', verifiedBy: 'Anita Rao' },
+    { id: 'AC3', studentId: aarav.id, name: 'Raju Naik', relation: 'Family driver', mobile: '9812344413', photo: ph('RN', 120), idType: 'Driving licence', idLast4: '3051', validUntil: '', status: 'PENDING', addedBy: 'Rohit Sharma' }
+  ];
+  db.seq.collector = 3;
+  db.requests[0].collector = { id: 'AC1', name: 'Meena Sharma', relation: 'Mother', mobile: '9812344411', idType: 'Aadhaar', idLast4: '4417' };
+
   const ab = riders[20];
   db.attendance[ab.sectionId + ':' + today] = { [ab.id]: 'A' };
   return db;
