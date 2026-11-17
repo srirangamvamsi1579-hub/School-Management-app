@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plans by school size</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 1600px; height: 3200px; box-sizing: border-box; padding: 56px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-direction: column; gap: 24px">
+  <header style="display: flex; flex-direction: column; gap: 8px">
+    <div style="font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #2147C7">Pricing &amp; packaging</div>
+    <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 44px; line-height: 1.05; font-weight: 700">Four plans, one codebase — switched by configuration</h1>
+    <p style="margin: 0; font-size: 16px; color: #4B5260; max-width: 1100px">Each plan is a saved set of feature switches and limits. Anything one tier up can be sold as an add-on, so a 200-student school can still buy Payroll without moving plan.</p>
+  </header>
+
+  <div style="display: grid; grid-template-columns: 520px repeat(4, minmax(0, 1fr)); gap: 12px; align-items: stretch">
+    <div style="background: #111827; color: #E5E9F0; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; line-height: 1.5">
+      <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; color: #FFFFFF">Suggested price model</h2>
+      <div><b style="color: #FFFFFF">Base:</b> price per enrolled student per year, with a yearly minimum per plan.</div>
+      <div><b style="color: #FFFFFF">Add-ons:</b> flat yearly price per school (for example Payroll, Online payments, Power BI).</div>
+      <div><b style="color: #FFFFFF">Usage:</b> SMS / WhatsApp over the monthly credit billed per message.</div>
+      <div><b style="color: #FFFFFF">Upgrade trigger:</b> enrolment above the plan's cap prompts the next plan; nothing is switched off mid-year.</div>
+    </div>
+    <sc-for list="{{plans}}" as="p" hint-placeholder-count="4">
+      <section aria-label="{{p.name}} plan" style="background: #FFFFFF; border: {{p.border}}; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700">{{p.name}}</h2>
+          <sc-if value="{{p.popular}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: #2147C7; color: #FFFFFF">Most schools</span></sc-if>
+        </div>
+        <div style="font-size: 15px; font-weight: 600; color: #16348F">{{p.range}}</div>
+        <div style="font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700">[PRICE] <span style="font-family: Inter, sans-serif; font-size: 13px; font-weight: 500; color: #4B5260">/ student / year</span></div>
+        <div style="font-size: 12px; color: #4B5260">Minimum [MIN] / year · {{p.hosting}}</div>
+        <ul style="margin: 0; padding: 10px 0 0; list-style: none; border-top: 1px solid #EEF0F3; display: flex; flex-direction: column; gap: 5px; font-size: 13px">
+          <sc-for list="{{p.limits}}" as="l" hint-placeholder-count="6">
+            <li style="display: flex; justify-content: space-between; gap: 8px"><span style="color: #4B5260">{{l.k}}</span><b>{{l.v}}</b></li>
+          </sc-for>
+        </ul>
+      </section>
+    </sc-for>
+  </div>
+
+  <table style="width: 100%; border-collapse: separate; border-spacing: 0; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; overflow: hidden; font-size: 13px">
+    <colgroup><col style="width: 532px"><col><col><col><col></colgroup>
+    <thead>
+      <tr style="background: #F0F2F5">
+        <th scope="col" style="text-align: left; padding: 10px 16px; font-weight: 700">Module · sub-menu · function</th>
+        <sc-for list="{{planNames}}" as="n" hint-placeholder-count="4"><th scope="col" style="padding: 10px 8px; font-weight: 700">{{n}}</th></sc-for>
+      </tr>
+    </thead>
+    <tbody>
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="30">
+        <tr style="background: {{r.bg}}">
+          <th scope="row" style="text-align: left; padding: 5px 16px 5px {{r.indent}}px; font-weight: {{r.weight}}; border-top: 1px solid #EEF0F3; font-size: {{r.size}}px">
+            {{r.label}}<sc-if value="{{r.isFn}}" hint-placeholder-val="{{false}}"><span style="margin-left: 8px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: #EEF0F3; color: #3A404B">FUNCTION</span></sc-if>
+          </th>
+          <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="4">
+            <td style="padding: 5px 8px; text-align: center; border-top: 1px solid #EEF0F3"><span style="font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 6px; background: {{c.bg}}; color: {{c.fg}}">{{c.t}}</span></td>
+          </sc-for>
+        </tr>
+      </sc-for>
+    </tbody>
+  </table>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":3200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const PL = [
+      ['Starter', 'Up to 250 students', 'Shared database', false, ['25', '10 GB', '500', '1', '—', '—']],
+      ['Growth', '251 – 500 students', 'Shared database', false, ['60', '25 GB', '2,000', '1', 'Built-in', '—']],
+      ['Professional', '501 – 1,000 students', 'Shared database', true, ['150', '100 GB', '5,000', '2', 'Power BI', '—']],
+      ['Enterprise', '1,000+ students', 'Shared or dedicated database', false, ['Unlimited', '500 GB', '20,000', 'Unlimited', 'Power BI', '5']]
+    ];
+    const keys = ['Staff logins', 'Storage', 'SMS / month', 'Campuses', 'Insights', 'Custom reports'];
+    const plans = PL.map(([name, range, hosting, popular, vals]) => ({
+      name, range, hosting, popular, border: popular ? '2px solid #2147C7' : '1px solid #E3E6EB',
+      limits: vals.map((v, i) => ({ k: keys[i], v }))
+    }));
+    // [code, label, kind M/S/F, minRank, addonEligible]
+    const T = [
+      ['Dashboard', 'M', 1], ['Role-based home', 'S', 1], ['Notifications inbox', 'F', 1],
+      ['Students', 'M', 1], ['Insights', 'I', 2], ['All Students', 'S', 1], ['New Admission', 'S', 1], ['Attendance', 'S', 1], ['Documents & ID Cards', 'S', 1], ['Promote / Transfer', 'S', 2], ['Bulk import from Excel', 'F', 2], ['ID card printing', 'F', 2], ['Online admission form', 'F', 3],
+      ['Staff', 'M', 1], ['Insights', 'I', 2], ['All Staff · Add Staff', 'S', 1], ['Staff Attendance', 'S', 1], ['Leave Requests', 'S', 1], ['Departments & Designations', 'S', 1], ['Leave approval workflow', 'F', 2], ['Biometric attendance sync', 'F', 4],
+      ['Academics', 'M', 1], ['Academic Years · Classes · Subjects', 'S', 1], ['Boards, Syllabus & Textbooks', 'S', 1], ['Timetable', 'S', 1], ['Multiple campuses / branches', 'F', 4],
+      ['Exams', 'M', 1], ['Question Papers · Approved Papers', 'S', 1], ['Question Bank', 'S', 1], ['Paper Formats', 'S', 1], ['Co-Scholastic', 'S', 1], ['Assessment Profiles', 'S', 1],
+      ['Auto-generate paper from topics & difficulty', 'F', 2], ['Multiple sets (A / B / C) & shuffling', 'F', 2], ['Sample & practice papers', 'F', 2],
+      ['Board syllabus & textbook library', 'F', 2], ['AI-drafted questions (teacher review)', 'F', 3], ['Licensed question library', 'F', 4],
+      ['Fees', 'M', 1], ['Insights', 'I', 2], ['Collect Fee · Receipts', 'S', 1], ['Fee Request Emails (per grade)', 'S', 1], ['Payment Matching & auto-confirm', 'S', 2], ['Dues & Reminders', 'S', 1], ['Fee Structure', 'S', 1], ['Concessions', 'S', 2], ['Refunds', 'S', 2], ['SMS fee reminders', 'F', 2], ['Online payment gateway', 'F', 3], ['Payment links', 'F', 3], ['WhatsApp receipts & reminders', 'F', 3],
+      ['Payroll', 'M', 2], ['Insights', 'I', 2], ['Run Payroll · Payslips', 'S', 2], ['Salary Structure', 'S', 2], ['Advances & Deductions', 'S', 3], ['Payroll approval workflow', 'F', 3], ['Bank transfer file', 'F', 3], ['Statutory reports (PF, tax)', 'F', 3],
+      ['Accounts', 'M', 1], ['Bank & Payment Details (bank, UPI QR)', 'S', 1], ['Insights', 'I', 3], ['Account Statement', 'S', 3], ['Income & Expenses', 'S', 3], ['Cash & Bank Book', 'S', 3], ['Chart of Accounts · Reports', 'S', 3], ['Bank reconciliation', 'F', 4], ['Budgets & variance', 'F', 4],
+      ['Operations', 'M', 1], ['Insights (logins & adoption)', 'S', 3], ['Users', 'S', 1], ['Roles & Permissions', 'S', 1], ['School Settings', 'S', 1], ['Audit Log', 'S', 3], ['Website & Links', 'S', 1], ['Website widgets (pay fees, enquiry)', 'F', 2], ['Appearance & Branding', 'S', 1], ['Colour presets, logo & dark mode', 'F', 1], ['Custom brand colour', 'F', 2], ['Layout templates & extra fonts', 'F', 3], ['White-label mobile app', 'F', 4], ['Custom roles', 'F', 3], ['Audit log export', 'F', 4], ['Custom domain & branding', 'F', 4], ['Single sign-on', 'F', 4, false], ['Open API access', 'F', 4, false],
+      ['My Space & apps', 'M', 1], ['My Profile · My Child · Fee Dues & Pay', 'S', 1], ['My Payslips', 'S', 2], ['Parent mobile app', 'F', 1], ['Teacher mobile app', 'F', 2]
+    ];
+    const ON = ['#E6F4EA', '#0F6B32'], ADD = ['#FFF1E0', '#8A3B00'], OFF = ['transparent', '#6B7280'], PBI = ['#DCE5FF', '#16348F'];
+    const INS = { 2: 'Built-in charts', 3: 'Power BI', 4: 'Power BI + custom' };
+    const rows = T.map(([label, kind, min, addon]) => {
+      const eligible = addon !== false;
+      const cells = [1, 2, 3, 4].map((rank) => {
+        if (rank >= min) {
+          if (kind === 'I') { const t = rank === 2 ? INS[2] : (rank === 3 ? INS[3] : INS[4]); return { t, bg: rank >= 3 ? PBI[0] : ON[0], fg: rank >= 3 ? PBI[1] : ON[1] }; }
+          return { t: 'Included', bg: ON[0], fg: ON[1] };
+        }
+        if (rank === min - 1 && eligible) return { t: 'Add-on', bg: ADD[0], fg: ADD[1] };
+        return { t: '—', bg: OFF[0], fg: OFF[1] };
+      });
+      const isM = kind === 'M';
+      return { label, cells, isFn: kind === 'F', bg: isM ? '#F7F8FA' : '#FFFFFF', weight: isM ? 700 : (kind === 'F' ? 400 : 500), indent: isM ? 16 : 40, size: isM ? 14 : 13 };
+    });
+    return { plans, rows, planNames: ['Starter', 'Growth', 'Professional', 'Enterprise'] };
+  }
+}
+</script>
+</body>
+</html>

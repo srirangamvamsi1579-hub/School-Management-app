@@ -1,0 +1,416 @@
+{
+"v": 3,
+"createdOnFiles": {
+"v": 1,
+"at": "2026-11-17T03:35:18Z"
+},
+"title": "School Management System — Screens, Menus & Database",
+"launch": {
+"view": "canvas"
+},
+"pages": [],
+"boards": {
+"Main.dc.html": {
+"x": 0,
+"y": 0,
+"w": 1600,
+"h": 1180,
+"title": "Menu structure & role access"
+},
+"Sidebar.dc.html": {
+"x": 1680,
+"y": 0,
+"w": 248,
+"h": 980,
+"title": "Sidebar — filtered by profile",
+"is_interactive": true
+},
+"Database.dc.html": {
+"x": 2008,
+"y": 0,
+"w": 1760,
+"h": 1420,
+"title": "Database schema"
+},
+"Dashboard.dc.html": {
+"x": 0,
+"y": 1800,
+"w": 1440,
+"h": 1000,
+"title": "Dashboard (switch role in Tweaks)",
+"expand": "fill",
+"is_interactive": true
+},
+"StudentAdmission.dc.html": {
+"x": 1520,
+"y": 1800,
+"w": 1440,
+"h": 1640,
+"title": "Students › New Admission",
+"expand": "fill"
+},
+"StaffForm.dc.html": {
+"x": 3040,
+"y": 1800,
+"w": 1440,
+"h": 1640,
+"title": "Staff › Add Staff",
+"expand": "fill"
+},
+"FeeCollection.dc.html": {
+"x": 4560,
+"y": 1800,
+"w": 1440,
+"h": 1080,
+"title": "Fees › Collect Fee",
+"expand": "fill",
+"is_interactive": true
+},
+"Payroll.dc.html": {
+"x": 6080,
+"y": 1800,
+"w": 1440,
+"h": 1080,
+"title": "Payroll › Run Payroll",
+"expand": "fill"
+},
+"AccountStatement.dc.html": {
+"x": 7600,
+"y": 1800,
+"w": 1440,
+"h": 1080,
+"title": "Accounts › Account Statement",
+"expand": "fill"
+},
+"UserManagement.dc.html": {
+"x": 9120,
+"y": 1800,
+"w": 1440,
+"h": 1360,
+"title": "Operations › Users, Roles & Permissions",
+"expand": "fill",
+"is_interactive": true
+},
+"MobileParent.dc.html": {
+"x": 0,
+"y": 3820,
+"w": 390,
+"h": 844,
+"title": "Mobile — Parent home"
+},
+"MobileTeacher.dc.html": {
+"x": 470,
+"y": 3820,
+"w": 390,
+"h": 844,
+"title": "Mobile — Teacher attendance",
+"is_interactive": true
+},
+"SaaSArchitecture.dc.html": {
+"x": 0,
+"y": 5044,
+"w": 1760,
+"h": 1140,
+"title": "AWS SaaS architecture"
+},
+"PlansMatrix.dc.html": {
+"x": 1840,
+"y": 5044,
+"w": 1600,
+"h": 3200,
+"title": "Plans by school size — what each includes"
+},
+"ConfigConsole.dc.html": {
+"x": 3520,
+"y": 5044,
+"w": 1440,
+"h": 1240,
+"title": "Platform console — configure a school",
+"expand": "fill",
+"is_interactive": true
+},
+"InsightsFees.dc.html": {
+"x": 5040,
+"y": 5044,
+"w": 1440,
+"h": 1180,
+"title": "Fees › Insights (Power BI embedded)",
+"expand": "fill"
+},
+"InsightsCatalog.dc.html": {
+"x": 6560,
+"y": 5044,
+"w": 1600,
+"h": 1120,
+"title": "Insights per main menu — report catalog"
+},
+"ExamPaperBuilder.dc.html": {
+"x": 0,
+"y": 8644,
+"w": 1440,
+"h": 1320,
+"title": "Exams › Question Papers › New paper (generator)",
+"expand": "fill",
+"is_interactive": true
+},
+"ExamPaperPreview.dc.html": {
+"x": 1520,
+"y": 8644,
+"w": 1440,
+"h": 1760,
+"title": "Exams › Question Papers › Review, approve & print",
+"expand": "fill"
+},
+"ExamApprovedPapers.dc.html": {
+"x": 3040,
+"y": 8644,
+"w": 1440,
+"h": 1040,
+"title": "Exams › Approved Papers",
+"expand": "fill"
+},
+"QuestionBank.dc.html": {
+"x": 4560,
+"y": 8644,
+"w": 1440,
+"h": 1300,
+"title": "Exams › Question Bank",
+"expand": "fill"
+},
+"SyllabusLibrary.dc.html": {
+"x": 6080,
+"y": 8644,
+"w": 1440,
+"h": 1160,
+"title": "Academics › Boards, Syllabus & Textbooks",
+"expand": "fill",
+"is_interactive": true
+},
+"PaperFormats.dc.html": {
+"x": 7600,
+"y": 8644,
+"w": 1600,
+"h": 1240,
+"title": "Indian paper formats (blueprints)"
+},
+"CoScholastic.dc.html": {
+"x": 9280,
+"y": 8644,
+"w": 1440,
+"h": 1100,
+"title": "Exams › Co-Scholastic",
+"expand": "fill",
+"is_interactive": true
+},
+"Appearance.dc.html": {
+"x": 0,
+"y": 10784,
+"w": 1440,
+"h": 1360,
+"title": "Operations › Appearance & Branding (live preview)",
+"expand": "fill",
+"is_interactive": true
+},
+"ThemeArchitecture.dc.html": {
+"x": 1520,
+"y": 10784,
+"w": 1600,
+"h": 1100,
+"title": "How theming works — layers, guardrails, plans"
+},
+"BankDetails.dc.html": {
+"x": 0,
+"y": 12524,
+"w": 1440,
+"h": 1120,
+"title": "Accounts › Bank & Payment Details",
+"expand": "fill"
+},
+"FeeRequestEmail.dc.html": {
+"x": 1520,
+"y": 12524,
+"w": 1440,
+"h": 1300,
+"title": "Fees › Fee Request Emails (per grade)",
+"expand": "fill",
+"is_interactive": true
+},
+"ParentPayPage.dc.html": {
+"x": 3040,
+"y": 12524,
+"w": 390,
+"h": 844,
+"title": "Parent payment link (from the email)",
+"is_interactive": true
+},
+"PaymentMatching.dc.html": {
+"x": 3510,
+"y": 12524,
+"w": 1440,
+"h": 1140,
+"title": "Fees › Payment Matching (auto-confirm)",
+"expand": "fill",
+"is_interactive": true
+},
+"WebsiteLinks.dc.html": {
+"x": 5030,
+"y": 12524,
+"w": 1440,
+"h": 1240,
+"title": "Operations › Website & Links",
+"expand": "fill",
+"is_interactive": true
+},
+"Timetable.dc.html": {
+"x": 0,
+"y": 14204,
+"w": 1440,
+"h": 1000,
+"title": "Academics › Timetable (grade day view)",
+"expand": "fill",
+"is_interactive": true
+},
+"FeeStructure.dc.html": {
+"x": 1520,
+"y": 14204,
+"w": 1440,
+"h": 1560,
+"title": "Fees › Fee Structure (published to parents)",
+"expand": "fill",
+"is_interactive": true
+},
+"InvoiceTemplate.dc.html": {
+"x": 3040,
+"y": 14204,
+"w": 794,
+"h": 1123,
+"title": "Fee invoice — A4 print template"
+},
+"StudentProfile.dc.html": {
+"x": 3914,
+"y": 14204,
+"w": 1440,
+"h": 1640,
+"title": "Student profile & assessment profile",
+"expand": "fill",
+"is_interactive": true
+}
+},
+"order": [
+"Main.dc.html",
+"Sidebar.dc.html",
+"Database.dc.html",
+"Dashboard.dc.html",
+"StudentAdmission.dc.html",
+"StaffForm.dc.html",
+"FeeCollection.dc.html",
+"Payroll.dc.html",
+"AccountStatement.dc.html",
+"UserManagement.dc.html",
+"MobileParent.dc.html",
+"MobileTeacher.dc.html",
+"SaaSArchitecture.dc.html",
+"PlansMatrix.dc.html",
+"ConfigConsole.dc.html",
+"InsightsFees.dc.html",
+"InsightsCatalog.dc.html",
+"ExamPaperBuilder.dc.html",
+"ExamPaperPreview.dc.html",
+"ExamApprovedPapers.dc.html",
+"QuestionBank.dc.html",
+"SyllabusLibrary.dc.html",
+"PaperFormats.dc.html",
+"CoScholastic.dc.html",
+"Appearance.dc.html",
+"ThemeArchitecture.dc.html",
+"BankDetails.dc.html",
+"FeeRequestEmail.dc.html",
+"ParentPayPage.dc.html",
+"PaymentMatching.dc.html",
+"WebsiteLinks.dc.html",
+"Timetable.dc.html",
+"FeeStructure.dc.html",
+"InvoiceTemplate.dc.html",
+"StudentProfile.dc.html"
+],
+"notes": {
+"t1": {
+"x": 0,
+"y": -300,
+"text": "1 · Architecture — menus, role access, database",
+"kind": "title1",
+"maxW": 3768
+},
+"t2": {
+"x": 0,
+"y": 1500,
+"text": "2 · Web admin screens (responsive — also the tablet / web-link build)",
+"kind": "title1",
+"maxW": 10560
+},
+"t3": {
+"x": 0,
+"y": 3520,
+"text": "3 · Mobile app (iOS + Android) — same roles, same API",
+"kind": "title1",
+"maxW": 1800
+},
+"t4": {
+"x": 0,
+"y": 4760,
+"text": "4 · SaaS platform — plans by school size, configuration console, Power BI insights",
+"kind": "title1",
+"maxW": 8160
+},
+"t5": {
+"x": 0,
+"y": 8364,
+"text": "5 · Exams — question bank, paper generator, approval & print, co-scholastic",
+"kind": "title1",
+"maxW": 10720
+},
+"s3": {
+"x": 0,
+"y": 10044,
+"w": 420,
+"text": "Flow: teacher picks board → grade → subject → textbook chapters/topics → difficulty mix → format. Generator fills each section from the approved bank, then HOD/Principal approves, paper is locked and printed (sets A/B/C).",
+"fill": "green"
+},
+"t6": {
+"x": 0,
+"y": 10504,
+"text": "6 · Appearance & Branding — templates, colours, fonts, user preferences",
+"kind": "title1",
+"maxW": 3120
+},
+"t7": {
+"x": 0,
+"y": 12244,
+"text": "7 · Fee collection by email & bank / UPI, auto-confirmation, website links",
+"kind": "title1",
+"maxW": 6470
+},
+"t8": {
+"x": 0,
+"y": 13924,
+"text": "8 · Templates from the school's own samples — timetable, fee structure, invoice, profile",
+"kind": "title1",
+"maxW": 5354
+},
+"s2": {
+"x": 1680,
+"y": 1000,
+"w": 300,
+"text": "Sidebar now also takes a plan (Tweaks): modules, sub-menus and Insights only appear when the school's plan or add-ons include them.",
+"fill": "orange"
+},
+"s1": {
+"x": 940,
+"y": 3820,
+"w": 360,
+"text": "Every screen imports the same Sidebar component with a role. The sidebar shows only menus that role can view (role_menu_permissions.can_view) and hides a module when none of its sub-menus are visible.",
+"fill": "blue"
+}
+},
+"designSystems": []
+}

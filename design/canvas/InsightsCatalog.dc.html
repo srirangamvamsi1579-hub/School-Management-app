@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Insights per main menu</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 1600px; height: 1120px; box-sizing: border-box; padding: 56px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-direction: column; gap: 24px">
+  <header style="display: flex; flex-direction: column; gap: 8px">
+    <div style="font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #B45309">Power BI · one Insights tab per main menu</div>
+    <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 44px; line-height: 1.05; font-weight: 700">Report catalog</h1>
+  </header>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+    <sc-for list="{{mods}}" as="m" hint-placeholder-count="6">
+      <section style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600">{{m.name}} › Insights</h2>
+          <span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: #DCE5FF; color: #16348F">{{m.plan}}</span>
+        </div>
+        <div style="font-size: 12px; color: #4B5260">Seen by: {{m.who}}</div>
+        <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px">
+          <sc-for list="{{m.reports}}" as="r" hint-placeholder-count="3">
+            <li style="display: flex; flex-direction: column; gap: 2px; padding-top: 8px; border-top: 1px solid #EEF0F3">
+              <b style="font-size: 14px">{{r.title}}</b>
+              <span style="font-size: 12px; color: #4B5260">{{r.measures}}</span>
+            </li>
+          </sc-for>
+        </ul>
+        <div style="margin-top: auto; font-size: 11px; color: #4B5260; font-family: ui-monospace, Menlo, monospace">{{m.facts}}</div>
+      </section>
+    </sc-for>
+  </div>
+
+  <section aria-label="How embedding works" style="background: #111827; color: #CBD5E1; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+    <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; color: #FFFFFF">How an Insights tab loads — one Power BI report, every school sees only its own rows</h2>
+    <ol style="margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px">
+      <sc-for list="{{steps}}" as="s" hint-placeholder-count="5">
+        <li style="display: flex; flex-direction: column; gap: 6px">
+          <span style="width: 28px; height: 28px; border-radius: 999px; background: #F59E0B; color: #0B1220; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{s.n}}</span>
+          <b style="color: #FFFFFF; font-size: 14px">{{s.t}}</b>
+          <span style="font-size: 13px; line-height: 1.45">{{s.b}}</span>
+        </li>
+      </sc-for>
+    </ol>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":1120}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const M = (name, plan, who, facts, reports) => ({ name, plan, who, facts, reports: reports.map(([title, measures]) => ({ title, measures })) });
+    const mods = [
+      M('Students', 'Growth+', 'Admin, Principal', 'fact_attendance · fact_enrolment · dim_student · dim_class', [
+        ['Enrolment & capacity', 'Students by class vs seats, new admissions, withdrawals'],
+        ['Attendance patterns', 'Daily %, chronic absentees, day-of-week heatmap'],
+        ['Students at risk', 'Low attendance + overdue fees + falling marks']]),
+      M('Staff', 'Growth+', 'Admin, Principal', 'fact_staff_attendance · fact_leave · dim_staff', [
+        ['Staff mix & ratio', 'Student–teacher ratio by class, teaching vs non-teaching'],
+        ['Leave & absence', 'Leave days by type and department, substitute load'],
+        ['Tenure & attrition', 'Joiners, leavers, average tenure']]),
+      M('Fees', 'Growth+', 'Admin, Principal, Accountant', 'fact_fee_invoice · fact_fee_payment · dim_date', [
+        ['Collection vs billed', 'Collection rate by month, class, fee head'],
+        ['Overdue ageing & defaulters', '1–30, 31–60, 61–90, 90+ days; repeat defaulters'],
+        ['Payment modes & concessions', 'UPI / cash / card mix, concession cost by reason']]),
+      M('Payroll', 'Growth+', 'Admin, Principal, Accountant', 'fact_payslip · fact_payslip_line · dim_staff', [
+        ['Payroll cost by department', 'Gross, deductions, net; cost per student'],
+        ['Salary trend & headcount', 'Month-on-month cost, loss-of-pay days'],
+        ['Payroll vs fee income', 'Salaries as % of fees collected']]),
+      M('Accounts', 'Professional+', 'Admin, Principal, Accountant', 'fact_voucher_line · dim_account · dim_date', [
+        ['Income vs expenses', 'Monthly surplus, budget vs actual (Enterprise)'],
+        ['Cash flow & bank balance', 'Opening, in, out, closing; 90-day projection'],
+        ['Expense by category', 'Utilities, maintenance, supplies — trend and share']]),
+      M('Operations', 'Professional+', 'Admin, Principal', 'fact_login · fact_feature_use · dim_user', [
+        ['Logins & app adoption', 'Active parents, staff logins, app vs web'],
+        ['Feature usage', 'Which menus are used — helps upsell and training'],
+        ['Notifications', 'SMS / WhatsApp sent vs plan credit']])
+    ];
+    const steps = [
+      { n: '1', t: 'Open Insights', b: 'A user clicks Insights in any main menu; it only appears if the plan includes it.' },
+      { n: '2', t: 'Check entitlement', b: 'The app reads the feature variant: built-in charts (Growth) or Power BI (Professional+).' },
+      { n: '3', t: 'Get an embed token', b: 'The embed service calls the Power BI REST API with the school’s tenant_id as the effective identity.' },
+      { n: '4', t: 'Render in the app', b: 'The Power BI JavaScript SDK shows the report inside the screen; users need no Power BI licence.' },
+      { n: '5', t: 'Row-level security', b: 'Role "Tenant" filters every table to tenant_id = USERNAME(), so schools never see each other.' }
+    ];
+    return { mods, steps };
+  }
+}
+</script>
+</body>
+</html>

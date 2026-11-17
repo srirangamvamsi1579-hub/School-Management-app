@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fee structure</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1560px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="Accountant" plan="Professional" active="FEE_STRUCT" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <nav aria-label="Breadcrumb" style="font-size: 13px; color: #4B5260">Fees › Fee Structure</nav>
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+        <div><h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700">Fee structure — High School</h1><div style="font-size: 14px; color: #4B5260">Academic year 2027-28 · draft · compared with the current structure</div></div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <button type="button" onClick="{{toggleCompare}}" aria-pressed="{{compareSel}}" style="height: 40px; padding: 0 14px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid {{cmpBorder}}; background: {{cmpBg}}; color: {{cmpFg}}">Compare with current</button>
+          <button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Apply % increase…</button>
+          <button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Parent PDF</button>
+          <button type="button" style="height: 40px; padding: 0 14px; border: 0; border-radius: 8px; background: #2147C7; color: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Send for approval</button>
+        </div>
+      </div>
+    </div>
+
+    <section aria-label="Base fee" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">1 · Yearly fee by grade group</h2>
+      <div style="overflow-x: auto">
+        <table style="width: 100%; min-width: 680px; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums">
+          <thead><tr style="background: #F0F2F5"><th scope="col" style="text-align: left; padding: 8px">Fee head</th><sc-for list="{{groups}}" as="g" hint-placeholder-count="5"><th scope="col" style="text-align: right; padding: 8px">{{g}}</th></sc-for></tr></thead>
+          <tbody>
+            <sc-for list="{{base}}" as="r" hint-placeholder-count="4">
+              <tr style="border-top: 1px solid #EEF0F3; background: {{r.bg}}">
+                <th scope="row" style="text-align: left; padding: 8px; font-weight: {{r.w}}">{{r.head}}<div style="font-size: 11px; font-weight: 500; color: #4B5260">{{r.note}}</div></th>
+                <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="5">
+                  <td style="text-align: right; padding: 8px; font-weight: {{r.w}}"><input type="text" value="{{c.v}}" aria-label="{{c.aria}}" style="width: 96px; height: 34px; box-sizing: border-box; padding: 0 8px; border: 1px solid {{c.border}}; border-radius: 6px; font: inherit; text-align: right; background: {{c.inBg}}" readOnly="{{c.ro}}"><sc-if value="{{c.cmp}}" hint-placeholder-val="{{false}}"><div style="font-size: 11px; color: #4B5260; margin-top: 2px">was {{c.old}} · <b style="color: #8A3B00">{{c.pct}}</b></div></sc-if></td>
+                </sc-for>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-label="Total by transport band" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap"><h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">2 · Total yearly fee with transport, by pick-up band</h2><span style="font-size: 12px; color: #4B5260">Each student's pick-up point sets the band · day scholars pay the base total</span></div>
+      <div style="overflow-x: auto">
+        <table style="width: 100%; min-width: 680px; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums">
+          <thead><tr style="background: #F0F2F5"><th scope="col" style="text-align: left; padding: 8px">Band</th><sc-for list="{{groups}}" as="g" hint-placeholder-count="5"><th scope="col" style="text-align: right; padding: 8px">{{g}}</th></sc-for></tr></thead>
+          <tbody>
+            <sc-for list="{{bands}}" as="b" hint-placeholder-count="6">
+              <tr style="border-top: 1px solid #EEF0F3"><th scope="row" style="text-align: left; padding: 8px">{{b.name}}<div style="font-size: 11px; font-weight: 500; color: #4B5260">{{b.desc}}</div></th>
+                <sc-for list="{{b.cells}}" as="c" hint-placeholder-count="5"><td style="text-align: right; padding: 8px"><b>{{c.v}}</b><div style="font-size: 11px; color: #4B5260">transport {{c.t}}<sc-if value="{{c.cmp}}" hint-placeholder-val="{{false}}"> · <b style="color: #8A3B00">{{c.pct}}</b></sc-if></div></td></sc-for>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-label="Payment options" style="display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">3 · How parents can pay</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px">
+        <sc-for list="{{plans}}" as="p" hint-placeholder-count="3">
+          <div style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 6px">
+            <b style="font-size: 16px">{{p.name}}</b>
+            <sc-for list="{{p.points}}" as="x" hint-placeholder-count="3"><span style="font-size: 13px; color: #2A2F38">• {{x}}</span></sc-for>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between">
+          <b style="font-size: 15px">What a family pays — preview</b>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap">
+            <sc-for list="{{pickGroup}}" as="g" hint-placeholder-count="5"><button type="button" aria-pressed="{{g.sel}}" onClick="{{g.pick}}" style="height: 34px; padding: 0 10px; border-radius: 8px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid {{g.border}}; background: {{g.bg}}; color: {{g.fg}}">{{g.label}}</button></sc-for>
+            <select aria-label="Band" onChange="{{pickBand}}" style="height: 34px; padding: 0 8px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-size: 12px"><sc-for list="{{bandOpts}}" as="o" hint-placeholder-count="7"><option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px">
+          <sc-for list="{{preview}}" as="p" hint-placeholder-count="3">
+            <div style="padding: 12px; border-radius: 10px; background: #F5F6F8; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 12px; color: #4B5260">{{p.k}}</span><b style="font-size: 18px">{{p.v}}</b><span style="font-size: 12px; color: #4B5260">{{p.s}}</span></div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 16px">
+      <section aria-label="Billed separately" style="flex: 1 1 340px; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px">
+        <h2 style="margin: 0 0 4px; font-family: 'Space Grotesk', sans-serif; font-size: 18px">4 · Not included — billed as used</h2>
+        <sc-for list="{{excl}}" as="e" hint-placeholder-count="5"><div style="display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding-top: 6px; border-top: 1px solid #EEF0F3"><b>{{e.k}}</b><span style="color: #4B5260; text-align: right">{{e.v}}</span></div></sc-for>
+      </section>
+      <section aria-label="Notes for parents" style="flex: 1 1 340px; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px">
+        <h2 style="margin: 0 0 4px; font-family: 'Space Grotesk', sans-serif; font-size: 18px">5 · Notes printed on the parent copy</h2>
+        <textarea rows="6" aria-label="Notes" defaultValue="{{notes}}" style="box-sizing: border-box; padding: 8px 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-size: 13px; line-height: 1.5; resize: vertical"></textarea>
+        <span style="font-size: 12px; color: #4B5260">Arrears for dining or transport used last year are added to the first instalment automatically, from attendance.</span>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1560}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const cmp = st.cmp !== undefined ? st.cmp : true, gi = st.gi !== undefined ? st.gi : 2, band = st.band !== undefined ? st.band : 3;
+    const set = (p) => this.setState(Object.assign({ cmp, gi, band }, p));
+    const fmt = (n) => Math.round(n).toLocaleString('en-IN');
+    const pct = (a, b) => (((a / b) - 1) * 100).toFixed(1) + '%';
+    const G = ['I–IV', 'V–VII', 'VIII–X', 'XI', 'XII'];
+    const NEW = { Tuition: [126090, 130650, 143310, 207930, 233610], Dining: [34350, 34470, 37860, 40800, 41040], Annual: [7500, 7500, 7500, 7500, 7500] };
+    const OLD = { Tuition: [114600, 118800, 130260, 189000, 212400], Dining: [30000, 30000, 33000, 35100, 35100], Annual: [7500, 7500, 7500, 7500, 7500] };
+    const tot = (o) => G.map((_, i) => o.Tuition[i] + o.Dining[i] + o.Annual[i]);
+    const nT = tot(NEW), oT = tot(OLD);
+    const NOTE = { Tuition: 'Eligible for single-payment discount', Dining: 'Day dining', Annual: 'Events, activities, insurance' };
+    const base = ['Tuition', 'Dining', 'Annual'].map((h) => ({ head: h, note: NOTE[h], w: 500, bg: '#FFFFFF',
+      cells: G.map((g, i) => ({ v: fmt(NEW[h][i]), old: fmt(OLD[h][i]), pct: pct(NEW[h][i], OLD[h][i]), cmp: cmp, ro: false, border: '#CDD2DA', inBg: '#FFFFFF', aria: h + ' ' + g })) }));
+    base.push({ head: 'Total (day scholar)', note: '', w: 700, bg: '#F7F8FA', cells: G.map((g, i) => ({ v: fmt(nT[i]), old: fmt(oT[i]), pct: pct(nT[i], oT[i]), cmp: cmp, ro: true, border: 'transparent', inBg: 'transparent', aria: 'Total ' + g })) });
+    const BN = [[196620, 201180, 218790, 301080, 327000], [207960, 212460, 231990, 307650, 333570], [215730, 220380, 242190, 314100, 340020], [221050, 225780, 247410, 322230, 348150], [226170, 230730, 252690, 332370, 358290], [230220, 234960, 257310, 336360, 362280]];
+    const BO = [[180450, 184650, 200760, 273600, 297000], [190800, 195000, 212760, 279600, 303000], [198000, 202200, 222210, 285600, 309000], [201900, 206100, 225960, 291600, 315000], [206550, 210750, 230160, 300720, 324120], [210300, 214500, 234360, 304320, 327720]];
+    const BD = ['Pick-up zone A', 'Pick-up zone B', 'Pick-up zone C', 'Pick-up zone D', 'Pick-up zone E', 'Pick-up zone F'];
+    const bands = BN.map((row, b) => ({ name: 'Band ' + (b + 1), desc: BD[b], cells: row.map((v, i) => ({ v: fmt(v), t: fmt(v - nT[i]), pct: pct(v, BO[b][i]), cmp })) }));
+    const plans = [
+      { name: 'Single payment', points: ['5% discount on tuition', 'Choose by 30 June', 'One invoice in April'] },
+      { name: 'Three instalments', points: ['April, August and December', 'No discount', 'Invoices labelled Instalment I, II, III'] },
+      { name: 'Finance partner', points: ['Partner pays the school in full', 'Parent pays the partner monthly', 'No discount; school is paid upfront'] }
+    ];
+    const pickGroup = G.map((label, i) => ({ label, sel: i === gi ? 'true' : 'false', bg: i === gi ? '#14171C' : '#FFFFFF', fg: i === gi ? '#FFFFFF' : '#2A2F38', border: i === gi ? '#14171C' : '#CDD2DA', pick: () => set({ gi: i }) }));
+    const bandOpts = [{ v: '0', label: 'No transport', sel: band === 0 }].concat(BD.map((d, b) => ({ v: String(b + 1), label: 'Band ' + (b + 1) + ' · ' + d, sel: band === b + 1 })));
+    const yearly = band === 0 ? nT[gi] : BN[band - 1][gi];
+    const disc = NEW.Tuition[gi] * 0.05;
+    const preview = [
+      { k: 'Single payment (April)', v: '₹' + fmt(yearly - disc), s: 'saves ₹' + fmt(disc) },
+      { k: 'Three instalments', v: '3 × ₹' + fmt(yearly / 3), s: 'Apr · Aug · Dec — total ₹' + fmt(yearly) },
+      { k: 'Finance partner', v: '₹' + fmt(yearly / 10) + ' / month', s: 'indicative; partner’s terms apply' }
+    ];
+    const excl = [['Uniforms', 'Billed as issued'], ['Textbooks', 'Billed as issued'], ['Stationery', 'First set free, then as used'], ['Notebooks', 'First set free, then as used'], ['Excursions', 'Billed when organised']].map(([k, v]) => ({ k, v }));
+    const notes = 'Fees are reviewed once a year by the school management.\nDining and transport are charged only for months the service is used.\nTransport is by pick-up point; the band is confirmed in the admission letter.\nFees once paid are not refundable except as per the school’s refund policy.';
+    return {
+      zero: 0, groups: G, base, bands, plans, pickGroup, bandOpts, preview, excl, notes,
+      compareSel: cmp ? 'true' : 'false', cmpBg: cmp ? '#14171C' : '#FFFFFF', cmpFg: cmp ? '#FFFFFF' : '#2A2F38', cmpBorder: cmp ? '#14171C' : '#CDD2DA',
+      toggleCompare: () => set({ cmp: !cmp }), pickBand: (e) => set({ band: parseInt(e.target.value, 10) })
+    };
+  }
+}
+</script>
+</body>
+</html>

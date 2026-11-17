@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fee request emails</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1300px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="Accountant" plan="Professional" active="FEE_REQUESTS" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <nav aria-label="Breadcrumb" style="font-size: 13px; color: #4B5260">Fees › Fee Request Emails › New request</nav>
+      <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700">Send fee requests by grade</h1>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start">
+      <div style="flex: 1 1 400px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+        <section aria-label="Who" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">1 · Grades</h2>
+          <div role="group" aria-label="Grades" style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px">
+            <sc-for list="{{grades}}" as="g" hint-placeholder-count="12">
+              <button type="button" aria-pressed="{{g.sel}}" onClick="{{g.toggle}}" style="height: 40px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid {{g.border}}; background: {{g.bg}}; color: {{g.fg}}">{{g.label}}</button>
+            </sc-for>
+          </div>
+          <div role="radiogroup" aria-label="Which dues" style="display: flex; flex-wrap: wrap; gap: 6px">
+            <sc-for list="{{scopes}}" as="s" hint-placeholder-count="3">
+              <button type="button" role="radio" aria-checked="{{s.sel}}" onClick="{{s.pick}}" style="height: 36px; padding: 0 12px; border-radius: 999px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid {{s.border}}; background: {{s.bg}}; color: {{s.fg}}">{{s.label}}</button>
+            </sc-for>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+            <sc-for list="{{summary}}" as="m" hint-placeholder-count="4">
+              <div style="padding: 10px 12px; border-radius: 10px; background: {{m.bg}}"><div style="font-size: 12px; color: #4B5260">{{m.k}}</div><div style="font-size: 18px; font-weight: 700; color: {{m.fg}}">{{m.v}}</div></div>
+            </sc-for>
+          </div>
+          <span style="font-size: 12px; color: #4B5260">Emails go to each student's primary guardian, taken from the student record. Families with no email get an SMS instead (Growth+) and are listed for the office.</span>
+        </section>
+
+        <section aria-label="Message" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">2 · Message</h2>
+          <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600">Subject
+            <input type="text" value="{{subjectTpl}}" readOnly="{{true}}" aria-label="Subject" style="height: 40px; box-sizing: border-box; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 13px">
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600">Message
+            <textarea rows="6" defaultValue="{{bodyTpl}}" style="box-sizing: border-box; padding: 8px 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 13px; line-height: 1.5; resize: vertical"></textarea>
+          </label>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px">
+            <sc-for list="{{chips}}" as="c" hint-placeholder-count="8"><span style="font-size: 11px; font-family: ui-monospace, Menlo, monospace; padding: 3px 8px; border-radius: 6px; background: #EEF2FF; color: #16348F">{{c}}</span></sc-for>
+          </div>
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 14px"><input type="checkbox" checked="{{true}}" readOnly="{{true}}" style="width: 18px; height: 18px">Add "Pay now" personal link</label>
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 14px"><input type="checkbox" checked="{{true}}" readOnly="{{true}}" style="width: 18px; height: 18px">Add bank details &amp; UPI QR (Fee collection account)</label>
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 14px"><input type="checkbox" checked="{{true}}" readOnly="{{true}}" style="width: 18px; height: 18px">Attach the invoice PDF</label>
+        </section>
+
+        <section aria-label="When" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">3 · When</h2>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+            <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600">Due date<input type="date" value="2026-12-10" style="height: 40px; box-sizing: border-box; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 13px"></label>
+            <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600">Send<select style="height: 40px; padding: 0 8px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 13px"><option>Tomorrow 9:00 am</option><option>Now</option></select></label>
+          </div>
+          <span style="font-size: 13px">Reminders to those who haven't paid: <b>3 days before</b>, <b>on the due date</b>, <b>3 days after</b></span>
+          <div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap">
+            <button type="button" style="height: 44px; padding: 0 16px; border: 1px solid #CDD2DA; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer">Send test to me</button>
+            <button type="button" style="height: 44px; padding: 0 16px; border: 0; border-radius: 10px; background: #2147C7; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer">Schedule {{emailCount}} emails</button>
+          </div>
+        </section>
+      </div>
+
+      <div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+        <section aria-label="Email preview" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; overflow: hidden">
+          <div style="padding: 10px 16px; background: #F0F2F5; font-size: 12px; color: #4B5260; display: flex; flex-direction: column; gap: 2px">
+            <span><b>To:</b> Rohit Sharma &lt;rohit.s@example.com&gt;</span><span><b>Subject:</b> Fee due: Aarav Sharma (Grade VIII-A) — ₹1,03,070 by 10 Dec 2026</span>
+          </div>
+          <div style="padding: 20px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; line-height: 1.55">
+            <div style="display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 3px solid #2147C7"><span style="width: 36px; height: 36px; border-radius: 8px; background: #2147C7; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 800">S</span><b style="font-size: 16px">[School Name]</b></div>
+            <p style="margin: 0">Dear Rohit Sharma,</p>
+            <p style="margin: 0">The Instalment III fee for Aarav Sharma (Grade VIII-A) of <b>₹1,03,070</b> is due on <b>10 Dec 2026</b>. You can pay online with the button below, or by bank transfer / UPI using the school's details.</p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px">
+              <tbody>
+                <sc-for list="{{lines}}" as="l" hint-placeholder-count="4"><tr style="border-top: 1px solid #EEF0F3"><td style="padding: 6px 0; font-weight: {{l.w}}">{{l.k}}</td><td style="padding: 6px 0; text-align: right; font-weight: {{l.w}}">{{l.v}}</td></tr></sc-for>
+              </tbody>
+            </table>
+            <a href="ParentPayPage.dc.html" style="align-self: flex-start; display: inline-flex; align-items: center; height: 46px; padding: 0 22px; border-radius: 10px; background: #2147C7; color: #FFFFFF; font-weight: 700; text-decoration: none">Pay ₹1,03,070 now</a>
+            <div style="display: flex; gap: 14px; padding: 12px; border-radius: 10px; background: #F5F6F8; font-size: 13px">
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><b>Or pay by bank transfer / UPI</b><span>[School] Educational Society</span><span>State Bank of India, MG Road · IFSC SBIN0001234</span><span>Account no.: on the payment page</span><span>UPI: schoolfees@sbi</span><span style="color: #8A3B00">Please write <b>ADM-2025-0231</b> in the remarks so we can match it automatically.</span></div>
+              <div role="img" aria-label="UPI QR code" style="flex: 0 0 84px; height: 84px; border: 2px dashed #8A93A3; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #4B5260; text-align: center">UPI<br>QR</div>
+            </div>
+            <p style="margin: 0; font-size: 12px; color: #4B5260">Invoice INV-2026-08301 attached. You'll get a receipt by email as soon as the payment is confirmed.</p>
+          </div>
+        </section>
+
+        <section aria-label="Previous requests" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Sent requests</h2>
+          <sc-for list="{{campaigns}}" as="c" hint-placeholder-count="2">
+            <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid #EEF0F3">
+              <div style="display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap"><b style="font-size: 14px">{{c.title}}</b><span style="font-size: 12px; color: #4B5260">{{c.meta}}</span></div>
+              <div aria-hidden="true" style="display: flex; height: 10px; border-radius: 4px; overflow: hidden; gap: 2px; background: #F0F2F5"><div style="width: {{c.paid}}%; background: #0F6B32"></div><div style="width: {{c.part}}%; background: #B45309"></div></div>
+              <span style="font-size: 12px; color: #4B5260">{{c.text}}</span>
+            </div>
+          </sc-for>
+        </section>
+      </div>
+    </div>
+
+    <section aria-label="Per family status" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Instalment III · Grades VIII–X — each family</h2>
+      <div style="overflow-x: auto">
+        <table style="width: 100%; min-width: 860px; border-collapse: collapse; font-size: 13px">
+          <thead><tr style="text-align: left; color: #5B6270; font-size: 12px"><th scope="col" style="padding: 6px">Student</th><th scope="col" style="padding: 6px">Guardian email</th><th scope="col" style="padding: 6px; text-align: right">Due</th><th scope="col" style="padding: 6px">Status</th><th scope="col" style="padding: 6px">Remarks (filled in automatically)</th></tr></thead>
+          <tbody>
+            <sc-for list="{{families}}" as="f" hint-placeholder-count="5">
+              <tr style="border-top: 1px solid #EEF0F3"><td style="padding: 8px 6px; font-weight: 600">{{f.name}}</td><td style="padding: 8px 6px; color: #4B5260">{{f.email}}</td><td style="padding: 8px 6px; text-align: right">{{f.due}}</td>
+                <td style="padding: 8px 6px"><span style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: {{f.bg}}; color: {{f.fg}}">{{f.status}}</span></td><td style="padding: 8px 6px; color: #4B5260">{{f.remark}}</td></tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const sel = st.sel || { 8: 1, 9: 1, 10: 1 };
+    const scope = st.scope || 'INST';
+    const R = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+    const COUNT = [62, 60, 58, 64, 66, 61, 63, 70, 68, 72, 54, 49];
+    const AVG = (g) => g <= 4 ? 65540 : g <= 7 ? 67060 : g <= 10 ? 103070 : g === 11 ? 102690 : 109000;
+    const fmt = (n) => '₹' + Math.round(n).toLocaleString('en-IN');
+    const set = (p) => this.setState(Object.assign({ sel, scope }, p));
+    let students = 0, emails = 0, due = 0;
+    const grades = R.map((label, i) => {
+      const g = i + 1, on = !!sel[g];
+      if (on) { const n = scope === 'OVERDUE' ? Math.round(COUNT[i] * 0.14) : COUNT[i]; students += n; emails += Math.round(n * 0.96); due += n * (scope === 'OVERDUE' ? AVG(g) * 0.6 : AVG(g)); }
+      return { label, sel: on ? 'true' : 'false', bg: on ? '#2147C7' : '#FFFFFF', fg: on ? '#FFFFFF' : '#2A2F38', border: on ? '#2147C7' : '#CDD2DA',
+        toggle: () => { const n = Object.assign({}, sel); if (on) delete n[g]; else n[g] = 1; set({ sel: n }); } };
+    });
+    const scopes = [['INST', 'Instalment III (Dec)'], ['ALL', 'Everything unpaid'], ['OVERDUE', 'Only overdue']].map(([k, label]) => { const on = k === scope; return { label, sel: on ? 'true' : 'false', bg: on ? '#14171C' : '#FFFFFF', fg: on ? '#FFFFFF' : '#2A2F38', border: on ? '#14171C' : '#CDD2DA', pick: () => set({ scope: k }) }; });
+    const summary = [['Students', String(students), '#F5F6F8', '#14171C'], ['Guardian emails found', String(emails), '#E6F4EA', '#0F6B32'],
+      ['No email — SMS instead', String(students - emails), students - emails ? '#FFF1E0' : '#F5F6F8', students - emails ? '#8A3B00' : '#14171C'], ['Total requested', fmt(due), '#EEF2FF', '#16348F']]
+      .map(([k, v, bg, fg]) => ({ k, v, bg, fg }));
+    const chips = ['{{guardian_name}}', '{{student_name}}', '{{class}}', '{{instalment}}', '{{amount_due}}', '{{due_date}}', '{{pay_link}}', '{{bank_details}}'];
+    const lines = [['Tuition', '₹60,890', 400], ['Dining', '₹16,320', 400], ['Transport', '₹25,860', 400], ['Net payable', '₹1,03,070', 700]].map(([k, v, w]) => ({ k, v, w }));
+    const campaigns = [
+      ['Instalment II · Grades I–XII', 'Sent 1 Aug · due 10 Aug', 92, 3, '92% paid · 3% part-paid · 41 reminders sent · 0 bounced'],
+      ['Transport arrears · Grades V–X', 'Sent 2 Oct · due 15 Oct', 78, 6, '78% paid · 6% part-paid · 22 still due']
+    ].map(([title, meta, paid, part, text]) => ({ title, meta, paid, part, text }));
+    const S = { PAID: ['Paid', '#E6F4EA', '#0F6B32'], PART: ['Part-paid', '#FFF1E0', '#8A3B00'], OPEN: ['Opened', '#EEF2FF', '#16348F'], SENT: ['Sent', '#EEF0F3', '#3A404B'], SMS: ['SMS sent', '#EEF0F3', '#3A404B'] };
+    const families = [
+      ['Aarav Sharma · VIII-A', 'rohit.s@example.com', '₹1,03,070', 'PAID', 'Paid ₹1,03,070 by UPI on 05 Dec 2026 · ref pay_Nf83kQ · receipt R-2026-00412 · confirmed automatically'],
+      ['Diya Patel · VIII-B', 'meena.p@example.com', '₹1,03,070', 'PART', 'Paid ₹50,000 by NEFT on 06 Dec 2026 · UTR SBIN226340091 · receipt R-2026-00419 · ₹53,070 still due'],
+      ['Kabir Khan · IX-S2', 'imran.k@example.com', '₹1,09,470', 'OPEN', 'Opened 04 Dec 2026, 8:12 pm'],
+      ['Isha Bhat · X-W1', 'anil.b@example.com', '₹1,09,470', 'SENT', 'Reminder due 07 Dec'],
+      ['Nikhil Rao · X-W3', '— (no email on file)', '₹1,09,470', 'SMS', 'SMS with pay link sent to +91 98•••• 1204 · office to update email']
+    ].map(([name, email, d, k, remark]) => ({ name, email, due: d, remark, status: S[k][0], bg: S[k][1], fg: S[k][2] }));
+    const O = '{{', C = '}}';
+    const subjectTpl = 'Fee due: ' + O + 'student_name' + C + ' (' + O + 'class' + C + ') — ' + O + 'amount_due' + C + ' by ' + O + 'due_date' + C;
+    const bodyTpl = 'Dear ' + O + 'guardian_name' + C + ',\n\nThe ' + O + 'instalment' + C + ' fee for ' + O + 'student_name' + C + ' (' + O + 'class' + C + ') of ' + O + 'amount_due' + C + ' is due on ' + O + 'due_date' + C + '. You can pay online with the button below, or by bank transfer / UPI using the school\'s details.\n\nThank you,\nAccounts Office';
+    return { subjectTpl, bodyTpl, zero: 0, grades, scopes, summary, chips, lines, campaigns, families, emailCount: String(emails) };
+  }
+}
+</script>
+</body>
+</html>

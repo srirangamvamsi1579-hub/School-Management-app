@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fee invoice template</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 794px; height: 1123px; box-sizing: border-box; padding: 48px 56px; background: #FFFFFF; font-family: Inter, Arial, sans-serif; color: #14171C; font-size: 15px; display: flex; flex-direction: column; gap: 18px; position: relative">
+  <header style="display: flex; gap: 14px; align-items: center; padding-bottom: 14px; border-bottom: 2px solid {{accent}}">
+    <div role="img" aria-label="School logo" style="width: 64px; height: 52px; border-radius: 8px; background: {{accent}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 22px">S</div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <b style="font-size: 19px; letter-spacing: 0.02em">[SCHOOL NAME]</b>
+      <span style="font-size: 12px; color: #3A404B">[Address line, Mandal, District, City – PIN]</span>
+      <span style="font-size: 12px; color: #3A404B">(An undertaking of [Educational Society])</span>
+    </div>
+  </header>
+
+  <div style="text-align: center; font-weight: 800; font-size: 18px; letter-spacing: 0.2em">FEES</div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; font-size: 14px">
+    <dl style="margin: 0; display: grid; grid-template-columns: 130px 1fr; gap: 10px 8px">
+      <dt style="color: #4B5260">Student Name:</dt><dd style="margin: 0; font-weight: 700">AARAV SHARMA</dd>
+      <dt style="color: #4B5260">Admission No:</dt><dd style="margin: 0; font-weight: 600">ADM-2025-0231</dd>
+      <dt style="color: #4B5260">Program:</dt><dd style="margin: 0; font-weight: 600">GRADE VIII</dd>
+      <dt style="color: #4B5260">Installment:</dt><dd style="margin: 0; font-weight: 600">Installment III</dd>
+    </dl>
+    <dl style="margin: 0; display: grid; grid-template-columns: 120px 1fr; gap: 10px 8px">
+      <dt style="color: #4B5260">Fee Invoice No:</dt><dd style="margin: 0; font-weight: 700">INV-GVS-08301</dd>
+      <dt style="color: #4B5260">Date:</dt><dd style="margin: 0; font-weight: 600">01-12-2026</dd>
+      <dt style="color: #4B5260">Due Date:</dt><dd style="margin: 0; font-weight: 600">10-12-2026</dd>
+    </dl>
+  </div>
+
+  <table style="width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums">
+    <thead><tr style="border-bottom: 1.5px solid #14171C; color: #3A404B; font-size: 13px"><th scope="col" style="text-align: left; padding: 8px 4px; width: 48px">Sr</th><th scope="col" style="text-align: left; padding: 8px 4px">Description</th><th scope="col" style="text-align: right; padding: 8px 4px">Amount</th></tr></thead>
+    <tbody>
+      <sc-for list="{{items}}" as="i" hint-placeholder-count="3">
+        <tr style="border-bottom: 1px solid #E3E6EB"><td style="padding: 9px 4px">{{i.sr}}</td><td style="padding: 9px 4px">{{i.d}}</td><td style="padding: 9px 4px; text-align: right">{{i.a}}</td></tr>
+      </sc-for>
+    </tbody>
+  </table>
+
+  <div style="display: flex; flex-direction: column; gap: 10px; font-size: 14px; font-variant-numeric: tabular-nums">
+    <div style="display: flex; justify-content: flex-end; gap: 40px; padding-bottom: 10px; border-bottom: 1px solid #E3E6EB"><span>Grand Total:</span><b style="min-width: 140px; text-align: right">₹ 1,03,070.00</b></div>
+    <div style="display: flex; justify-content: space-between"><span>Previous Outstanding Amount:</span><span>₹ 0.00</span></div>
+    <div style="display: flex; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid #E3E6EB"><span>Total Advance:</span><span>₹ 0.00</span></div>
+    <div style="display: flex; justify-content: space-between; font-size: 16px"><b>Net Payable:</b><b>₹ 1,03,070.00</b></div>
+    <div style="font-size: 13px"><b>Net Payable Amount (in words):</b> INR One Lakh, Three Thousand And Seventy only.</div>
+  </div>
+
+  <section aria-label="How to pay" style="display: flex; gap: 18px; padding: 14px 16px; border: 1.5px solid {{accent}}; border-radius: 10px">
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 1.5">
+      <b style="font-size: 14px">How to pay</b>
+      <span><b>Online:</b> scan the code or visit <span style="font-family: ui-monospace, Menlo, monospace">greenvalley.yourapp.com/pay</span> and enter the invoice no.</span>
+      <span><b>UPI:</b> schoolfees@sbi</span>
+      <span><b>Bank transfer:</b> [School] Educational Society · State Bank of India, MG Road · A/c 3021 4567 4821 · IFSC SBIN0001234</span>
+      <span style="color: #8A3B00">Please quote <b>ADM-2025-0231</b> in the remarks — your receipt is emailed automatically once the payment reaches the school.</span>
+    </div>
+    <div role="img" aria-label="Pay QR code" style="flex: 0 0 110px; height: 110px; box-sizing: border-box; border: 2px dashed #8A93A3; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px; font-weight: 700; color: #4B5260">Pay link<br>QR</div>
+  </section>
+
+  <sc-if value="{{paid}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; right: 70px; top: 360px; transform: rotate(-12deg); border: 3px solid #0F6B32; color: #0F6B32; border-radius: 8px; padding: 6px 14px; font-weight: 800; font-size: 20px; letter-spacing: 0.08em; text-align: center">PAID<div style="font-size: 11px; letter-spacing: 0">05-12-2026 · R-2026-00412</div></div>
+  </sc-if>
+
+  <footer style="margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 10px; border-top: 1px solid #E3E6EB; font-size: 12px; color: #3A404B">
+    <i style="font-weight: 600">This is a Computer Generated Statement and Does Not Require a Signature</i>
+    <span>Page 1 of 1</span>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E07A1F","options":["#E07A1F","#2147C7","#0F766E","#9F1239"]},"paid":{"editor":"boolean","default":false},"$preview":{"width":794,"height":1123}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const items = [['1', 'Tuition', '₹ 60,890.00'], ['2', 'Dining', '₹ 16,320.00'], ['3', 'Transport', '₹ 25,860.00']].map(([sr, d, a]) => ({ sr, d, a }));
+    return { items, accent: this.props.accent ?? '#E07A1F', paid: this.props.paid ?? false };
+  }
+}
+</script>
+</body>
+</html>

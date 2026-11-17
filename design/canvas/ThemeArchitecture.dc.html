@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How theming works</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 1600px; height: 1100px; box-sizing: border-box; padding: 56px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-direction: column; gap: 24px">
+  <header style="display: flex; flex-direction: column; gap: 8px">
+    <div style="font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #2147C7">App config · Appearance</div>
+    <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 44px; line-height: 1.05; font-weight: 700">Four layers, one set of design tokens</h1>
+    <p style="margin: 0; font-size: 16px; color: #4B5260; max-width: 1200px">Screens never hard-code colours. They read tokens; each layer can override the one before it, and the result is cached per user at sign-in.</p>
+  </header>
+
+  <div style="display: flex; align-items: stretch; gap: 10px">
+    <sc-for list="{{layers}}" as="l" hint-placeholder-count="4">
+      <div style="flex: 1; display: flex; align-items: center; gap: 10px">
+        <section style="flex: 1; align-self: stretch; background: #FFFFFF; border: 1px solid #E3E6EB; border-top: 4px solid {{l.c}}; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+          <span style="font-size: 12px; font-weight: 700; color: #4B5260">LAYER {{l.n}} · set by {{l.who}}</span>
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px">{{l.name}}</h2>
+          <ul style="margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.55; color: #2A2F38">
+            <sc-for list="{{l.items}}" as="i" hint-placeholder-count="4"><li>{{i}}</li></sc-for>
+          </ul>
+          <code style="margin-top: auto; font-size: 11px; color: #4B5260; font-family: ui-monospace, Menlo, monospace">{{l.table}}</code>
+        </section>
+        <sc-if value="{{l.arrow}}" hint-placeholder-val="{{true}}"><span aria-hidden="true" style="font-size: 22px; color: #8A93A3">→</span></sc-if>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; gap: 20px; align-items: stretch">
+    <section style="flex: 1.1; background: #111827; color: #CBD5E1; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px; color: #FFFFFF">Generated tokens (v_effective_theme)</h2>
+      <pre style="margin: 0; font-family: ui-monospace, Menlo, monospace; font-size: 12px; line-height: 1.55; color: #E5E9F0; white-space: pre-wrap">{{tokens}}</pre>
+    </section>
+    <section style="flex: 1; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Where the theme shows up</h2>
+      <sc-for list="{{targets}}" as="t" hint-placeholder-count="4">
+        <div style="display: flex; flex-direction: column; gap: 2px; padding-top: 8px; border-top: 1px solid #EEF0F3"><b style="font-size: 14px">{{t.k}}</b><span style="font-size: 13px; color: #4B5260">{{t.v}}</span></div>
+      </sc-for>
+    </section>
+    <section style="flex: 1; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Guardrails</h2>
+      <sc-for list="{{rules}}" as="r" hint-placeholder-count="5">
+        <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.45; padding-top: 8px; border-top: 1px solid #EEF0F3"><span aria-hidden="true" style="color: #0F6B32; font-weight: 800">✓</span><span>{{r}}</span></div>
+      </sc-for>
+    </section>
+  </div>
+
+  <section style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px">
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px">
+      <thead><tr style="color: #5B6270; font-size: 12px; text-align: left"><th scope="col" style="padding: 6px">By plan</th><sc-for list="{{plans}}" as="p" hint-placeholder-count="4"><th scope="col" style="padding: 6px">{{p}}</th></sc-for></tr></thead>
+      <tbody>
+        <sc-for list="{{planRows}}" as="r" hint-placeholder-count="4">
+          <tr style="border-top: 1px solid #EEF0F3"><th scope="row" style="text-align: left; padding: 8px 6px; font-weight: 600">{{r.k}}</th>
+            <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="4"><td style="padding: 8px 6px"><span style="font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 6px; background: {{c.bg}}; color: {{c.fg}}">{{c.t}}</span></td></sc-for>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const layers = [
+      { n: '1', who: 'your team', name: 'Platform base', c: '#14171C', table: 'built into the app', items: ['Spacing and type scale', 'Status colours: paid, overdue, absent (locked)', 'Focus rings, minimum touch size 44px', 'Light and dark surfaces'], arrow: true },
+      { n: '2', who: 'school admin', name: 'Layout template', c: '#6D28D9', table: 'ui_templates', items: ['Classic, Bright, Top navigation, Compact rail, Primary school', 'Menu position: side, top or icon rail', 'Default density and corner radius'], arrow: true },
+      { n: '3', who: 'school admin', name: 'School theme', c: '#2147C7', table: 'tenant_themes (versioned)', items: ['Brand colour → accessible shade and tints', 'Menu colour: dark, brand or light', 'Font, logo, login photo', 'Draft → preview → publish → roll back'], arrow: true },
+      { n: '4', who: 'each user', name: 'My preferences', c: '#0F766E', table: 'user_ui_preferences', items: ['Light, dark or high contrast', 'Text size 90–130%', 'Compact rows', 'Language and reduced motion'], arrow: false }
+    ];
+    const tokens = '{\n  "color": {\n    "primary": "#9C6404",      // from #F59E0B, darkened\n    "primaryTint": "#F5F0E6",\n    "sidebarBg": "#784D00",\n    "success": "#0F6B32",      // locked\n    "danger":  "#A11A12"       // locked\n  },\n  "layout": { "nav": "TOP", "density": "COMPACT",\n              "radius": 8, "rowHeight": 36 },\n  "font":   { "family": "Poppins" },\n  "user":   { "colorMode": "DARK", "textScale": 115 }\n}';
+    const targets = [
+      ['Web admin', 'Tokens become CSS variables on the page root; every component reads them.'],
+      ['iOS & Android apps', 'The same JSON is loaded at sign-in and mapped to the app theme; white-label builds also swap the app name and icon.'],
+      ['Printed documents', 'Receipts, question papers, report cards and payslips use the logo and primary colour in the header.'],
+      ['Emails & payment links', 'Logo and colour in the header of fee reminders and receipts.']
+    ].map(([k, v]) => ({ k, v }));
+    const rules = [
+      'White text on the brand colour must reach 4.5:1; if not, a darker shade is used automatically (the database does this too).',
+      'Status colours and error messages can’t be themed, so meaning never changes between schools.',
+      'Every template keeps the same menus and permissions — only the look changes.',
+      'Changes go live only when published; each version is kept and can be restored in one click.',
+      'Fonts are limited to ones that cover Indian scripts or degrade cleanly to them.'
+    ];
+    const ON = ['#E6F4EA', '#0F6B32'], ADD = ['#FFF1E0', '#8A3B00'], OFF = ['transparent', '#6B7280'];
+    const row = (k, min, eligible) => ({ k, cells: [1, 2, 3, 4].map((r) => r >= min ? { t: 'Included', bg: ON[0], fg: ON[1] } : (r === min - 1 && eligible !== false ? { t: 'Add-on', bg: ADD[0], fg: ADD[1] } : { t: '—', bg: OFF[0], fg: OFF[1] })) });
+    const planRows = [row('Colour presets, logo, dark mode, user preferences', 1), row('Custom brand colour', 2), row('Layout templates & extra fonts', 3), row('White-label mobile app (own name & icon)', 4)];
+    return { layers, tokens, targets, rules, plans: ['Starter', 'Growth', 'Professional', 'Enterprise'], planRows };
+  }
+}
+</script>
+</body>
+</html>

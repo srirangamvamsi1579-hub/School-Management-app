@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Run payroll</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1080px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="Accountant" active="PAY_RUN" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <nav aria-label="Breadcrumb" style="font-size: 13px; color: #4B5260">Payroll › Run Payroll</nav>
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700">Payroll — November 2026</h1>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4B5260">Month
+            <select style="height: 40px; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-size: 14px; background: #FFFFFF"><option>November 2026</option><option>October 2026</option></select>
+          </label>
+          <button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Recalculate</button>
+        </div>
+      </div>
+    </div>
+
+    <div role="tablist" aria-label="Payroll sub-menu" style="display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid #DDE1E7">
+      <a href="#" role="tab" aria-selected="true" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; text-decoration: none; font-size: 14px; font-weight: 600; color: #2147C7; border-bottom: 2px solid #2147C7; margin-bottom: -1px">Run Payroll</a>
+      <a href="#" role="tab" aria-selected="false" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; text-decoration: none; font-size: 14px; font-weight: 600; color: #4B5260">Payslips</a>
+      <a href="#" role="tab" aria-selected="false" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; text-decoration: none; font-size: 14px; font-weight: 600; color: #4B5260">Salary Structure</a>
+      <a href="#" role="tab" aria-selected="false" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; text-decoration: none; font-size: 14px; font-weight: 600; color: #4B5260">Advances &amp; Deductions</a>
+    </div>
+
+    <ol aria-label="Payroll status" style="margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px">
+      <sc-for list="{{stages}}" as="s" hint-placeholder-count="4">
+        <li style="display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 10px; background: {{s.bg}}; border: 1px solid {{s.border}}">
+          <span style="font-size: 12px; font-weight: 600; color: {{s.fg}}">{{s.state}}</span>
+          <span style="font-size: 14px; font-weight: 700">{{s.label}}</span>
+          <span style="font-size: 12px; color: #4B5260">{{s.who}}</span>
+        </li>
+      </sc-for>
+    </ol>
+
+    <section aria-label="Totals" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px">
+      <sc-for list="{{tiles}}" as="t" hint-placeholder-count="4">
+        <div style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px">
+          <span style="font-size: 13px; color: #4B5260">{{t.label}}</span>
+          <span style="font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700">{{t.value}}</span>
+        </div>
+      </sc-for>
+    </section>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+      <section aria-label="Staff payroll" style="flex: 3 1 600px; min-width: 0; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600">Staff in this run</h2>
+          <label style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border: 1px solid #CDD2DA; border-radius: 8px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6270" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+            <input type="search" aria-label="Filter staff" placeholder="Filter staff" style="border: 0; outline: none; font: inherit; font-size: 14px; width: 160px">
+          </label>
+        </div>
+        <div style="overflow-x: auto">
+          <table style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px">
+            <thead>
+              <tr style="text-align: left; color: #5B6270; font-size: 12px">
+                <th scope="col" style="padding: 8px 6px; font-weight: 600">Staff</th>
+                <th scope="col" style="padding: 8px 6px; font-weight: 600">Designation</th>
+                <th scope="col" style="padding: 8px 6px; font-weight: 600; text-align: right">Paid days</th>
+                <th scope="col" style="padding: 8px 6px; font-weight: 600; text-align: right">Gross</th>
+                <th scope="col" style="padding: 8px 6px; font-weight: 600; text-align: right">Deductions</th>
+                <th scope="col" style="padding: 8px 6px; font-weight: 600; text-align: right">Net pay</th>
+                <th scope="col" style="padding: 8px 6px; font-weight: 600">Note</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{rows}}" as="r" hint-placeholder-count="7">
+                <tr style="border-top: 1px solid #EEF0F3">
+                  <td style="padding: 10px 6px"><div style="font-weight: 600">{{r.name}}</div><div style="font-size: 12px; color: #4B5260">{{r.code}}</div></td>
+                  <td style="padding: 10px 6px; color: #4B5260">{{r.desig}}</td>
+                  <td style="padding: 10px 6px; text-align: right; font-variant-numeric: tabular-nums">{{r.days}}</td>
+                  <td style="padding: 10px 6px; text-align: right; font-variant-numeric: tabular-nums">{{r.gross}}</td>
+                  <td style="padding: 10px 6px; text-align: right; font-variant-numeric: tabular-nums; color: #A11A12">{{r.ded}}</td>
+                  <td style="padding: 10px 6px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">{{r.net}}</td>
+                  <td style="padding: 10px 6px"><sc-if value="{{r.hasNote}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #FFF1E0; color: #8A3B00; white-space: nowrap">{{r.note}}</span></sc-if></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size: 13px; color: #4B5260">Showing 7 of 86 · <a href="#">View all</a></div>
+      </section>
+
+      <aside aria-label="Approval and posting" style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+        <section style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600">On approval, posts</h2>
+          <sc-for list="{{posting}}" as="p" hint-placeholder-count="3">
+            <div style="display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding-top: 8px; border-top: 1px solid #EEF0F3">
+              <span style="font-family: ui-monospace, Menlo, monospace">{{p.side}} {{p.acc}}</span>
+              <strong style="font-variant-numeric: tabular-nums">{{p.amt}}</strong>
+            </div>
+          </sc-for>
+        </section>
+        <button type="button" style="min-height: 52px; border: 0; border-radius: 10px; background: #2147C7; color: #FFFFFF; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer">Submit to Principal for approval</button>
+        <button type="button" disabled="{{true}}" style="min-height: 48px; border: 1px solid #CDD2DA; border-radius: 10px; background: #F0F2F5; color: #5B6270; font: inherit; font-size: 14px; font-weight: 600">Export bank transfer file — after approval</button>
+        <button type="button" disabled="{{true}}" style="min-height: 48px; border: 1px solid #CDD2DA; border-radius: 10px; background: #F0F2F5; color: #5B6270; font: inherit; font-size: 14px; font-weight: 600">Publish payslips — after payment</button>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const stages = [
+      ['Current', 'Draft', 'Prepared by Accountant', 'cur'],
+      ['Next', 'Principal approval', 'can_approve on Run Payroll', 'next'],
+      ['Then', 'Bank transfer', 'Accountant exports file', 'next'],
+      ['Finally', 'Paid & payslips out', 'Staff see My Payslips', 'next']
+    ].map(([state, label, who, k]) => ({ state, label, who, bg: k === 'cur' ? '#EEF2FF' : '#FFFFFF', border: k === 'cur' ? '#2147C7' : '#E3E6EB', fg: k === 'cur' ? '#16348F' : '#4B5260' }));
+    const tiles = [['Staff in run', '86'], ['Gross pay', '₹51.2L'], ['Deductions', '₹8.4L'], ['Net pay', '₹42.8L']].map(([label, value]) => ({ label, value }));
+    const rows = [
+      ['Meera Iyer', 'EMP-0012', 'PGT — Physics', '30', '₹78,400', '₹11,250', '₹67,150', ''],
+      ['Rahul Verma', 'EMP-0045', 'TGT — Maths', '30', '₹61,600', '₹8,100', '₹53,500', ''],
+      ['Sana Khan', 'EMP-0067', 'Accountant', '30', '₹52,000', '₹6,640', '₹45,360', ''],
+      ['Joseph D’Souza', 'EMP-0088', 'TGT — English', '28', '₹57,493', '₹7,700', '₹49,793', 'Loss of pay · 2 days'],
+      ['Anita Rao', 'EMP-0102', 'Office Assistant', '30', '₹28,500', '₹2,100', '₹26,400', ''],
+      ['Vikram Singh', 'EMP-0131', 'Driver', '30', '₹22,000', '₹3,520', '₹18,480', 'Advance recovery ₹2,000'],
+      ['Priya Rao', 'EMP-0187', 'TGT — Science', '15', '₹30,800', '₹4,050', '₹26,750', 'Joined 16 Nov · pro-rata']
+    ].map(([name, code, desig, days, gross, ded, net, note]) => ({ name, code, desig, days, gross, ded, net, note, hasNote: !!note }));
+    const posting = [['Dr', '5000 Salaries & Wages', '₹51.2L'], ['Cr', '2000 Salaries Payable', '₹42.8L'], ['Cr', '2100 Deductions Payable', '₹8.4L']]
+      .map(([side, acc, amt]) => ({ side, acc, amt }));
+    return { zero: 0, stages, tiles, rows, posting };
+  }
+}
+</script>
+</body>
+</html>

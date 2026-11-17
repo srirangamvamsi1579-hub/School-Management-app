@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Account statement</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1080px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="Accountant" active="ACC_STMT" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <nav aria-label="Breadcrumb" style="font-size: 13px; color: #4B5260">Accounts › Account Statement</nav>
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700">Account statement</h1>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Export PDF</button>
+          <button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Export Excel</button>
+          <button type="button" style="height: 40px; padding: 0 14px; border: 0; border-radius: 8px; background: #2147C7; color: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">+ Journal entry</button>
+        </div>
+      </div>
+    </div>
+
+    <section aria-label="Filters" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; align-items: end">
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Ledger account
+        <select style="height: 44px; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px"><option>1010 · Bank Account</option><option>1000 · Cash in Hand</option><option>4000 · Tuition Fee Income</option><option>5000 · Salaries &amp; Wages</option><option>All accounts (day book)</option></select>
+      </label>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">From
+        <input type="date" value="2026-11-01" style="height: 44px; box-sizing: border-box; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px">
+      </label>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">To
+        <input type="date" value="2026-11-16" style="height: 44px; box-sizing: border-box; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px">
+      </label>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Voucher type
+        <select style="height: 44px; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px"><option>All</option><option>Receipt</option><option>Payment</option><option>Journal</option><option>Contra</option></select>
+      </label>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Search narration
+        <input type="search" placeholder="e.g. electricity" style="height: 44px; box-sizing: border-box; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px">
+      </label>
+    </section>
+
+    <section aria-label="Summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px">
+      <sc-for list="{{tiles}}" as="t" hint-placeholder-count="4">
+        <div style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px">
+          <span style="font-size: 13px; color: #4B5260">{{t.label}}</span>
+          <span style="font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; color: {{t.fg}}">{{t.value}}</span>
+        </div>
+      </sc-for>
+    </section>
+
+    <section aria-label="Ledger lines" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+        <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600">1010 · Bank Account — 1 to 16 Nov 2026</h2>
+        <span style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #FFF1E0; color: #8A3B00">Sample data</span>
+      </div>
+      <div style="overflow-x: auto">
+        <table style="width: 100%; min-width: 860px; border-collapse: collapse; font-size: 14px">
+          <thead>
+            <tr style="text-align: left; color: #5B6270; font-size: 12px">
+              <th scope="col" style="padding: 8px 6px; font-weight: 600">Date</th>
+              <th scope="col" style="padding: 8px 6px; font-weight: 600">Voucher</th>
+              <th scope="col" style="padding: 8px 6px; font-weight: 600">Narration</th>
+              <th scope="col" style="padding: 8px 6px; font-weight: 600">Source</th>
+              <th scope="col" style="padding: 8px 6px; font-weight: 600; text-align: right">Debit</th>
+              <th scope="col" style="padding: 8px 6px; font-weight: 600; text-align: right">Credit</th>
+              <th scope="col" style="padding: 8px 6px; font-weight: 600; text-align: right">Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-top: 1px solid #EEF0F3; background: #F7F8FA">
+              <td style="padding: 10px 6px; color: #4B5260">01 Nov</td>
+              <td colspan="5" style="padding: 10px 6px; font-weight: 600">Opening balance</td>
+              <td style="padding: 10px 6px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">{{openingTxt}}</td>
+            </tr>
+            <sc-for list="{{lines}}" as="l" hint-placeholder-count="10">
+              <tr style="border-top: 1px solid #EEF0F3">
+                <td style="padding: 10px 6px; color: #4B5260; white-space: nowrap">{{l.date}}</td>
+                <td style="padding: 10px 6px; white-space: nowrap"><div style="font-family: ui-monospace, Menlo, monospace; font-size: 13px">{{l.no}}</div><div style="font-size: 12px; color: #4B5260">{{l.type}}</div></td>
+                <td style="padding: 10px 6px">{{l.narr}}</td>
+                <td style="padding: 10px 6px"><a href="#" style="font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: {{l.sBg}}; color: {{l.sFg}}; text-decoration: none; white-space: nowrap">{{l.src}}</a></td>
+                <td style="padding: 10px 6px; text-align: right; font-variant-numeric: tabular-nums; color: #0F6B32">{{l.dr}}</td>
+                <td style="padding: 10px 6px; text-align: right; font-variant-numeric: tabular-nums; color: #A11A12">{{l.cr}}</td>
+                <td style="padding: 10px 6px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums">{{l.bal}}</td>
+              </tr>
+            </sc-for>
+            <tr style="border-top: 2px solid #14171C">
+              <td colspan="4" style="padding: 12px 6px; font-weight: 700">Closing balance · 16 Nov</td>
+              <td style="padding: 12px 6px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">{{drTxt}}</td>
+              <td style="padding: 12px 6px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">{{crTxt}}</td>
+              <td style="padding: 12px 6px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">{{closingTxt}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const fmt = (n) => '₹' + n.toLocaleString('en-IN');
+    const SRC = { Fees: ['#E6F4EA', '#0F6B32'], Payroll: ['#EEF2FF', '#16348F'], Expense: ['#FFF1E0', '#8A3B00'], Refund: ['#FDECEA', '#A11A12'], Manual: ['#EEF0F3', '#3A404B'] };
+    const opening = 4862400;
+    const raw = [
+      ['01 Nov', 'RV-26-3101', 'Receipt', 'Online fee settlement · 212 receipts', 'Fees', 984500, 0],
+      ['01 Nov', 'PV-26-0912', 'Payment', 'Salaries — October 2026 bank transfer', 'Payroll', 0, 4172300],
+      ['03 Nov', 'CV-26-0088', 'Contra', 'Cash deposited to bank', 'Manual', 215000, 0],
+      ['05 Nov', 'PV-26-0921', 'Payment', 'Electricity — October bill', 'Expense', 0, 46300],
+      ['08 Nov', 'RV-26-3188', 'Receipt', 'Cheque — receipt R-2026-05102', 'Fees', 24800, 0],
+      ['10 Nov', 'PV-26-0934', 'Payment', 'PF & TDS remittance — October', 'Payroll', 0, 826400],
+      ['12 Nov', 'RV-26-3240', 'Receipt', 'Online fee settlement · 186 receipts', 'Fees', 861200, 0],
+      ['14 Nov', 'PV-26-0940', 'Payment', 'Fee refund — transfer certificate issued', 'Refund', 0, 12000],
+      ['15 Nov', 'PV-26-0946', 'Payment', 'School bus maintenance', 'Expense', 0, 38750],
+      ['16 Nov', 'RV-26-3291', 'Receipt', 'UPI fee receipts — today', 'Fees', 102500, 0]
+    ];
+    let bal = opening, dr = 0, cr = 0;
+    const lines = raw.map(([date, no, type, narr, src, d, c]) => {
+      bal += d - c; dr += d; cr += c;
+      return { date, no, type, narr, src, dr: d ? fmt(d) : '', cr: c ? fmt(c) : '', bal: fmt(bal), sBg: SRC[src][0], sFg: SRC[src][1] };
+    });
+    const tiles = [['Opening balance', fmt(opening), '#14171C'], ['Total debits (in)', fmt(dr), '#0F6B32'], ['Total credits (out)', fmt(cr), '#A11A12'], ['Closing balance', fmt(bal), '#14171C']]
+      .map(([label, value, fg]) => ({ label, value, fg }));
+    return { zero: 0, lines, tiles, openingTxt: fmt(opening), drTxt: fmt(dr), crTxt: fmt(cr), closingTxt: fmt(bal) };
+  }
+}
+</script>
+</body>
+</html>

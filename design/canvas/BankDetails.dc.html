@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bank and payment details</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1120px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="Accountant" plan="Professional" active="ACC_BANK" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <nav aria-label="Breadcrumb" style="font-size: 13px; color: #4B5260">Accounts › Bank &amp; Payment Details</nav>
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700">Bank &amp; payment details</h1>
+        <button type="button" style="height: 44px; padding: 0 16px; border: 0; border-radius: 10px; background: #2147C7; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer">+ Add account</button>
+      </div>
+      <p style="margin: 0; font-size: 14px; color: #4B5260">The fee account below is printed on invoices and shown in fee emails and on the parent payment page.</p>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start">
+      <div style="flex: 3 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+        <section aria-label="Fee collection account" style="background: #FFFFFF; border: 2px solid #2147C7; border-radius: 14px; padding: 20px; display: flex; flex-wrap: wrap; gap: 20px">
+          <div style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+              <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px">Fee collection account</h2>
+              <span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: #DCE5FF; color: #16348F">Default for fees</span>
+              <span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: #E6F4EA; color: #0F6B32">Verified by Principal · 12 Nov</span>
+            </div>
+            <dl style="margin: 0; display: grid; grid-template-columns: 150px 1fr; gap: 8px 12px; font-size: 14px">
+              <sc-for list="{{fee}}" as="f" hint-placeholder-count="8">
+                <dt style="color: #4B5260">{{f.k}}</dt><dd style="margin: 0; font-weight: 600; font-family: {{f.font}}">{{f.v}}</dd>
+              </sc-for>
+            </dl>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <button type="button" style="height: 40px; padding: 0 12px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Edit</button>
+              <button type="button" style="height: 40px; padding: 0 12px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Show full account no. (asks for password)</button>
+            </div>
+          </div>
+          <figure style="flex: 0 0 200px; margin: 0; display: flex; flex-direction: column; gap: 8px; align-items: center">
+            <div role="img" aria-label="UPI QR code placeholder" style="width: 180px; height: 180px; box-sizing: border-box; border: 2px dashed #8A93A3; border-radius: 12px; position: relative; background: #FFFFFF">
+              <span style="position: absolute; left: 14px; top: 14px; width: 38px; height: 38px; border: 6px solid #14171C; box-sizing: border-box"></span>
+              <span style="position: absolute; right: 14px; top: 14px; width: 38px; height: 38px; border: 6px solid #14171C; box-sizing: border-box"></span>
+              <span style="position: absolute; left: 14px; bottom: 14px; width: 38px; height: 38px; border: 6px solid #14171C; box-sizing: border-box"></span>
+              <span style="position: absolute; left: 0; right: 0; top: 76px; text-align: center; font-size: 12px; font-weight: 700; color: #4B5260">UPI QR from<br>your bank</span>
+            </div>
+            <figcaption style="font-size: 12px; color: #4B5260; text-align: center">Upload the QR your bank issued for this account</figcaption>
+            <button type="button" style="height: 36px; padding: 0 12px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">Replace QR</button>
+          </figure>
+        </section>
+
+        <section aria-label="Other accounts" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Other accounts</h2>
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px">
+            <thead><tr style="text-align: left; color: #5B6270; font-size: 12px"><th scope="col" style="padding: 6px">Name</th><th scope="col" style="padding: 6px">Bank · IFSC</th><th scope="col" style="padding: 6px">Account</th><th scope="col" style="padding: 6px">Used for</th><th scope="col" style="padding: 6px">Shown to parents</th></tr></thead>
+            <tbody>
+              <sc-for list="{{others}}" as="o" hint-placeholder-count="2">
+                <tr style="border-top: 1px solid #EEF0F3"><td style="padding: 10px 6px; font-weight: 600">{{o.name}}</td><td style="padding: 10px 6px">{{o.bank}}</td><td style="padding: 10px 6px; font-family: ui-monospace, Menlo, monospace">{{o.acc}}</td><td style="padding: 10px 6px">{{o.use}}</td><td style="padding: 10px 6px">{{o.shown}}</td></tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </section>
+
+        <section aria-label="Where these details appear" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Where parents see them</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
+            <a href="FeeRequestEmail.dc.html" style="display: flex; flex-direction: column; gap: 4px; padding: 14px; border: 1px solid #E3E6EB; border-radius: 10px; text-decoration: none; color: #14171C"><b>Fee request emails</b><span style="font-size: 13px; color: #4B5260">Bank, IFSC, UPI ID and the pay link</span></a>
+            <a href="InvoiceTemplate.dc.html" style="display: flex; flex-direction: column; gap: 4px; padding: 14px; border: 1px solid #E3E6EB; border-radius: 10px; text-decoration: none; color: #14171C"><b>Printed invoice</b><span style="font-size: 13px; color: #4B5260">"How to pay" box with the UPI QR</span></a>
+            <a href="ParentPayPage.dc.html" style="display: flex; flex-direction: column; gap: 4px; padding: 14px; border: 1px solid #E3E6EB; border-radius: 10px; text-decoration: none; color: #14171C"><b>Payment page</b><span style="font-size: 13px; color: #4B5260">Full account no. shown only here, behind the personal link</span></a>
+          </div>
+        </section>
+      </div>
+
+      <aside style="flex: 2 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+        <section aria-label="How payments are confirmed" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">How payments get confirmed</h2>
+          <sc-for list="{{sources}}" as="s" hint-placeholder-count="3">
+            <div style="display: flex; flex-direction: column; gap: 4px; padding-top: 10px; border-top: 1px solid #EEF0F3">
+              <div style="display: flex; justify-content: space-between; gap: 8px; align-items: center"><b style="font-size: 14px">{{s.name}}</b><span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: {{s.bg}}; color: {{s.fg}}">{{s.state}}</span></div>
+              <span style="font-size: 13px; color: #4B5260; line-height: 1.45">{{s.desc}}</span>
+            </div>
+          </sc-for>
+          <a href="PaymentMatching.dc.html" style="font-size: 13px; font-weight: 600">Open payment matching</a>
+        </section>
+        <section aria-label="Safety" style="background: #FFF1E0; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 1.5; color: #4A2600">
+          <b style="font-size: 14px">Protection against changed bank details</b>
+          <span>Any edit to account no., IFSC or UPI ID goes on hold until a second person (Principal or Admin) verifies it.</span>
+          <span>The Principal gets an email for every change, and parents see a "bank details changed on …" note for 30 days.</span>
+          <span>Account numbers are stored encrypted; lists show only the last four digits.</span>
+        </section>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1120}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const M = 'ui-monospace, Menlo, monospace', T = 'Inter, sans-serif';
+    const fee = [['Account holder', '[School] Educational Society', T], ['Bank & branch', 'State Bank of India · MG Road', T], ['Account no.', '•••• •••• 4821', M],
+      ['IFSC', 'SBIN0001234', M], ['Account type', 'Current', T], ['UPI ID', 'schoolfees@sbi', M], ['Ledger account', '1010 · Bank Account', T], ['Payment gateway', 'Connected · settles here daily', T]]
+      .map(([k, v, font]) => ({ k, v, font }));
+    const others = [['Salary account', 'HDFC Bank · HDFC0000456', '•••• 7710', 'Payroll transfers', 'No'], ['Transport account', 'State Bank of India · SBIN0001234', '•••• 3398', 'Transport fees (optional split)', 'Only for transport']]
+      .map(([name, bank, acc, use, shown]) => ({ name, bank, acc, use, shown }));
+    const sources = [
+      ['Online payment (pay link)', 'Automatic', '#E6F4EA', '#0F6B32', 'Gateway tells us the moment a parent pays by UPI, card or net banking. Receipt and email go out in seconds.'],
+      ['Bank statement / bank feed', 'Daily, automatic', '#E6F4EA', '#0F6B32', 'Transfers to this account are matched by the admission no. in the narration, or by a unique amount. Growth plan and above.'],
+      ['Parent enters UTR', 'Checked', '#FFF1E0', '#8A3B00', 'For UPI QR or NEFT payments, the parent types the reference on the payment page; it is confirmed when the bank line arrives.']
+    ].map(([name, state, bg, fg, desc]) => ({ name, state, bg, fg, desc }));
+    return { zero: 0, fee, others, sources };
+  }
+}
+</script>
+</body>
+</html>

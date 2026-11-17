@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Role-based sidebar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<nav aria-label="Main menu" style="width: 100%; min-height: {{minH}}px; height: 100%; box-sizing: border-box; background: #111827; color: #CBD5E1; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column; gap: 4px; padding: 20px 12px">
+  <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 18px">
+    <div style="width: 36px; height: 36px; border-radius: 10px; background: #2F5BEA; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px">S</div>
+    <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+      <div style="color: #FFFFFF; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 16px">[School Name]</div>
+      <div style="font-size: 12px; color: #94A3B8">{{role}} · {{plan}} plan</div>
+    </div>
+  </div>
+  <sc-for list="{{groups}}" as="g" hint-placeholder-count="6">
+    <div style="display: flex; flex-direction: column">
+      <sc-if value="{{g.isLink}}" hint-placeholder-val="{{false}}">
+        <a href="{{g.href}}" style="display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 10px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; background: {{g.bg}}; color: {{g.fg}}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{g.icon}}"></path></svg>
+          <span>{{g.label}}</span>
+        </a>
+      </sc-if>
+      <sc-if value="{{g.isGroup}}" hint-placeholder-val="{{true}}">
+        <button type="button" onClick="{{g.toggle}}" aria-expanded="{{g.expanded}}" style="display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 10px; border: 0; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; text-align: left; background: transparent; color: {{g.fg}}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{g.icon}}"></path></svg>
+          <span style="flex: 1">{{g.label}}</span>
+          <span style="font-size: 11px; color: #94A3B8; font-weight: 500">{{g.count}}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: rotate({{g.rot}}deg)"><path d="M9 6l6 6-6 6"></path></svg>
+        </button>
+        <sc-if value="{{g.open}}" hint-placeholder-val="{{false}}">
+          <div style="display: flex; flex-direction: column; gap: 2px; padding: 2px 0 8px 28px">
+            <sc-for list="{{g.kids}}" as="k" hint-placeholder-count="4">
+              <sc-if value="{{k.isHdr}}" hint-placeholder-val="{{false}}">
+                <div style="padding: 8px 10px 2px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #94A3B8">{{k.label}}</div>
+              </sc-if>
+              <sc-if value="{{k.isLink}}" hint-placeholder-val="{{true}}">
+                <a href="{{k.href}}" style="display: flex; align-items: center; min-height: 36px; padding: 0 10px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: {{k.weight}}; background: {{k.bg}}; color: {{k.fg}}">{{k.label}}</a>
+              </sc-if>
+            </sc-for>
+          </div>
+        </sc-if>
+      </sc-if>
+    </div>
+  </sc-for>
+  <div style="flex: 1"></div>
+  <div style="display: flex; align-items: center; gap: 10px; padding: 12px 8px 0; border-top: 1px solid #1F2937">
+    <div style="width: 32px; height: 32px; border-radius: 999px; background: #334155; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700">{{initials}}</div>
+    <div style="flex: 1; font-size: 13px; color: #E5E9F0">{{roleUser}}</div>
+    <button type="button" aria-label="Sign out" style="width: 36px; height: 36px; border: 0; border-radius: 8px; background: transparent; color: #94A3B8; cursor: pointer; display: flex; align-items: center; justify-content: center">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"></path></svg>
+    </button>
+  </div>
+</nav>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"role":{"editor":"enum","options":["Admin","Principal","Accountant","Teacher","Front Office","Parent"],"default":"Admin"},"plan":{"editor":"enum","options":["Starter","Growth","Professional","Enterprise"],"default":"Professional"},"active":{"editor":null,"default":"DASHBOARD"},"minH":{"editor":null,"default":980},"$preview":{"width":248,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const role = this.props.role ?? 'Admin';
+    const active = this.props.active ?? 'DASHBOARD';
+    const minH = this.props.minH ?? 980;
+    const plan = this.props.plan ?? 'Professional';
+    const rank = { 'Starter': 1, 'Growth': 2, 'Professional': 3, 'Enterprise': 4 }[plan] || 3;
+    const MIN = { PAYROLL: 2, FEE_MATCHING: 2, STU_PROMOTE: 2, STU_INS: 2, STF_INS: 2, FEE_CONC: 2, FEE_REFUND: 2, FEE_INS: 2,
+      PAY_RUN: 2, PAY_SLIPS: 2, PAY_STRUCT: 2, PAY_ADV: 3, PAY_INS: 2, ACC_STMT: 3, ACC_EXP: 3, ACC_BOOKS: 3, ACC_COA: 3,
+      ACC_RPT: 3, ACC_INS: 3, OPS_AUDIT: 3, OPS_INS: 3, SELF_PAYSLIP: 2 };
+    const inPlan = (code) => (MIN[code] || 1) <= rank;
+    const insLabel = rank === 2 ? 'Insights (basic)' : 'Insights';
+    const I = {
+      home: 'M3 11l9-8 9 8M5 10v10h14V10',
+      users: 'M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6M22 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8',
+      brief: 'M3 7h18v13H3zM8 7V4h8v3M3 13h18',
+      book: 'M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3zM4 17a3 3 0 0 1 3-3h11',
+      receipt: 'M6 2h12v20l-3-2-3 2-3-2-3 2zM9 7h6M9 11h6M9 15h4',
+      wallet: 'M3 6h15a3 3 0 0 1 3 3v9a2 2 0 0 1-2 2H3zM3 6l13-3v3M16 13h2',
+      chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+      shield: 'M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z',
+      user: 'M20 21a8 8 0 0 0-16 0M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8',
+      exam: 'M9 3h6v3H9zM6 5h3M15 5h3v16H6V5M9 11h6M9 15h4'
+    };
+    const MENU = [
+      ['DASHBOARD', 'Dashboard', I.home, [], 'Dashboard.dc.html'],
+      ['STUDENTS', 'Students', I.users, [['STU_INS', insLabel], ['STU_LIST', 'All Students'], ['STU_ADMIT', 'New Admission', 'StudentAdmission.dc.html'], ['STU_ATT', 'Attendance'], ['STU_PROMOTE', 'Promote / Transfer'], ['STU_DOCS', 'Documents & ID Cards']]],
+      ['STAFF', 'Staff', I.brief, [['STF_INS', insLabel], ['STF_LIST', 'All Staff'], ['STF_ADD', 'Add Staff', 'StaffForm.dc.html'], ['STF_ATT', 'Staff Attendance'], ['STF_LEAVE', 'Leave Requests'], ['STF_DEPT', 'Departments & Designations']]],
+      ['ACADEMICS', 'Academics', I.book, [['ACA_YEAR', 'Academic Years'], ['ACA_CLASS', 'Classes & Sections'], ['ACA_SUBJ', 'Subjects'], ['ACA_SYLLABUS', 'Boards, Syllabus & Textbooks', 'SyllabusLibrary.dc.html'], ['ACA_TIMETABLE', 'Timetable', 'Timetable.dc.html']]],
+      ['EXAMS', 'Exams', I.exam, [['#P', 'Papers'], ['EXM_QP', 'Question Papers', 'ExamPaperBuilder.dc.html'], ['EXM_APPROVED', 'Approved Papers', 'ExamApprovedPapers.dc.html'], ['EXM_QB', 'Question Bank', 'QuestionBank.dc.html'], ['EXM_FORMATS', 'Paper Formats', 'PaperFormats.dc.html'], ['#C', 'Co-Scholastic'], ['EXM_COSCH', 'Co-Scholastic Grades', 'CoScholastic.dc.html'], ['#R', 'Reports'], ['EXM_PROFILE', 'Assessment Profiles', 'StudentProfile.dc.html']]],
+      ['FEES', 'Fees', I.receipt, [['FEE_INS', insLabel, 'InsightsFees.dc.html'], ['FEE_COLLECT', 'Collect Fee', 'FeeCollection.dc.html'], ['FEE_REQUESTS', 'Fee Request Emails', 'FeeRequestEmail.dc.html'], ['FEE_MATCHING', 'Payment Matching', 'PaymentMatching.dc.html'], ['FEE_DUES', 'Dues & Reminders'], ['FEE_RECEIPTS', 'Receipts'], ['FEE_STRUCT', 'Fee Structure', 'FeeStructure.dc.html'], ['FEE_CONC', 'Concessions'], ['FEE_REFUND', 'Refunds']]],
+      ['PAYROLL', 'Payroll', I.wallet, [['PAY_INS', insLabel], ['PAY_RUN', 'Run Payroll', 'Payroll.dc.html'], ['PAY_SLIPS', 'Payslips'], ['PAY_STRUCT', 'Salary Structure'], ['PAY_ADV', 'Advances & Deductions']]],
+      ['ACCOUNTS', 'Accounts', I.chart, [['ACC_INS', insLabel], ['ACC_BANK', 'Bank & Payment Details', 'BankDetails.dc.html'], ['ACC_STMT', 'Account Statement', 'AccountStatement.dc.html'], ['ACC_EXP', 'Income & Expenses'], ['ACC_BOOKS', 'Cash & Bank Book'], ['ACC_COA', 'Chart of Accounts'], ['ACC_RPT', 'Financial Reports']]],
+      ['OPERATIONS', 'Operations', I.shield, [['OPS_INS', insLabel], ['OPS_USERS', 'Users', 'UserManagement.dc.html'], ['OPS_ROLES', 'Roles & Permissions', 'UserManagement.dc.html'], ['OPS_AUDIT', 'Audit Log'], ['OPS_SETTINGS', 'School Settings'], ['OPS_APPEARANCE', 'Appearance & Branding', 'Appearance.dc.html'], ['OPS_WEBSITE', 'Website & Links', 'WebsiteLinks.dc.html']]],
+      ['SELF', 'My Space', I.user, [['SELF_PROFILE', 'My Profile'], ['SELF_CHILD', 'My Child'], ['SELF_FEES', 'Fee Dues & Pay'], ['SELF_PAYSLIP', 'My Payslips']]]
+    ];
+    const ACCESS = {
+      'Principal': ['ACA_TIMETABLE', 'EXM_PROFILE', 'ACC_BANK', 'FEE_REQUESTS', 'FEE_MATCHING', 'ACA_SYLLABUS', 'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_FORMATS', 'EXM_COSCH', 'STU_INS', 'STF_INS', 'FEE_INS', 'PAY_INS', 'ACC_INS', 'OPS_INS', 'STU_LIST', 'STU_ATT', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_YEAR', 'ACA_CLASS', 'ACA_SUBJ', 'FEE_DUES', 'FEE_CONC', 'FEE_REFUND', 'PAY_RUN', 'PAY_SLIPS', 'ACC_STMT', 'ACC_EXP', 'ACC_RPT', 'OPS_AUDIT', 'SELF_PROFILE', 'SELF_PAYSLIP'],
+      'Accountant': ['ACC_BANK', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_INS', 'PAY_INS', 'ACC_INS', 'STU_LIST', 'STF_LIST', 'FEE_COLLECT', 'FEE_DUES', 'FEE_RECEIPTS', 'FEE_STRUCT', 'FEE_CONC', 'FEE_REFUND', 'PAY_RUN', 'PAY_SLIPS', 'PAY_STRUCT', 'PAY_ADV', 'ACC_STMT', 'ACC_EXP', 'ACC_BOOKS', 'ACC_COA', 'ACC_RPT', 'SELF_PROFILE', 'SELF_PAYSLIP'],
+      'Teacher': ['ACA_TIMETABLE', 'EXM_PROFILE', 'ACA_SYLLABUS', 'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_COSCH', 'STU_LIST', 'STU_ATT', 'STF_LEAVE', 'SELF_PROFILE', 'SELF_PAYSLIP'],
+      'Front Office': ['STU_LIST', 'STU_ADMIT', 'STU_DOCS', 'FEE_COLLECT', 'FEE_RECEIPTS', 'FEE_DUES', 'SELF_PROFILE', 'SELF_PAYSLIP'],
+      'Parent': ['SELF_PROFILE', 'SELF_CHILD', 'SELF_FEES']
+    };
+    const byRole = (code) => role === 'Admin' ? (code !== 'SELF_CHILD' && code !== 'SELF_FEES') : (ACCESS[role] || []).indexOf(code) >= 0;
+    const allowed = (code) => byRole(code) && inPlan(code);
+    const openState = (this.state && this.state.open) || {};
+    const groups = [];
+    MENU.forEach(([code, label, icon, kids, href]) => {
+      if (kids.length === 0) {
+        const on = active === code;
+        groups.push({ isLink: true, isGroup: false, label, icon, href: href || '#', bg: on ? '#2F5BEA' : 'transparent', fg: on ? '#FFFFFF' : '#CBD5E1', kids: [], open: false });
+        return;
+      }
+      if (!inPlan(code)) return;
+      const raw = kids.filter((k) => k[0].charAt(0) === '#' || allowed(k[0])).map(([c, l, h]) => {
+        if (c.charAt(0) === '#') return { isHdr: true, isLink: false, label: l, on: false };
+        const on = c === active;
+        return { isHdr: false, isLink: true, label: l, href: h || '#', bg: on ? '#2F5BEA' : 'transparent', fg: on ? '#FFFFFF' : '#B8C2D6', weight: on ? 600 : 500, on };
+      });
+      const visible = raw.filter((k, i) => !k.isHdr || (raw[i + 1] && !raw[i + 1].isHdr));
+      if (visible.length === 0) return;
+      const hasActive = visible.some((k) => k.on);
+      const open = openState[code] !== undefined ? openState[code] : hasActive;
+      groups.push({
+        isLink: false, isGroup: true, label, icon, kids: visible, open,
+        expanded: open ? 'true' : 'false', rot: open ? 90 : 0,
+        count: String(visible.filter((k) => !k.isHdr).length), fg: hasActive ? '#FFFFFF' : '#CBD5E1',
+        toggle: () => this.setState({ open: Object.assign({}, openState, { [code]: !open }) })
+      });
+    });
+    const who = { 'Admin': ['AD', 'Admin user'], 'Principal': ['PR', 'Principal'], 'Accountant': ['AC', 'Accountant'], 'Teacher': ['TR', 'Class teacher'], 'Front Office': ['FO', 'Front office'], 'Parent': ['PA', 'Parent'] }[role] || ['U', 'User'];
+    return { role, plan, minH, groups, initials: who[0], roleUser: who[1] };
+  }
+}
+</script>
+</body>
+</html>

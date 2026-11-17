@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Platform console — configure a school</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1240px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-direction: column">
+  <header style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 12px 24px; background: #0B1220; color: #E5E9F0">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <div style="width: 32px; height: 32px; border-radius: 8px; background: #F59E0B; color: #0B1220; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700">C</div>
+      <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 17px; color: #FFFFFF">[Your Company] · Platform Console</div>
+      <span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: #7F1D1D; color: #FFFFFF">PRODUCTION</span>
+    </div>
+    <nav aria-label="Console" style="display: flex; gap: 4px; flex-wrap: wrap">
+      <a href="#" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; background: #1F2937; color: #FFFFFF; font-size: 13px; font-weight: 600; text-decoration: none">Schools</a>
+      <a href="PlansMatrix.dc.html" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; color: #CBD5E1; font-size: 13px; font-weight: 600; text-decoration: none">Plans &amp; catalog</a>
+      <a href="#" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; color: #CBD5E1; font-size: 13px; font-weight: 600; text-decoration: none">Billing</a>
+      <a href="InsightsCatalog.dc.html" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; color: #CBD5E1; font-size: 13px; font-weight: 600; text-decoration: none">Power BI reports</a>
+      <a href="#" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; color: #CBD5E1; font-size: 13px; font-weight: 600; text-decoration: none">Releases</a>
+    </nav>
+  </header>
+
+  <div style="display: flex; flex-wrap: wrap; flex: 1; align-items: stretch">
+    <aside aria-label="Schools" style="flex: 1 1 280px; max-width: 100%; background: #FFFFFF; border-right: 1px solid #E3E6EB; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Schools</h2>
+        <button type="button" style="height: 36px; padding: 0 12px; border: 0; border-radius: 8px; background: #2147C7; color: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">+ Onboard</button>
+      </div>
+      <input type="search" aria-label="Search schools" placeholder="Search schools" style="height: 40px; box-sizing: border-box; padding: 0 12px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-size: 14px">
+      <sc-for list="{{tenants}}" as="t" hint-placeholder-count="5">
+        <button type="button" onClick="{{t.pick}}" aria-pressed="{{t.sel}}" style="display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 10px; text-align: left; font: inherit; cursor: pointer; border: 1px solid {{t.border}}; background: {{t.bg}}">
+          <span style="display: flex; justify-content: space-between; gap: 8px; width: 100%"><b style="font-size: 14px">{{t.name}}</b><span style="font-size: 11px; font-weight: 700; color: {{t.stFg}}">{{t.status}}</span></span>
+          <span style="font-size: 12px; color: #4B5260">{{t.plan}} · {{t.studentsTxt}} students</span>
+        </button>
+      </sc-for>
+    </aside>
+
+    <main style="flex: 999 1 640px; min-width: 0; box-sizing: border-box; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+      <section aria-label="School summary" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px 20px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700">{{cur.name}}</h1>
+          <div style="font-size: 13px; color: #4B5260">{{cur.sub}}.yourapp.com · {{cur.region}} · {{cur.hosting}} · renews {{cur.renews}}</div>
+        </div>
+        <div style="flex: 0 1 320px; display: flex; flex-direction: column; gap: 6px">
+          <div style="display: flex; justify-content: space-between; font-size: 13px"><span style="color: #4B5260">Students vs plan cap</span><b>{{capTxt}}</b></div>
+          <div style="height: 8px; border-radius: 999px; background: #E3E6EB; overflow: hidden"><div style="height: 8px; border-radius: 999px; width: {{capPct}}%; background: {{capColor}}"></div></div>
+          <div style="font-size: 12px; color: {{capColor}}; font-weight: 600">{{capNote}}</div>
+        </div>
+      </section>
+
+      <div role="tablist" aria-label="School configuration" style="display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid #DDE1E7">
+        <a href="#" role="tab" aria-selected="true" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; text-decoration: none; font-size: 14px; font-weight: 600; color: #2147C7; border-bottom: 2px solid #2147C7; margin-bottom: -1px">Plan &amp; features</a>
+        <a href="#" role="tab" aria-selected="false" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; text-decoration: none; font-size: 14px; font-weight: 600; color: #4B5260">Limits</a>
+        <a href="#" role="tab" aria-selected="false" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; text-decoration: none; font-size: 14px; font-weight: 600; color: #4B5260">Billing</a>
+        <a href="#" role="tab" aria-selected="false" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; text-decoration: none; font-size: 14px; font-weight: 600; color: #4B5260">Branding</a>
+        <a href="#" role="tab" aria-selected="false" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; text-decoration: none; font-size: 14px; font-weight: 600; color: #4B5260">Change history</a>
+      </div>
+
+      <fieldset style="border: 0; margin: 0; padding: 0">
+        <legend style="font-size: 13px; font-weight: 600; padding: 0; margin-bottom: 8px">Plan — sets the default switches below</legend>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px">
+          <sc-for list="{{planBtns}}" as="p" hint-placeholder-count="4">
+            <button type="button" onClick="{{p.pick}}" aria-pressed="{{p.sel}}" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 56px; padding: 8px 14px; border-radius: 10px; font: inherit; text-align: left; cursor: pointer; border: 1px solid {{p.border}}; background: {{p.bg}}; color: {{p.fg}}">
+              <b style="font-size: 15px">{{p.name}}</b><span style="font-size: 12px">{{p.range}}</span>
+            </button>
+          </sc-for>
+        </div>
+      </fieldset>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start">
+        <section aria-label="Feature switches" style="flex: 2 1 520px; min-width: 0; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 8px 0">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; gap: 12px; flex-wrap: wrap">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Modules, sub-menus &amp; functions</h2>
+            <span style="font-size: 12px; color: #4B5260">Switch on anything outside the plan to sell it as an add-on</span>
+          </div>
+          <sc-for list="{{mods}}" as="m" hint-placeholder-count="9">
+            <div style="border-top: 1px solid #EEF0F3">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 8px 18px">
+                <button type="button" onClick="{{m.toggleOpen}}" aria-expanded="{{m.expanded}}" aria-label="{{m.openAria}}" style="width: 36px; height: 36px; border: 0; border-radius: 8px; background: #F0F2F5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2A2F38" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: rotate({{m.rot}}deg)"><path d="M9 6l6 6-6 6"></path></svg>
+                </button>
+                <span style="flex: 1; font-size: 15px; font-weight: 700; color: {{m.nameFg}}">{{m.name}} <span style="font-size: 12px; font-weight: 500; color: #4B5260">· {{m.countTxt}}</span></span>
+                <span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: {{m.pBg}}; color: {{m.pFg}}">{{m.pill}}</span>
+                <button type="button" role="switch" aria-checked="{{m.checked}}" aria-label="{{m.aria}}" disabled="{{m.locked}}" onClick="{{m.flip}}" style="position: relative; width: 48px; height: 28px; border: 0; border-radius: 999px; cursor: pointer; background: {{m.track}}">
+                  <span style="position: absolute; top: 3px; left: {{m.knob}}px; width: 22px; height: 22px; border-radius: 999px; background: #FFFFFF"></span>
+                </button>
+              </div>
+              <sc-if value="{{m.open}}" hint-placeholder-val="{{false}}">
+                <div style="padding: 0 18px 10px 64px; display: flex; flex-direction: column">
+                  <sc-for list="{{m.kids}}" as="k" hint-placeholder-count="5">
+                    <div style="display: flex; align-items: center; gap: 10px; min-height: 44px; border-top: 1px dashed #EEF0F3">
+                      <span style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: {{k.kBg}}; color: {{k.kFg}}">{{k.kind}}</span>
+                      <span style="flex: 1; font-size: 14px; color: {{k.nameFg}}">{{k.name}}</span>
+                      <span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: {{k.pBg}}; color: {{k.pFg}}">{{k.pill}}</span>
+                      <button type="button" role="switch" aria-checked="{{k.checked}}" aria-label="{{k.aria}}" disabled="{{k.locked}}" onClick="{{k.flip}}" style="position: relative; width: 44px; height: 26px; border: 0; border-radius: 999px; cursor: pointer; background: {{k.track}}">
+                        <span style="position: absolute; top: 3px; left: {{k.knob}}px; width: 20px; height: 20px; border-radius: 999px; background: #FFFFFF"></span>
+                      </button>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </section>
+
+        <aside style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+          <section aria-label="Price summary" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Price summary</h2>
+            <div style="display: flex; justify-content: space-between; font-size: 14px; gap: 10px"><span>{{planName}} plan · {{cur.studentsTxt}} students</span><b>[PRICE]</b></div>
+            <sc-for list="{{addons}}" as="a" hint-placeholder-count="2">
+              <div style="display: flex; justify-content: space-between; font-size: 14px; gap: 10px; padding-top: 8px; border-top: 1px solid #EEF0F3"><span>Add-on · {{a.name}}</span><b style="color: #8A3B00">[ADD-ON]</b></div>
+            </sc-for>
+            <sc-if value="{{noAddons}}" hint-placeholder-val="{{false}}"><div style="font-size: 13px; color: #4B5260">No add-ons</div></sc-if>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #4B5260; padding-top: 8px; border-top: 1px solid #EEF0F3"><span>Switched off by school</span><b style="color: #14171C">{{offCount}}</b></div>
+          </section>
+
+          <section aria-label="Effective menu" style="background: #111827; color: #CBD5E1; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 6px">
+            <h2 style="margin: 0 0 6px; font-family: 'Space Grotesk', sans-serif; font-size: 18px; color: #FFFFFF">What the school's admin will see</h2>
+            <sc-for list="{{preview}}" as="v" hint-placeholder-count="7">
+              <div style="display: flex; justify-content: space-between; font-size: 14px; min-height: 30px; align-items: center"><span style="color: #FFFFFF; font-weight: 600">{{v.name}}</span><span style="font-size: 12px">{{v.n}} items</span></div>
+            </sc-for>
+          </section>
+
+          <button type="button" style="min-height: 52px; border: 0; border-radius: 10px; background: #2147C7; color: #FFFFFF; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer">Save &amp; publish to school</button>
+          <p style="margin: 0; font-size: 12px; color: #4B5260">Applies at each user's next sign-in. Every change is written to config_audit with your name.</p>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const PLANS = [['Starter', 'Up to 250', 250], ['Growth', '251 – 500', 500], ['Professional', '501 – 1,000', 1000], ['Enterprise', '1,000+', null]];
+    const TEN = [
+      { id: 'GV', name: 'Green Valley School', sub: 'greenvalley', plan: 3, students: 742, status: 'Active', renews: '31 Mar 2027', hosting: 'Pooled DB', region: 'ap-south-1', ov: { FN_BANK_RECON: true } },
+      { id: 'SR', name: 'Sunrise Public School', sub: 'sunrise', plan: 1, students: 212, status: 'Active', renews: '30 Jun 2027', hosting: 'Pooled DB', region: 'ap-south-1', ov: { PAYROLL: true } },
+      { id: 'SM', name: 'St. Mary’s Academy', sub: 'stmarys', plan: 2, students: 468, status: 'Active', renews: '31 Jan 2027', hosting: 'Pooled DB', region: 'ap-south-1', ov: { FN_PAYMENT_GATEWAY: true } },
+      { id: 'LV', name: 'Lakeview International', sub: 'lakeview', plan: 4, students: 2140, status: 'Active', renews: '31 Mar 2027', hosting: 'Dedicated DB', region: 'ap-south-1', ov: {} },
+      { id: 'LS', name: 'Little Steps Kindergarten', sub: 'littlesteps', plan: 1, students: 96, status: 'Trial', renews: 'trial ends 30 Nov', hosting: 'Pooled DB', region: 'ap-south-1', ov: { FN_SMS_REMIND: true } }
+    ];
+    const CAT = [
+      ['DASHBOARD', 'Dashboard', 1, [['S', 'Role-based home', 1], ['F', 'Notifications inbox', 1]]],
+      ['STUDENTS', 'Students', 1, [['S', 'Insights', 2, 'STU_INS'], ['S', 'All Students', 1], ['S', 'New Admission', 1], ['S', 'Attendance', 1], ['S', 'Documents & ID Cards', 1], ['S', 'Promote / Transfer', 2], ['F', 'Bulk import from Excel', 2], ['F', 'ID card printing', 2], ['F', 'Online admission form', 3]]],
+      ['STAFF', 'Staff', 1, [['S', 'Insights', 2, 'STF_INS'], ['S', 'All Staff · Add Staff', 1], ['S', 'Staff Attendance', 1], ['S', 'Leave Requests', 1], ['S', 'Departments & Designations', 1], ['F', 'Leave approval workflow', 2], ['F', 'Biometric attendance sync', 4]]],
+      ['ACADEMICS', 'Academics', 1, [['S', 'Academic Years · Classes · Subjects', 1], ['S', 'Boards, Syllabus & Textbooks', 1], ['S', 'Timetable', 1], ['F', 'Multiple campuses / branches', 4]]],
+      ['EXAMS', 'Exams', 1, [['S', 'Question Papers · Approved Papers', 1], ['S', 'Question Bank', 1], ['S', 'Paper Formats', 1], ['S', 'Co-Scholastic', 1], ['F', 'Auto-generate from topics & difficulty', 2], ['F', 'Multiple sets (A / B / C)', 2], ['F', 'Sample & practice papers', 2], ['F', 'Board syllabus & textbook library', 2], ['F', 'AI-drafted questions (teacher review)', 3], ['F', 'Licensed question library', 4]]],
+      ['FEES', 'Fees', 1, [['S', 'Insights', 2, 'FEE_INS'], ['S', 'Collect Fee · Receipts', 1], ['S', 'Fee Request Emails', 1], ['S', 'Payment Matching', 2], ['S', 'Dues & Reminders', 1], ['S', 'Fee Structure', 1], ['S', 'Concessions', 2], ['S', 'Refunds', 2], ['F', 'SMS fee reminders', 2, 'FN_SMS_REMIND'], ['F', 'Online payment gateway', 3, 'FN_PAYMENT_GATEWAY'], ['F', 'Payment links', 3], ['F', 'WhatsApp receipts & reminders', 3]]],
+      ['PAYROLL', 'Payroll', 2, [['S', 'Insights', 2, 'PAY_INS'], ['S', 'Run Payroll · Payslips', 2], ['S', 'Salary Structure', 2], ['S', 'Advances & Deductions', 3], ['F', 'Payroll approval workflow', 3], ['F', 'Bank transfer file', 3], ['F', 'Statutory reports (PF, tax)', 3]]],
+      ['ACCOUNTS', 'Accounts', 1, [['S', 'Bank & Payment Details', 1], ['S', 'Insights', 3, 'ACC_INS'], ['S', 'Account Statement', 3], ['S', 'Income & Expenses', 3], ['S', 'Cash & Bank Book', 3], ['S', 'Chart of Accounts · Reports', 3], ['F', 'Bank reconciliation', 4, 'FN_BANK_RECON'], ['F', 'Budgets & variance', 4]]],
+      ['OPERATIONS', 'Operations', 1, [['S', 'Users', 1], ['S', 'Roles & Permissions', 1], ['S', 'School Settings', 1], ['S', 'Audit Log', 3], ['S', 'Appearance & Branding', 1], ['S', 'Website & Links', 1], ['F', 'Custom brand colour', 2], ['F', 'Layout templates & extra fonts', 3], ['F', 'White-label mobile app', 4], ['F', 'Custom roles', 3], ['F', 'Custom domain & branding', 4], ['F', 'Single sign-on', 4, 'FN_SSO', false], ['F', 'Open API access', 4, 'FN_API', false]]],
+      ['SELF', 'My Space & apps', 1, [['S', 'My Profile · My Child · Fee Dues', 1], ['S', 'My Payslips', 2], ['F', 'Parent mobile app', 1], ['F', 'Teacher mobile app', 2]]]
+    ];
+    const st = this.state || {};
+    const tid = st.tenant || 'GV';
+    const plans = st.plans || {};
+    const ovAll = st.ov || {};
+    const openMap = st.open || { FEES: true };
+    const t = TEN.filter((x) => x.id === tid)[0];
+    const rank = plans[tid] || t.plan;
+    const ov = ovAll[tid] || t.ov;
+    const save = (patch) => this.setState(Object.assign({ tenant: tid, plans, ov: ovAll, open: openMap }, patch));
+    const setOv = (code, val) => {
+      const next = Object.assign({}, ov);
+      if (val === undefined) delete next[code]; else next[code] = val;
+      save({ ov: Object.assign({}, ovAll, { [tid]: next }) });
+    };
+    const C = { plan: ['#E6F4EA', '#0F6B32', 'In plan'], add: ['#FFF1E0', '#8A3B00', 'Add-on'], off: ['#EEF0F3', '#3A404B', 'Switched off'], none: ['transparent', '#6B7280', 'Not in plan'], ent: ['transparent', '#6B7280', 'Enterprise only'] };
+    const sw = (on, locked) => ({ checked: on ? 'true' : 'false', track: locked ? '#E3E6EB' : (on ? '#2147C7' : '#6B7280'), knob: on ? 23 : 3, locked: !!locked });
+    const addons = []; let offCount = 0; const preview = [];
+    const mods = CAT.map(([code, name, min, kids]) => {
+      const inPlan = rank >= min;
+      const o = ov[code];
+      const on = o !== undefined ? o : inPlan;
+      const isAdd = o === true && !inPlan;
+      if (isAdd) addons.push({ name });
+      if (o === false && inPlan) offCount += 1;
+      const pillKey = isAdd ? 'add' : (o === false && inPlan ? 'off' : (inPlan ? 'plan' : 'none'));
+      let enabledKids = 0;
+      const kidRows = kids.map(([kind, kname, kmin, kcode, eligible]) => {
+        const c = kcode || (code + ':' + kname);
+        const kin = rank >= kmin || (isAdd && kmin <= min);
+        const ko = ov[c];
+        const kon = ko !== undefined ? ko : kin;
+        const lock = (eligible === false && rank < 4) || !on;
+        const kAdd = ko === true && !kin;
+        if (kAdd && on) addons.push({ name: name + ' › ' + kname });
+        if (ko === false && kin) offCount += 1;
+        if (kon && on) enabledKids += 1;
+        const pk = eligible === false && rank < 4 ? 'ent' : (kAdd ? 'add' : (ko === false && kin ? 'off' : (kin ? 'plan' : 'none')));
+        const label = kname === 'Insights' ? (rank >= 3 && kin ? 'Insights · Power BI' : (kin ? 'Insights · built-in charts' : 'Insights')) : kname;
+        return Object.assign({ kind: kind === 'F' ? 'FUNCTION' : 'SUB-MENU', kBg: kind === 'F' ? '#EEF0F3' : '#EEF2FF', kFg: kind === 'F' ? '#3A404B' : '#16348F',
+          name: label, nameFg: kon && on ? '#14171C' : '#6B7280', pill: C[pk][2], pBg: C[pk][0], pFg: C[pk][1], aria: name + ' › ' + kname,
+          flip: () => setOv(c, kon ? (kin ? false : undefined) : (kin ? undefined : true)) }, sw(kon && on, lock));
+      });
+      if (on) preview.push({ name, n: String(enabledKids) });
+      const open = !!openMap[code];
+      return Object.assign({ name, countTxt: enabledKids + ' of ' + kids.length + ' on', nameFg: on ? '#14171C' : '#6B7280',
+        pill: C[pillKey][2], pBg: C[pillKey][0], pFg: C[pillKey][1], aria: 'Module ' + name, open, expanded: open ? 'true' : 'false', rot: open ? 90 : 0,
+        openAria: (open ? 'Collapse ' : 'Expand ') + name, kids: kidRows,
+        toggleOpen: () => save({ open: Object.assign({}, openMap, { [code]: !open }) }),
+        flip: () => setOv(code, on ? (inPlan ? false : undefined) : (inPlan ? undefined : true)) }, sw(on, false));
+    });
+    const cap = PLANS[rank - 1][2];
+    const pct = cap ? Math.min(100, Math.round(t.students / cap * 100)) : 30;
+    const capColor = !cap ? '#0F6B32' : pct >= 90 ? '#B45309' : '#0F6B32';
+    const capNote = !cap ? 'No student cap on Enterprise' : t.students > cap ? 'Over the cap — upgrade at renewal' : pct >= 90 ? 'Near the cap — suggest the next plan at renewal' : 'Within plan';
+    const tenants = TEN.map((x) => {
+      const r = plans[x.id] || x.plan, on = x.id === tid;
+      return { name: x.name, plan: PLANS[r - 1][0], studentsTxt: x.students.toLocaleString('en-IN'), status: x.status, stFg: x.status === 'Trial' ? '#8A3B00' : '#0F6B32',
+        sel: on ? 'true' : 'false', bg: on ? '#EEF2FF' : '#FFFFFF', border: on ? '#2147C7' : '#E3E6EB', pick: () => this.setState({ tenant: x.id, plans, ov: ovAll, open: openMap }) };
+    });
+    const planBtns = PLANS.map(([name, range], i) => {
+      const on = rank === i + 1;
+      return { name, range: range + ' students', sel: on ? 'true' : 'false', bg: on ? '#2147C7' : '#FFFFFF', fg: on ? '#FFFFFF' : '#2A2F38', border: on ? '#2147C7' : '#CDD2DA',
+        pick: () => save({ plans: Object.assign({}, plans, { [tid]: i + 1 }) }) };
+    });
+    return {
+      tenants, planBtns, mods, addons, noAddons: addons.length === 0, offCount: String(offCount), preview,
+      planName: PLANS[rank - 1][0], cur: Object.assign({}, t, { studentsTxt: t.students.toLocaleString('en-IN') }),
+      capTxt: t.students.toLocaleString('en-IN') + ' / ' + (cap ? cap.toLocaleString('en-IN') : '∞'), capPct: pct, capColor, capNote
+    };
+  }
+}
+</script>
+</body>
+</html>

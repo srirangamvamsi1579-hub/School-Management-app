@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Database schema</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 1760px; height: 1420px; box-sizing: border-box; padding: 56px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-direction: column; gap: 28px">
+  <header style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #2147C7">Database · 33 tables · 3 views</div>
+      <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 44px; line-height: 1.05; font-weight: 700">Schema by module</h1>
+    </div>
+    <div style="display: flex; gap: 16px; font-size: 12px; color: #4B5260; align-items: center">
+      <span style="display: flex; align-items: center; gap: 6px"><span style="font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 4px; background: #14171C; color: #FFFFFF">PK</span> primary key</span>
+      <span style="display: flex; align-items: center; gap: 6px"><span style="font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 4px; background: #DCE5FF; color: #16348F">FK</span> links to another table</span>
+      <span style="display: flex; align-items: center; gap: 6px"><span style="font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 4px; background: #FFE9D6; color: #8A3B00">ENC</span> stored encrypted</span>
+    </div>
+  </header>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; align-items: start">
+    <sc-for list="{{modules}}" as="m" hint-placeholder-count="8">
+      <section style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 19px; font-weight: 600">{{m.name}}</h2>
+          <span style="font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 999px; background: {{m.tagBg}}; color: {{m.tagFg}}">{{m.tag}}</span>
+        </div>
+        <sc-for list="{{m.tables}}" as="t" hint-placeholder-count="3">
+          <div style="border: 1px solid #E3E6EB; border-radius: 10px; overflow: hidden">
+            <div style="background: #F0F2F5; padding: 7px 10px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; font-weight: 700">{{t.name}}</div>
+            <ul style="margin: 0; padding: 6px 10px 8px; list-style: none; display: flex; flex-direction: column; gap: 4px">
+              <sc-for list="{{t.cols}}" as="c" hint-placeholder-count="3">
+                <li style="display: flex; align-items: center; gap: 6px; font-size: 12px">
+                  <sc-if value="{{c.hasBadge}}" hint-placeholder-val="{{false}}">
+                    <span style="font-size: 9px; font-weight: 700; padding: 2px 4px; border-radius: 4px; background: {{c.bg}}; color: {{c.fg}}">{{c.badge}}</span>
+                  </sc-if>
+                  <span style="font-family: ui-monospace, Menlo, monospace; color: #14171C">{{c.col}}</span>
+                  <span style="color: #5B6270; margin-left: auto; text-align: right">{{c.note}}</span>
+                </li>
+              </sc-for>
+            </ul>
+          </div>
+        </sc-for>
+      </section>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1760,"height":1420}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const B = { PK: ['#14171C', '#FFFFFF'], FK: ['#DCE5FF', '#16348F'], ENC: ['#FFE9D6', '#8A3B00'] };
+    const col = (spec) => {
+      const [col, badge, note] = spec;
+      return { col, badge: badge || '', note: note || '', hasBadge: !!badge, bg: badge ? B[badge][0] : '', fg: badge ? B[badge][1] : '' };
+    };
+    const T = (name, cols) => ({ name, cols: cols.map(col) });
+    const tag = (t) => t === 'Accountant' ? { tag: t, tagBg: '#DCE5FF', tagFg: '#16348F' } : t === 'Operations' ? { tag: t, tagBg: '#FFE9D6', tagFg: '#8A3B00' } : { tag: t, tagBg: '#E3E6EB', tagFg: '#3A404B' };
+    const M = (name, t, tables) => Object.assign({ name, tables }, tag(t));
+    const modules = [
+      M('Security & menus', 'Operations', [
+        T('users', [['user_id', 'PK'], ['username · email · phone'], ['person_type, person_id', 'FK', 'staff / student / guardian'], ['status', '', 'ACTIVE · LOCKED']]),
+        T('roles', [['role_id', 'PK'], ['code', '', 'ADMIN, ACCOUNTANT…']]),
+        T('user_roles', [['user_id', 'FK'], ['role_id', 'FK']]),
+        T('menus', [['menu_id', 'PK'], ['parent_id', 'FK', 'sub-menu → menu'], ['code · label · route']]),
+        T('role_menu_permissions', [['role_id, menu_id', 'FK'], ['can_view / create / edit'], ['can_delete / approve'], ['data_scope', '', 'ALL · OWN_CLASS · SELF']]),
+        T('audit_logs', [['user_id', 'FK'], ['action · entity · old/new']])
+      ]),
+      M('Academics', 'Core', [
+        T('academic_years', [['year_id', 'PK'], ['name · start · end · is_current']]),
+        T('classes', [['class_id', 'PK'], ['name · level_no']]),
+        T('sections', [['section_id', 'PK'], ['class_id', 'FK'], ['class_teacher_id', 'FK', '→ staff']]),
+        T('subjects', [['subject_id', 'PK'], ['code · name']])
+      ]),
+      M('Students & guardians', 'People', [
+        T('students', [['student_id', 'PK'], ['admission_no', '', 'unique'], ['name · dob · gender · photo'], ['status', '', 'ACTIVE · LEFT · ALUMNI']]),
+        T('guardians', [['guardian_id', 'PK'], ['name · relation · phone']]),
+        T('student_guardians', [['student_id, guardian_id', 'FK'], ['is_primary']]),
+        T('enrollments', [['enrollment_id', 'PK'], ['student_id · year_id', 'FK'], ['section_id', 'FK'], ['roll_no']]),
+        T('student_attendance', [['enrollment_id', 'FK'], ['att_date · status']]),
+        T('student_documents', [['student_id', 'FK'], ['doc_type · file_url']])
+      ]),
+      M('Staff', 'People', [
+        T('staff', [['staff_id', 'PK'], ['employee_code', '', 'unique'], ['department_id · designation_id', 'FK'], ['bank_account · tax_id', 'ENC']]),
+        T('departments / designations', [['id', 'PK'], ['name · is_teaching']]),
+        T('staff_attendance', [['staff_id', 'FK'], ['att_date · status']]),
+        T('leave_requests', [['staff_id', 'FK'], ['from · to · type'], ['approved_by', 'FK', '→ users']])
+      ]),
+      M('Fees', 'Accountant', [
+        T('fee_heads', [['fee_head_id', 'PK'], ['name · frequency'], ['income_account_id', 'FK', '→ ledger']]),
+        T('fee_structures', [['year · class · fee_head', 'FK'], ['amount · due_day']]),
+        T('fee_concessions', [['enrollment_id · fee_head_id', 'FK'], ['kind · value · reason']]),
+        T('fee_invoices', [['invoice_id', 'PK'], ['enrollment_id', 'FK'], ['net · paid · status', '', 'DUE · PAID…']]),
+        T('fee_invoice_items', [['invoice_id · fee_head_id', 'FK'], ['amount']]),
+        T('fee_payments', [['payment_id', 'PK'], ['receipt_no · mode · amount'], ['collected_by', 'FK', '→ users']]),
+        T('payment_allocations', [['payment_id · invoice_id', 'FK'], ['amount']])
+      ]),
+      M('Payroll', 'Accountant', [
+        T('salary_components', [['component_id', 'PK'], ['kind', '', 'EARNING · DEDUCTION'], ['calc_type']]),
+        T('staff_salary_structures', [['staff_id · component_id', 'FK'], ['amount · effective_from']]),
+        T('salary_advances', [['staff_id', 'FK'], ['amount · balance']]),
+        T('payroll_runs', [['run_id', 'PK'], ['month · year'], ['status', '', 'DRAFT · APPROVED · PAID']]),
+        T('payslips', [['run_id · staff_id', 'FK'], ['gross · deductions · net']]),
+        T('payslip_lines', [['payslip_id · component_id', 'FK'], ['amount']])
+      ]),
+      M('Accounts', 'Accountant', [
+        T('ledger_accounts', [['account_id', 'PK'], ['code · name'], ['acc_type', '', 'ASSET · INCOME…'], ['parent_id', 'FK', 'grouping']]),
+        T('vouchers', [['voucher_id', 'PK'], ['voucher_no · date · type'], ['source_type · source_id', '', 'fee / payroll / expense']]),
+        T('voucher_lines', [['voucher_id · account_id', 'FK'], ['debit · credit']]),
+        T('expenses', [['account_id', 'FK', 'category'], ['vendor · amount · status']])
+      ]),
+      M('Views & posting rules', 'Core', [
+        T('v_user_menu', [['user → menus they can view', '', 'drives the sidebar']]),
+        T('v_account_statement', [['ledger lines + running balance', '', 'Account Statement']]),
+        T('v_student_dues', [['balance due per student', '', 'Dues & parent app']]),
+        T('auto postings', [['Fee received', '', 'Dr Cash/Bank · Cr Fee Income'], ['Payroll approved', '', 'Dr Salaries · Cr Payable'], ['Salary paid', '', 'Dr Payable · Cr Bank'], ['Expense paid', '', 'Dr Expense · Cr Cash/Bank']])
+      ])
+    ];
+    return { modules };
+  }
+}
+</script>
+</body>
+</html>

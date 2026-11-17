@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Student profile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=Kalam:wght@400;700&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1640px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="Teacher" plan="Professional" active="EXM_PROFILE" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 16px">
+    <nav aria-label="Breadcrumb" style="font-size: 13px; color: #4B5260">Students › All Students › Aarav Sharma</nav>
+
+    <section aria-label="Student" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px 20px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center">
+      <div style="width: 72px; height: 72px; border-radius: 999px; background: #DCE5FF; color: #16348F; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700">AS</div>
+      <div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 4px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700">Aarav Sharma</h1>
+        <span style="font-size: 14px; color: #4B5260">ADM-2025-0231 · Grade VIII-A · Roll 12 · Blue house · CBSE</span>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap">
+        <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+          <div style="padding: 10px 14px; border-radius: 10px; background: {{s.bg}}; min-width: 120px"><div style="font-size: 12px; color: #4B5260">{{s.k}}</div><div style="font-size: 16px; font-weight: 700; color: {{s.fg}}">{{s.v}}</div></div>
+        </sc-for>
+      </div>
+    </section>
+
+    <div role="tablist" aria-label="Profile sections" style="display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid #DDE1E7">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="5">
+        <button type="button" role="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}" style="min-height: 44px; padding: 0 14px; border: 0; background: transparent; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; color: {{t.fg}}; border-bottom: 2px solid {{t.line}}; margin-bottom: -1px">{{t.label}}</button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{isOverview}}" hint-placeholder-val="{{false}}">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px">
+        <sc-for list="{{cards}}" as="c" hint-placeholder-count="4">
+          <section style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 17px">{{c.title}}</h2>
+            <dl style="margin: 0; display: grid; grid-template-columns: 140px 1fr; gap: 8px 10px; font-size: 14px">
+              <sc-for list="{{c.rows}}" as="r" hint-placeholder-count="5"><dt style="color: #4B5260">{{r.k}}</dt><dd style="margin: 0; font-weight: 600">{{r.v}}</dd></sc-for>
+            </dl>
+          </section>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isProfile}}" hint-placeholder-val="{{true}}">
+      <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start">
+        <article aria-label="Assessment profile" style="flex: 3 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #D5DAE1; padding: 32px 36px; display: flex; flex-direction: column; gap: 14px; font-family: 'Noto Serif', Georgia, serif; font-size: 15px; line-height: 1.6">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-family: Inter, sans-serif">
+            <div role="radiogroup" aria-label="Term" style="display: flex; gap: 6px">
+              <sc-for list="{{terms}}" as="t" hint-placeholder-count="3">
+                <button type="button" role="radio" aria-checked="{{t.sel}}" onClick="{{t.pick}}" style="height: 34px; padding: 0 12px; border-radius: 999px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid {{t.border}}; background: {{t.bg}}; color: {{t.fg}}">{{t.label}}</button>
+              </sc-for>
+            </div>
+            <span style="font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: {{p.stBg}}; color: {{p.stFg}}">{{p.status}}</span>
+          </div>
+          <h2 style="margin: 4px 0 0; text-align: center; font-style: italic; font-size: 22px">{{p.title}}</h2>
+          <b style="font-style: italic">Aarav Sharma</b>
+          <p style="margin: 0; font-style: italic">{{p.headline}}</p>
+          <div><b style="font-style: italic">Our observations… </b><span style="white-space: pre-line">{{obs}}</span></div>
+          <div><b style="font-style: italic">During classes, </b>{{p.inClass}}</div>
+          <h3 style="margin: 8px 0 0; text-align: center; font-size: 16px; font-style: italic">Subject comments…</h3>
+          <sc-for list="{{p.groups}}" as="g" hint-placeholder-count="3">
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <b style="font-family: Inter, sans-serif; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #4B5260">{{g.name}}</b>
+              <sc-for list="{{g.items}}" as="i" hint-placeholder-count="2"><div><b style="font-style: italic">{{i.subj}}:</b> {{i.c}} <span style="font-family: Inter, sans-serif; font-size: 11px; color: #4B5260">— {{i.t}}</span></div></sc-for>
+            </div>
+          </sc-for>
+          <div><b style="font-style: italic">Assessment projects: </b>{{p.projects}}</div>
+          <p style="margin: 0">{{p.closing}}</p>
+          <div style="display: flex; justify-content: space-between; margin-top: 18px; font-family: Inter, sans-serif; font-size: 13px"><span style="border-top: 1px solid #14171C; padding-top: 4px; min-width: 160px; text-align: center">Coordinator</span><span style="border-top: 1px solid #14171C; padding-top: 4px; min-width: 160px; text-align: center">Vice Principal</span></div>
+        </article>
+
+        <aside style="flex: 2 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+          <section aria-label="Workflow" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 17px">Write → review → publish</h2>
+            <span style="font-size: 13px; color: #4B5260; line-height: 1.5">Class teacher writes the general part, subject teachers add their lines, the coordinator reviews, then it's published to the parent app and printed with signatures.</span>
+            <div style="display: flex; gap: 8px"><button type="button" style="flex: 1; min-height: 40px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Print A4</button><button type="button" style="flex: 1; min-height: 40px; border: 0; border-radius: 8px; background: #2147C7; color: #FFFFFF; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer">Send to coordinator</button></div>
+          </section>
+          <section aria-label="Comment bank" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 17px">Comment bank</h2>
+            <span style="font-size: 12px; color: #4B5260">Tap to add to "Our observations". The school can add its own phrases.</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px">
+              <sc-for list="{{phrases}}" as="ph" hint-placeholder-count="6"><button type="button" onClick="{{ph.add}}" style="min-height: 34px; padding: 4px 10px; border-radius: 999px; border: 1px solid #CDD2DA; background: {{ph.bg}}; font: inherit; font-size: 12px; text-align: left; cursor: pointer">{{ph.t}}</button></sc-for>
+            </div>
+          </section>
+          <section aria-label="Appreciation cards" style="display: flex; flex-direction: column; gap: 12px">
+            <sc-for list="{{cardsA}}" as="a" hint-placeholder-count="2">
+              <div style="background: #FFFFFF; border: 8px double {{a.border}}; padding: 18px; text-align: center; display: flex; flex-direction: column; gap: 6px; font-family: 'Kalam', cursive">
+                <b style="font-size: 22px">{{a.title}}</b>
+                <span style="font-size: 17px; line-height: 1.45">{{a.msg}}</span>
+                <div style="display: flex; justify-content: space-between; font-family: Inter, sans-serif; font-size: 11px; color: #4B5260; margin-top: 8px"><span>Coordinator</span><span>{{a.when}}</span><span>Vice Principal</span></div>
+              </div>
+            </sc-for>
+          </section>
+        </aside>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isOther}}" hint-placeholder-val="{{false}}">
+      <section style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 24px; font-size: 14px; color: #4B5260">{{otherText}}</section>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1640}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const tab = st.tab || 'PROFILE', term = st.term || 'TERM1', added = st.added || [];
+    const set = (p) => this.setState(Object.assign({ tab, term, added }, p));
+    const stats = [['Attendance', '94%', '#F5F6F8', '#14171C'], ['Fees', 'Inst. III due 10 Dec', '#FFF1E0', '#8A3B00'], ['Profile', 'Term 1 published', '#E6F4EA', '#0F6B32'], ['Transport', 'Band 3 · zone C', '#F5F6F8', '#14171C']]
+      .map(([k, v, bg, fg]) => ({ k, v, bg, fg }));
+    const T = [['OVERVIEW', 'Overview'], ['PROFILE', 'Assessment profile'], ['ATT', 'Attendance'], ['FEES', 'Fees & invoices'], ['DOCS', 'Documents']];
+    const tabs = T.map(([k, label]) => ({ label, sel: k === tab ? 'true' : 'false', fg: k === tab ? '#2147C7' : '#4B5260', line: k === tab ? '#2147C7' : 'transparent', pick: () => set({ tab: k }) }));
+    const cards = [
+      { title: 'Personal', rows: [['Date of birth', '14-05-2013'], ['Gender', 'Male'], ['Blood group', 'B+'], ['Admission date', '01-04-2019'], ['Home language', 'Telugu']] },
+      { title: 'Guardians', rows: [['Father', 'Rohit Sharma · primary'], ['Mobile', '+91 98•••• 4410'], ['Email', 'rohit.s@example.com'], ['Mother', 'Neha Sharma'], ['Parent app', 'Active since Apr 2025']] },
+      { title: 'School', rows: [['Class teacher', 'Ms. Sonia (SON)'], ['Board', 'CBSE'], ['2nd language', 'Telugu'], ['Elective', 'Robotics'], ['House', 'Blue']] },
+      { title: 'Fees', rows: [['Payment option', 'Three instalments'], ['Transport', 'Band 3 · zone C pick-up'], ['Instalment III', '₹1,03,070 due 10-12-2026'], ['Previous outstanding', '₹0'], ['Last receipt', 'R-2026-00218 · 06 Aug']] }
+    ].map((c) => ({ title: c.title, rows: c.rows.map(([k, v]) => ({ k, v })) }));
+    const P = {
+      TERM1: { title: '1st Term Assessment Profile 2026 – 2027', status: 'Published 20 Oct', stBg: '#E6F4EA', stFg: '#0F6B32',
+        headline: 'We appreciate Aarav’s steady effort and the care he brings to group work.',
+        obs: 'Aarav settled into Grade VIII quickly. He is curious, asks thoughtful questions and is beginning to take more responsibility for his own belongings and time.',
+        inClass: 'he prepares well and completes tasks on time. He shares his views confidently and is learning to wait for his turn in discussions.',
+        projects: 'His science model on water purification was well researched and clearly explained.',
+        closing: 'Keep reading widely, Aarav — your ideas deserve a bigger vocabulary!' },
+      TERM2: { title: '2nd Term Assessment Profile 2026 – 2027', status: 'Draft · 3 of 7 subjects in', stBg: '#FFF1E0', stFg: '#8A3B00',
+        headline: 'Aarav has shown real focus during the half-yearly assessments.',
+        obs: 'He plans his work better and asks for help early when something is unclear.',
+        inClass: 'he is attentive and supports classmates during pair work.', projects: 'Pending.', closing: '' },
+      FINAL: { title: 'Final Term Assessment Profile 2026 – 2027', status: 'Not started', stBg: '#EEF0F3', stFg: '#3A404B',
+        headline: '', obs: '', inClass: '', projects: '', closing: '' }
+    }[term];
+    const groups = [
+      { name: 'Language', items: [['English', 'Understands texts in depth; answers would gain from more examples.', 'SON'], ['Telugu', 'Writes well-structured compositions with a good choice of words.', 'SAUR']] },
+      { name: 'Math & Sciences', items: [['Mathematics', 'Quick and accurate; shows working in a clear sequence.', 'SN'], ['Science', 'Strong on concepts; should read multi-step questions twice.', 'KIR']] },
+      { name: 'Social Sciences', items: [['History', 'Answers are well organised and to the point.', 'SANCH'], ['Geography', 'Maps and diagrams are neat and accurate.', 'SAND']] }
+    ].map((g) => ({ name: g.name, items: g.items.map(([subj, c, t]) => ({ subj, c: term === 'FINAL' ? '—' : c, t })) }));
+    const PH = ['Works well with others.', 'Takes pride in neat work.', 'Asks for help when needed.', 'Needs reminders to submit work on time.', 'Listens carefully to instructions.', 'Shows leadership in group tasks.'];
+    const phrases = PH.map((t) => ({ t, bg: added.indexOf(t) >= 0 ? '#E6F4EA' : '#FFFFFF', add: () => { if (added.indexOf(t) < 0) set({ added: added.concat([t]) }); } }));
+    const obs = (P.obs + (added.length ? ' ' + added.join(' ') : '')).trim() || '—';
+    const terms = [['TERM1', '1st term'], ['TERM2', '2nd term'], ['FINAL', 'Final']].map(([k, label]) => ({ label, sel: k === term ? 'true' : 'false', bg: k === term ? '#14171C' : '#FFFFFF', fg: k === term ? '#FFFFFF' : '#2A2F38', border: k === term ? '#14171C' : '#CDD2DA', pick: () => set({ term: k, added: [] }) }));
+    const cardsA = [
+      { title: 'Bravo!', msg: 'For focus and care in the second-term assessments.', when: 'Dec 2026', border: '#3A404B' },
+      { title: 'Well done!', msg: 'Your enthusiasm and initiative in October and November are noticed. Keep it going!', when: 'Nov 2026', border: '#E07A1F' }
+    ];
+    const OT = { ATT: 'Attendance by month, late arrivals and leave — same data as the parent app.', FEES: 'Invoices, receipts and the fee request emails sent for Aarav, with their auto-filled remarks.', DOCS: 'Birth certificate, transfer certificate, photo and ID proof.' };
+    return {
+      zero: 0, stats, tabs, cards, p: Object.assign({}, P, { groups }), obs, phrases, terms, cardsA,
+      isOverview: tab === 'OVERVIEW', isProfile: tab === 'PROFILE', isOther: ['ATT', 'FEES', 'DOCS'].indexOf(tab) >= 0, otherText: OT[tab] || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

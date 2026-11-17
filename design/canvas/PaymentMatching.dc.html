@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Payment matching</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1140px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="Accountant" plan="Professional" active="FEE_MATCHING" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <nav aria-label="Breadcrumb" style="font-size: 13px; color: #4B5260">Fees › Payment Matching</nav>
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700">Incoming payments — today</h1>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <span style="display: inline-flex; align-items: center; height: 40px; padding: 0 12px; border-radius: 8px; background: #E6F4EA; color: #0F6B32; font-size: 13px; font-weight: 600">Bank feed: last line 10:42</span>
+          <button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Import bank statement</button>
+        </div>
+      </div>
+    </div>
+
+    <ol aria-label="What happens to each payment" style="margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px">
+      <sc-for list="{{flow}}" as="f" hint-placeholder-count="6">
+        <li style="display: flex; align-items: center; gap: 6px"><span style="padding: 6px 10px; border-radius: 999px; background: #FFFFFF; border: 1px solid #E3E6EB; font-weight: 600">{{f.t}}</span><sc-if value="{{f.arrow}}" hint-placeholder-val="{{true}}"><span aria-hidden="true" style="color: #8A93A3">→</span></sc-if></li>
+      </sc-for>
+    </ol>
+
+    <section aria-label="Today" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px">
+      <sc-for list="{{tiles}}" as="t" hint-placeholder-count="4">
+        <div style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: #4B5260">{{t.k}}</span><span style="font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; color: {{t.fg}}">{{t.v}}</span></div>
+      </sc-for>
+    </section>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start">
+      <section aria-label="Payments" style="flex: 3 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px">
+        <div style="overflow-x: auto">
+          <table style="width: 100%; min-width: 680px; border-collapse: collapse; font-size: 13px">
+            <thead><tr style="text-align: left; color: #5B6270; font-size: 12px"><th scope="col" style="padding: 6px">Time</th><th scope="col" style="padding: 6px">From</th><th scope="col" style="padding: 6px">Reference · narration</th><th scope="col" style="padding: 6px; text-align: right">Amount</th><th scope="col" style="padding: 6px">Result</th></tr></thead>
+            <tbody>
+              <sc-for list="{{rows}}" as="r" hint-placeholder-count="7">
+                <tr onClick="{{r.pick}}" style="border-top: 1px solid #EEF0F3; cursor: pointer; background: {{r.rowBg}}">
+                  <td style="padding: 9px 6px; color: #4B5260; white-space: nowrap">{{r.time}}</td>
+                  <td style="padding: 9px 6px"><b>{{r.src}}</b><div style="font-size: 12px; color: #4B5260">{{r.mode}}</div></td>
+                  <td style="padding: 9px 6px"><span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px">{{r.ref}}</span><div style="font-size: 12px; color: #4B5260">{{r.narr}}</div></td>
+                  <td style="padding: 9px 6px; text-align: right; font-weight: 700">{{r.amt}}</td>
+                  <td style="padding: 9px 6px"><span style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: {{r.bg}}; color: {{r.fg}}; white-space: nowrap">{{r.status}}</span><div style="font-size: 12px; color: #4B5260; margin-top: 2px">{{r.result}}</div></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside aria-label="Review" style="flex: 2 1 340px; min-width: 0; background: #FFFFFF; border: 2px solid #B45309; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Needs a person — UPI ₹50,000</h2>
+        <div style="font-size: 13px; color: #4B5260; line-height: 1.5">Ref <b style="font-family: ui-monospace, Menlo, monospace; color: #14171C">UTR 4402 9917 3310</b> · payer "MEENA P" · narration "school fee". No admission no., and the amount matches no request exactly.</div>
+        <span style="font-size: 12px; font-weight: 700; color: #4B5260">Suggested matches</span>
+        <sc-for list="{{cands}}" as="c" hint-placeholder-count="3">
+          <label style="display: flex; gap: 10px; align-items: flex-start; padding: 10px; border-radius: 10px; cursor: pointer; border: 1px solid {{c.border}}; background: {{c.bg}}">
+            <input type="radio" name="cand" checked="{{c.on}}" onChange="{{c.pick}}" style="width: 18px; height: 18px; margin-top: 2px">
+            <span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 14px">{{c.name}}</b><span style="font-size: 12px; color: #4B5260">{{c.why}}</span></span>
+          </label>
+        </sc-for>
+        <sc-if value="{{confirmed}}" hint-placeholder-val="{{false}}">
+          <div role="status" style="font-size: 13px; padding: 10px 12px; border-radius: 10px; background: #E6F4EA; color: #0F6B32; line-height: 1.45">Matched to {{chosen}}. Receipt R-2026-00419 created, Instalment III part-paid (₹53,070 left), voucher posted to Bank, confirmation emailed.</div>
+        </sc-if>
+        <div style="display: flex; gap: 8px">
+          <button type="button" style="flex: 1; min-height: 44px; border: 1px solid #CDD2DA; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Not a fee — park it</button>
+          <button type="button" onClick="{{confirm}}" style="flex: 1; min-height: 44px; border: 0; border-radius: 10px; background: #2147C7; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer">Confirm match</button>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1140}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const cand = st.cand || 0, confirmed = !!st.confirmed;
+    const flow = ['Payment arrives', 'Matched to the fee request', 'Receipt created', 'Invoice marked paid', 'Bank voucher posted', 'Parent emailed'].map((t, i, a) => ({ t, arrow: i < a.length - 1 }));
+    const S = { AUTO: ['Confirmed', '#E6F4EA', '#0F6B32'], REVIEW: ['Needs review', '#FFF1E0', '#8A3B00'], DUP: ['Duplicate — ignored', '#EEF0F3', '#3A404B'], MAN: ['Matched by you', '#DCE5FF', '#16348F'], WAIT: ['Waiting for bank', '#EEF0F3', '#3A404B'] };
+    const R = [
+      ['10:42', 'Online', 'UPI', 'pay_Nf83kQ', 'Pay link — Aarav Sharma', '₹1,03,070', 'AUTO', 'R-2026-00412 · pay link'],
+      ['10:31', 'Bank feed', 'NEFT', 'SBIN226340091', 'NEFT/R KUMAR/FEES ADM-2024-0118', '₹1,09,470', 'AUTO', 'R-2026-00411 · admission no. in narration'],
+      ['10:05', 'Bank feed', 'UPI', 'UTR 4402 9917 3310', 'MEENA P / school fee', '₹50,000', confirmed ? 'MAN' : 'REVIEW', confirmed ? 'R-2026-00419 · Diya Patel' : 'No admission no., no exact amount'],
+      ['09:58', 'Parent', 'UPI QR', 'UTR 7781 0042 5519', 'Entered on pay page by Anil Bhat', '₹1,09,470', 'WAIT', 'Will confirm when the bank line arrives'],
+      ['09:40', 'Bank feed', 'IMPS', 'pay_Nf83kQ', 'Settlement of an online payment', '₹1,03,070', 'DUP', 'Already receipted — not counted twice'],
+      ['09:12', 'Online', 'Card', 'pay_Nf7zLp', 'Pay link — Kavya Reddy', '₹67,060', 'AUTO', 'R-2026-00410 · pay link'],
+      ['08:47', 'Bank feed', 'NEFT', 'HDFC22633800412', 'NEFT/S JOSHI/ADM-2023-0544 TERM', '₹72,930', 'AUTO', 'R-2026-00409 · admission no. in narration']
+    ];
+    const rows = R.map(([time, src, mode, ref, narr, amt, k, result]) => ({ time, src, mode, ref, narr, amt, result, status: S[k][0], bg: S[k][1], fg: S[k][2], rowBg: k === 'REVIEW' ? '#FFFBF5' : '#FFFFFF', pick: () => {} }));
+    const tiles = [['Received in bank today', '₹4,02,530', '#14171C'], ['Confirmed automatically', '4', '#0F6B32'], ['Needs review', confirmed ? '0' : '1', confirmed ? '#14171C' : '#8A3B00'], ['Duplicates blocked', '1', '#14171C']]
+      .map(([k, v, fg]) => ({ k, v, fg }));
+    const C = [
+      ['Diya Patel · VIII-B (guardian Meena Patel)', 'Payer name matches guardian · Instalment III ₹1,03,070 open · paid ₹50,000 last term the same way'],
+      ['Meera Pillai · III-A (guardian Suresh Pillai)', 'Surname starts with P · ₹65,540 open'],
+      ['Search another student…', 'Pick any student with open fees']
+    ];
+    const cands = C.map(([name, why], i) => ({ name, why, on: i === cand, bg: i === cand ? '#EEF2FF' : '#FFFFFF', border: i === cand ? '#2147C7' : '#E3E6EB', pick: () => this.setState({ cand: i, confirmed }) }));
+    return { zero: 0, flow, rows, tiles, cands, confirmed, chosen: C[cand][0].split(' · ')[0], confirm: () => this.setState({ cand, confirmed: true }) };
+  }
+}
+</script>
+</body>
+</html>

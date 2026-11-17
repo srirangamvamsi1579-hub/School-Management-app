@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Website and links</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1240px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="Admin" plan="Professional" active="OPS_WEBSITE" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <nav aria-label="Breadcrumb" style="font-size: 13px; color: #4B5260">Operations › Website &amp; Links</nav>
+      <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700">Website &amp; links</h1>
+    </div>
+
+    <div role="radiogroup" aria-label="Website" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px">
+      <sc-for list="{{modes}}" as="m" hint-placeholder-count="2">
+        <button type="button" role="radio" aria-checked="{{m.sel}}" onClick="{{m.pick}}" style="display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 12px; font: inherit; text-align: left; cursor: pointer; border: 2px solid {{m.border}}; background: #FFFFFF">
+          <b style="font-size: 15px">{{m.title}}</b><span style="font-size: 13px; color: #4B5260; line-height: 1.45">{{m.desc}}</span>
+        </button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{existing}}" hint-placeholder-val="{{true}}">
+      <section aria-label="Existing website" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; align-items: end">
+        <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600">School website<input type="url" value="https://www.[school].edu.in" style="height: 40px; box-sizing: border-box; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 13px"></label>
+        <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600">Ownership check<span style="display: inline-flex; align-items: center; height: 40px; padding: 0 12px; border-radius: 8px; background: #E6F4EA; color: #0F6B32; font-size: 13px">Verified by DNS record · 12 Nov</span></div>
+        <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600">App address (Enterprise)<input type="text" value="app.[school].edu.in" style="height: 40px; box-sizing: border-box; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 13px"></label>
+      </section>
+    </sc-if>
+    <sc-if value="{{isNew}}" hint-placeholder-val="{{false}}">
+      <section aria-label="New pages" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+        <span style="font-size: 13px; color: #4B5260">Pages are hosted at <b>greenvalley.yourapp.com</b> in the school's theme. Edit text and photos; data (fees, notices, timetable) stays live.</span>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px">
+          <sc-for list="{{pages}}" as="p" hint-placeholder-count="6">
+            <div style="padding: 12px; border: 1px solid #E3E6EB; border-radius: 10px; display: flex; flex-direction: column; gap: 4px"><b style="font-size: 14px">{{p.t}}</b><span style="font-size: 12px; color: #4B5260">{{p.d}}</span><span style="font-size: 11px; font-weight: 700; color: {{p.fg}}">{{p.s}}</span></div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-if>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start">
+      <section aria-label="Menu links" style="flex: 3 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap"><h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Links in the app menu</h2><button type="button" style="height: 38px; padding: 0 12px; border: 0; border-radius: 8px; background: #2147C7; color: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">+ Add link</button></div>
+        <div style="overflow-x: auto">
+          <table style="width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13px">
+            <thead><tr style="text-align: left; color: #5B6270; font-size: 12px"><th scope="col" style="padding: 6px">Label</th><th scope="col" style="padding: 6px">Shown under</th><th scope="col" style="padding: 6px">Web page</th><th scope="col" style="padding: 6px">Opens</th><th scope="col" style="padding: 6px">Who sees it</th></tr></thead>
+            <tbody>
+              <sc-for list="{{links}}" as="l" hint-placeholder-count="5">
+                <tr style="border-top: 1px solid #EEF0F3"><td style="padding: 9px 6px; font-weight: 600">{{l.label}}</td><td style="padding: 9px 6px">{{l.under}}</td><td style="padding: 9px 6px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #4B5260">{{l.url}}</td><td style="padding: 9px 6px">{{l.open}}</td><td style="padding: 9px 6px; color: #4B5260">{{l.roles}}</td></tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+        <span style="font-size: 12px; color: #4B5260">Only https pages. "Inside the app" needs the other site to allow embedding; otherwise it opens in a new tab. No personal data is added to the address.</span>
+      </section>
+
+      <aside aria-label="Menu preview" style="flex: 1 1 280px; min-width: 0; background: #111827; color: #CBD5E1; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+        <b style="color: #FFFFFF; font-size: 15px">Menu preview</b>
+        <div role="radiogroup" aria-label="Preview as" style="display: flex; flex-wrap: wrap; gap: 6px">
+          <sc-for list="{{roleTabs}}" as="r" hint-placeholder-count="4">
+            <button type="button" role="radio" aria-checked="{{r.sel}}" onClick="{{r.pick}}" style="height: 34px; padding: 0 10px; border-radius: 999px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid {{r.border}}; background: {{r.bg}}; color: {{r.fg}}">{{r.label}}</button>
+          </sc-for>
+        </div>
+        <sc-for list="{{preview}}" as="p" hint-placeholder-count="5">
+          <div style="display: flex; flex-direction: column; gap: 2px; padding-top: 8px; border-top: 1px solid #1F2937">
+            <b style="color: #FFFFFF; font-size: 13px">{{p.menu}}</b>
+            <sc-for list="{{p.items}}" as="i" hint-placeholder-count="2"><span style="font-size: 13px; padding-left: 12px; color: {{i.fg}}">{{i.t}}</span></sc-for>
+          </div>
+        </sc-for>
+      </aside>
+    </div>
+
+    <section aria-label="Widgets for the school website" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap"><h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Put the app on your website</h2><span style="font-size: 12px; color: #4B5260">Paste one line into any page · Growth plan and above (plain links on every plan)</span></div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px">
+        <sc-for list="{{widgets}}" as="w" hint-placeholder-count="5">
+          <div style="border: 1px solid #E3E6EB; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 6px">
+            <b style="font-size: 14px">{{w.t}}</b><span style="font-size: 12px; color: #4B5260">{{w.d}}</span>
+            <code style="font-size: 11px; background: #F0F2F5; padding: 6px 8px; border-radius: 6px; color: #14171C; word-break: break-all">{{w.code}}</code>
+            <button type="button" style="align-self: flex-start; height: 32px; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 6px; background: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">Copy</button>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const mode = st.mode || 'EXISTING', role = st.role || 'Parent';
+    const set = (p) => this.setState(Object.assign({ mode, role }, p));
+    const modes = [['EXISTING', 'Connect our existing website', 'Keep your site. Add its pages to the app menu, and put Pay fees, Enquiry and Parent login buttons on the site.'],
+      ['NEW', 'Create pages for us', 'No website yet, or want a fresh one: we host Home, Admissions, Fees, Notices and Contact pages in your theme.']]
+      .map(([k, title, desc]) => ({ title, desc, sel: k === mode ? 'true' : 'false', border: k === mode ? '#2147C7' : '#E3E6EB', pick: () => set({ mode: k }) }));
+    const pages = [['Home', 'Welcome, highlights, photos', 'Published', '#0F6B32'], ['Admissions', 'Enquiry form → Students › New Admission', 'Published', '#0F6B32'], ['Fees & payment', 'Fee structure + pay link lookup', 'Published', '#0F6B32'],
+      ['Notices', 'Live from the app', 'Draft', '#8A3B00'], ['Timetable', 'Grade timetables, read-only', 'Draft', '#8A3B00'], ['Contact', 'Map, phone, office hours', 'Published', '#0F6B32']]
+      .map(([t, d, s, fg]) => ({ t, d, s, fg }));
+    const L = [
+      ['School website', 'Top of menu', 'https://www.[school].edu.in', 'New tab', ['Admin', 'Principal', 'Accountant', 'Teacher', 'Parent']],
+      ['Admissions 2027', 'Students', 'https://www.[school].edu.in/admissions', 'Inside the app', ['Admin', 'Principal']],
+      ['Transport routes map', 'Fees', 'https://www.[school].edu.in/transport', 'New tab', ['Admin', 'Parent']],
+      ['Circulars', 'My Space', 'https://www.[school].edu.in/circulars', 'Inside the app', ['Teacher', 'Parent']],
+      ['Library catalogue', 'Academics', 'https://library.[school].edu.in', 'New tab', ['Teacher']]
+    ];
+    const links = L.map(([label, under, url, open, roles]) => ({ label, under, url, open, roles: roles.join(', ') }));
+    const BASE = { Admin: ['Dashboard', 'Students', 'Fees', 'Academics', 'Operations'], Principal: ['Dashboard', 'Students', 'Fees', 'Academics', 'Exams'], Teacher: ['Dashboard', 'Students', 'Academics', 'Exams', 'My Space'], Parent: ['Dashboard', 'My Space'] };
+    const roleTabs = Object.keys(BASE).map((r) => { const on = r === role; return { label: r, sel: on ? 'true' : 'false', bg: on ? '#2147C7' : 'transparent', fg: on ? '#FFFFFF' : '#CBD5E1', border: on ? '#2147C7' : '#334155', pick: () => set({ role: r }) }; });
+    const mine = L.filter((l) => l[4].indexOf(role) >= 0);
+    const preview = [];
+    const top = mine.filter((l) => l[1] === 'Top of menu');
+    if (top.length) preview.push({ menu: '↗ ' + top[0][0], items: [] });
+    BASE[role].forEach((menu) => {
+      const items = mine.filter((l) => l[1] === menu).map((l) => ({ t: '↗ ' + l[0], fg: '#93C5FD' }));
+      preview.push({ menu, items: items.length ? items : [{ t: '(app screens)', fg: '#64748B' }] });
+    });
+    const tag = (w) => '<script src="https://cdn.yourapp.com/w.js" data-school="greenvalley" data-widget="' + w + '"></' + 'script>';
+    const widgets = [['Pay fees button', 'Parent enters admission no. + mobile, gets a one-time code, then pays.', tag('pay-fees')],
+      ['Admission enquiry form', 'Lands in Students › New Admission as an enquiry.', tag('enquiry')],
+      ['Parent / staff login', 'Sign-in button that opens the app.', tag('login')],
+      ['Notices feed', 'Latest circulars, updated live.', tag('notices')],
+      ['Plain link (any plan)', 'Use as a normal hyperlink on any website.', 'https://greenvalley.yourapp.com/pay']].map(([t, d, code]) => ({ t, d, code }));
+    return { zero: 0, modes, existing: mode === 'EXISTING', isNew: mode === 'NEW', pages, links, roleTabs, preview, widgets };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Approved papers</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1040px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="Principal" plan="Professional" active="EXM_APPROVED" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <nav aria-label="Breadcrumb" style="font-size: 13px; color: #4B5260">Exams › Papers › Approved Papers</nav>
+      <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700">Approve &amp; print papers</h1>
+    </div>
+    <div role="tablist" aria-label="Paper status" style="display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid #DDE1E7">
+      <a href="#" role="tab" aria-selected="true" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; text-decoration: none; font-size: 14px; font-weight: 600; color: #2147C7; border-bottom: 2px solid #2147C7; margin-bottom: -1px">Awaiting my approval (2)</a>
+      <a href="#" role="tab" aria-selected="false" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; text-decoration: none; font-size: 14px; font-weight: 600; color: #4B5260">Approved &amp; locked (5)</a>
+      <a href="#" role="tab" aria-selected="false" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; text-decoration: none; font-size: 14px; font-weight: 600; color: #4B5260">Printed (11)</a>
+      <a href="#" role="tab" aria-selected="false" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; text-decoration: none; font-size: 14px; font-weight: 600; color: #4B5260">Sample papers (8)</a>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+      <section aria-label="Papers" style="flex: 3 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px 20px">
+        <div style="overflow-x: auto">
+          <table style="width: 100%; min-width: 680px; border-collapse: collapse; font-size: 14px">
+            <thead><tr style="text-align: left; color: #5B6270; font-size: 12px">
+              <th scope="col" style="padding: 8px 6px">Paper</th><th scope="col" style="padding: 8px 6px">Exam date</th><th scope="col" style="padding: 8px 6px">Sets</th>
+              <th scope="col" style="padding: 8px 6px">Prepared by</th><th scope="col" style="padding: 8px 6px">Status</th><th scope="col" style="padding: 8px 6px; text-align: right">Action</th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{papers}}" as="p" hint-placeholder-count="6">
+                <tr style="border-top: 1px solid #EEF0F3; background: {{p.rowBg}}">
+                  <td style="padding: 10px 6px"><div style="font-weight: 600">{{p.title}}</div><div style="font-size: 12px; color: #4B5260">{{p.meta}}</div></td>
+                  <td style="padding: 10px 6px; white-space: nowrap">{{p.date}}</td>
+                  <td style="padding: 10px 6px">{{p.sets}}</td>
+                  <td style="padding: 10px 6px; color: #4B5260">{{p.by}}</td>
+                  <td style="padding: 10px 6px"><span style="font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: {{p.sBg}}; color: {{p.sFg}}; white-space: nowrap">{{p.status}}</span></td>
+                  <td style="padding: 10px 6px; text-align: right"><a href="{{p.href}}" style="display: inline-flex; align-items: center; height: 36px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; background: {{p.aBg}}; color: {{p.aFg}}">{{p.action}}</a></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside aria-label="Print" style="flex: 1 1 320px; min-width: 0; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Print — Half-yearly · Class IX Science</h2>
+        <span style="font-size: 12px; font-weight: 700; align-self: flex-start; padding: 3px 8px; border-radius: 999px; background: #E6F4EA; color: #0F6B32">Approved &amp; locked · 12 Dec</span>
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px">
+          <caption style="text-align: left; font-size: 13px; font-weight: 600; padding-bottom: 6px">Copies per set (156 students, seated alternately)</caption>
+          <tbody>
+            <sc-for list="{{copies}}" as="c" hint-placeholder-count="3">
+              <tr style="border-top: 1px solid #EEF0F3"><th scope="row" style="text-align: left; padding: 8px 4px; font-weight: 600">Set {{c.set}}</th><td style="padding: 8px 4px; color: #4B5260">{{c.rooms}}</td><td style="padding: 8px 4px; text-align: right"><input type="number" aria-label="{{c.aria}}" value="{{c.n}}" style="width: 64px; height: 36px; box-sizing: border-box; padding: 0 8px; border: 1px solid #CDD2DA; border-radius: 6px; font: inherit; font-size: 14px; text-align: right"></td></tr>
+            </sc-for>
+          </tbody>
+        </table>
+        <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; min-height: 36px"><input type="checkbox" checked="{{true}}" readOnly="{{true}}" style="width: 18px; height: 18px">Watermark: CONFIDENTIAL</label>
+        <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; min-height: 36px"><input type="checkbox" checked="{{true}}" readOnly="{{true}}" style="width: 18px; height: 18px">Roll number box on page 1</label>
+        <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; min-height: 36px"><input type="checkbox" readOnly="{{true}}" style="width: 18px; height: 18px">Answer key &amp; marking scheme (separate, Principal only)</label>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Paper size
+          <select style="height: 40px; padding: 0 8px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px"><option>A4 · single-sided</option><option>A4 · double-sided</option><option>Legal</option></select>
+        </label>
+        <div style="display: flex; gap: 8px">
+          <button type="button" style="flex: 1; min-height: 48px; border: 1px solid #CDD2DA; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer">Download PDF</button>
+          <button type="button" style="flex: 1; min-height: 48px; border: 0; border-radius: 10px; background: #2147C7; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer">Print 156 copies</button>
+        </div>
+        <p style="margin: 0; font-size: 12px; color: #4B5260">Every download and print is logged with name, time and copies. Locked papers can't be edited; unlocking needs the Principal and is logged too.</p>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const S = {
+      wait: ['Awaiting approval', '#FFF1E0', '#8A3B00', 'Review', '#2147C7', '#FFFFFF', 'ExamPaperPreview.dc.html'],
+      hod: ['HOD reviewing', '#EEF0F3', '#3A404B', 'View', '#EEF0F3', '#2A2F38', 'ExamPaperPreview.dc.html'],
+      lock: ['Approved · locked', '#E6F4EA', '#0F6B32', 'Print', '#E6F4EA', '#0F6B32', '#'],
+      print: ['Printed', '#EEF0F3', '#3A404B', 'Reprint', '#EEF0F3', '#2A2F38', '#']
+    };
+    const papers = [
+      ['Half-yearly · Mathematics (Standard)', 'Class X · CBSE board pattern · 80 marks', '14 Dec', 'A · B · C', 'Priya Rao', 'wait'],
+      ['Half-yearly · English Language & Literature', 'Class X · CBSE · 80 marks', '16 Dec', 'A · B', 'Anil Mehta', 'wait'],
+      ['Half-yearly · Science', 'Class IX · CBSE · 80 marks', '12 Dec', 'A · B · C', 'Meera Iyer', 'lock'],
+      ['Half-yearly · Social Science', 'Class VIII · school format · 80 marks', '11 Dec', 'A · B', 'Farah Sheikh', 'lock'],
+      ['Periodic test 2 · Mathematics', 'Class VII · 40 marks', '20 Nov', 'A', 'Rahul Verma', 'print'],
+      ['Unit test 3 · Hindi', 'Class V · 25 marks', '—', 'A', 'Sunita Joshi', 'hod']
+    ].map(([title, meta, date, sets, by, k], i) => ({ title, meta, date, sets, by, status: S[k][0], sBg: S[k][1], sFg: S[k][2], action: S[k][3], aBg: S[k][4], aFg: S[k][5], href: S[k][6], rowBg: i === 2 ? '#F7F9FF' : '#FFFFFF' }));
+    const copies = [['A', 'Rooms 1, 3, 5', 52], ['B', 'Rooms 2, 4, 6', 52], ['C', 'Rooms 7, 8', 52]].map(([set, rooms, n]) => ({ set, rooms, n, aria: 'Copies of Set ' + set }));
+    return { zero: 0, papers, copies };
+  }
+}
+</script>
+</body>
+</html>

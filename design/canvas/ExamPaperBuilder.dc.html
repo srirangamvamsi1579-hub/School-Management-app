@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New question paper</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1320px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="Teacher" plan="Professional" active="EXM_QP" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <nav aria-label="Breadcrumb" style="font-size: 13px; color: #4B5260">Exams › Papers › Question Papers › New paper</nav>
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700">Build a question paper</h1>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <a href="#" style="display: flex; align-items: center; height: 40px; padding: 0 14px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; color: #2A2F38; font-size: 13px; font-weight: 600; text-decoration: none">My drafts (3)</a>
+          <a href="ExamApprovedPapers.dc.html" style="display: flex; align-items: center; height: 40px; padding: 0 14px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; color: #2A2F38; font-size: 13px; font-weight: 600; text-decoration: none">Approved papers</a>
+        </div>
+      </div>
+    </div>
+
+    <section aria-label="Paper details" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px 18px">
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Board
+        <select style="height: 44px; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px"><option>CBSE</option><option>ICSE (CISCE)</option><option>State board — Maharashtra</option><option>IB — MYP</option></select>
+      </label>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Class
+        <select style="height: 44px; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px"><option>Class X (A, B, C, D)</option><option>Class IX</option></select>
+      </label>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Subject
+        <select style="height: 44px; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px"><option>Mathematics — Standard (041)</option><option>Mathematics — Basic (241)</option><option>Science (086)</option></select>
+      </label>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Textbook
+        <select style="height: 44px; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px"><option>NCERT Mathematics, Class X</option></select>
+      </label>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Exam
+        <select style="height: 44px; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px"><option>Half-yearly examination</option><option>Unit test</option><option>Periodic test</option><option>Pre-board</option><option>Sample paper (practice)</option></select>
+      </label>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Exam date
+        <input type="date" value="2026-12-14" style="height: 44px; box-sizing: border-box; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px">
+      </label>
+    </section>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start">
+      <section aria-label="Chapters and topics" style="flex: 3 1 440px; min-width: 0; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px">1 · Pick chapters &amp; topics</h2>
+            <span style="font-size: 13px; color: #4B5260">{{selSummary}}</span>
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap">
+            <button type="button" onClick="{{pickTerm1}}" style="height: 36px; padding: 0 12px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">Half-yearly syllabus</button>
+            <button type="button" onClick="{{pickAll}}" style="height: 36px; padding: 0 12px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">Full syllabus</button>
+            <button type="button" onClick="{{pickNone}}" style="height: 36px; padding: 0 12px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer">Clear</button>
+          </div>
+        </div>
+        <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+          <sc-for list="{{chapters}}" as="c" hint-placeholder-count="14">
+            <li style="display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-top: 1px solid #EEF0F3">
+              <label style="display: flex; align-items: center; gap: 10px; min-height: 32px; cursor: pointer">
+                <input type="checkbox" checked="{{c.on}}" onChange="{{c.toggle}}" style="width: 18px; height: 18px">
+                <span style="width: 28px; font-size: 12px; font-weight: 700; color: #4B5260">Ch {{c.no}}</span>
+                <span style="flex: 1; font-size: 14px; font-weight: 600">{{c.title}}</span>
+                <span style="font-size: 12px; color: #4B5260">{{c.qs}} questions</span>
+              </label>
+              <sc-if value="{{c.on}}" hint-placeholder-val="{{false}}">
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; padding-left: 66px">
+                  <sc-for list="{{c.topics}}" as="t" hint-placeholder-count="3">
+                    <span style="font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 999px; background: #EEF2FF; color: #16348F">✓ {{t}}</span>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </li>
+          </sc-for>
+        </ul>
+      </section>
+
+      <div style="flex: 2 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+        <section aria-label="Difficulty" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px">2 · Difficulty mix</h2>
+          <div role="radiogroup" aria-label="Difficulty preset" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+            <sc-for list="{{presets}}" as="p" hint-placeholder-count="3">
+              <button type="button" role="radio" aria-checked="{{p.sel}}" onClick="{{p.pick}}" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 52px; padding: 6px 10px; border-radius: 10px; font: inherit; text-align: left; cursor: pointer; border: 1px solid {{p.border}}; background: {{p.bg}}; color: {{p.fg}}"><b style="font-size: 13px">{{p.name}}</b><span style="font-size: 11px">{{p.mix}}</span></button>
+            </sc-for>
+          </div>
+          <div aria-hidden="true" style="display: flex; height: 28px; border-radius: 6px; overflow: hidden; gap: 2px">
+            <div style="width: {{mix.e}}%; background: #9FD3AE"></div>
+            <div style="width: {{mix.i}}%; background: #F4C77B"></div>
+            <div style="width: {{mix.t}}%; background: #E58A7E"></div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; font-size: 13px">
+            <div><b>Easy {{mix.e}}%</b><br><span style="color: #4B5260">≈ {{mix.em}} marks</span></div>
+            <div><b>Intermediate {{mix.i}}%</b><br><span style="color: #4B5260">≈ {{mix.im}} marks</span></div>
+            <div><b>Tough {{mix.t}}%</b><br><span style="color: #4B5260">≈ {{mix.tm}} marks</span></div>
+          </div>
+        </section>
+
+        <section aria-label="Format" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px">3 · Paper format</h2>
+          <div role="radiogroup" aria-label="Paper format" style="display: flex; flex-direction: column; gap: 8px">
+            <sc-for list="{{formats}}" as="f" hint-placeholder-count="4">
+              <button type="button" role="radio" aria-checked="{{f.sel}}" onClick="{{f.pick}}" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px; border-radius: 10px; font: inherit; text-align: left; cursor: pointer; border: 1px solid {{f.border}}; background: {{f.bg}}">
+                <span style="display: flex; flex-direction: column"><b style="font-size: 14px; color: #14171C">{{f.name}}</b><span style="font-size: 12px; color: #4B5260">{{f.desc}}</span></span>
+                <span style="font-size: 13px; font-weight: 700; color: #16348F; white-space: nowrap">{{f.marks}}</span>
+              </button>
+            </sc-for>
+          </div>
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; min-height: 36px"><input type="checkbox" checked="{{true}}" readOnly="{{true}}" style="width: 18px; height: 18px">Skip questions used in the last 12 months</label>
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; min-height: 36px"><input type="checkbox" checked="{{true}}" readOnly="{{true}}" style="width: 18px; height: 18px">Add internal choice (OR) where the format allows</label>
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 14px">Sets
+            <select style="height: 40px; padding: 0 8px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-size: 14px"><option>3 sets — A, B, C (no repeats)</option><option>1 set</option><option>2 sets</option></select>
+          </label>
+        </section>
+      </div>
+    </div>
+
+    <section aria-label="Blueprint" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px">
+        <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px">4 · Blueprint &amp; bank check — {{fmtName}}</h2>
+        <span style="font-size: 13px; color: #4B5260">{{fmtMeta}}</span>
+      </div>
+      <div style="overflow-x: auto">
+        <table style="width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px">
+          <thead><tr style="text-align: left; color: #5B6270; font-size: 12px">
+            <th scope="col" style="padding: 8px 6px">Section</th><th scope="col" style="padding: 8px 6px">Question type</th>
+            <th scope="col" style="padding: 8px 6px; text-align: right">Questions</th><th scope="col" style="padding: 8px 6px; text-align: right">Marks each</th>
+            <th scope="col" style="padding: 8px 6px; text-align: right">Total</th><th scope="col" style="padding: 8px 6px">Approved in bank (selected topics)</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+              <tr style="border-top: 1px solid #EEF0F3">
+                <td style="padding: 10px 6px; font-weight: 700">{{r.sec}}</td>
+                <td style="padding: 10px 6px">{{r.type}}</td>
+                <td style="padding: 10px 6px; text-align: right">{{r.n}}</td>
+                <td style="padding: 10px 6px; text-align: right">{{r.mk}}</td>
+                <td style="padding: 10px 6px; text-align: right; font-weight: 600">{{r.tot}}</td>
+                <td style="padding: 10px 6px"><span style="font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: {{r.bg}}; color: {{r.fg}}">{{r.avail}}</span></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <sc-if value="{{hasGap}}" hint-placeholder-val="{{false}}">
+        <div style="font-size: 13px; padding: 10px 12px; border-radius: 8px; background: #FDECEA; color: #A11A12">Not enough questions for some sections — add topics, add questions to the bank, or let AI draft new ones for review.</div>
+      </sc-if>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end">
+        <button type="button" style="height: 48px; padding: 0 18px; border: 1px solid #CDD2DA; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer">Save as sample paper</button>
+        <button type="button" style="height: 48px; padding: 0 18px; border: 1px solid #2147C7; border-radius: 10px; background: #FFFFFF; color: #2147C7; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer">Pick questions myself</button>
+        <a href="ExamPaperPreview.dc.html" style="display: flex; align-items: center; height: 48px; padding: 0 20px; border-radius: 10px; background: #2147C7; color: #FFFFFF; font-size: 15px; font-weight: 700; text-decoration: none">Generate paper</a>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1320}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const CH = [
+      [1, 'Real Numbers', 62, ['Fundamental Theorem of Arithmetic', 'HCF and LCM', 'Proving irrationality']],
+      [2, 'Polynomials', 54, ['Zeroes of a polynomial', 'Zeroes and coefficients']],
+      [3, 'Pair of Linear Equations in Two Variables', 78, ['Graphical method', 'Substitution & elimination', 'Consistency']],
+      [4, 'Quadratic Equations', 71, ['Factorisation', 'Nature of roots', 'Word problems']],
+      [5, 'Arithmetic Progressions', 66, ['nth term', 'Sum of n terms']],
+      [6, 'Triangles', 58, ['Similar figures', 'Basic proportionality theorem', 'Similarity criteria']],
+      [7, 'Coordinate Geometry', 49, ['Distance formula', 'Section formula']],
+      [8, 'Introduction to Trigonometry', 73, ['Trigonometric ratios', 'Specific angles', 'Identities']],
+      [9, 'Some Applications of Trigonometry', 37, ['Heights and distances']],
+      [10, 'Circles', 41, ['Tangent to a circle', 'Tangents from a point']],
+      [11, 'Areas Related to Circles', 33, ['Sector and segment']],
+      [12, 'Surface Areas and Volumes', 45, ['Combined solids — area', 'Combined solids — volume']],
+      [13, 'Statistics', 52, ['Mean', 'Mode and median']],
+      [14, 'Probability', 39, ['Theoretical probability']]
+    ];
+    const st = this.state || {};
+    const sel = st.sel || { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 };
+    const preset = st.preset || 'Balanced';
+    const fmt = st.fmt || 'CBSE';
+    const keep = { sel, preset, fmt };
+    const set = (patch) => this.setState(Object.assign({}, keep, patch));
+    let nCh = 0, nTopics = 0, nQs = 0;
+    const chapters = CH.map(([no, title, qs, topics]) => {
+      const on = !!sel[no];
+      if (on) { nCh += 1; nTopics += topics.length; nQs += qs; }
+      return { no: String(no), title, qs: String(qs), topics, on, toggle: () => { const n = Object.assign({}, sel); if (on) delete n[no]; else n[no] = 1; set({ sel: n }); } };
+    });
+    const range = (a, b) => { const o = {}; for (let i = a; i <= b; i++) o[i] = 1; return o; };
+    const PRE = { 'Practice': [50, 40, 10], 'Balanced': [30, 50, 20], 'Challenging': [15, 45, 40] };
+    const presets = Object.keys(PRE).map((name) => {
+      const on = name === preset, m = PRE[name];
+      return { name, mix: m[0] + ' / ' + m[1] + ' / ' + m[2], sel: on ? 'true' : 'false', bg: on ? '#EEF2FF' : '#FFFFFF', border: on ? '#2147C7' : '#CDD2DA', fg: on ? '#16348F' : '#2A2F38', pick: () => set({ preset: name }) };
+    });
+    const F = {
+      CBSE: { name: 'CBSE Class X — board pattern', desc: 'Sections A–E · 38 questions · 3 hours', total: 80, meta: '80 marks · 3 hours · 50% competency-based target',
+        rows: [['A', 'MCQ', 18, 1, 9], ['A', 'Assertion & Reason', 2, 1, 2], ['B', 'Very short answer', 5, 2, 5], ['C', 'Short answer', 6, 3, 5], ['D', 'Long answer', 4, 5, 3], ['E', 'Case based (3 sub-parts)', 3, 4, 1.2]] },
+      PT: { name: 'Periodic test — 40 marks', desc: 'Sections A–E · school format · 1½ hours', total: 40, meta: '40 marks · 90 minutes',
+        rows: [['A', 'MCQ', 10, 1, 9], ['B', 'Very short answer', 5, 2, 5], ['C', 'Short answer', 4, 3, 5], ['D', 'Long answer', 1, 5, 3], ['E', 'Case based', 1, 3, 1.2]] },
+      UT: { name: 'Unit test — 25 marks', desc: 'Sections A–C · 45 minutes', total: 25, meta: '25 marks · 45 minutes',
+        rows: [['A', 'MCQ', 5, 1, 9], ['B', 'Very short answer', 5, 2, 5], ['C', 'Long answer', 2, 5, 3]] },
+      ICSE: { name: 'ICSE Class X — two sections', desc: 'A compulsory · B attempt any 4 of 6', total: 80, meta: '80 marks · Section B: attempt 4 of 6',
+        rows: [['A', 'MCQ', 15, 1, 9], ['A', 'Very short answer', 5, 3, 5], ['A', 'Short answer', 5, 2, 5], ['B', 'Long answer (attempt 4)', 6, 10, 2]] }
+    };
+    const formats = Object.keys(F).map((k) => {
+      const on = k === fmt;
+      return { name: F[k].name, desc: F[k].desc, marks: F[k].total + ' marks', sel: on ? 'true' : 'false', bg: on ? '#EEF2FF' : '#FFFFFF', border: on ? '#2147C7' : '#CDD2DA', pick: () => set({ fmt: k }) };
+    });
+    const f = F[fmt];
+    let hasGap = false;
+    const rows = f.rows.map(([sec, type, n, mk, perCh]) => {
+      const avail = Math.floor(nCh * perCh * 3);
+      const lvl = avail >= n * 2 ? 'ok' : (avail >= n ? 'warn' : 'gap');
+      if (lvl === 'gap') hasGap = true;
+      const C = { ok: ['#E6F4EA', '#0F6B32', ' — good variety'], warn: ['#FFF1E0', '#8A3B00', ' — just enough'], gap: ['#FDECEA', '#A11A12', ' — short by ' + (n - avail)] };
+      return { sec, type, n: String(n), mk: String(mk), tot: String(n * mk), avail: avail + C[lvl][2], bg: C[lvl][0], fg: C[lvl][1] };
+    });
+    const m = PRE[preset];
+    const mix = { e: m[0], i: m[1], t: m[2], em: Math.round(f.total * m[0] / 100), tm: Math.round(f.total * m[2] / 100) };
+    mix.im = f.total - mix.em - mix.tm;
+    return {
+      zero: 0, chapters, presets, formats, rows, mix, hasGap, fmtName: f.name, fmtMeta: f.meta,
+      selSummary: nCh + ' chapters · ' + nTopics + ' topics · ' + nQs + ' approved questions',
+      pickTerm1: () => set({ sel: range(1, 8) }), pickAll: () => set({ sel: range(1, 14) }), pickNone: () => set({ sel: {} })
+    };
+  }
+}
+</script>
+</body>
+</html>

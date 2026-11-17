@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Collect fee</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1080px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="Accountant" active="FEE_COLLECT" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <nav aria-label="Breadcrumb" style="font-size: 13px; color: #4B5260">Fees › Collect Fee</nav>
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700">Collect fee</h1>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <a href="#" style="display: flex; align-items: center; height: 40px; padding: 0 14px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; color: #2A2F38; font-size: 13px; font-weight: 600; text-decoration: none">Today's receipts</a>
+          <a href="#" style="display: flex; align-items: center; height: 40px; padding: 0 14px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; color: #2A2F38; font-size: 13px; font-weight: 600; text-decoration: none">Dues report</a>
+        </div>
+      </div>
+    </div>
+
+    <label style="display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 16px; background: #FFFFFF; border: 2px solid #2147C7; border-radius: 12px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2147C7" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input type="search" aria-label="Find student" value="Aarav Sharma" placeholder="Search by name, admission no., or guardian mobile" style="flex: 1; border: 0; outline: none; font: inherit; font-size: 16px; background: transparent">
+      <span style="font-size: 12px; color: #4B5260">1 match</span>
+    </label>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+      <div style="flex: 3 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+        <section aria-label="Student" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center">
+          <div style="width: 56px; height: 56px; border-radius: 999px; background: #DCE5FF; color: #16348F; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700">AS</div>
+          <div style="flex: 1 1 200px; display: flex; flex-direction: column; gap: 4px">
+            <div style="font-size: 18px; font-weight: 700">Aarav Sharma</div>
+            <div style="font-size: 13px; color: #4B5260">ADM-2025-0231 · Grade 6-A · Roll 12 · Route 3</div>
+            <div style="font-size: 13px; color: #4B5260">Guardian: Rohit Sharma (Father) · +91 98•••• 4410</div>
+          </div>
+          <div style="display: flex; gap: 24px; flex-wrap: wrap">
+            <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #4B5260">Total due</span><span style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: #B42318">₹21,500</span></div>
+            <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #4B5260">Concession</span><span style="font-size: 15px; font-weight: 600">None</span></div>
+          </div>
+        </section>
+
+        <section aria-label="Pending invoices" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600">Pending invoices</h2>
+            <span style="font-size: 13px; color: #4B5260">Oldest first — tick what is being paid</span>
+          </div>
+          <div style="overflow-x: auto">
+            <table style="width: 100%; min-width: 620px; border-collapse: collapse; font-size: 14px">
+              <thead>
+                <tr style="text-align: left; color: #5B6270; font-size: 12px">
+                  <th scope="col" style="padding: 8px 6px; width: 40px"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Select</span></th>
+                  <th scope="col" style="padding: 8px 6px; font-weight: 600">Invoice</th>
+                  <th scope="col" style="padding: 8px 6px; font-weight: 600">Fee heads</th>
+                  <th scope="col" style="padding: 8px 6px; font-weight: 600">Due</th>
+                  <th scope="col" style="padding: 8px 6px; font-weight: 600; text-align: right">Net</th>
+                  <th scope="col" style="padding: 8px 6px; font-weight: 600; text-align: right">Paid</th>
+                  <th scope="col" style="padding: 8px 6px; font-weight: 600; text-align: right">Balance</th>
+                  <th scope="col" style="padding: 8px 6px; font-weight: 600">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <sc-for list="{{invoices}}" as="i" hint-placeholder-count="4">
+                  <tr style="border-top: 1px solid #EEF0F3; background: {{i.rowBg}}">
+                    <td style="padding: 10px 6px"><input type="checkbox" checked="{{i.on}}" onChange="{{i.toggle}}" aria-label="{{i.aria}}" style="width: 18px; height: 18px; cursor: pointer"></td>
+                    <td style="padding: 10px 6px"><div style="font-weight: 600">{{i.period}}</div><div style="font-size: 12px; color: #4B5260">{{i.no}}</div></td>
+                    <td style="padding: 10px 6px; color: #4B5260; font-size: 13px">{{i.heads}}</td>
+                    <td style="padding: 10px 6px; white-space: nowrap">{{i.due}}</td>
+                    <td style="padding: 10px 6px; text-align: right; font-variant-numeric: tabular-nums">{{i.net}}</td>
+                    <td style="padding: 10px 6px; text-align: right; font-variant-numeric: tabular-nums; color: #4B5260">{{i.paid}}</td>
+                    <td style="padding: 10px 6px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">{{i.bal}}</td>
+                    <td style="padding: 10px 6px"><span style="font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: {{i.sBg}}; color: {{i.sFg}}">{{i.status}}</span></td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section aria-label="Accounting entry preview" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600">Posts to Accounts automatically</h2>
+            <span style="font-size: 12px; color: #4B5260">Receipt voucher · linked to this payment</span>
+          </div>
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px">
+            <thead><tr style="text-align: left; color: #5B6270; font-size: 12px"><th scope="col" style="padding: 6px">Ledger account</th><th scope="col" style="padding: 6px; text-align: right">Debit</th><th scope="col" style="padding: 6px; text-align: right">Credit</th></tr></thead>
+            <tbody>
+              <sc-for list="{{posting}}" as="p" hint-placeholder-count="3">
+                <tr style="border-top: 1px solid #EEF0F3">
+                  <td style="padding: 8px 6px; font-family: ui-monospace, Menlo, monospace; font-size: 13px">{{p.acc}}</td>
+                  <td style="padding: 8px 6px; text-align: right; font-variant-numeric: tabular-nums">{{p.dr}}</td>
+                  <td style="padding: 8px 6px; text-align: right; font-variant-numeric: tabular-nums">{{p.cr}}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <aside aria-label="Payment" style="flex: 1 1 320px; min-width: 0; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+        <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600">Payment</h2>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Amount received
+          <input type="text" inputMode="decimal" value="{{totalTxt}}" readOnly="{{true}}" style="height: 52px; box-sizing: border-box; padding: 0 14px; border: 1px solid #CDD2DA; border-radius: 10px; font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700">
+        </label>
+        <fieldset style="border: 0; margin: 0; padding: 0">
+          <legend style="font-size: 13px; font-weight: 600; padding: 0; margin-bottom: 8px">Mode</legend>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+            <sc-for list="{{modes}}" as="m" hint-placeholder-count="5">
+              <button type="button" onClick="{{m.pick}}" aria-pressed="{{m.pressed}}" style="min-height: 44px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid {{m.border}}; background: {{m.bg}}; color: {{m.fg}}">{{m.label}}</button>
+            </sc-for>
+          </div>
+        </fieldset>
+        <sc-if value="{{needsRef}}" hint-placeholder-val="{{false}}">
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">{{refLabel}}
+            <input type="text" placeholder="Required" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px">
+          </label>
+        </sc-if>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Remarks
+          <input type="text" placeholder="Optional" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px">
+        </label>
+        <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 10px; background: #F5F6F8; font-size: 14px">
+          <div style="display: flex; justify-content: space-between"><span style="color: #4B5260">Invoices selected</span><strong>{{count}}</strong></div>
+          <div style="display: flex; justify-content: space-between"><span style="color: #4B5260">Balance after payment</span><strong>{{remainTxt}}</strong></div>
+          <div style="display: flex; justify-content: space-between"><span style="color: #4B5260">Receipt no.</span><strong>R-2026-05531</strong></div>
+        </div>
+        <button type="button" style="min-height: 52px; border: 0; border-radius: 10px; background: #2147C7; color: #FFFFFF; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer">Collect {{totalTxt}} &amp; print receipt</button>
+        <div style="display: flex; gap: 8px">
+          <button type="button" style="flex: 1; min-height: 44px; border: 1px solid #CDD2DA; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Send payment link</button>
+          <button type="button" style="flex: 1; min-height: 44px; border: 1px solid #CDD2DA; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">WhatsApp receipt</button>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const sel = st.sel || { a: true, b: true, c: true, d: false };
+    const mode = st.mode || 'Cash';
+    const fmt = (n) => '₹' + n.toLocaleString('en-IN');
+    const INV = [
+      { id: 'a', no: 'INV-2026-1102', period: 'Sep 2026', heads: 'Tuition · Transport', due: '30 Sep', net: 8000, paid: 4000, split: { 'Tuition': 2200, 'Transport': 1800 }, status: 'Overdue' },
+      { id: 'b', no: 'INV-2026-1388', period: 'Oct 2026', heads: 'Tuition · Transport', due: '31 Oct', net: 8000, paid: 0, split: { 'Tuition': 6200, 'Transport': 1800 }, status: 'Overdue' },
+      { id: 'c', no: 'INV-2026-1675', period: 'Nov 2026', heads: 'Tuition · Transport', due: '30 Nov', net: 8000, paid: 0, split: { 'Tuition': 6200, 'Transport': 1800 }, status: 'Due' },
+      { id: 'd', no: 'INV-2026-1702', period: 'Term 2 exam', heads: 'Exam fee', due: '15 Dec', net: 1500, paid: 0, split: { 'Exam': 1500 }, status: 'Due' }
+    ];
+    let total = 0, count = 0, all = 0;
+    const heads = {};
+    const invoices = INV.map((i) => {
+      const bal = i.net - i.paid;
+      all += bal;
+      const on = !!sel[i.id];
+      if (on) { total += bal; count += 1; Object.keys(i.split).forEach((h) => { heads[h] = (heads[h] || 0) + i.split[h]; }); }
+      const over = i.status === 'Overdue';
+      return {
+        no: i.no, period: i.period, heads: i.heads, due: i.due, net: fmt(i.net), paid: i.paid ? fmt(i.paid) : '—', bal: fmt(bal), status: i.status,
+        sBg: over ? '#FDECEA' : '#FFF1E0', sFg: over ? '#A11A12' : '#8A3B00', on, rowBg: on ? '#F7F9FF' : '#FFFFFF',
+        aria: 'Pay ' + i.period, toggle: () => this.setState({ sel: Object.assign({}, sel, { [i.id]: !on }), mode })
+      };
+    });
+    const modes = ['Cash', 'UPI', 'Card', 'Bank', 'Cheque', 'Online'].map((m) => {
+      const on = m === mode;
+      return { label: m, pressed: on ? 'true' : 'false', bg: on ? '#2147C7' : '#FFFFFF', fg: on ? '#FFFFFF' : '#2A2F38', border: on ? '#2147C7' : '#CDD2DA', pick: () => this.setState({ mode: m, sel }) };
+    });
+    const ACC = { 'Tuition': '4000 Tuition Fee Income', 'Transport': '4010 Transport Fee Income', 'Exam': '4020 Other Fee Income' };
+    const posting = [{ acc: mode === 'Cash' ? '1000 Cash in Hand' : '1010 Bank Account', dr: fmt(total), cr: '' }]
+      .concat(Object.keys(heads).map((h) => ({ acc: ACC[h], dr: '', cr: fmt(heads[h]) })));
+    const refLabel = mode === 'Cheque' ? 'Cheque no. & bank' : mode === 'Card' ? 'Card approval code' : 'Transaction reference';
+    return {
+      zero: 0, invoices, modes, posting, count: String(count), totalTxt: fmt(total), remainTxt: fmt(all - total),
+      needsRef: mode !== 'Cash', refLabel
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Boards, syllabus and textbooks</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1160px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="Admin" plan="Professional" active="ACA_SYLLABUS" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <nav aria-label="Breadcrumb" style="font-size: 13px; color: #4B5260">Academics › Boards, Syllabus &amp; Textbooks</nav>
+      <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700">Boards, syllabus &amp; textbooks</h1>
+      <p style="margin: 0; font-size: 14px; color: #4B5260">Link each class to its board. Teachers then see that board's textbooks, chapters and topics when they build papers.</p>
+    </div>
+
+    <div role="tablist" aria-label="Board" style="display: flex; flex-wrap: wrap; gap: 8px">
+      <sc-for list="{{boardTabs}}" as="b" hint-placeholder-count="4">
+        <button type="button" role="tab" aria-selected="{{b.sel}}" onClick="{{b.pick}}" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 56px; padding: 8px 16px; border-radius: 12px; font: inherit; text-align: left; cursor: pointer; border: 1px solid {{b.border}}; background: {{b.bg}}; color: {{b.fg}}">
+          <b style="font-size: 15px">{{b.name}}</b><span style="font-size: 12px">{{b.sub}}</span>
+        </button>
+      </sc-for>
+    </div>
+
+    <div role="tablist" aria-label="Grade" style="display: flex; flex-wrap: wrap; gap: 6px">
+      <sc-for list="{{grades}}" as="g" hint-placeholder-count="12">
+        <button type="button" role="tab" aria-selected="{{g.sel}}" onClick="{{g.pick}}" style="min-width: 48px; height: 40px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid {{g.border}}; background: {{g.bg}}; color: {{g.fg}}">{{g.label}}</button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{isCbse}}" hint-placeholder-val="{{true}}">
+      <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start">
+        <section aria-label="Subjects and textbooks" style="flex: 3 1 520px; min-width: 0; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px"><h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px">CBSE · {{gradeName}} · subjects &amp; textbooks</h2><span style="font-size: 12px; color: #4B5260">Sample data shows Class X · linked to sections A, B, C, D</span></div>
+          <div style="overflow-x: auto">
+            <table style="width: 100%; min-width: 620px; border-collapse: collapse; font-size: 14px">
+              <thead><tr style="text-align: left; color: #5B6270; font-size: 12px"><th scope="col" style="padding: 8px 6px">Subject</th><th scope="col" style="padding: 8px 6px">Textbook(s)</th><th scope="col" style="padding: 8px 6px; text-align: right">Chapters</th><th scope="col" style="padding: 8px 6px; text-align: right">Questions</th><th scope="col" style="padding: 8px 6px">Status</th></tr></thead>
+              <tbody>
+                <sc-for list="{{subjects}}" as="s" hint-placeholder-count="5">
+                  <tr style="border-top: 1px solid #EEF0F3; background: {{s.rowBg}}">
+                    <td style="padding: 10px 6px"><b>{{s.name}}</b><div style="font-size: 12px; color: #4B5260">Code {{s.code}}</div></td>
+                    <td style="padding: 10px 6px">{{s.books}}</td>
+                    <td style="padding: 10px 6px; text-align: right">{{s.ch}}</td>
+                    <td style="padding: 10px 6px; text-align: right">{{s.qs}}</td>
+                    <td style="padding: 10px 6px"><span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: {{s.sBg}}; color: {{s.sFg}}">{{s.status}}</span></td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section aria-label="Mathematics chapters" style="flex: 2 1 340px; min-width: 0; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Mathematics — units, chapters &amp; board weightage</h2>
+          <sc-for list="{{units}}" as="u" hint-placeholder-count="7">
+            <div style="display: flex; flex-direction: column; gap: 4px; padding-top: 8px; border-top: 1px solid #EEF0F3">
+              <div style="display: flex; justify-content: space-between; gap: 8px"><b style="font-size: 14px">{{u.name}}</b><span style="font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: #EEF2FF; color: #16348F">{{u.marks}} marks</span></div>
+              <span style="font-size: 13px; color: #4B5260">{{u.chapters}}</span>
+            </div>
+          </sc-for>
+          <div style="font-size: 12px; color: #4B5260; padding-top: 6px; border-top: 1px solid #EEF0F3">Total 80 marks + 20 internal assessment. Weightage feeds the paper generator's chapter balance.</div>
+        </section>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isOther}}" hint-placeholder-val="{{false}}">
+      <section aria-label="Board setup" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 12px; max-width: 900px">
+        <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px">{{other.title}}</h2>
+        <sc-for list="{{other.points}}" as="p" hint-placeholder-count="4">
+          <div style="display: flex; gap: 10px; font-size: 14px; line-height: 1.5"><span style="color: #2147C7; font-weight: 700">•</span><span>{{p}}</span></div>
+        </sc-for>
+        <button type="button" style="align-self: flex-start; height: 44px; padding: 0 18px; border: 0; border-radius: 10px; background: #2147C7; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer">{{other.cta}}</button>
+      </section>
+    </sc-if>
+
+    <p style="margin: 0; font-size: 12px; color: #4B5260; max-width: 960px">Chapter and topic lists are reference data. Questions in the bank are written by your teachers, drafted by AI for teacher review, or come from a licensed library — never copied from publishers' books.</p>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1160}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const board = st.board || 'CBSE';
+    const grade = st.grade || 10;
+    const B = [['CBSE', 'Classes I – XII · affiliated'], ['ICSE / ISC', 'CISCE · not linked'], ['State board', 'Pick a state'], ['IB', 'PYP · MYP · DP']];
+    const boardTabs = B.map(([name, sub]) => { const on = name === board; return { name, sub, sel: on ? 'true' : 'false', bg: on ? '#2147C7' : '#FFFFFF', fg: on ? '#FFFFFF' : '#2A2F38', border: on ? '#2147C7' : '#CDD2DA', pick: () => this.setState({ board: name, grade }) }; });
+    const R = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+    const grades = R.map((r, i) => { const on = i + 1 === grade; return { label: r, sel: on ? 'true' : 'false', bg: on ? '#14171C' : '#FFFFFF', fg: on ? '#FFFFFF' : '#2A2F38', border: on ? '#14171C' : '#CDD2DA', pick: () => this.setState({ board, grade: i + 1 }) }; });
+    const OK = ['Linked', '#E6F4EA', '#0F6B32'], PART = ['Bank thin', '#FFF1E0', '#8A3B00'];
+    const subjects = [
+      ['Mathematics — Standard', '041', 'NCERT Mathematics, Class X', 14, 758, OK, true],
+      ['Science', '086', 'NCERT Science, Class X', 13, 612, OK, false],
+      ['Social Science', '087', 'NCERT — History, Geography, Political Science, Economics (4 books)', 22, 534, OK, false],
+      ['English Language & Literature', '184', 'NCERT First Flight · Footprints without Feet', 20, 288, PART, false],
+      ['Hindi — Course A', '002', 'NCERT Kshitij · Kritika', 17, 196, PART, false]
+    ].map(([name, code, books, ch, qs, s, hi]) => ({ name, code, books, ch: String(ch), qs: String(qs), status: s[0], sBg: s[1], sFg: s[2], rowBg: hi ? '#F7F9FF' : '#FFFFFF' }));
+    const units = [
+      ['Number Systems', 6, 'Ch 1 Real Numbers'], ['Algebra', 20, 'Ch 2 Polynomials · Ch 3 Linear Equations · Ch 4 Quadratic Equations · Ch 5 AP'],
+      ['Coordinate Geometry', 6, 'Ch 7 Coordinate Geometry'], ['Geometry', 15, 'Ch 6 Triangles · Ch 10 Circles'],
+      ['Trigonometry', 12, 'Ch 8 Introduction · Ch 9 Applications'], ['Mensuration', 10, 'Ch 11 Areas Related to Circles · Ch 12 Surface Areas & Volumes'],
+      ['Statistics & Probability', 11, 'Ch 13 Statistics · Ch 14 Probability']
+    ].map(([name, marks, chapters]) => ({ name, marks: String(marks), chapters }));
+    const O = {
+      'ICSE / ISC': { title: 'Link ICSE (Class X) and ISC (Class XII) subjects', cta: 'Link ICSE to classes', points: [
+        'Subjects follow the CISCE syllabus units; schools choose their own textbook publishers, so you pick the book per subject and we map its chapters to the syllabus units.',
+        'Paper format: two sections — Section A compulsory, Section B attempt a set number (for example any four), with marks shown in brackets [ ].',
+        'Internal assessment marks are entered separately and added to the report card.'] },
+      'State board': { title: 'Pick a state board', cta: 'Choose state', points: [
+        'Maharashtra, Karnataka, Tamil Nadu, Telangana and Andhra Pradesh are set up; others can be added from the platform console.',
+        'Each state’s textbook bureau books are loaded as chapter and topic lists, in English and the state language where available.',
+        'Paper formats are templates you adjust to the state’s current blueprint before using them for board-style papers.'] },
+      'IB': { title: 'IB programmes work differently', cta: 'Set up IB units', points: [
+        'IB has no prescribed textbooks: teachers define units, key concepts and assessment objectives instead of chapters.',
+        'MYP tasks are marked against criteria A–D (0–8 each) rather than marks per question; DP uses Paper 1 / 2 / 3 style internal tests.',
+        'The question bank and generator still work — topics become your units, and "difficulty" maps to criterion bands.'] }
+    };
+    const isCbse = board === 'CBSE';
+    return { zero: 0, boardTabs, grades, subjects, units, isCbse, isOther: !isCbse, other: O[board] || O['IB'], gradeName: 'Class ' + R[grade - 1] };
+  }
+}
+</script>
+</body>
+</html>

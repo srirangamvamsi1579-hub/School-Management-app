@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Parent app home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-direction: column; overflow: hidden">
+  <div style="flex: 1; overflow: hidden; padding: 24px 20px 16px; display: flex; flex-direction: column; gap: 16px">
+    <header style="display: flex; justify-content: space-between; align-items: center">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 13px; color: #4B5260">Good evening, Rohit</span>
+        <span style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700">[School Name]</span>
+      </div>
+      <button type="button" aria-label="Notifications" style="width: 44px; height: 44px; border-radius: 999px; border: 1px solid #DDE1E7; background: #FFFFFF; display: flex; align-items: center; justify-content: center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#14171C" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21h4"></path></svg>
+      </button>
+    </header>
+
+    <button type="button" aria-label="Switch child" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 12px; border: 1px solid #DDE1E7; border-radius: 14px; background: #FFFFFF; font: inherit; text-align: left">
+      <span style="width: 40px; height: 40px; border-radius: 999px; background: #DCE5FF; color: #16348F; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px">AS</span>
+      <span style="flex: 1; display: flex; flex-direction: column"><strong style="font-size: 15px">Aarav Sharma</strong><span style="font-size: 12px; color: #4B5260">Grade 6-A · Roll 12</span></span>
+      <span style="font-size: 12px; font-weight: 600; color: #2147C7">Switch</span>
+    </button>
+
+    <section aria-label="Fee due" style="background: #16348F; color: #FFFFFF; border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+      <span style="font-size: 13px; color: #DCE5FF">Total fee due</span>
+      <span style="font-family: 'Space Grotesk', sans-serif; font-size: 36px; font-weight: 700">₹20,000</span>
+      <span style="font-size: 13px; color: #DCE5FF">₹12,000 overdue (Sep, Oct) · ₹8,000 due 30 Nov</span>
+      <a href="#" style="display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 12px; background: #FFFFFF; color: #16348F; font-size: 15px; font-weight: 700; text-decoration: none; margin-top: 4px">Pay now</a>
+    </section>
+
+    <section aria-label="Shortcuts" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <sc-for list="{{tiles}}" as="t" hint-placeholder-count="4">
+        <a href="#" style="display: flex; flex-direction: column; gap: 4px; padding: 14px; min-height: 76px; box-sizing: border-box; border-radius: 14px; background: #FFFFFF; border: 1px solid #E3E6EB; text-decoration: none; color: #14171C">
+          <span style="font-size: 13px; color: #4B5260">{{t.label}}</span>
+          <span style="font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700">{{t.value}}</span>
+        </a>
+      </sc-for>
+    </section>
+
+    <section aria-label="Recent receipts" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px">
+      <div style="display: flex; justify-content: space-between; align-items: center"><h2 style="margin: 0; font-size: 15px; font-weight: 700">Recent receipts</h2><a href="#" style="font-size: 13px; font-weight: 600; color: #2147C7">All</a></div>
+      <sc-for list="{{receipts}}" as="r" hint-placeholder-count="2">
+        <div style="display: flex; justify-content: space-between; align-items: center; min-height: 44px; border-top: 1px solid #EEF0F3">
+          <div style="display: flex; flex-direction: column"><span style="font-size: 14px; font-weight: 600">{{r.what}}</span><span style="font-size: 12px; color: #4B5260">{{r.meta}}</span></div>
+          <span style="font-size: 14px; font-weight: 700">{{r.amt}}</span>
+        </div>
+      </sc-for>
+    </section>
+  </div>
+
+  <nav aria-label="Parent app" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: #FFFFFF; border-top: 1px solid #E3E6EB; padding: 6px 8px 22px">
+    <sc-for list="{{tabs}}" as="b" hint-placeholder-count="4">
+      <a href="#" aria-current="{{b.cur}}" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 52px; justify-content: center; text-decoration: none; font-size: 11px; font-weight: 600; color: {{b.fg}}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{b.icon}}"></path></svg>
+        {{b.label}}
+      </a>
+    </sc-for>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const tiles = [['Attendance (term)', '96%'], ['Last payment', '₹8,000'], ['Class teacher', 'Ms. Rao'], ['Notices', '3 new']].map(([label, value]) => ({ label, value }));
+    const receipts = [['Tuition + Transport · Aug', 'R-2026-04812 · 28 Oct · UPI', '₹8,000'], ['Transport · Jul', 'R-2026-04366 · 15 Oct · Card', '₹1,800']].map(([what, meta, amt]) => ({ what, meta, amt }));
+    const I = { home: 'M3 11l9-8 9 8M5 10v10h14V10', fees: 'M6 2h12v20l-3-2-3 2-3-2-3 2zM9 7h6M9 11h6M9 15h4', child: 'M16 19v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6', me: 'M20 21a8 8 0 0 0-16 0M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8' };
+    const tabs = [['Home', I.home, true], ['Fees', I.fees, false], ['My Child', I.child, false], ['Profile', I.me, false]]
+      .map(([label, icon, on]) => ({ label, icon, cur: on ? 'page' : 'false', fg: on ? '#2147C7' : '#5B6270' }));
+    return { tiles, receipts, tabs };
+  }
+}
+</script>
+</body>
+</html>

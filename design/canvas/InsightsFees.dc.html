@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fees insights</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1180px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="Accountant" plan="Professional" active="FEE_INS" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <nav aria-label="Breadcrumb" style="font-size: 13px; color: #4B5260">Fees › Insights</nav>
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700">Fee insights</h1>
+          <span style="font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #FFF1E0; color: #8A3B00">Power BI · Professional plan</span>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Export to Excel</button>
+          <button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Subscribe by email</button>
+          <button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #CDD2DA; border-radius: 8px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Full screen</button>
+        </div>
+      </div>
+    </div>
+
+    <section aria-label="Embedded Power BI report" style="background: #FFFFFF; border: 1px solid #DDE1E7; border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 18px">
+      <div role="tablist" aria-label="Report pages" style="display: flex; flex-wrap: wrap; gap: 6px">
+        <sc-for list="{{pages}}" as="p" hint-placeholder-count="4">
+          <button type="button" role="tab" aria-selected="{{p.sel}}" style="min-height: 40px; padding: 0 14px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid {{p.border}}; background: {{p.bg}}; color: {{p.fg}}">{{p.label}}</button>
+        </sc-for>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 12px">
+        <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #4B5260">Academic year
+          <select style="height: 38px; min-width: 140px; padding: 0 8px; border: 1px solid #CDD2DA; border-radius: 6px; font: inherit; font-size: 13px; color: #14171C"><option>2026-27</option><option>2025-26</option></select>
+        </label>
+        <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #4B5260">Class
+          <select style="height: 38px; min-width: 140px; padding: 0 8px; border: 1px solid #CDD2DA; border-radius: 6px; font: inherit; font-size: 13px; color: #14171C"><option>All classes</option><option>Grades 1–5</option><option>Grades 6–8</option></select>
+        </label>
+        <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #4B5260">Months
+          <select style="height: 38px; min-width: 140px; padding: 0 8px; border: 1px solid #CDD2DA; border-radius: 6px; font: inherit; font-size: 13px; color: #14171C"><option>Apr – Nov 2026</option><option>This term</option></select>
+        </label>
+        <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #4B5260">Fee head
+          <select style="height: 38px; min-width: 140px; padding: 0 8px; border: 1px solid #CDD2DA; border-radius: 6px; font: inherit; font-size: 13px; color: #14171C"><option>All fee heads</option><option>Tuition</option><option>Transport</option></select>
+        </label>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px">
+        <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+          <div style="border: 1px solid #E3E6EB; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 12px; color: #4B5260; font-weight: 600">{{k.label}}</span>
+            <span style="font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700">{{k.value}}</span>
+            <span style="font-size: 12px; color: #4B5260">{{k.sub}}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 18px">
+        <figure style="flex: 3 1 460px; min-width: 0; margin: 0; border: 1px solid #E3E6EB; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+          <figcaption style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 15px">Collection rate by billing month</b><span style="font-size: 12px; color: #4B5260">Share of each month's invoices paid so far</span></figcaption>
+          <div style="display: flex; gap: 8px">
+            <div aria-hidden="true" style="display: flex; flex-direction: column; justify-content: space-between; height: 220px; font-size: 11px; color: #4B5260; text-align: right; width: 36px"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div>
+            <div style="flex: 1; position: relative; height: 220px; border-bottom: 1px solid #9AA3B2">
+              <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 0; border-top: 1px dashed #E3E6EB"></div>
+              <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 55px; border-top: 1px dashed #E3E6EB"></div>
+              <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 110px; border-top: 1px dashed #E3E6EB"></div>
+              <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 165px; border-top: 1px dashed #E3E6EB"></div>
+              <div role="img" aria-label="{{rateAria}}" style="position: absolute; inset: 0; display: flex; align-items: flex-end; gap: 10px; padding: 0 6px">
+                <sc-for list="{{months}}" as="m" hint-placeholder-count="8">
+                  <div title="{{m.tip}}" style="flex: 1; position: relative; height: {{m.h}}px; background: #2147C7; border-radius: 4px 4px 0 0">
+                    <sc-if value="{{m.showLabel}}" hint-placeholder-val="{{false}}"><span style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 700; color: #14171C; white-space: nowrap">{{m.v}}</span></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; padding-left: 50px; padding-right: 6px">
+            <sc-for list="{{months}}" as="m" hint-placeholder-count="8"><span style="flex: 1; text-align: center; font-size: 11px; color: #4B5260">{{m.label}}</span></sc-for>
+          </div>
+          <p style="margin: 0; font-size: 12px; color: #4B5260">November invoices are due on 30 Nov, so its rate is still climbing.</p>
+        </figure>
+
+        <figure style="flex: 2 1 320px; min-width: 0; margin: 0; border: 1px solid #E3E6EB; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+          <figcaption style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 15px">Overdue by age</b><span style="font-size: 12px; color: #4B5260">Days past due date · total ₹4.3L</span></figcaption>
+          <sc-for list="{{aging}}" as="a" hint-placeholder-count="4">
+            <div title="{{a.tip}}" style="display: flex; flex-direction: column; gap: 4px">
+              <div style="display: flex; justify-content: space-between; font-size: 13px"><span>{{a.label}}</span><b>{{a.v}}</b></div>
+              <div style="height: 14px; background: #F0F2F5; border-radius: 4px"><div style="height: 14px; width: {{a.w}}%; background: {{a.c}}; border-radius: 0 4px 4px 0"></div></div>
+            </div>
+          </sc-for>
+          <a href="#" style="font-size: 13px; font-weight: 600; margin-top: auto">See the 14 students overdue 90+ days</a>
+        </figure>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 18px">
+        <figure style="flex: 1 1 360px; min-width: 0; margin: 0; border: 1px solid #E3E6EB; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+          <figcaption><b style="font-size: 15px">Collection rate by class group</b></figcaption>
+          <sc-for list="{{classes}}" as="c" hint-placeholder-count="5">
+            <div title="{{c.tip}}" style="display: grid; grid-template-columns: 110px 1fr 44px; gap: 10px; align-items: center; font-size: 13px">
+              <span>{{c.label}}</span>
+              <div style="height: 12px; background: #F0F2F5; border-radius: 4px"><div style="height: 12px; width: {{c.w}}%; background: #2147C7; border-radius: 0 4px 4px 0"></div></div>
+              <b style="text-align: right">{{c.v}}</b>
+            </div>
+          </sc-for>
+        </figure>
+        <figure style="flex: 1 1 360px; min-width: 0; margin: 0; border: 1px solid #E3E6EB; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+          <figcaption><b style="font-size: 15px">How parents pay</b> <span style="font-size: 12px; color: #4B5260">· share of amount collected</span></figcaption>
+          <sc-for list="{{modes}}" as="c" hint-placeholder-count="4">
+            <div title="{{c.tip}}" style="display: grid; grid-template-columns: 110px 1fr 44px; gap: 10px; align-items: center; font-size: 13px">
+              <span>{{c.label}}</span>
+              <div style="height: 12px; background: #F0F2F5; border-radius: 4px"><div style="height: 12px; width: {{c.w}}%; background: #16348F; border-radius: 0 4px 4px 0"></div></div>
+              <b style="text-align: right">{{c.v}}</b>
+            </div>
+          </sc-for>
+        </figure>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; font-size: 12px; color: #4B5260; border-top: 1px solid #EEF0F3; padding-top: 12px">
+        <span>Embedded Power BI report · rows limited to this school (RLS role "Tenant")</span>
+        <span>Data refreshed today 06:00 from Redshift · Sample data</span>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const pages = ['Collection vs billed', 'Defaulters', 'Payment modes', 'Concessions'].map((label, i) => ({
+      label, sel: i === 0 ? 'true' : 'false', bg: i === 0 ? '#14171C' : '#FFFFFF', fg: i === 0 ? '#FFFFFF' : '#2A2F38', border: i === 0 ? '#14171C' : '#CDD2DA'
+    }));
+    const kpis = [['Billed · Apr–Nov', '₹1.97 Cr', '8 billing months'], ['Collected', '₹1.87 Cr', '94.7% of billed'], ['Overdue', '₹4.3L', 'Past due date, Apr–Oct bills'], ['Not yet due', '₹6.2L', 'November, due 30 Nov']]
+      .map(([label, value, sub]) => ({ label, value, sub }));
+    const M = [['Apr', 99.0], ['May', 98.6], ['Jun', 98.3], ['Jul', 97.9], ['Aug', 97.5], ['Sep', 96.7], ['Oct', 94.2], ['Nov', 74.8]];
+    const months = M.map(([label, v], i) => ({ label, v: v.toFixed(1) + '%', h: Math.round(v / 100 * 220), tip: label + ' 2026: ' + v.toFixed(1) + '% collected', showLabel: i === 0 || i === M.length - 1 }));
+    const rateAria = 'Collection rate by billing month: ' + M.map(([l, v]) => l + ' ' + v + '%').join(', ');
+    const A = [['1–30 days', 2.1, '#93A9EE'], ['31–60 days', 1.2, '#4F72DA'], ['61–90 days', 0.6, '#2147C7'], ['90+ days', 0.4, '#102A7A']];
+    const aging = A.map(([label, v, c]) => ({ label, v: '₹' + v.toFixed(1) + 'L', w: Math.round(v / 2.1 * 100), c, tip: label + ': ₹' + v.toFixed(1) + ' lakh' }));
+    const CL = [['Nursery – KG', 96], ['Grades 1–5', 95], ['Grades 6–8', 94], ['Grades 9–10', 93], ['Grades 11–12', 92]];
+    const classes = CL.map(([label, v]) => ({ label, v: v + '%', w: v, tip: label + ': ' + v + '% collected' }));
+    const MO = [['UPI', 46], ['Cash', 31], ['Card', 14], ['Bank transfer', 9]];
+    const modes = MO.map(([label, v]) => ({ label, v: v + '%', w: Math.round(v / 46 * 100), tip: label + ': ' + v + '% of amount collected' }));
+    return { zero: 0, pages, kpis, months, rateAria, aging, classes, modes };
+  }
+}
+</script>
+</body>
+</html>

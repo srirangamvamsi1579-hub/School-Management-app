@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add staff</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1640px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="Admin" active="STF_ADD" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <nav aria-label="Breadcrumb" style="font-size: 13px; color: #4B5260">Staff › Add Staff</nav>
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700">Add staff member</h1>
+        <span style="font-size: 13px; color: #4B5260">Writes to <code>staff</code>, <code>staff_salary_structures</code>, <code>users</code></span>
+      </div>
+    </div>
+
+    <div role="tablist" aria-label="Staff form sections" style="display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid #DDE1E7">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="5">
+        <a href="{{t.href}}" role="tab" aria-selected="{{t.sel}}" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; text-decoration: none; font-size: 14px; font-weight: 600; color: {{t.fg}}; border-bottom: 2px solid {{t.line}}; margin-bottom: -1px">{{t.label}}</a>
+      </sc-for>
+    </div>
+
+    <sc-for list="{{sections}}" as="sec" hint-placeholder-count="3">
+      <section id="{{sec.id}}" aria-label="{{sec.title}}" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600">{{sec.title}}</h2>
+            <p style="margin: 0; font-size: 13px; color: #4B5260">{{sec.desc}}</p>
+          </div>
+          <sc-if value="{{sec.secure}}" hint-placeholder-val="{{false}}">
+            <span style="align-self: flex-start; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #FFE9D6; color: #8A3B00">Encrypted · visible to Admin &amp; Accountant only</span>
+          </sc-if>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px 20px">
+          <sc-for list="{{sec.fields}}" as="f" hint-placeholder-count="6">
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: #2A2F38">
+              <span>{{f.label}}<sc-if value="{{f.req}}" hint-placeholder-val="{{false}}"><span style="color: #B42318"> *</span></sc-if></span>
+              <sc-if value="{{f.isInput}}" hint-placeholder-val="{{true}}">
+                <input type="{{f.type}}" placeholder="{{f.ph}}" value="{{f.val}}" readOnly="{{f.ro}}" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px; background: {{f.bg}}">
+              </sc-if>
+              <sc-if value="{{f.isSelect}}" hint-placeholder-val="{{false}}">
+                <select style="height: 44px; box-sizing: border-box; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px; background: #FFFFFF">
+                  <sc-for list="{{f.opts}}" as="o" hint-placeholder-count="2"><option>{{o}}</option></sc-for>
+                </select>
+              </sc-if>
+            </label>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+
+    <section id="salary" aria-label="Salary structure" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600">4 · Salary structure</h2>
+          <p style="margin: 0; font-size: 13px; color: #4B5260">Used by Payroll every month. Components come from Payroll › Salary Structure.</p>
+        </div>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Effective from
+          <input type="date" value="2026-12-01" style="height: 44px; padding: 0 12px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px">
+        </label>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 20px">
+        <div style="flex: 1 1 360px; min-width: 0; overflow-x: auto">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px">
+            <caption style="text-align: left; font-size: 13px; font-weight: 700; color: #0F6B32; padding-bottom: 6px">Earnings</caption>
+            <tbody>
+              <sc-for list="{{earn}}" as="r" hint-placeholder-count="4">
+                <tr style="border-top: 1px solid #EEF0F3">
+                  <th scope="row" style="text-align: left; padding: 10px 6px; font-weight: 500">{{r.name}}</th>
+                  <td style="padding: 10px 6px; color: #4B5260; font-size: 12px">{{r.rule}}</td>
+                  <td style="padding: 10px 6px; text-align: right; font-variant-numeric: tabular-nums">{{r.amt}}</td>
+                </tr>
+              </sc-for>
+              <tr style="border-top: 2px solid #14171C"><th scope="row" style="text-align: left; padding: 10px 6px">Gross</th><td></td><td style="padding: 10px 6px; text-align: right; font-weight: 700">₹61,600</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="flex: 1 1 360px; min-width: 0; overflow-x: auto">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px">
+            <caption style="text-align: left; font-size: 13px; font-weight: 700; color: #B42318; padding-bottom: 6px">Deductions</caption>
+            <tbody>
+              <sc-for list="{{ded}}" as="r" hint-placeholder-count="3">
+                <tr style="border-top: 1px solid #EEF0F3">
+                  <th scope="row" style="text-align: left; padding: 10px 6px; font-weight: 500">{{r.name}}</th>
+                  <td style="padding: 10px 6px; color: #4B5260; font-size: 12px">{{r.rule}}</td>
+                  <td style="padding: 10px 6px; text-align: right; font-variant-numeric: tabular-nums">{{r.amt}}</td>
+                </tr>
+              </sc-for>
+              <tr style="border-top: 2px solid #14171C"><th scope="row" style="text-align: left; padding: 10px 6px">Total deductions</th><td></td><td style="padding: 10px 6px; text-align: right; font-weight: 700">₹8,100</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="flex: 0 1 220px; background: #EEF2FF; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 6px; justify-content: center">
+          <div style="font-size: 13px; color: #16348F; font-weight: 600">Net pay / month</div>
+          <div style="font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700; color: #16348F">₹53,500</div>
+          <div style="font-size: 12px; color: #2A2F38">CTC ₹7.39L / year</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="login" aria-label="Login access" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600">5 · Login &amp; roles</h2>
+        <p style="margin: 0; font-size: 13px; color: #4B5260">Creates a user linked to this staff record. The roles decide which menus they see.</p>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px 20px">
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Username
+          <input type="text" value="priya.rao" style="height: 44px; padding: 0 12px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px">
+        </label>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Send invite to
+          <select style="height: 44px; padding: 0 10px; border: 1px solid #CDD2DA; border-radius: 8px; font: inherit; font-weight: 400; font-size: 14px"><option>Email + SMS</option><option>Email</option><option>SMS</option></select>
+        </label>
+      </div>
+      <fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+        <legend style="font-size: 13px; font-weight: 600; padding: 0; margin-bottom: 10px">Roles</legend>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px">
+          <sc-for list="{{roles}}" as="r" hint-placeholder-count="5">
+            <label style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 10px; font-size: 14px; font-weight: 600; border: 1px solid {{r.border}}; background: {{r.bg}}; color: {{r.fg}}">
+              <input type="checkbox" checked="{{r.on}}" readOnly="{{true}}" style="width: 18px; height: 18px">{{r.name}}
+            </label>
+          </sc-for>
+        </div>
+      </fieldset>
+    </section>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: flex-end">
+      <button type="button" style="height: 48px; padding: 0 20px; border: 1px solid #CDD2DA; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer">Cancel</button>
+      <button type="button" style="height: 48px; padding: 0 20px; border: 0; border-radius: 10px; background: #2147C7; color: #FFFFFF; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer">Save staff &amp; send invite</button>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1640}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const F = (label, kind, e) => {
+      e = e || {};
+      const isSelect = kind === 'select';
+      return { label, req: !!e.req, isSelect, isInput: !isSelect, type: isSelect ? 'text' : kind, ph: e.ph || '', val: e.val || '', ro: !!e.ro, bg: e.ro ? '#F0F2F5' : '#FFFFFF', opts: e.opts || [] };
+    };
+    const sections = [
+      { id: 'personal', title: '1 · Personal', desc: 'Who they are and how to reach them.', secure: false, fields: [
+        F('Employee code', 'text', { val: 'EMP-0187', ro: true }), F('First name', 'text', { req: true, ph: 'e.g. Priya' }), F('Last name', 'text', { ph: 'e.g. Rao' }),
+        F('Gender', 'select', { opts: ['Select', 'Female', 'Male', 'Other'] }), F('Date of birth', 'date', {}), F('Mobile', 'tel', { req: true, ph: '+91 ' }),
+        F('Email', 'email', { req: true, ph: 'name@school.edu' }), F('Qualification', 'text', { ph: 'e.g. M.Sc, B.Ed' }), F('Photo', 'file', {})
+      ] },
+      { id: 'employment', title: '2 · Employment', desc: 'Department and designation decide teaching load and payroll group.', secure: false, fields: [
+        F('Department', 'select', { req: true, opts: ['Science', 'Mathematics', 'Languages', 'Administration', 'Accounts', 'Transport'] }),
+        F('Designation', 'select', { req: true, opts: ['TGT — Teacher', 'PGT — Senior Teacher', 'Accountant', 'Office Assistant', 'Driver'] }),
+        F('Employment type', 'select', { req: true, opts: ['Permanent', 'Contract', 'Part-time'] }),
+        F('Joining date', 'date', { req: true }), F('Reports to', 'select', { opts: ['Principal', 'Vice Principal', 'Head of Department'] }),
+        F('Class teacher of', 'select', { opts: ['None', 'Grade 6-A', 'Grade 6-B', 'Grade 8-B'] })
+      ] },
+      { id: 'bank', title: '3 · Bank & statutory', desc: 'Needed for salary transfer and tax deduction.', secure: true, fields: [
+        F('Bank name', 'text', { ph: 'e.g. State Bank' }), F('Account number', 'password', { ph: '••••••••••' }), F('IFSC / routing code', 'text', { ph: '' }),
+        F('Tax ID (PAN)', 'password', { ph: '••••••••••' }), F('Provident fund no.', 'text', { ph: 'Optional' })
+      ] }
+    ];
+    const tabs = [['Personal', '#personal', true], ['Employment', '#employment', false], ['Bank & statutory', '#bank', false], ['Salary', '#salary', false], ['Login & roles', '#login', false]]
+      .map(([label, href, on]) => ({ label, href, sel: on ? 'true' : 'false', fg: on ? '#2147C7' : '#4B5260', line: on ? '#2147C7' : 'transparent' }));
+    const row = ([name, rule, amt]) => ({ name, rule, amt });
+    const earn = [['Basic', 'Fixed', '₹40,000'], ['HRA', '40% of basic', '₹16,000'], ['DA', '10% of basic', '₹4,000'], ['Transport', 'Fixed', '₹1,600']].map(row);
+    const ded = [['Provident fund', '12% of basic', '₹4,800'], ['Professional tax', 'Fixed', '₹200'], ['Income tax (TDS)', 'Monthly estimate', '₹3,100']].map(row);
+    const roles = [['Teacher', true], ['Front Office', false], ['Accountant', false], ['Principal', false], ['Admin', false]]
+      .map(([name, on]) => ({ name, on, bg: on ? '#EEF2FF' : '#FFFFFF', fg: on ? '#16348F' : '#2A2F38', border: on ? '#2147C7' : '#CDD2DA' }));
+    return { zero: 0, sections, tabs, earn, ded, roles };
+  }
+}
+</script>
+</body>
+</html>

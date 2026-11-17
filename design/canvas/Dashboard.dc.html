@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dashboard</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1000px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="{{role}}" active="DASHBOARD" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+      <label style="flex: 1 1 280px; max-width: 420px; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px; background: #FFFFFF; border: 1px solid #DDE1E7; border-radius: 10px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6270" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search</span>
+        <input type="search" placeholder="Search students, staff, receipts…" style="flex: 1; border: 0; outline: none; font: inherit; font-size: 14px; background: transparent">
+      </label>
+      <div style="display: flex; gap: 10px; align-items: center">
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4B5260">Year
+          <select style="height: 40px; padding: 0 10px; border: 1px solid #DDE1E7; border-radius: 8px; font: inherit; font-size: 14px; background: #FFFFFF"><option>2026-27</option><option>2025-26</option></select>
+        </label>
+        <button type="button" aria-label="Notifications" style="width: 44px; height: 44px; border: 1px solid #DDE1E7; border-radius: 10px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#14171C" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21h4"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: space-between">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <div style="font-size: 13px; color: #4B5260">{{greeting}}</div>
+        <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700">{{title}}</h1>
+      </div>
+      <span style="font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 999px; background: #FFF1E0; color: #8A3B00">Sample data</span>
+    </div>
+
+    <section aria-label="Key numbers" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px">
+      <sc-for list="{{tiles}}" as="t" hint-placeholder-count="4">
+        <div style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 8px">
+          <div style="font-size: 13px; color: #4B5260; font-weight: 500">{{t.label}}</div>
+          <div style="font-family: 'Space Grotesk', sans-serif; font-size: 30px; font-weight: 700">{{t.value}}</div>
+          <div style="font-size: 12px; color: #4B5260">{{t.sub}}</div>
+        </div>
+      </sc-for>
+    </section>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+      <section aria-label="Recent activity" style="flex: 2 1 520px; min-width: 0; background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600">{{activityTitle}}</h2>
+          <a href="#" style="font-size: 13px; font-weight: 600">View all</a>
+        </div>
+        <div style="overflow-x: auto">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; min-width: 520px">
+            <thead>
+              <tr style="text-align: left; color: #5B6270; font-size: 12px">
+                <th scope="col" style="padding: 8px 6px; font-weight: 600">When</th>
+                <th scope="col" style="padding: 8px 6px; font-weight: 600">Item</th>
+                <th scope="col" style="padding: 8px 6px; font-weight: 600">By</th>
+                <th scope="col" style="padding: 8px 6px; font-weight: 600; text-align: right">Amount</th>
+                <th scope="col" style="padding: 8px 6px; font-weight: 600">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{activity}}" as="a" hint-placeholder-count="5">
+                <tr style="border-top: 1px solid #EEF0F3">
+                  <td style="padding: 12px 6px; color: #4B5260; white-space: nowrap">{{a.when}}</td>
+                  <td style="padding: 12px 6px; font-weight: 500">{{a.item}}</td>
+                  <td style="padding: 12px 6px; color: #4B5260">{{a.by}}</td>
+                  <td style="padding: 12px 6px; text-align: right; font-variant-numeric: tabular-nums">{{a.amount}}</td>
+                  <td style="padding: 12px 6px"><span style="font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: {{a.bg}}; color: {{a.fg}}">{{a.status}}</span></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+        <section aria-label="Quick actions" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600">Quick actions</h2>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+            <sc-for list="{{actions}}" as="q" hint-placeholder-count="4">
+              <a href="{{q.href}}" style="display: flex; align-items: center; min-height: 48px; padding: 0 12px; border-radius: 10px; background: #EEF2FF; color: #16348F; font-size: 13px; font-weight: 600; text-decoration: none">{{q.label}}</a>
+            </sc-for>
+          </div>
+        </section>
+        <section aria-label="Needs attention" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600">Needs attention</h2>
+          <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px">
+            <sc-for list="{{todo}}" as="d" hint-placeholder-count="3">
+              <li style="display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 14px">
+                <span>{{d.label}}</span>
+                <span style="font-weight: 700; font-size: 13px; padding: 2px 8px; border-radius: 6px; background: #FFF1E0; color: #8A3B00">{{d.count}}</span>
+              </li>
+            </sc-for>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"role":{"editor":"enum","options":["Admin","Principal","Accountant","Teacher","Front Office","Parent"],"default":"Admin"},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const role = this.props.role ?? 'Admin';
+    const S = { ok: ['#E6F4EA', '#0F6B32'], warn: ['#FFF1E0', '#8A3B00'], info: ['#E8EEFF', '#16348F'] };
+    const act = (when, item, by, amount, status, k) => ({ when, item, by, amount, status, bg: S[k][0], fg: S[k][1] });
+    const R = {
+      'Admin': {
+        title: 'School overview', tiles: [['Students enrolled', '1,248', '2026-27 · 42 sections'], ['Staff', '86', '64 teaching · 22 non-teaching'], ['Fees collected (Nov)', '₹18.4L', 'of ₹24.6L billed'], ['Outstanding dues', '₹6.2L', '213 invoices overdue']],
+        actions: [['New admission', 'StudentAdmission.dc.html'], ['Add staff', 'StaffForm.dc.html'], ['Add user', 'UserManagement.dc.html'], ['Roles & permissions', 'UserManagement.dc.html']],
+        todo: [['Leave requests to approve', '4'], ['Payroll Nov — awaiting approval', '1'], ['Users locked out', '2']], at: 'Recent activity'
+      },
+      'Principal': {
+        title: 'Today at school', tiles: [['Student attendance', '94.2%', '72 absent today'], ['Staff on leave', '4', '2 substitutes assigned'], ['Pending approvals', '7', 'Leave · payroll · concessions'], ['Fee collection (Nov)', '75%', 'of billed amount']],
+        actions: [['Approve payroll', 'Payroll.dc.html'], ['Leave requests', '#'], ['Fee dues report', '#'], ['Audit log', '#']],
+        todo: [['Payroll Nov — approve', '1'], ['Concession requests', '2'], ['Leave requests', '4']], at: 'Recent approvals & activity'
+      },
+      'Accountant': {
+        title: 'Accounts desk', tiles: [['Collected today', '₹1,42,500', '38 receipts'], ['Collected (Nov)', '₹18.4L', 'Cash 31% · Online 69%'], ['Overdue invoices', '213', '₹6.2L outstanding'], ['Payroll Nov', 'Draft', 'Net ₹42.8L · 86 staff']],
+        actions: [['Collect fee', 'FeeCollection.dc.html'], ['Run payroll', 'Payroll.dc.html'], ['Account statement', 'AccountStatement.dc.html'], ['Add expense', '#']],
+        todo: [['Cheques to deposit', '6'], ['Unreconciled bank lines', '11'], ['Refunds pending', '2']], at: 'Recent transactions'
+      },
+      'Teacher': {
+        title: 'My class · Grade 8-B', tiles: [['Students', '38', 'Grade 8 · Section B'], ['Present today', '36', '2 absent · not yet notified'], ['My leave balance', '9 days', 'Casual 4 · Sick 5'], ['Next payslip', '30 Nov', 'November 2026']],
+        actions: [['Mark attendance', '#'], ['My students', '#'], ['Apply leave', '#'], ['My payslips', '#']],
+        todo: [['Attendance not marked (periods)', '1'], ['Documents missing in my class', '3']], at: 'My recent activity'
+      },
+      'Front Office': {
+        title: 'Front desk', tiles: [['Admissions this month', '23', '5 awaiting documents'], ['Receipts today', '47', '₹2,08,300 collected'], ['Documents pending', '9', 'TC · birth certificate'], ['Fee dues follow-up', '58', 'Parents to call']],
+        actions: [['New admission', 'StudentAdmission.dc.html'], ['Collect fee', 'FeeCollection.dc.html'], ['Print receipt', '#'], ['Upload documents', '#']],
+        todo: [['Incomplete admissions', '5'], ['Receipts to reprint', '2']], at: 'Today at the desk'
+      },
+      'Parent': {
+        title: 'Aarav Sharma · Grade 6-A', tiles: [['Total fee due', '₹20,000', '₹12,000 overdue · ₹8,000 due 30 Nov'], ['Attendance', '96%', 'This term'], ['Last payment', '₹8,000', 'Paid 28 Oct · R-2026-04812'], ['Class teacher', 'Ms. Rao', 'Grade 6-A']],
+        actions: [['Pay fees', '#'], ['Download receipts', '#'], ['Attendance', '#'], ['My profile', '#']],
+        todo: [['November fee due', '1']], at: 'Payments & notices'
+      }
+    }[role];
+    const activity = role === 'Parent' ? [
+      act('28 Oct', 'Tuition + Transport (Aug) — R-2026-04812', 'UPI', '₹8,000', 'Paid', 'ok'),
+      act('01 Nov', 'November fee invoice', 'School', '₹8,000', 'Due', 'warn'),
+      act('31 Oct', 'October fee invoice', 'School', '₹8,000', 'Overdue', 'warn')
+    ] : role === 'Teacher' ? [
+      act('Today 8:05', 'Attendance · Grade 8-B', 'You', '—', 'Submitted', 'ok'),
+      act('Yesterday', 'Leave request · 21 Nov', 'You', '—', 'Pending', 'warn'),
+      act('31 Oct', 'Payslip · October 2026', 'Payroll', '—', 'Available', 'info')
+    ] : [
+      act('10:42', 'Fee receipt R-2026-05530 · Grade 4-C', 'Front office', '₹8,250', 'Paid', 'ok'),
+      act('10:15', 'New admission · Grade 1-A', 'Front office', '—', 'Docs pending', 'warn'),
+      act('09:58', 'Expense · electricity bill', 'Accountant', '₹46,300', 'Approved', 'info'),
+      act('09:30', 'Payroll Nov run created', 'Accountant', '₹42.8L', 'Draft', 'warn'),
+      act('Yesterday', 'User created · Ms. Rao (Teacher)', 'Admin', '—', 'Active', 'ok')
+    ];
+    return {
+      role, zero: 0, title: R.title, greeting: 'Signed in as ' + role + ' · Monday, 16 November 2026',
+      tiles: R.tiles.map(([label, value, sub]) => ({ label, value, sub })),
+      actions: R.actions.map(([label, href]) => ({ label, href })),
+      todo: R.todo.map(([label, count]) => ({ label, count })),
+      activity, activityTitle: R.at
+    };
+  }
+}
+</script>
+</body>
+</html>

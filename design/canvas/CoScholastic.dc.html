@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Co-scholastic grades</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2147C7}a:hover{color:#16348F}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1100px; background: #F5F6F8; font-family: Inter, system-ui, sans-serif; color: #14171C; display: flex; flex-wrap: wrap; align-items: stretch">
+  <div style="flex: 1 1 248px; background: #111827">
+    <dc-import name="Sidebar" role="Teacher" plan="Professional" active="EXM_COSCH" min-h="{{zero}}" hint-size="100%,900px"></dc-import>
+  </div>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <nav aria-label="Breadcrumb" style="font-size: 13px; color: #4B5260">Exams › Co-Scholastic › Grades</nav>
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700">Co-scholastic grades — Term 1</h1>
+        <div role="tablist" aria-label="Class" style="display: flex; gap: 6px">
+          <sc-for list="{{classes}}" as="c" hint-placeholder-count="2">
+            <button type="button" role="tab" aria-selected="{{c.sel}}" onClick="{{c.pick}}" style="height: 40px; padding: 0 14px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid {{c.border}}; background: {{c.bg}}; color: {{c.fg}}">{{c.label}}</button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <section aria-label="Grading scale" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 14px 18px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center">
+      <b style="font-size: 14px">{{scaleName}}</b>
+      <sc-for list="{{legend}}" as="l" hint-placeholder-count="3">
+        <span style="font-size: 13px"><b style="display: inline-flex; width: 26px; height: 26px; align-items: center; justify-content: center; border-radius: 6px; background: #EEF2FF; color: #16348F; margin-right: 6px">{{l.g}}</b>{{l.label}}</span>
+      </sc-for>
+      <span style="margin-left: auto; font-size: 12px; color: #4B5260">Judged on regularity, participation, output and teamwork</span>
+    </section>
+
+    <section aria-label="Grade entry" style="background: #FFFFFF; border: 1px solid #E3E6EB; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+      <div style="overflow-x: auto">
+        <table style="width: 100%; min-width: 860px; border-collapse: collapse; font-size: 14px">
+          <thead>
+            <tr style="text-align: left; color: #5B6270; font-size: 12px">
+              <th scope="col" style="padding: 8px 6px">Roll · Student</th>
+              <sc-for list="{{areas}}" as="a" hint-placeholder-count="4">
+                <th scope="col" style="padding: 8px 6px"><div style="display: flex; flex-direction: column; gap: 4px"><span>{{a.name}}</span><button type="button" onClick="{{a.fillB}}" style="align-self: flex-start; height: 28px; padding: 0 8px; border: 1px solid #CDD2DA; border-radius: 6px; background: #FFFFFF; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer">Set all to {{a.mid}}</button></div></th>
+              </sc-for>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+              <tr style="border-top: 1px solid #EEF0F3">
+                <th scope="row" style="padding: 8px 6px; text-align: left; font-weight: 600; white-space: nowrap">{{r.roll}} · {{r.name}}</th>
+                <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="4">
+                  <td style="padding: 8px 6px">
+                    <div role="radiogroup" aria-label="{{c.aria}}" style="display: flex; gap: 4px">
+                      <sc-for list="{{c.opts}}" as="o" hint-placeholder-count="3">
+                        <button type="button" role="radio" aria-checked="{{o.sel}}" onClick="{{o.pick}}" style="width: 36px; height: 36px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid {{o.border}}; background: {{o.bg}}; color: {{o.fg}}">{{o.g}}</button>
+                      </sc-for>
+                    </div>
+                  </td>
+                </sc-for>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; padding-top: 6px; border-top: 1px solid #EEF0F3">
+        <span style="font-size: 13px; color: #4B5260">Showing 8 of {{total}} students · {{filled}} grades entered</span>
+        <div style="display: flex; gap: 8px">
+          <button type="button" style="height: 44px; padding: 0 16px; border: 1px solid #CDD2DA; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer">Save draft</button>
+          <button type="button" style="height: 44px; padding: 0 16px; border: 0; border-radius: 10px; background: #2147C7; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer">Submit to report card</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const cls = st.cls || 'VIII-B';
+    const marks = st.marks || {};
+    const senior = cls === 'X-A';
+    const scale = senior ? ['A', 'B', 'C', 'D', 'E'] : ['A', 'B', 'C'];
+    const L = senior ? ['Outstanding', 'Excellent', 'Very good', 'Good', 'Needs improvement'] : ['Outstanding', 'Very good', 'Fair'];
+    const AREAS = ['Work Education', 'Art Education', 'Health & Physical Education', 'Discipline'];
+    const NAMES = senior ? ['Aditi Kulkarni', 'Arjun Nair', 'Diya Patel', 'Farhan Ali', 'Ishaan Gupta', 'Kavya Reddy', 'Neha Joshi', 'Rohan Das']
+      : ['Ananya Singh', 'Dev Malhotra', 'Isha Bhat', 'Kabir Khan', 'Meher Kaur', 'Nikhil Rao', 'Pooja Menon', 'Siddharth Jain'];
+    const keep = { cls, marks };
+    const setMark = (k, g) => this.setState({ cls, marks: Object.assign({}, marks, { [k]: g }) });
+    const dflt = (i, a) => scale[(i * 3 + a * 2) % 3 === 0 ? 0 : ((i + a) % 4 === 0 ? 2 : 1)];
+    let filled = 0;
+    const rows = NAMES.map((name, i) => ({
+      roll: String(i + 1).padStart(2, '0'), name,
+      cells: AREAS.map((area, a) => {
+        const k = cls + ':' + i + ':' + a;
+        const cur = marks[k] !== undefined ? marks[k] : dflt(i, a);
+        if (cur) filled += 1;
+        return { aria: area + ' grade for ' + name, opts: scale.map((g) => { const on = g === cur; return { g, sel: on ? 'true' : 'false', bg: on ? '#2147C7' : '#FFFFFF', fg: on ? '#FFFFFF' : '#2A2F38', border: on ? '#2147C7' : '#CDD2DA', pick: () => setMark(k, g) }; }) };
+      })
+    }));
+    const mid = scale[1];
+    const areas = AREAS.map((name, a) => ({ name, mid, fillB: () => { const m = Object.assign({}, marks); NAMES.forEach((_, i) => { m[cls + ':' + i + ':' + a] = mid; }); this.setState({ cls, marks: m }); } }));
+    const classes = ['VIII-B', 'X-A'].map((label) => { const on = label === cls; return { label: 'Class ' + label, sel: on ? 'true' : 'false', bg: on ? '#14171C' : '#FFFFFF', fg: on ? '#FFFFFF' : '#2A2F38', border: on ? '#14171C' : '#CDD2DA', pick: () => this.setState({ cls: label, marks }) }; });
+    return {
+      zero: 0, rows, areas, classes, filled: String(filled), total: senior ? '41' : '38',
+      scaleName: senior ? '5-point scale · Classes IX–X' : '3-point scale · Classes I–VIII',
+      legend: scale.map((g, i) => ({ g, label: L[i] }))
+    };
+  }
+}
+</script>
+</body>
+</html>
