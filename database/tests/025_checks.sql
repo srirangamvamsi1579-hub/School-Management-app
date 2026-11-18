@@ -7,7 +7,7 @@ DO $$ BEGIN
   ASSERT (SELECT count(*) FROM menus m JOIN menus p ON p.menu_id = m.parent_id
           WHERE p.code = 'OPERATIONS' AND m.code IN ('OPS_USERS', 'OPS_ROLES', 'OPS_IMPORT')) = 3, 'users, roles and import under Operations';
   ASSERT (SELECT string_agg(m.code, ',' ORDER BY m.code) FROM menus m JOIN menus p ON p.menu_id = m.parent_id WHERE p.code = 'OPERATIONS')
-         = 'OPS_IMPORT,OPS_ROLES,OPS_USERS', 'nothing else under Operations';
+         = 'OPS_HELPDOCS,OPS_IMPORT,OPS_ROLES,OPS_USERS', 'nothing else under Operations (Help Documents & FAQs joins in 026)';
   ASSERT (SELECT menu_group FROM menus WHERE code = 'OPS_USERS') = 'User management', 'grouped';
   ASSERT (SELECT menu_group FROM menus WHERE code = 'OPS_IMPORT') = 'Data upload', 'grouped';
   ASSERT EXISTS (SELECT 1 FROM role_menu_permissions p JOIN roles r USING (role_id) JOIN menus m USING (menu_id)

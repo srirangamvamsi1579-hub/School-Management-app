@@ -1,5 +1,6 @@
 // Business rules of the test build. Each function changes the in-memory database (db)
 // the same way the SQL functions do in the real platform (see /database).
+import { undoTemplate } from './importTemplates.js';
 import { amountInWords, num, todayISO, dmy, dmon } from './format.js';
 import { CATEGORIES, renderTemplate, SAMPLE } from '../data/templates.js';
 import { FORMATS } from '../data/seed.js';
@@ -218,7 +219,10 @@ export const IMPORT_FIELDS = {
     ['department', 'Department', 'TEXT', true, ['dept']],
     ['designation', 'Designation', 'TEXT', true, ['post', 'role']],
     ['mobile', 'Mobile', 'PHONE', true, ['phone', 'contact']],
-    ['email', 'Email', 'EMAIL', false, ['e mail', 'mail id']]
+    ['email', 'Email', 'EMAIL', false, ['e mail', 'mail id']],
+    ['gender', 'Gender', 'ENUM:Male,Female,Other', false, ['sex']],
+    ['employment_type', 'Employment type', 'ENUM:Full time,Part time', false, ['type', 'full or part time', 'employment']],
+    ['join_date', 'Date of joining', 'DATE', false, ['doj', 'joining date', 'date joined']]
   ]
 };
 
@@ -314,7 +318,7 @@ export function commitImport(db, entity, mapped, fileName, by) {
       job.created.push({ student: s.id, guardian: newG ? g.id : null });
     } else {
       const s = { id: 'E' + (100 + db.staff.length), code: o.employee_code, first: o.first_name, last: o.last_name, short: o.first_name.slice(0, 3).toUpperCase(), dept: o.department,
-        desig: o.designation, mobile: o.mobile, email: o.email, join: todayISO(), salary: { Basic: 0, HRA: 0, DA: 0, Transport: 0, PF: 0, Tax: 0 }, status: 'Active', importedBy: job.id };
+        desig: o.designation, mobile: o.mobile, email: o.email, join: o.join_date || todayISO(), gender: o.gender || undefined, type: o.employment_type || 'Full time', salary: { Basic: 0, HRA: 0, DA: 0, Transport: 0, PF: 0, Tax: 0 }, status: 'Active', importedBy: job.id };
       db.staff.push(s);
       job.created.push({ staff: s.id });
     }
@@ -330,6 +334,7 @@ export function rollbackImport(db, jobId, by) {
   db.students = db.students.filter((s) => !sIds.includes(s.id));
   db.guardians = db.guardians.filter((g) => !gIds.includes(g.id));
   db.staff = db.staff.filter((s) => !eIds.includes(s.id));
+  if (job.undo) undoTemplate(db, job);
   job.status = 'ROLLED BACK';
   log(db, by, 'Import rolled back', `${job.fileName}`);
 }

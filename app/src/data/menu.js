@@ -25,10 +25,10 @@ export const ROLES = [
 export const MENU = [
   { code: 'DASHBOARD', label: 'Dashboard', icon: 'home', min: 1, items: [['DASH', 'Dashboard', 1]] },
   { code: 'STUDENTS', label: 'Students', icon: 'users', min: 1, items: [
-    ['STU_INS', 'Insights', 2], ['STU_LIST', 'All Students', 1], ['STU_ADMISSIONS', 'Admissions & Enquiries', 1], ['STU_ADMIT', 'New Admission', 1], ['STU_ATT', 'Attendance', 1], ['STU_REQUESTS', 'Coordinator Desk', 1], ['STU_MEETINGS', 'Parent Meetings', 1], ['STU_OFFICE', 'Office Requests', 1], ['STU_GATE', 'Gate Desk', 1],
-    ['STU_PROMOTE', 'Promote / Transfer', 2], ['STU_DOCS', 'Documents & ID Cards', 1]] },
+    ['STU_INS', 'Insights', 2], ['STU_LIST', 'All Students', 1], ['STU_PROFILE', 'Student Profile', 1], ['STU_ADMISSIONS', 'Admissions & Enquiries', 1], ['STU_ADMIT', 'New Admission', 1], ['STU_ATT', 'Attendance', 1], ['STU_REQUESTS', 'Coordinator Desk', 1], ['STU_MEETINGS', 'Parent Meetings', 1], ['STU_OFFICE', 'Office Requests', 1], ['STU_GATE', 'Gate Desk', 1],
+    ['STU_REPORTCARD', 'Report Cards', 1], ['STU_DOCS', 'Documents & ID Cards', 1]] },
   { code: 'STAFF', label: 'Staff', icon: 'brief', min: 1, items: [
-    ['STF_INS', 'Insights', 2], ['STF_LIST', 'All Staff', 1], ['STF_ADD', 'Add Staff', 1], ['STF_ATT', 'Staff Attendance', 1], ['STF_LEAVE', 'Leave Requests', 1]] },
+    ['STF_INS', 'Insights', 2], ['STF_LIST', 'All Staff', 1], ['STF_ATT', 'Staff Attendance', 1], ['STF_LEAVE', 'Leave Requests', 1]] },
   { code: 'ACADEMICS', label: 'Academics', icon: 'book', min: 1, items: [
     ['ACA_CLASS', 'Classes & Sections', 1], ['ACA_COORD', 'Class Coordinators', 1], ['ACA_SYLLABUS', 'Boards, Syllabus & Textbooks', 1], ['ACA_TIMETABLE', 'Timetable', 1]] },
   { code: 'EXAMS', label: 'Exams', icon: 'exam', min: 1, items: [
@@ -47,9 +47,9 @@ export const MENU = [
   // Operations: user management and data upload. Always on, so the Admin can always reach Users and Roles.
   { code: 'OPERATIONS', label: 'Operations', icon: 'shield', min: 1, items: [
     ['#U', 'User management'], ['OPS_USERS', 'Users', 1], ['OPS_ROLES', 'Roles & Permissions', 1],
-    ['#D', 'Data upload'], ['OPS_IMPORT', 'Data Import', 1]] },
+    ['#D', 'Data upload'], ['OPS_IMPORT', 'Data Import', 1], ['OPS_HELPDOCS', 'Help Documents & FAQs', 1]] },
   { code: 'SELF', label: 'My Space', icon: 'user', min: 1, items: [
-    ['SELF_CHILD', 'My Child', 1], ['SELF_REQUESTS', 'Requests to School', 1], ['SELF_FEES', 'Fee Dues & Pay', 1], ['SELF_PAYSLIP', 'My Payslips', 2], ['SELF_MYPERF', 'My Teaching Performance', 2], ['SELF_PROFILE', 'My Account', 1], ['SELF_PREFS', 'My Preferences', 1]] },
+    ['SELF_CHILD', 'My Child', 1], ['SELF_REQUESTS', 'Requests to School', 1], ['SELF_FEES', 'Fee Dues & Pay', 1], ['SELF_PAYSLIP', 'My Payslips', 2], ['SELF_LEAVE', 'My Leave', 1], ['SELF_MYPERF', 'My Teaching Performance', 2], ['SELF_PROFILE', 'My Account', 1], ['SELF_PREFS', 'My Preferences', 1]] },
   // Admin only: see the app as each profile sees it, without signing in as them
   { code: 'VIEWAS', label: 'View as Profile', icon: 'eye', min: 1, items: [['VA_PARENT', 'Parent', 1], ['VA_TEACHER', 'Teacher (class coordinator)', 1], ['VA_VP', 'Teacher + Vice Principal', 1], ['VA_HOTS', 'Teacher + Head of Teaching Staff', 1], ['VA_PRINCIPAL', 'Principal', 1], ['VA_ACCOUNTANT', 'Accountant', 1], ['VA_FRONT_OFFICE', 'Front Office', 1], ['VA_TRANSPORT', 'Transport team', 1]] },
   { code: 'PLATFORM', label: 'Platform Console', icon: 'cloud', min: 1, items: [['PLT_SCHOOLS', 'Schools & Plans', 1]] },
@@ -57,24 +57,24 @@ export const MENU = [
   { code: 'SETTINGS', label: 'Settings', icon: 'settings', min: 1, items: [
     ['#S', 'School setup'], ['OPS_APPEARANCE', 'Appearance & Branding', 1], ['OPS_WEBSITE', 'Website & Links', 1], ['OPS_CHANNELS', 'Web & App Screens', 1], ['OPS_TEMPLATES', 'Templates', 1], ['ACC_BANK', 'Bank & Payment Details', 1],
     ['#M', 'Messages'], ['OPS_SMS', 'SMS Gateway', 1], ['OPS_OUTBOX', 'Email & SMS Outbox', 1]] },
-  { code: 'HELP', label: 'Help', icon: 'book', min: 1, items: [['HELP_GUIDE', 'User Guide & Demo', 1]] }
+  { code: 'HELP', label: 'Help', icon: 'book', min: 1, items: [['HELP_GUIDE', 'User Guide & Demo', 1], ['HELP_FAQ', 'FAQs', 1]] }
 ];
 
 const ALL = MENU.flatMap((m) => m.items.map((i) => i[0])).filter((c) => c[0] !== '#');
 
 export const ACCESS = {
   ADMIN: ALL.filter((c) => !['SELF_CHILD', 'SELF_FEES', 'SELF_REQUESTS', 'SELF_MYPERF', 'PLT_SCHOOLS'].includes(c)),
-  PRINCIPAL: ['DASH', 'OPS_CHANNELS', 'HELP_GUIDE', 'STU_INS', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'STU_OFFICE', 'ACA_COORD', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'SELF_PROFILE', 'ANL_HOME', 'ANL_RANK', 'ANL_TRANSPORT', 'ANL_TEACHER', 'ANL_ADMISSIONS', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE',
+  PRINCIPAL: ['DASH', 'OPS_CHANNELS', 'HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'STU_PROFILE', 'STU_REPORTCARD', 'STU_INS', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'STU_OFFICE', 'ACA_COORD', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'SELF_PROFILE', 'ANL_HOME', 'ANL_RANK', 'ANL_TRANSPORT', 'ANL_TEACHER', 'ANL_ADMISSIONS', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE',
     'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_FORMATS', 'EXM_COSCH', 'EXM_PROFILE', 'FEE_INS', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_STRUCT', 'FEE_CONC',
     'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
-  ACCOUNTANT: ['HELP_GUIDE', 'DASH', 'STU_LIST', 'STF_LIST', 'SELF_PROFILE', 'ANL_HOME', 'ANL_TRANSPORT', 'FEE_INS', 'FEE_COLLECT', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_RECEIPTS', 'FEE_STRUCT', 'FEE_CONC',
+  ACCOUNTANT: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'DASH', 'STU_LIST', 'STF_LIST', 'SELF_PROFILE', 'ANL_HOME', 'ANL_TRANSPORT', 'FEE_INS', 'FEE_COLLECT', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_RECEIPTS', 'FEE_STRUCT', 'FEE_CONC',
     'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'OPS_OUTBOX', 'SELF_PAYSLIP', 'SELF_PREFS'],
-  TEACHER: ['HELP_GUIDE', 'DASH', 'STU_LIST', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'ANL_RANK', 'SELF_PROFILE', 'STF_LEAVE', 'ACA_SYLLABUS', 'ACA_TIMETABLE', 'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_COSCH', 'EXM_PROFILE',
+  TEACHER: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'DASH', 'STU_LIST', 'STU_PROFILE', 'STU_REPORTCARD', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'ANL_RANK', 'SELF_PROFILE', 'ACA_SYLLABUS', 'ACA_TIMETABLE', 'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_COSCH', 'EXM_PROFILE',
     'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
-  FRONT_OFFICE: ['HELP_GUIDE', 'DASH', 'STU_LIST', 'STU_GATE', 'STU_OFFICE', 'TRN_CHANGES', 'SELF_PROFILE', 'STU_ADMISSIONS', 'STU_ADMIT', 'ANL_ADMISSIONS', 'STU_DOCS', 'FEE_COLLECT', 'FEE_DUES', 'FEE_RECEIPTS', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
-  PARENT: ['HELP_GUIDE', 'DASH', 'ACA_TIMETABLE', 'SELF_CHILD', 'SELF_REQUESTS', 'SELF_FEES', 'SELF_PROFILE', 'SELF_PREFS'],
-  TRANSPORT: ['HELP_GUIDE', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'ANL_TRANSPORT', 'SELF_PROFILE', 'SELF_PREFS'],
-  PLATFORM: ['PLT_SCHOOLS', 'OPS_CHANNELS', 'HELP_GUIDE']
+  FRONT_OFFICE: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'DASH', 'STU_LIST', 'STU_PROFILE', 'STU_GATE', 'STU_OFFICE', 'TRN_CHANGES', 'SELF_PROFILE', 'STU_ADMISSIONS', 'STU_ADMIT', 'ANL_ADMISSIONS', 'STU_DOCS', 'FEE_COLLECT', 'FEE_DUES', 'FEE_RECEIPTS', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
+  PARENT: ['HELP_GUIDE', 'HELP_FAQ', 'DASH', 'ACA_TIMETABLE', 'SELF_CHILD', 'SELF_REQUESTS', 'SELF_FEES', 'SELF_PROFILE', 'SELF_PREFS'],
+  TRANSPORT: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'ANL_TRANSPORT', 'SELF_PROFILE', 'SELF_PREFS'],
+  PLATFORM: ['PLT_SCHOOLS', 'OPS_CHANNELS', 'HELP_GUIDE', 'HELP_FAQ']
 };
 
 // Modules a school can't switch off (Platform Console shows them as Always on)
@@ -123,7 +123,7 @@ export const PHONE_READY = {
   SELF_REQUESTS: ['Requests', 'send'], SELF_FEES: ['Fees', 'receipt'], SELF_CHILD: ['My child', 'user'], ACA_TIMETABLE: ['Timetable', 'calendar'],
   STU_ATT: ['Attendance', 'check'], STU_REQUESTS: ['Approvals', 'inbox'], STU_MEETINGS: ['Meetings', 'chat'], STU_GATE: ['Gate', 'shield'],
   STU_OFFICE: ['Office', 'inbox'], TRN_SHEETS: ['Route sheet', 'bus'], TRN_MANIFEST: ['Manifest', 'list'], TRN_CHANGES: ['Bus changes', 'bus'],
-  STF_LEAVE: ['Leave', 'calendar'], SELF_PAYSLIP: ['Payslips', 'receipt'], SELF_PROFILE: ['Account', 'settings']
+  STF_LEAVE: ['Leave', 'calendar'], SELF_LEAVE: ['My leave', 'calendar'], SELF_PAYSLIP: ['Payslips', 'receipt'], SELF_PROFILE: ['Account', 'settings']
 };
 export const CHANNELS = { BOTH: 'Website + app', WEB: 'Website only', APP: 'App only' };
 // Recommended defaults (17 Nov 2026), chosen so most roles fit the 5-tab phone bar. Anything not listed shows on the website only.

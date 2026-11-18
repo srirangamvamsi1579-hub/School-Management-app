@@ -3,6 +3,9 @@
 import fs from 'node:fs';
 import { MENU, ACCESS, PLANS, MIN_RANK, PHONE_READY, RECOMMENDED, CHANNELS, mobileTabs, webScreens, channelIn } from '../src/data/menu.js';
 import { SCREEN_HELP, WORKFLOWS, DEMO_PEOPLE } from '../src/data/guide.js';
+import { SCREEN_FLOW } from '../src/data/guideFlows.js';
+import { FAQS, FAQ_TOPICS } from '../src/data/faq.js';
+import { TEMPLATES, templateFile, LOAD_ORDER_NOTE } from '../src/lib/importTemplates.js';
 import { buildSeed } from '../src/data/seed.js';
 
 const db = buildSeed();
@@ -62,17 +65,23 @@ MENU.forEach((m, k) => { p(`### 5.${k + 1} ${m.label}${m.min > 1 ? ` (from the $
     p(`| **${l}**${MIN_RANK[c] > 1 ? ` <br>*${PLANS[MIN_RANK[c] - 1].name}+*` : ''} | ${esc(what)} | ${esc(how)} | ${who.map((r) => NAMES[r]).join(', ')} | ${PHONE_READY[c] ? (app.length ? `Website; app for ${app.map((r) => NAMES[r]).join(', ')}` : 'Website (can be added to the app)') : 'Website'} |`); });
   p(''); });
 
-p(`## 6. Mobile app`, '',
+p(`## 6. Screen by screen`, '', `How to use each screen, in the order you click through it. In the app (Help → User Guide & Demo → Screen by screen) this list follows the school's plan, the functions switched on and the person's access; here every screen is listed.`, '');
+MENU.forEach((m, k) => { const items = m.items.filter((i) => i[0][0] !== '#' && !i[0].startsWith('VA_')); if (!items.length) return; p(`### 6.${k + 1} ${m.label}`, '');
+  items.forEach(([c, l]) => { const f = SCREEN_FLOW[c]; if (!f) return; p(`**${l}** — ${SCREEN_HELP[c]?.[0] || ''}`, '', ...f.flow.map((st, i) => `${i + 1}. ${st}`), ...(f.tips.length ? ['', ...f.tips.map((x) => `- *${x}*`)] : []), ''); });
+  if (m.code === 'VIEWAS') p(`**View as Profile (any profile)**`, '', ...SCREEN_FLOW.VA_PARENT.flow.map((st, i) => `${i + 1}. ${st}`), ''); });
+
+p(`## 7. Mobile app`, '',
   `- One app in Google Play and the App Store serves every school. On first open, enter the school code (from the school website or welcome email), then sign in with the same email or mobile and password as the website.`,
   `- The platform team switches the app on per school (Platform Console → Schools & Plans → Mobile app). New schools start with it off.`,
   `- Tabs follow section 3. More than five tabs: the extra ones are under **More**.`,
   `- Works offline with saved information; turn notifications on from Home.`,
-  `- Parents delete their account in **Account → Delete my account**, or on the web at #/p/delete.`, '',
-  `## 7. Common questions`, '',
-  `- **A menu is missing.** Check the school's plan and switches (Platform Console), the role's permissions (Operations → Roles & Permissions), and whether the screen is set to *App only* for the role (Web & App Screens).`,
-  `- **A link from the school website says "not available".** The person's role can't open that screen on the website; they are taken to their home screen.`,
-  `- **A parent can't choose a pickup person.** New pickup people must be checked by the Front Office first (Gate Desk → Approve pickup people).`,
-  `- **The coordinator doesn't see a request.** Meetings go to the teacher asked, certificates to the office; coordinators see leave, early leave and transport requests for their sections.`,
-  `- **A change to app screens isn't showing.** It must be approved and published; people see it at their next sign-in or app refresh.`, '');
+  `- Parents delete their account in **Account → Delete my account**, or on the web at #/p/delete.`, '');
+
+p(`## 8. Moving data in: conversion templates`, '', `**Operations → Data Import → Templates.** ${LOAD_ORDER_NOTE} Blank template: \`NN_Name_Data.xlsx\`. Filled-in file: \`NN_Name_Data_<SCHOOL>_<YYYYMMDD>.xlsx\` — the app recognises the template from the name.`, '',
+  `| No | File | Menu | Required columns | All columns |`, `| --- | --- | --- | --- | --- |`,
+  ...TEMPLATES.map((t) => `| ${String(t.no).padStart(2, '0')} | ${templateFile(t)} | ${t.menu} | ${t.cols.filter((c) => c[1]).map((c) => c[0]).join(', ')} | ${t.cols.length} |`), '');
+
+p(`## 9. Frequently asked questions`, '', `In the app: **Help → FAQs** (each person sees the questions for their role, plus the school's own questions and documents from Operations → Help Documents & FAQs).`, '');
+FAQ_TOPICS.forEach((topic) => { const l = FAQS.filter((f) => f.topic === topic); if (!l.length) return; p(`### ${topic}`, ''); l.forEach((f) => p(`**${f.q}** ${f.roles.includes('ALL') ? '' : `*(${f.roles.map((r) => NAMES[r]).join(', ')})*`}  `, f.a, '')); });
 fs.writeFileSync(new URL('../../docs/USER_GUIDE.md', import.meta.url), L.join('\n'));
 console.log('docs/USER_GUIDE.md', L.length, 'lines');

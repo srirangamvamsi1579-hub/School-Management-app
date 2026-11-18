@@ -1,6 +1,6 @@
 # School Management Platform — Requirements
 
-Updated 18 Nov 2026 (release 11: a Settings menu for the setup screens, with Operations kept for user management and data upload; release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos; release 7: opens on a Main menu, designations by role, account creation in the app, Admin View as Profile; 7.1–7.5: User management with departments, access by department with read only / full access, access summary, standard profiles for Indian schools; release 8: question papers driven by topic selection, up to 10 sets, approval per set, question bank with topics, blueprints; release 10: nobody waits for approval (staff checked against the staff record), dashboard in sections (students, staff, transport, fees, enrolment) with year-on-year arrows, gender split and grade limits; release 9: accounts come from registration (Add user is Admin-only, with a reason), Users filters, copy a returning person's details from the archive, department, student and created columns, 25 per page, refresh, parents checked against the student record with no approval, no switched-off status, reset password for Admin or by permission, delete as a status with a view-only archive). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
+Updated 18 Nov 2026 (release 12: dashboard insights with full and part time, salary by type, riders per route and bus breakdowns; route planning, pickup suggestions and a route map; student profile; attendance registers with date ranges; report cards replace Promote / Transfer; Add staff inside All Staff; My Leave with allowances and approver notifications; screen-by-screen user guide and FAQs; help documents; 20 conversion templates; release 11: a Settings menu for the setup screens, with Operations kept for user management and data upload; release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos; release 7: opens on a Main menu, designations by role, account creation in the app, Admin View as Profile; 7.1–7.5: User management with departments, access by department with read only / full access, access summary, standard profiles for Indian schools; release 8: question papers driven by topic selection, up to 10 sets, approval per set, question bank with topics, blueprints; release 10: nobody waits for approval (staff checked against the staff record), dashboard in sections (students, staff, transport, fees, enrolment) with year-on-year arrows, gender split and grade limits; release 9: accounts come from registration (Add user is Admin-only, with a reason), Users filters, copy a returning person's details from the archive, department, student and created columns, 25 per page, refresh, parents checked against the student record with no approval, no switched-off status, reset password for Admin or by permission, delete as a status with a view-only archive). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
 
 One platform runs Indian K-12 schools of every size, from under 250 to over 1,000 students. Each school gets only the modules its plan includes, and every person sees only the menus their role allows.
 
@@ -55,13 +55,13 @@ Seven roles see different menus. Four plans decide which modules a school has. A
 
 ## Screens by module
 
-14 modules hold 67 screens plus the sign-in pages, and all of them open in the test build. Column-level detail per screen is in the client review PDF (`docs/School_Platform_Client_Review.pdf`), and the visual designs are on the design canvas.
+16 menus hold 70 screens plus the sign-in pages, and all of them open in the test build. Column-level detail per screen is in the client review PDF (`docs/School_Platform_Client_Review.pdf`), and the visual designs are on the design canvas.
 
 | Module | Screens | Key fields and actions |
 | --- | --- | --- |
 | Dashboard | Dashboard | Sections for students, staff, transport, fees and enrolment, each against last year (▲ / ▼); boys and girls; grade limits; needs-attention list and recent activity |
-| Students | Insights, All Students, Admissions & Enquiries, New Admission, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Gate Desk, Promote / Transfer, Documents & ID Cards | Admission no. (generated), name, gender, DOB, class-section, house, guardian name/relation/mobile/email, transport band |
-| Staff | Insights, All Staff, Add Staff, Staff Attendance, Leave Requests | Employee code, short code (timetable), department, designation, mobile, email, basic pay |
+| Students | Insights, All Students, Student Profile, Admissions & Enquiries, New Admission, Attendance (register), Coordinator Desk, Parent Meetings, Office Requests, Gate Desk, Report Cards, Documents & ID Cards | Admission no. (generated), name, gender, DOB, class-section, house, guardian name/relation/mobile/email, transport band; profile in four parts (personal, academic, performance with rank, attendance); report cards by grade, section or student for an exam, a term or the year |
+| Staff | Insights, All Staff (with Add staff and Edit), Staff Attendance (register), Leave Requests | Employee code, short code (timetable), department, designation, full or part time, mobile, email, basic pay; leave approvals, leave taken by staff, leave types and allowances |
 | Academics | Classes & Sections, Boards Syllabus & Textbooks, Timetable | Board, chapters, topics; timetable cells "SUBJECT TEACHER", grade-wide blocks, teacher clash check |
 | Exams | Question Papers, Approved Papers, Question Bank, Blueprints, Co-Scholastic Grades, Assessment Profiles | Papers per exam timetable; topics chosen per paper drive the questions; up to 10 sets, each approved separately; the set for the exam chosen until the start time; print, answer key, teacher's copy; A/B/C grades; subject comments and appreciation card |
 | Fees | Insights, Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions | Grades, instalment, due date; source, UTR, narration, amount, match status; invoice and receipt in the school's template |
@@ -69,11 +69,11 @@ Seven roles see different menus. Four plans decide which modules a school has. A
 | Data Analytics | Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel | Grade, sections, term, subject filters; Power BI pages |
 | Payroll | Run Payroll, Payslips | Basic, HRA, DA, transport, PF, TDS, net; approve and post |
 | Accounts | Account Statement, Income & Expenses | Ledger with running balance |
-| Operations | User management: Users, Roles & Permissions · Data upload: Data Import | Permission grid; import mapping. Always on |
+| Operations | User management: Users, Roles & Permissions · Data upload: Data Import, Help Documents & FAQs | Permission grid; 20 conversion templates and import mapping; the school's own help documents and FAQs. Always on |
 | Settings | School setup: Appearance & Branding, Website & Links, Web & App Screens, Templates, Bank & Payment Details · Messages: SMS Gateway, Email & SMS Outbox | Template versions and defaults; bank holder, account (encrypted), IFSC, UPI ID, QR; theme; menu links. Always on |
-| My Space | My Child, Requests to School, Fee Dues & Pay, My Payslips, My Teaching Performance, My Account, My Preferences | Parent pay page with online pay or bank transfer + UTR |
+| My Space | My Child, Requests to School, Fee Dues & Pay, My Payslips, My Leave, My Teaching Performance, My Account, My Preferences | Parent pay page with online pay or bank transfer + UTR; parents open published report cards; staff apply for leave and see what is left |
 | Platform Console | Schools & Plans | Plan per school, module and sub-menu switches, add-ons, mobile app on/off |
-| Help | User Guide & Demo | Guided demos, every menu explained, what each role sees |
+| Help | User Guide & Demo, FAQs | Guided demos, the screen-by-screen flow, every menu explained, what each role sees — all following the school's plan and the person's access; FAQs by role and the school's documents |
 
 ## Accounts and sign-in
 
@@ -668,9 +668,67 @@ Screens that set up the school and the app, rather than day-to-day school work, 
 - **Not moved:** My Preferences and My Account (personal, in My Space), View as Profile (Admin tool, its own menu), Fee Structure and Concessions (used in fee work, in Fees), and Classes & Sections (in Academics).
 - **Database:** `024_settings_menu.sql` turns the Operations menu and plan feature into Settings, moves Bank & Payment Details under it, adds `menus.menu_group` for the groups and a trigger that stops Settings being switched off. `025_operations_menu.sql` brings Operations back with Users, Roles & Permissions and Data Import (and the self sign-up, custom roles and photo import functions), gives everyone who could open those screens the Operations menu, and stops Operations being switched off too.
 
+## Added 18 Nov 2026 (release 12)
+
+### 1. Dashboard: insights, not only counts
+
+Every section now opens with **What this tells you**: a few plain-language observations worked out from the figures (for example "Part-time staff are 24% of the headcount but 12% of the salary bill", "R3 gained the most riders", "Bus KA-01-F-4414 broke down 3 times this year — book a full service"). Students, Fees and Enrolment have them too.
+
+- **Staff:** full-time and part-time counts against last year; teaching and non-teaching; **salary paid this year** (April to last month) with the monthly bill; a table of salary **by employee type** (staff, monthly salary, paid this year, average per person, share of salary) and by staff group (teaching and leadership, office and accounts, transport); staff by department split full time / part time; men and women. The list of who joined this year was removed.
+- **Transport:** riders against last year; **riders per route with the change against last year**; **buses** (in service, spare, under repair); **breakdowns this year** with delay and riders affected, and a table of every breakdown and of the fleet (last service, fitness date, breakdowns per bus). Transport, Admin and Principal can **Log a breakdown** (taking a bus off the road marks it Under repair until it is back in service).
+
+### 2. Routes, Stops & Timings: route planning, pickup suggestions, route map
+
+- **Plan the route.** Like a ride app, the planner compares the order of the stops: *Shortest drive*, *Farthest stop first* and, where stops are within 600 m walking of each other, *Fewer stops* — each with km, minutes and minutes saved, previewed on the map. **Use this route** reorders the stops and works the times out again so the bus still reaches school on time. The demo's R4 is 13 minutes shorter.
+- **Pickup suggestions.** Riders who live nearer another stop (on their route, or another route with seats) — **Move**; and where two or more riders live more than 1.2 km from any stop, a **new stop** between their homes — **Add this stop**.
+- **Route map.** A plan view of the route with the school, the stops in order, riders' homes, other routes and suggested stops. **Add a stop** by clicking the map (it goes where it adds the least driving), **Move** a stop, **Remove** one with no riders. Edit timings has **Work out times from the map**. Driver route sheets pick up every change.
+- In production the map uses real coordinates and road distances from a maps service; the planning rules are the same.
+
+### 3. Student Profile (Students → Student Profile)
+
+Find a student by grade, section or name; four tabs:
+- **Personal profile:** details, family and who else can collect, transport stop and times, fees.
+- **Academic profile:** class, board, class teacher, coordinators, subjects and teachers, co-scholastic grades, teachers' comments.
+- **Performance:** % per subject for Periodic Test 1, Half-yearly, Periodic Test 2 and Annual; overall %; **rank in the section and the grade**; compared with classmates (score, rank, "better than x% of the grade", grade average and top score, a strip showing where the student sits, and each subject against the grade average).
+- **Attendance report:** month by month and for the year.
+
+Parents see the same profile for their own child in My Child.
+
+### 4. Attendance registers
+
+Students → Attendance and Staff → Staff Attendance are registers: **one row per person, one column per day**, with **From / To** and quick ranges (Today, This week, This month, Last month). Tap a cell to switch Present → Absent → Late (staff: Absent → Half day). Approved leave shows as L and is locked; Sundays and school holidays are greyed; each row totals present, absent and %. The phone app uses 44 × 44 px cells.
+
+### 5. Report Cards (replaces Promote / Transfer)
+
+Promote / Transfer was a description screen only (moving a section to the next grade at year end and issuing transfer certificates); nothing ran behind it. It is replaced by **Report Cards**: pick grade, section, one student or all, and a **term, the whole year or one exam** → Generate → **Print / save as PDF** → **Publish to parents**. A card shows marks per exam, weighted %, CBSE grade (A1 … E), overall result, rank in section and grade, attendance for the term, co-scholastic grades, teachers' remarks and signature lines. Parents are notified and open, print or save it in **My Child → Report cards**.
+
+### 6–8. Staff: Add staff in All Staff; My Leave; approvals with notifications
+
+- **All Staff** has **Add staff** and **Edit** (department, designation, **full or part time**, joining date, pay); the separate Add Staff menu is gone.
+- **My Space → My Leave** (every staff role): each leave type with **days a year, taken, waiting and left**; apply with dates or a half day and a reason; Sundays and holidays don't count. Standard types (changeable by Admin and Principal in Leave Requests → Leave types): casual 12 (up to 3 at a time), sick 10 (can be applied after the day), earned 15 (full-time staff, 7 days' notice), maternity 182, paternity 15, compensatory off 5, leave without pay (no limit).
+- **Approvers are notified** in the app (🔔 bell in the top bar) and by email: teaching staff → the Principal and the Vice Principal; others → the Principal and the Admin; the Principal → the Admin. Nobody approves their own leave. Approving marks the staff register; the applicant is notified of the decision; the other approver's notification is cleared.
+- **Staff → Leave Requests:** waiting for approval, all requests with filters, leave taken by each person, leave types.
+
+### 9–11. Help: user guide by function, FAQs, help documents
+
+- **User Guide & Demo** shows only what applies: *Menus I can open* (default), *Everything in our plan*, or *Everything the platform offers*. Guided demos that need menus outside the plan are hidden. New **Screen by screen** tab: for every screen, what it is for, the **steps in click order** and tips, with a Try button. Three new guided demos (staff leave, report cards, route planning). The functions switched on for the school are listed. `docs/USER_GUIDE.md` has the full screen-by-screen guide, the templates and the FAQs.
+- **Help → FAQs:** 30 questions by topic, each shown only to the roles it applies to, with search; plus the school's own questions and documents.
+- **Operations → Help Documents & FAQs:** the Admin adds documents (a link or an uploaded file, the menu it belongs to, who can see it, versioned) and the school's own FAQs.
+
+### 11–12. Data Import: conversion templates
+
+Operations → Data Import → **Templates**: 20 predefined templates, one per menu or table, with every column the app needs and a *How to fill* sheet (required, format, example, notes). Download one or **all in one workbook**.
+
+- **Naming convention:** blank `NN_Name_Data.xlsx` (01_Class_Section_Data, 02_Student_Data, 03_Guardian_Data, 04_Staff_Data, 05_Staff_Salary_Data, 06_Leave_Balance_Data, 07_Fee_Structure_Data, 08_Fee_Payment_History_Data, 09_Fee_Concession_Data, 10_Transport_Route_Data, 11_Transport_Stop_Data, 12_Student_Transport_Data, 13_Subject_Teacher_Data, 14_Timetable_Data, 15_Exam_Marks_Data, 16_Student_Attendance_Data, 17_Staff_Attendance_Data, 18_Admission_Enquiry_Data, 19_Question_Bank_Data, 20_Bus_Fleet_Data); filled in `NN_Name_Data_<SCHOOL>_<YYYYMMDD>.xlsx`. The upload is recognised from the file name. Load in number order.
+- **Loading:** students and staff go through column mapping and can be rolled back; leave balances, student transport, exam marks and both attendance templates are checked and loaded, and can be rolled back; the others are checked row by row and marked ready for the conversion team to load at go-live.
+
+### Database (`026_release12.sql`)
+
+New menus and permissions; full / part time on staff; school holidays; leave types, allowances, approvers, `apply_staff_leave()` and `decide_staff_leave()` with notifications and the staff register; in-app notifications; report cards and CBSE grades with a rank view; buses, breakdowns, route plans and map positions; staff by employment type; help documents and school FAQs; the 20 conversion templates and their columns.
+
 ## Database schema summary
 
-PostgreSQL 15+, twenty-five migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
+PostgreSQL 15+, twenty-six migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
 
 | File | Adds | Key tables, views and functions |
 | --- | --- | --- |
@@ -699,6 +757,7 @@ PostgreSQL 15+, twenty-five migration files loaded in order. Every table carries
 | 023_register_no_approval.sql | Nobody waits for approval | register_staff_via() (employee code, name, email/mobile on the staff record), role_for_designation(), users.staff_id; PENDING removed from users_status_check |
 | 024_settings_menu.sql | Settings menu | Operations menu and feature renamed Settings; ACC_BANK moved under it; menus.menu_group; Settings can't be switched off (trigger) |
 | 025_operations_menu.sql | Operations for user management and data upload | Operations menu and feature again, with OPS_USERS, OPS_ROLES, OPS_IMPORT (menu_group User management / Data upload); permissions copied to the Operations heading; Operations and Settings can't be switched off |
+| 026_release12.sql | Release 12 | staff.employment_type; STU_PROFILE, STU_REPORTCARD, SELF_LEAVE, OPS_HELPDOCS, HELP_FAQ menus (STF_ADD, STU_PROMOTE removed); school_holidays, leave_types, leave_requests approvals, apply_staff_leave(), decide_staff_leave(), v_leave_balances; app_notifications; report_cards, cbse_grade(), v_student_term_rank; buses, bus_incidents, route_plans, v_fleet_summary; v_staff_by_type; help_documents, school_faqs; import_templates, import_template_columns, template_for_file() |
 
 The test build keeps the same entities in browser memory (`app/src/data`) and runs the same rules in JavaScript (`app/src/lib/logic.js`).
 
@@ -849,9 +908,9 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 
 One-time setup: create the dev, preprod and prod environments in GitHub, add required reviewers to preprod and prod, and add the secret `AWS_DEPLOY_ROLE_ARN` (an IAM role for GitHub OIDC).
 
-**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the twenty-five migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
+**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the twenty-six migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
-**Automated tests (release 10).** See `docs/TEST_REPORT.md`: 62 app tests, 40 SQL check groups (007–025), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 26 web end-to-end tests (including the dashboard sections, staff registration against the staff record, Add user for the Admin only with a reason, copying a returning person's details from the archive, the Users filters, columns, paging and Refresh, parent sign-up checked against the student record, delete as a status with the view-only archive, reset password by permission, the question-paper flow from topics to approval and print, the question bank and blueprints, every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations, the collapsed side menu, permissions by department with access levels, read-only screens, the access summary and deleting a profile) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
+**Automated tests (release 12).** See `docs/TEST_REPORT.md`: 70 app tests, 44 SQL check groups (007–026), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 32 web end-to-end tests (including the release 12 flows: dashboard insights and breakdowns, student profile, attendance registers, report cards to a parent, staff leave with notifications, route planning and a new stop, FAQs, help documents and templates; the dashboard sections, staff registration against the staff record, Add user for the Admin only with a reason, copying a returning person's details from the archive, the Users filters, columns, paging and Refresh, parent sign-up checked against the student record, delete as a status with the view-only archive, reset password by permission, the question-paper flow from topics to approval and print, the question bank and blueprints, every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations, the collapsed side menu, permissions by department with access levels, read-only screens, the access summary and deleting a profile) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
 
 **Earlier automated tests.** `npm test` ran 21 checks on the business rules (including the approved pickup list, route sheets, the attendant-tracking switch, requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
 
@@ -870,6 +929,14 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - [ ] Phone app (`#/p/mobile`, school GVS) → Create an account as School staff: Kavya Iyer, kavya.iyer@example.com, employee code EMP-0131 → the account opens at once as Teacher · PRT
 - [ ] Admin: Dashboard → Students (arrows, boys and girls, columns per class with grade limits; Edit grade limits) → Staff → Transport → Fees → Enrolment (filter by Mobile app)
 - [ ] Admin: Web & App Screens → Front Office → Gate Desk "App only" → Send for approval; Principal approves; Front Office no longer has Gate Desk on the website, but has it in the phone preview
+- [ ] Admin: Dashboard → Staff (full and part time, salary by employee type, What this tells you) → Transport (riders per route against last year, buses, breakdowns → Log a breakdown)
+- [ ] Transport: Routes, Stops & Timings → R4 → Plan the route → Shortest drive → Use this route; R2 → Pickup suggestions → Add this stop → Route map; Driver Route Sheets show the new stop
+- [ ] Teacher: Students → Student Profile → Aarav → Performance (ranks, compared with classmates) → Attendance report; Students → Attendance → This month → tap a cell
+- [ ] Principal: Students → Report Cards → Grade VIII, A, Term 1 → Generate → Print → Publish; Parent: 🔔 → Report card ready → Open
+- [ ] Teacher: My Space → My Leave → Casual leave next week → Send; Principal: 🔔 → Leave Requests → Approve; Staff Attendance shows L; Teacher: 🔔 shows the decision
+- [ ] Admin: Staff → All Staff → Add staff (Part time); Operations → Help Documents & FAQs → add a question and a document; Parent: Help → FAQs shows them
+- [ ] Admin: Operations → Data Import → Templates → Download all → fill 12_Student_Transport_Data → upload as 12_Student_Transport_Data_GVS_<date>.xlsx → Load → Import history → Roll back
+- [ ] Anyone: Help → User Guide & Demo → Screen by screen; switch Menus I can open / Everything in our plan
 - [ ] Admin: side menu → Operations → User management (Users, Roles & Permissions), Data upload (Data Import); Settings → School setup (Bank & Payment Details now here), Messages; Accountant: no Operations, Settings shows only Bank & Payment Details, Templates and the Outbox; Platform team: Schools & Plans → Operations and Settings show Always on
 - [ ] Anyone: Help → User Guide & Demo → run a guided demo with Start / Next step
 
@@ -929,3 +996,7 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - Google Play account: organisation (no 14-day closed test) — do we have a D-U-N-S number?
 - ~~Mobile app: one shared app or branded apps~~ — decided: one shared multi-school app.
 - Confirm the recommended phone screens per role (release 6 table) before the first store submission.
+- Leave policy: are the standard allowances right (casual 12, sick 10, earned 15, compensatory off 5), and does unused leave carry forward?
+- Report card format: does the school want its own layout (Settings → Templates), and is the weighting right (periodic tests 10% each, term exams 40% each)?
+- Route map provider (Google Maps or OpenStreetMap) and whether drivers log breakdowns from the route sheet link.
+- Year-end promotion and transfer certificates were never built (Promote / Transfer was a description only). Build them as a year-end step?

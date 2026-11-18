@@ -6,6 +6,7 @@ import { tenantOf } from './lib/logic.js';
 import { screensFor, roleName, accessLevel } from './lib/auth.js';
 import Login from './screens/Login.jsx';
 import { SCREENS, Placeholder } from './screens/index.js';
+import { alertsFor, unreadFor, markRead } from './lib/alerts.js';
 import { PublicEnquiry, PrivacyPolicy, DeleteAccountRequest } from './screens/Public.jsx';
 import MobileApp from './mobile/MobileApp.jsx';
 import HelpGuide, { DemoBar } from './screens/Guide.jsx';
@@ -147,6 +148,7 @@ export default function App() {
           <span className="crumbs">{screen === 'HOME' ? <b style={{ color: 'var(--ink)' }}>Main menu</b> : <>{MODULE_OF[screen]} / <b style={{ color: 'var(--ink)' }}>{LABEL[screen]}</b></>}</span>
           <span className="sp" />
           <span className="pill info">Test build · in-memory data</span>
+          <Bell userId={viewAs ? null : session.userId} go={go} />
           <span className="small"><b>{session.name || user?.user}</b> · {roleName(db, role)}{me?.designation ? ' · ' + me.designation : ''}</span>
           <button className="btn sm" onClick={() => { if (armed) { reset(); setArmed(false); } else { setArmed(true); setTimeout(() => setArmed(false), 4000); } }}>{armed ? 'Click again to reset' : 'Reset demo data'}</button>
           {!viewAs && <button className="btn sm" onClick={logout}>Switch user</button>}
@@ -159,4 +161,22 @@ export default function App() {
       {toast && <div className="toast" role="status">{toast.msg}</div>}
     </div>
   );
+}
+
+// Notifications for the signed-in person (leave to approve, decisions, report cards …)
+function Bell({ userId, go }) {
+  const { db, mutate } = useStore();
+  const [open, setOpen] = useState(false);
+  if (!userId) return null;
+  const mine = alertsFor(db, userId).slice(0, 30);
+  const n = unreadFor(db, userId);
+  const pick = (a) => { mutate((d) => markRead(d, userId, a.id)); setOpen(false); if (a.screen) go(a.screen); };
+  return <>
+    <button className="btn sm bell" aria-label={`Notifications${n ? `, ${n} unread` : ''}`} aria-expanded={open} onClick={() => setOpen(!open)}>🔔{n > 0 && <span className="n">{n}</span>}</button>
+    {open && <div className="alerts-pop" role="dialog" aria-label="Notifications">
+      <div className="row" style={{ justifyContent: 'space-between', padding: '2px 6px 8px' }}><b>Notifications</b>{n > 0 && <button className="btn sm" onClick={() => mutate((d) => markRead(d, userId))}>Mark all read</button>}</div>
+      {mine.length ? mine.map((a) => <button key={a.id} className={'a' + (a.read ? '' : ' unread')} onClick={() => pick(a)}><div className="b small">{a.title}</div><div className="small">{a.body}</div><div className="small muted">{new Date(a.at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</div></button>)
+        : <p className="small muted" style={{ padding: 6 }}>Nothing new.</p>}
+    </div>}
+  </>;
 }

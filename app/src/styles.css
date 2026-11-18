@@ -296,3 +296,53 @@ nav.side .mod:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
 .segbar .seg { border-radius: 4px; color: #fff; font-size: 12px; font-weight: 600; display: flex; align-items: center; padding-left: 8px; min-width: 4px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .limit-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Release 12: dashboard insights, attendance register, route map, report cards, notifications */
+.insights ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.insights li { line-height: 1.45; }
+.reg-wrap { overflow: auto; max-height: 70vh; border: 1px solid var(--line); border-radius: 8px; }
+.reg { border-collapse: separate; border-spacing: 0; font-size: 12px; }
+.reg th, .reg td { border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); padding: 2px; text-align: center; background: var(--surface); }
+.reg th { position: sticky; top: 0; z-index: 2; font-weight: 600; min-width: 30px; }
+.reg th.name, .reg td.name { position: sticky; left: 0; z-index: 3; text-align: left; min-width: 170px; padding: 4px 8px; }
+.reg th.name { z-index: 4; }
+.reg td.off, .reg th.off { background: var(--bg); color: var(--ink-3); }
+.reg th.today { box-shadow: inset 0 -3px 0 var(--brand); }
+.reg button.m { width: 28px; height: 26px; border: 1px solid transparent; border-radius: 6px; font-weight: 700; cursor: pointer; background: var(--ok-bg); color: var(--ok); font-size: 12px; }
+.reg button.m.A { background: var(--bad-bg); color: var(--bad); border-color: var(--bad); }
+.reg button.m.LATE, .reg button.m.HALF { background: var(--warn-bg); color: var(--warn); }
+.reg button.m.L { background: var(--info-bg); color: var(--brand); }
+.reg button.m:disabled { cursor: default; opacity: .9; }
+.reg td.tot { font-weight: 600; min-width: 44px; }
+.legend-row { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; margin: 8px 0; }
+.routemap { width: 100%; max-width: 560px; aspect-ratio: 1; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); touch-action: none; }
+.routemap.placing { cursor: crosshair; }
+.opt { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; text-align: left; background: var(--surface); width: 100%; }
+.opt.on { border-color: var(--brand); box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 25%, transparent); }
+.bell { position: relative; }
+.bell .n { position: absolute; top: -6px; right: -6px; background: var(--bad); color: #fff; border-radius: 10px; font-size: 10px; padding: 1px 5px; font-weight: 700; }
+.alerts-pop { position: absolute; right: 12px; top: 52px; width: 360px; max-height: 70vh; overflow: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.15); z-index: 50; padding: 8px; }
+.alerts-pop .a { padding: 8px; border-radius: 8px; cursor: pointer; display: block; width: 100%; text-align: left; background: none; border: 0; }
+.alerts-pop .a:hover { background: var(--bg); }
+.alerts-pop .a.unread { background: var(--info-bg); }
+.rc { background: #fff; color: #111; border: 1px solid #ccc; padding: 22px 26px; margin: 0 auto 18px; max-width: 800px; font-size: 13px; }
+.rc h2 { margin: 0; font-size: 18px; }
+.rc table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.rc th, .rc td { border: 1px solid #bbb; padding: 4px 6px; text-align: center; }
+.rc th:first-child, .rc td:first-child { text-align: left; }
+.rc .sig { display: flex; justify-content: space-between; margin-top: 36px; }
+.rc .sig div { border-top: 1px solid #555; padding-top: 4px; min-width: 150px; text-align: center; font-size: 12px; }
+.dots { position: relative; height: 26px; border-bottom: 1px solid var(--line); margin: 6px 0 2px; }
+.dots i { position: absolute; bottom: 3px; width: 8px; height: 8px; border-radius: 50%; background: var(--line); transform: translateX(-50%); }
+.dots i.me { background: var(--brand); width: 14px; height: 14px; bottom: 0; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--brand); }
+.faq details { border-bottom: 1px solid var(--line); padding: 8px 0; }
+.faq summary { cursor: pointer; font-weight: 600; }
+.flow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0; }
+.flow span.s { border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; font-size: 12px; background: var(--surface); }
+.flow span.arr { color: var(--ink-3); }
+@media print { .rc { border: 0; page-break-after: always; margin: 0; max-width: none; } }
+.reg th.off { color: var(--ink-2); }
+/* Phone app: register cells are full touch targets (44 × 44) */
+.mobile .reg button.m { width: 44px; height: 44px; font-size: 14px; }
+.mobile .reg th { min-width: 46px; }
+.mobile .reg th.name, .mobile .reg td.name { min-width: 130px; }

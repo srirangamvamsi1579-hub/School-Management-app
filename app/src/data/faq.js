@@ -1,0 +1,35 @@
+// Frequently asked questions shown in Help → FAQs. roles: who sees it ('ALL' = everyone). The school adds its own in
+// Operations → Help Documents & FAQs.
+export const FAQ_TOPICS = ['Signing in', 'Attendance', 'Leave', 'Fees', 'Transport', 'Results and report cards', 'Requests to school', 'Users and access', 'Data import', 'The app'];
+export const FAQS = [
+  ['Signing in', 'ALL', 'I forgot my password. What do I do?', 'On the sign-in page choose “Forgot password”. A 6-digit code goes to your email (or by SMS once the school connects it). Enter it and set a new password. The school never emails passwords.'],
+  ['Signing in', 'ALL', 'My account is locked.', 'After 5 wrong passwords the account locks. Use “Sign in with a code” to unlock it yourself, or ask the school office.'],
+  ['Signing in', 'PARENT', 'Registration says my details don’t match.', 'Use the admission number, the student’s name as on school records and the current grade. After 5 tries, contact the school office — they can check the record.'],
+  ['Signing in', 'TEACHER,PRINCIPAL,ACCOUNTANT,FRONT_OFFICE,TRANSPORT', 'How do staff create an account?', 'Register on the website or in the app with your employee code, your name and the mobile or email the school has on your staff record. The account opens at once with your role.'],
+  ['Attendance', 'TEACHER,PRINCIPAL,ADMIN', 'How do I mark attendance?', 'Students → Attendance. Pick the section; everyone starts Present for today. Tap a cell to switch Present → Absent → Late, then Submit today’s attendance. Absent students’ guardians get an SMS.'],
+  ['Attendance', 'TEACHER,PRINCIPAL,ADMIN', 'Can I correct an earlier day?', 'Yes — set the date range to include that day and tap the cell. Approved leave (L) can only change through the request.'],
+  ['Attendance', 'TEACHER,PRINCIPAL,ADMIN', 'Why is a column grey?', 'Sundays and school holidays are greyed out and don’t count in the totals.'],
+  ['Attendance', 'PARENT', 'Where do I see my child’s attendance?', 'My Child → Attendance report: month by month, with the year’s percentage.'],
+  ['Leave', 'TEACHER,PRINCIPAL,ACCOUNTANT,FRONT_OFFICE,TRANSPORT,ADMIN', 'How much leave can I take?', 'My Space → My Leave shows each leave type, how many days a year, what you have taken, what is waiting and what is left.'],
+  ['Leave', 'TEACHER,PRINCIPAL,ACCOUNTANT,FRONT_OFFICE,TRANSPORT,ADMIN', 'Who approves my leave?', 'Teaching staff: the Principal or the Vice Principal. Everyone else: the Principal or the Admin. They are told in the app (🔔) and by email, and you are told when they decide.'],
+  ['Leave', 'TEACHER,PRINCIPAL,ACCOUNTANT,FRONT_OFFICE,TRANSPORT,ADMIN', 'Can I take a half day?', 'Yes — tick Half day and pick one date. It counts as 0.5 of the leave type.'],
+  ['Leave', 'PRINCIPAL,ADMIN', 'How do I change how many days each leave type allows?', 'Staff → Leave Requests → Leave types → Change allowances.'],
+  ['Fees', 'PARENT', 'How do I pay fees?', 'My Space → Fee Dues & Pay. Pay online, or pay by bank transfer and enter the UTR so the school can match it.'],
+  ['Fees', 'PARENT', 'I paid but it still shows due.', 'Bank transfers show as paid once the bank line reaches the school, usually the next working day. If it’s longer, raise an Other request with the UTR.'],
+  ['Fees', 'ACCOUNTANT,ADMIN,PRINCIPAL', 'How are payments matched?', 'By the pay token in the fee email, then the admission number in the bank narration, then a unique amount. The rest wait in Payment Matching.'],
+  ['Transport', 'PARENT', 'My child won’t take the bus today.', 'Requests to School → Own transport (or In-person pickup). It’s confirmed at once and the driver’s sheet updates.'],
+  ['Transport', 'TRANSPORT,ADMIN,PRINCIPAL', 'How do I add a new stop?', 'Transport → Routes, Stops & Timings → pick the route → Add a stop, then click the map where it should be. The route order and times are worked out again.'],
+  ['Transport', 'TRANSPORT,ADMIN,PRINCIPAL', 'What does “Plan the route” do?', 'It compares the current order of stops with the shortest drive, farthest-stop-first and (where stops are close) fewer stops, with the minutes saved. Pick one and Use this route.'],
+  ['Transport', 'TRANSPORT,ADMIN,PRINCIPAL', 'Where do I record a bus breakdown?', 'Dashboard → Transport → Log a breakdown: date, route, what happened, delay and whether the spare bus covered it. Tick “taken off the road” to mark the bus Under repair until it is back in service.'],
+  ['Results and report cards', 'PARENT', 'Where is the report card?', 'My Child → Report cards → Open. Print it or save it as a PDF. You are notified when the school publishes one.'],
+  ['Results and report cards', 'TEACHER,PRINCIPAL,ADMIN', 'How do I make report cards?', 'Students → Report Cards → pick grade, section, student (or all) and the term or exam → Generate → Print / save as PDF → Publish to parents.'],
+  ['Results and report cards', 'TEACHER,PRINCIPAL,ADMIN,PARENT', 'How is the rank worked out?', 'By the overall % across subjects for that exam or term, against everyone in the section and the grade. Equal scores share a rank.'],
+  ['Requests to school', 'PARENT', 'How do I ask for an early leave?', 'Requests to School → Early leave: time before 15:00, who collects (from your approved list) and the reason. A class coordinator approves and you get a gate code.'],
+  ['Requests to school', 'PARENT', 'How do I add someone who can collect my child?', 'Requests to School → Approved pickup list → Add a person with a photo and the last 4 digits of a photo ID. The school checks the ID first.'],
+  ['Users and access', 'ADMIN', 'Why can’t someone see a menu?', 'Check the school’s plan (Platform Console), their department’s access (Roles & Permissions → Permissions by department) and any read-only setting. The Access summary shows what each person can open.'],
+  ['Users and access', 'ADMIN', 'Someone left. How do I remove them?', 'Operations → Users → Edit → Status Deleted → reason → confirm. A copy stays in the view-only archive.'],
+  ['Data import', 'ADMIN', 'How do we move from our old system?', 'Operations → Data Import → Templates. Download the templates, fill them in the number order (01 first) and upload each one. File names follow NN_Name_Data_SCHOOL_YYYYMMDD.xlsx so the app knows what each file is.'],
+  ['Data import', 'ADMIN', 'Can I undo an import?', 'Yes — Import history → Roll back removes everything that import added.'],
+  ['The app', 'ALL', 'Is there a phone app?', 'Yes — one app on Google Play and the App Store for every school. Enter the school code once. Which screens show there is set by the school.'],
+  ['The app', 'ALL', 'Where are my notifications?', 'The bell 🔔 at the top shows what needs you (for example leave to approve) and decisions on your requests. Click one to open the screen.']
+].map(([topic, roles, q, a], i) => ({ id: 'F' + (i + 1), topic, roles: roles.split(','), q, a }));

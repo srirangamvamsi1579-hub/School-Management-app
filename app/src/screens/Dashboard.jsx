@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../data/store.js';
 import { Page, Card, Stat, Bars as MiniBars, Progress, Status, Tabs, Modal, Field, Input, Select } from '../components/ui.jsx';
 import { Delta, Kpi, StackedColumns, Bars, SegmentBar } from '../components/charts.jsx';
-import { studentFigures, staffFigures, transportFigures, feeDashboard, registrationFigures, lastYearKey, GENDERS, SOURCES } from '../lib/dashboard.js';
+import { studentFigures, staffFigures, transportFigures, feeDashboard, registrationFigures, lastYearKey, GENDERS, SOURCES, studentInsights, staffInsights, transportInsights, feeInsights, enrolInsights } from '../lib/dashboard.js';
 import { roleName } from '../lib/auth.js';
 import { inr, num, dmon } from '../lib/format.js';
 import { classOf, balance, fullName, classLabel, tenantOf, log } from '../lib/logic.js';
@@ -51,6 +51,12 @@ function GenderMatrix({ label, now, before, period, year }) {
     <tbody>{rows.map(([n, v, b]) => <tr key={n} className={n === 'Total' ? 'b' : ''}><td>{n}</td><td>{b ?? '—'}</td><td>{v}</td><td><Delta now={v} before={b} period={period} short /></td></tr>)}</tbody></table>;
 }
 
+// What the figures mean: a short list of observations under the headline numbers
+function InsightList({ items, label }) {
+  if (!items.length) return null;
+  return <Card title="What this tells you" className="insights"><ul aria-label={label + ' insights'}>{items.map((x, i) => <li key={i}>{x}</li>)}</ul></Card>;
+}
+
 const GSERIES = [{ name: 'Boys', color: 'var(--s1)' }, { name: 'Girls', color: 'var(--s2)' }];
 
 function StudentsSection({ period, plan }) {
@@ -73,6 +79,7 @@ function StudentsSection({ period, plan }) {
       <Kpi label="Grades over their limit" value={f.overGrades.length} sub={f.overGrades.length ? f.overGrades.map((c) => `${c.name} +${c.over}`).join(' · ') : 'Every grade is within its limit'} />
       <Kpi label="Seats free within limits" value={num(f.underGrades.reduce((a, c) => a + c.free, 0))} sub={`in ${f.underGrades.length} grade${f.underGrades.length === 1 ? '' : 's'}`} />
     </div>
+    <InsightList items={studentInsights(db)} label="Students" />
     <div className="grid g-side">
       <Card title={f.coEd ? "Students by class, boys and girls" : "Students by class"} right={canEdit && <button className="btn sm" onClick={() => setEdit({ limits: { ...db.gradeLimits }, coEd: f.coEd })}>Edit grade limits</button>}>
         <StackedColumns label="Students by class" rows={rows} series={f.coEd ? GSERIES : [{ name: 'Students', color: 'var(--s1)' }]} limitName="Grade limit" />
@@ -103,48 +110,95 @@ function StudentsSection({ period, plan }) {
 function StaffSection({ period }) {
   const { db } = useStore();
   const f = staffFigures(db);
-  const coEd = true;
   const ratioOk = f.ratio != null && f.ratio <= f.norm;
+  const [ft, pt] = f.byType;
+  const TSERIES = [{ name: 'Full time', color: 'var(--s1)' }, { name: 'Part time', color: 'var(--s2)' }];
   return <section className="dash-section" aria-label="Staff">
     <div className="kpis">
-      <Kpi label="Total staff" value={f.total} sub={`${f.teachers} teaching`}><Delta now={f.total} before={f.before} period={period} pct /></Kpi>
-      <Kpi label="Joined this year" value={f.newThisYear.length}><Delta now={f.newThisYear.length} before={f.newBefore} period={period} /></Kpi>
+      <Kpi label="Total staff" value={f.total} sub={`${f.teachers} teaching · ${f.nonTeaching} non-teaching`}><Delta now={f.total} before={f.before} period={period} pct /></Kpi>
+      <Kpi label="Full time" value={ft.count} sub={`${ft.headShare}% of staff`}><Delta now={ft.count} before={ft.before} period={period} /></Kpi>
+      <Kpi label="Part time" value={pt.count} sub={`${pt.headShare}% of staff`}><Delta now={pt.count} before={pt.before} period={period} /></Kpi>
+      <Kpi label="Salary paid this year" value={inr(f.paidTotal)} sub={`${f.months} month${f.months === 1 ? '' : 's'} · ${inr(f.payroll)} a month`} />
       <Kpi label="Students per teacher" value={f.ratio == null ? '—' : f.ratio.toFixed(1)} sub={`School norm: up to ${f.norm}`}>
         <span className={'flag-chip ' + (ratioOk ? 'ok' : 'over')}>{ratioOk ? '✓ Within the norm' : '▲ Above the norm'}</span></Kpi>
     </div>
+    <InsightList items={staffInsights(db)} label="Staff" />
     <div className="grid g-side">
-      <Card title="Staff by department, men and women">
-        <Bars label="Staff by department" rows={f.depts.map((d) => ({ label: d.name, parts: [d.boys, d.girls], value: d.total }))} series={[{ name: 'Men', color: 'var(--s1)' }, { name: 'Women', color: 'var(--s2)' }]} valueText={(r) => r.value} />
+      <Card title="Salary by employee type">
+        <table className="t" aria-label="Salary by employee type"><thead><tr><th>Type</th><th className="num">Staff</th><th className="num">Monthly salary</th><th className="num">Paid this year</th><th className="num">Average per person / month</th><th className="num">Share of salary</th></tr></thead>
+          <tbody>{f.byType.map((t) => <tr key={t.type}><td className="b">{t.type}</td><td className="num">{t.count}</td><td className="num">{inr(t.monthly)}</td><td className="num">{inr(t.paid)}</td><td className="num">{inr(t.avg)}</td><td className="num">{t.share}%</td></tr>)}
+            <tr className="b"><td>Total</td><td className="num">{f.total}</td><td className="num">{inr(f.payroll)}</td><td className="num">{inr(f.paidTotal)}</td><td className="num">{inr(Math.round(f.payroll / Math.max(1, f.total)))}</td><td className="num">100%</td></tr></tbody></table>
+        <table className="t small" aria-label="Salary by staff group" style={{ marginTop: 12 }}><thead><tr><th>Staff group</th><th className="num">Full time</th><th className="num">Part time</th><th className="num">Monthly salary</th><th className="num">Paid this year</th></tr></thead>
+          <tbody>{f.categories.map((c) => <tr key={c.name}><td>{c.name}</td><td className="num">{c['Full time']}</td><td className="num">{c['Part time']}</td><td className="num">{inr(c.monthly)}</td><td className="num">{inr(c.paid)}</td></tr>)}</tbody></table>
+        <p className="small muted" style={{ marginTop: 6 }}>Gross salary (basic, HRA, DA and transport allowance) for the months paid so far this year, April to last month; staff who joined during the year count from their joining month.</p>
       </Card>
-      <Card title="Men and women">
-        <table className="t matrix" aria-label="Staff by gender"><thead><tr><th>Staff</th><th>{period}</th><th>{db.year}</th><th>Change</th></tr></thead>
-          <tbody>{[['Men', 'Male'], ['Women', 'Female']].map(([n, k]) => <tr key={k}><td>{n}</td><td>{f.beforeByGender?.[k] ?? '—'}</td><td>{f.byGender[k]}</td><td><Delta now={f.byGender[k]} before={f.beforeByGender?.[k]} period={period} short /></td></tr>)}
+      <Card title="Full time and part time">
+        <table className="t matrix" aria-label="Staff by employment type"><thead><tr><th>Staff</th><th>{period}</th><th>{db.year}</th><th>Change</th></tr></thead>
+          <tbody>{f.byType.map((t) => <tr key={t.type}><td>{t.type}</td><td>{t.before ?? '—'}</td><td>{t.count}</td><td><Delta now={t.count} before={t.before} period={period} short /></td></tr>)}
             <tr className="b"><td>Total</td><td>{f.before ?? '—'}</td><td>{f.total}</td><td><Delta now={f.total} before={f.before} period={period} short /></td></tr></tbody></table>
+        <table className="t matrix" aria-label="Staff by gender" style={{ marginTop: 12 }}><thead><tr><th>Staff</th><th>{period}</th><th>{db.year}</th><th>Change</th></tr></thead>
+          <tbody>{[['Men', 'Male'], ['Women', 'Female']].map(([n, k]) => <tr key={k}><td>{n}</td><td>{f.beforeByGender?.[k] ?? '—'}</td><td>{f.byGender[k]}</td><td><Delta now={f.byGender[k]} before={f.beforeByGender?.[k]} period={period} short /></td></tr>)}</tbody></table>
       </Card>
     </div>
-    <Card title="Joined this year">
-      {f.newThisYear.length ? <table className="t small" aria-label="Staff who joined this year"><thead><tr><th>Name</th><th>Employee code</th><th>Department</th><th>Designation</th><th>Joined</th></tr></thead>
-        <tbody>{f.newThisYear.map((s) => <tr key={s.id}><td className="b">{s.first} {s.last}</td><td>{s.code}</td><td>{s.dept}</td><td>{s.desig}</td><td>{dmon(s.join)}</td></tr>)}</tbody></table>
-        : <p className="muted">Nobody has joined this year yet.</p>}
+    <Card title="Staff by department, full time and part time">
+      <Bars label="Staff by department" rows={f.depts.map((d) => ({ label: d.name, parts: [d.full, d.part], value: d.total }))} series={TSERIES} valueText={(r) => r.value} />
     </Card>
   </section>;
 }
 
 function TransportSection({ period }) {
-  const { db } = useStore();
+  const { db, run, notify, session } = useStore();
   const f = transportFigures(db);
+  const canLog = ['ADMIN', 'PRINCIPAL', 'TRANSPORT'].includes(session.role);
+  const [bd, setBd] = useState(null);
+  const saveBd = () => {
+    const r = db.routes.find((x) => x.id === bd.routeId);
+    const err = !bd.date || bd.date > new Date().toISOString().slice(0, 10) ? 'Pick the date (today or earlier)' : !bd.detail.trim() ? 'Say what happened' : !(+bd.delayMin >= 0) ? 'Delay must be minutes' : '';
+    if (err) { notify(err); return; }
+    run((d) => { d.busIncidents = d.busIncidents || []; d.busIncidents.unshift({ id: 'BI' + (d.busIncidents.length + 1) + '-' + Date.now().toString(36), date: bd.date, routeId: r.id, bus: r.bus, kind: bd.kind, detail: bd.detail.trim(), delayMin: +bd.delayMin, trip: bd.trip,
+      replacedBy: bd.cover || null, students: d.students.filter((s) => s.status === 'Active' && s.routeId === r.id).length, by: session.name || session.role });
+      if (bd.offRoad) { const b = (d.buses || []).find((x) => x.reg === r.bus); if (b) b.status = 'Under repair'; }
+      log(d, session.name || session.role, 'Bus breakdown logged', `${r.id} ${bd.kind}`); });
+    notify('Breakdown logged'); setBd(null);
+  };
   return <section className="dash-section" aria-label="Transport">
     <div className="kpis">
       <Kpi label="Students on school transport" value={f.riders} sub={`${Math.round(100 * f.share)}% of students · ${f.byGender.Male} boys · ${f.byGender.Female} girls`}><Delta now={f.riders} before={f.before} period={period} pct /></Kpi>
+      <Kpi label="Buses" value={f.buses.length} sub={`${f.inService} in service · ${f.spare} spare${f.repair ? ` · ${f.repair} under repair` : ''}`}><Delta now={f.buses.length} before={f.busesBefore} period={period} /></Kpi>
+      <Kpi label="Breakdowns this year" value={f.incidents.length} sub={`${f.delayMin} minutes of delay · ${f.affected} riders affected`}><Delta now={f.incidents.length} before={f.incidentsBefore} period={`all of ${period}`} upGood={false} /></Kpi>
       <Kpi label="Seats used" value={`${Math.round((100 * f.riders) / (f.seats || 1))}%`} sub={`${f.riders} of ${f.seats} seats on ${f.routes.length} routes`} />
-      <Kpi label="Routes full" value={f.full.length} sub={f.full.length ? f.full.map((r) => r.id).join(', ') : 'No route is full'} />
-      <Kpi label="Routes under half full" value={f.low.length} sub={f.low.length ? f.low.map((r) => r.id).join(', ') : '—'} />
     </div>
-    <Card title="Riders by route, against the seats on the bus">
-      <Bars label="Riders by route" rows={f.routes.map((r) => ({ label: `${r.id} · ${r.name}`, value: r.riders, track: r.capacity, tipNote: `${r.capacity} seats`,
-        flag: r.riders > r.capacity ? { kind: 'over', text: `${r.riders - r.capacity} over` } : r.use < 0.5 ? { kind: 'under', text: 'under half full' } : null,
-        note: r.before == null ? null : `${period}: ${r.before} riders` }))} valueText={(r) => `${r.value} / ${r.track}`} />
+    <InsightList items={transportInsights(db)} label="Transport" />
+    <div className="grid g-side">
+      <Card title="Riders by route, against the seats on the bus">
+        <Bars label="Riders by route" rows={f.routes.map((r) => ({ label: `${r.id} · ${r.name}`, value: r.riders, track: r.capacity, tipNote: `${r.capacity} seats`,
+          flag: r.riders > r.capacity ? { kind: 'over', text: `${r.riders - r.capacity} over` } : r.use < 0.5 ? { kind: 'under', text: 'under half full' } : null,
+          note: r.before == null ? null : `${period}: ${r.before} riders` }))} valueText={(r) => `${r.value} / ${r.track}`} />
+      </Card>
+      <Card title="Change in riders per route">
+        <table className="t" aria-label="Riders per route against last year"><thead><tr><th>Route</th><th className="num">{period}</th><th className="num">{db.year}</th><th>Change</th><th className="num">Breakdowns</th></tr></thead>
+          <tbody>{f.routes.map((r) => <tr key={r.id}><td className="b">{r.id}</td><td className="num">{r.before ?? '—'}</td><td className="num">{r.riders}</td><td><Delta now={r.riders} before={r.before} period={period} short /></td><td className="num">{r.incidents || '—'}</td></tr>)}</tbody></table>
+      </Card>
+    </div>
+    <Card title={`Bus breakdowns this year (${f.incidents.length})`} right={canLog && <button className="btn sm" onClick={() => setBd({ date: new Date().toISOString().slice(0, 10), routeId: db.routes[0].id, kind: 'Breakdown', detail: '', delayMin: 30, trip: 'AM', cover: f.buses.find((b) => b.status === 'Spare')?.reg || '', offRoad: false })}>Log a breakdown</button>}>
+      {f.incidents.length ? <div className="tw"><table className="t small" aria-label="Bus breakdowns"><thead><tr><th>Date</th><th>Route</th><th>Bus</th><th>What happened</th><th>Trip</th><th className="num">Delay</th><th className="num">Riders</th><th>Cover</th></tr></thead>
+        <tbody>{f.incidents.map((b) => <tr key={b.id}><td>{dmon(b.date)}</td><td>{b.routeId}</td><td>{b.bus}</td><td><b>{b.kind}</b> — {b.detail}</td><td>{b.trip === 'AM' ? 'Morning' : 'Afternoon'}</td><td className="num">{b.delayMin} min</td><td className="num">{b.students}</td><td>{b.replacedBy ? `Spare ${b.replacedBy}` : 'Repaired on the spot'}</td></tr>)}</tbody></table></div>
+        : <p className="muted">No breakdowns this year.</p>}
+      <table className="t small" aria-label="Bus fleet" style={{ marginTop: 12 }}><thead><tr><th>Bus</th><th className="num">Seats</th><th>Status</th><th>Route</th><th>Last service</th><th>Fitness valid until</th><th className="num">Breakdowns</th></tr></thead>
+        <tbody>{f.buses.map((b) => <tr key={b.reg}><td className="b">{b.reg}{canLog && b.status === 'Under repair' && <button className="btn sm" style={{ marginLeft: 6 }} onClick={() => { run((d) => { d.buses.find((x) => x.reg === b.reg).status = b.routeId ? 'In service' : 'Spare'; }); notify(`${b.reg} back in service`); }}>Back in service</button>}</td><td className="num">{b.seats}</td><td><Status s={b.status} /></td><td>{b.routeId || '—'}</td><td>{b.lastService ? dmon(b.lastService) : '—'}</td><td>{b.fitnessUntil ? dmon(b.fitnessUntil) : '—'}</td><td className="num">{f.byBus.find(([r]) => r === b.reg)?.[1] || '—'}</td></tr>)}</tbody></table>
     </Card>
+    {bd && <Modal title="Log a bus breakdown" onClose={() => setBd(null)} actions={<button className="btn pri" onClick={saveBd}>Save</button>}>
+      <div className="form">
+        <Field label="Date" req><Input type="date" value={bd.date} onChange={(e) => setBd({ ...bd, date: e.target.value })} /></Field>
+        <Field label="Route" req><Select value={bd.routeId} onChange={(e) => setBd({ ...bd, routeId: e.target.value })} options={db.routes.map((r) => [r.id, `${r.id} · ${r.bus}`])} /></Field>
+        <Field label="What happened" req><Select value={bd.kind} onChange={(e) => setBd({ ...bd, kind: e.target.value })} options={['Breakdown', 'Flat tyre', 'Battery', 'Accident', 'Other']} /></Field>
+        <Field label="Trip"><Select value={bd.trip} onChange={(e) => setBd({ ...bd, trip: e.target.value })} options={[['AM', 'Morning'], ['PM', 'Afternoon']]} /></Field>
+        <Field label="Details" req full><Input value={bd.detail} onChange={(e) => setBd({ ...bd, detail: e.target.value })} placeholder="e.g. Engine overheated near ITPL" /></Field>
+        <Field label="Delay (minutes)"><Input type="number" min="0" value={bd.delayMin} onChange={(e) => setBd({ ...bd, delayMin: e.target.value })} /></Field>
+        <Field label="Covered by"><Select value={bd.cover} onChange={(e) => setBd({ ...bd, cover: e.target.value })} options={[['', 'Repaired on the spot'], ...f.buses.filter((b) => b.status === 'Spare').map((b) => [b.reg, 'Spare ' + b.reg])]} /></Field>
+      </div>
+      <label className="row small" style={{ marginTop: 8 }}><input type="checkbox" checked={bd.offRoad} onChange={(e) => setBd({ ...bd, offRoad: e.target.checked })} />Bus taken off the road (mark it Under repair)</label>
+    </Modal>}
   </section>;
 }
 
@@ -158,6 +212,7 @@ function FeesSection({ period }) {
       <Kpi label="Still to collect this year" value={inr(f.due)} sub="Includes instalments not yet due" />
       <Kpi label="Overdue" value={inr(f.overdue)} sub={`${f.overdueCount} invoices · ${f.overdueStudents} students`} />
     </div>
+    <InsightList items={feeInsights(db)} label="Fees" />
     <Card title={`Collected by class, as % of what is due so far · target ${f.target}%`}>
       <Bars label="Fee collection by class" rows={f.classes.filter((c) => c.billed).map((c) => ({ label: c.name, value: c.pct, tipNote: `${inr(c.paid)} of ${inr(c.billed)}`,
         flag: c.pct < f.target ? { kind: 'low', text: `${f.target - c.pct} below` } : { kind: 'ok', text: 'on target' } }))} max={100} target={f.target} targetName="Target" valueText={(r) => r.value + '%'} />
@@ -178,6 +233,7 @@ function EnrolmentSection({ period }) {
       <Kpi label="Accounts registered this year" value={f.thisYear}><Delta now={f.thisYear} before={f.beforeTotal} period={period} /></Kpi>
       {SOURCES.map(([k, name]) => <Kpi key={k} label={name} value={f.bySource[k]}><Delta now={f.bySource[k]} before={f.before?.[k]} period={period} /></Kpi>)}
     </div>
+    <InsightList items={enrolInsights(db)} label="Enrolment" />
     <Card title="How people registered this year">
       <SegmentBar label="Registrations by source" parts={SOURCES.map(([k, name]) => ({ name, value: f.bySource[k], color: colors[k] }))} />
     </Card>

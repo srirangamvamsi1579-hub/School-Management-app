@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../data/store.js';
 import { Page, Card, Tabs } from '../components/ui.jsx';
-import { MENU, ACCESS, PLANS, MIN_RANK, LABEL, CHANNELS, PHONE_READY, channelIn, publishedLayout, mobileTabs, webScreens } from '../data/menu.js';
+import { MENU, ACCESS, PLANS, MIN_RANK, LABEL, CHANNELS, PHONE_READY, channelIn, publishedLayout, mobileTabs, webScreens, canSee, FUNCTIONS, funcOn, ALWAYS_ON } from '../data/menu.js';
+import { SCREEN_FLOW } from '../data/guideFlows.js';
+import { docsFor } from './Help.jsx';
 import { SCREEN_HELP, WORKFLOWS, DEMO_PEOPLE } from '../data/guide.js';
 import { tenantOf } from '../lib/logic.js';
-import { roleName, rolePerms } from '../lib/auth.js';
+import { roleName, rolePerms, screensFor } from '../lib/auth.js';
 
 const KEY = 'school-demo-run';
 const ROLE_ORDER = ['PARENT', 'TEACHER', 'FRONT_OFFICE', 'TRANSPORT', 'PRINCIPAL', 'ACCOUNTANT', 'ADMIN', 'PLATFORM'];
@@ -71,13 +73,29 @@ export default function HelpGuide() {
   const rank = PLANS.find((p) => p.code === t.plan).rank;
   const planOf = (code) => PLANS.find((p) => p.rank === (MIN_RANK[code] || 1))?.name;
   const whoCan = (code) => ROLE_ORDER.filter((r) => (r === 'PLATFORM' ? ACCESS.PLATFORM.includes(code) : (rolePerms(db, r)).includes(code)));
+  // What the guide covers: the menus this person can open, everything in the school's plan, or everything the platform offers
+  const [scope, setScope] = useState(session && session.role !== 'PLATFORM' ? 'MINE' : 'SCHOOL');
+  const me = session ? db.users.find((u) => u.id === session.userId) : null;
+  const inPlan = (code) => { const mod = MENU.find((m) => m.items.some((i) => i[0] === code)); if (!mod) return true; const ov = t.overrides || {};
+    const modOn = ALWAYS_ON.includes(mod.code) || (ov[mod.code] !== undefined ? ov[mod.code] : rank >= mod.min); return modOn && (ov[code] !== undefined ? ov[code] : rank >= (MIN_RANK[code] || 1)); };
+  const mineList = session ? screensFor(db, me, session.role) : [];
+  const shown = (code) => (scope === 'ALL' ? true : scope === 'SCHOOL' ? inPlan(code) : inPlan(code) && (session?.role === 'ADMIN' ? ACCESS.ADMIN.includes(code) : mineList.includes(code)) && canSee(code, session.role, rank, t.overrides, { [session.role]: mineList }));
+  const menus = MENU.map((m) => ({ ...m, items: m.items.filter((i) => i[0][0] !== '#' && shown(i[0])) })).filter((m) => m.items.length);
+  const demoOk = (w) => w.steps.every((st) => !st.screen || inPlan(st.screen));
+  const flows = WORKFLOWS.filter((w) => scope === 'ALL' || demoOk(w));
+  const scopeBar = <div className="row small" style={{ margin: '10px 0', flexWrap: 'wrap' }} role="group" aria-label="What the guide covers"><b>Showing:</b>
+    {[...(session && session.role !== 'PLATFORM' ? [['MINE', 'Menus I can open']] : []), ['SCHOOL', `Everything in our plan (${PLANS.find((p) => p.rank === rank).name})`], ['ALL', 'Everything the platform offers']].map(([k, l]) =>
+      <button key={k} className={'btn sm' + (scope === k ? ' pri' : '')} aria-pressed={scope === k} onClick={() => setScope(k)}>{l}</button>)}
+    <span className="muted">{menus.reduce((a, m) => a + m.items.length, 0)} screens</span></div>;
   const body = (
     <>
-      <Tabs tabs={[['demos', `Guided demos (${WORKFLOWS.length})`], ['menus', 'Every menu explained'], ['roles', 'What each role sees'], ['start', 'Getting started']]} value={tab} onChange={setTab} />
+      <Tabs tabs={[['demos', `Guided demos (${flows.length})`], ['flow', 'Screen by screen'], ['menus', 'Every menu explained'], ['roles', 'What each role sees'], ['start', 'Getting started']]} value={tab} onChange={setTab} />
+      {tab !== 'roles' && tab !== 'start' && scopeBar}
 
       {tab === 'demos' && <div style={{ marginTop: 12 }}>
         <p className="small muted">Press <b>Start</b>. A bar at the bottom shows each step, signs you in as the right person and opens the right screen. Data is demo data in your browser; the “Reset demo data” button at the top (Admin) starts over.</p>
-        <div className="grid g2">{WORKFLOWS.map((w) => <Card key={w.id} title={w.title} right={<span className="small muted">{w.time}</span>}>
+        {flows.length < WORKFLOWS.length && <p className="small muted">{WORKFLOWS.length - flows.length} more demo(s) use menus outside {scope === 'MINE' ? 'your access or ' : ''}the school’s plan; choose “Everything the platform offers” to see them.</p>}
+        <div className="grid g2">{flows.map((w) => <Card key={w.id} title={w.title} right={<span className="small muted">{w.time}{!demoOk(w) ? ' · needs a higher plan' : ''}</span>}>
           <p className="small" style={{ marginTop: 0 }}>{w.roles}</p>
           {open === w.id ? <ol className="small" style={{ paddingLeft: 18 }}>{w.steps.map((s, i) => <li key={i} className="guide-step"><b>{s.public ? 'No sign-in' : DEMO_PEOPLE[s.as]}{s.screen ? ` → ${LABEL[s.screen]}` : ''}:</b> {s.do} <span className="muted">Check: {s.check}</span></li>)}</ol>
             : <p className="small muted">{w.steps.length} steps: {w.steps.map((s) => (s.screen ? LABEL[s.screen] : 'public page')).join(' → ')}</p>}
@@ -85,11 +103,26 @@ export default function HelpGuide() {
         </Card>)}</div>
       </div>}
 
+      {tab === 'flow' && <div style={{ marginTop: 4 }}>
+        <p className="small muted">For each screen: what it is for, the steps in the order you click through them, and tips. Only the screens selected above are listed, so the guide changes with the school’s plan, the functions switched on and your access.</p>
+        {menus.map((m) => <Card key={m.code} title={m.label}>
+          {m.items.map(([code, label]) => { const fl = SCREEN_FLOW[code]; const [what] = SCREEN_HELP[code] || ['']; const who = whoCan(code); const try1 = who.find((r) => HOME_USER[r]);
+            return <div key={code} style={{ padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
+              <div className="row" style={{ justifyContent: 'space-between' }}><b>{label}</b>{try1 && <button className="btn sm" onClick={() => signInAs(login, db, HOME_USER[try1], code, session)} aria-label={`Try ${label}`}>Try</button>}</div>
+              {what && <div className="small">{what}</div>}
+              {fl && <div className="flow" aria-label={`${label} steps`}>{fl.flow.map((st, i) => <span key={i} style={{ display: 'contents' }}>{i > 0 && <span className="arr">→</span>}<span className="s">{i + 1}. {st}</span></span>)}</div>}
+              {fl?.tips?.length > 0 && <ul className="small muted" style={{ margin: '4px 0 0', paddingLeft: 18 }}>{fl.tips.map((x, i) => <li key={i}>{x}</li>)}</ul>}
+              <div className="small muted">Who: {who.map((r) => roleName(db, r)).join(', ') || '—'} · from {planOf(code)}</div>
+            </div>; })}
+        </Card>)}
+        {session && docsFor(db, session.role).length > 0 && <Card title="School documents"><ul className="small">{docsFor(db, session.role).map((d) => <li key={d.id}>{d.kind === 'FILE' ? <a href={d.data} download={d.fileName}>{d.title}</a> : <a href={d.url} target="_blank" rel="noreferrer">{d.title}</a>}</li>)}</ul></Card>}
+      </div>}
+
       {tab === 'menus' && <div style={{ marginTop: 12 }}>
         <p className="small muted">Every main menu and sub-menu: what it is for, how to use it, who can open it, the plan it comes with, and where it shows. A school sees only the menus in its plan or switched on for it; a person sees only those their role, designation or personal grants allow.</p>
-        {MENU.map((m) => <Card key={m.code} title={`${m.label}${m.min > 1 ? ` · from ${PLANS[m.min - 1].name}` : ''}`}>
+        {menus.map((m) => <Card key={m.code} title={`${m.label}${m.min > 1 ? ` · from ${PLANS[m.min - 1].name}` : ''}`}>
           <div className="tw"><table className="t"><thead><tr><th>Sub-menu</th><th>What it is for</th><th>How to use it</th><th>Who can open it</th><th>Where</th><th /></tr></thead>
-            <tbody>{m.items.filter((i) => i[0][0] !== '#').map(([code, label]) => { const [what, how] = SCREEN_HELP[code] || ['', '']; const who = whoCan(code);
+            <tbody>{m.items.map(([code, label]) => { const [what, how] = SCREEN_HELP[code] || ['', '']; const who = whoCan(code);
               const app = who.filter((r) => r !== 'PLATFORM' && PHONE_READY[code] && channelIn(layout, r, code) !== 'WEB');
               const try1 = who.find((r) => HOME_USER[r]);
               return <tr key={code}><td className="b">{label}<div className="small muted">from {planOf(code)}</div></td><td className="small">{what}</td><td className="small">{how}</td>
@@ -125,9 +158,12 @@ export default function HelpGuide() {
             <li>Data stays in this browser. Two tabs stay in step. Reset with the Reset demo data button at the top (Admin), or the link at the bottom of the sign-in page.</li>
             <li>Plans: Starter, Growth, Professional, Enterprise. The demo school is on {PLANS.find((p) => p.rank === rank).name}. Menus marked “from Growth” or higher need that plan or an add-on.</li>
           </ul></Card>
+        <Card title="Functions switched on for this school">
+          <table className="t small"><tbody>{FUNCTIONS.map((f) => <tr key={f.code}><td>{f.name}</td><td>{funcOn(t, f.code) ? <span className="pill ok">On</span> : <span className="pill">Off</span>}</td></tr>)}</tbody></table>
+          <p className="small muted">The platform team switches these per school. The guide and demos follow what is switched on.</p></Card>
       </div>}
     </>
   );
   if (!session) return <div className="login"><main className="box" style={{ maxWidth: 1100 }}><div className="row"><h1 style={{ flex: 1 }}>User guide — {t.name}</h1><a className="small" href="#/">Sign in</a></div>{body}</main><DemoBar /></div>;
-  return <Page title="User Guide & Demo" sub="Guided demos of every workflow, every menu explained, and what each role sees on the website and in the app.">{body}</Page>;
+  return <Page title="User Guide & Demo" sub="Guided demos, the screen-by-screen flow of every menu, every menu explained, and what each role sees — following what your school has switched on and what you can open.">{body}</Page>;
 }

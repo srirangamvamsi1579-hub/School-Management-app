@@ -10,23 +10,23 @@ export const DEMO_PEOPLE = {
 
 // [what it is for, how to use it]
 export const SCREEN_HELP = {
-  DASH: ['The school at a glance, in sections: Students, Staff, Transport, Fees, Enrolment and Needs attention. Each compares this year with last year (▲ up, ▼ down).', 'Students: total and new enrolments with arrows, boys and girls (co-ed schools), a column per class split by gender with the grade limit marked, and which grades are over or under their limit (Edit grade limits). Staff: total, joiners, students per teacher against the norm, by department. Transport: riders per route against seats. Fees: collected against what is due so far and the target, by class. Enrolment: who registered from the website, the app or was added by the Admin.'],
+  DASH: ['The school at a glance, in sections: Students, Staff, Transport, Fees, Enrolment and Needs attention. Each compares this year with last year (▲ up, ▼ down) and starts with “What this tells you” — the figures explained in plain words.', 'Students: totals, boys and girls, grade limits, attendance. Staff: full-time and part-time counts, salary paid this year by employee type and staff group, students per teacher, leave waiting. Transport: riders per route against last year, the bus fleet (in service, spare, under repair) and every breakdown. Fees: collected against what is due and the target. Enrolment: where accounts came from.'],
   STU_INS: ['Student numbers, attendance and fee trends (Power BI).', 'Use the grade and month filters; export from the report menu.'],
   STU_LIST: ['Every student with class, guardian and transport.', 'Search by name or admission number; click a student to open the profile.'],
   STU_ADMISSIONS: ['Enquiries and applications for next year, from first call to enrolment, with a summary by grade.', 'Add an enquiry or application form; move it Submitted → In review → Offered → Enrolled, or Opted out with a reason. Website enquiries arrive here automatically.'],
   STU_ADMIT: ['Admit a student directly (without the enquiry pipeline).', 'Fill child, class-section, guardian and transport; the admission number is generated.'],
-  STU_ATT: ['Daily class attendance.', 'Pick the class; tap a student to switch Present / Absent. Leave (approved) and Late (dropped by parent) come in from parent requests.'],
+  STU_ATT: ['The attendance register: one row per student, one column per day.', 'Pick the section and a date range (today, week, month or your own). Tap a cell: Present → Absent → Late. Leave (L) comes from approved requests; Sundays and holidays are greyed. Submit today’s attendance to text absent students’ guardians.'],
   STU_REQUESTS: ['Coordinator Desk: leave, early-leave, pickup, drop and transport requests for the sections you coordinate.', 'Approve or decline (a reason is needed); approving an early leave sends the parent a gate code.'],
   STU_MEETINGS: ['Parents asking to meet or call you.', 'Click Reply, pick a date and time (or decline with a note); the parent is told by email and in the app.'],
   STU_OFFICE: ['Certificates, documents and queries sent by parents.', 'Open item → Update → Mark done with a message (e.g. "Ready at the office"), or decline.'],
   STU_GATE: ['Gate Desk: today’s collections and expected late arrivals; checking new pickup people.', 'Check photo ID, enter the 4-digit gate code, Hand over. For late arrivals press Arrived. "Approve pickup people" checks new collectors.'],
-  STU_PROMOTE: ['Promote a class to the next year or transfer a student out.', 'Choose class and target; review the list; confirm.'],
+  STU_REPORTCARD: ['Report cards (academic profile) for printing, saving as PDF and publishing to parents.', 'Pick grade, section, student (or all) and a term, the whole year or one exam → Generate → Print / save as PDF → Publish to parents.'],
+  STU_PROFILE: ['A student’s full profile: personal, academic, performance and attendance.', 'Find the student by grade, section or name; switch between the four tabs. Performance shows % per test and rank in the section and grade.'],
   STU_DOCS: ['Documents and ID cards.', 'Upload or print certificates and ID cards from the school’s templates.'],
   STF_INS: ['Staff numbers, attendance and leave trends.', 'Filter by department.'],
-  STF_LIST: ['Every staff member.', 'Search; open a profile to edit.'],
-  STF_ADD: ['Add a staff member.', 'Fill details; a set-password link is emailed if they get an account.'],
-  STF_ATT: ['Staff attendance.', 'Mark present / absent / on leave per day.'],
-  STF_LEAVE: ['Staff leave requests.', 'Staff apply; the Principal approves or declines.'],
+  STF_LIST: ['Every staff member, with Add staff and Edit on the same screen.', 'Search or filter by department and full / part time. Add staff (top right) creates the staff record and employee code; staff then register themselves with it.'],
+  STF_ATT: ['The staff attendance register.', 'Filter by department and pick a range. Tap a cell: Present → Absent → Half day. Approved leave shows as L.'],
+  STF_LEAVE: ['Approve staff leave; see all requests, leave taken by each person and the leave types.', 'Approvers are notified (🔔 and email). Approve, or Decline with a reason; the staff member is told. Admin and Principal change the yearly allowances.'],
   ACA_CLASS: ['Classes and sections with capacity.', 'Add sections; set capacity (used for admissions seats).'],
   ACA_COORD: ['Primary and secondary class coordinator for each section.', 'Pick two different teachers per section; they receive that section’s parent requests.'],
   ACA_SYLLABUS: ['Boards, textbooks, chapters and topics.', 'Pick the board and class; chapters feed question papers.'],
@@ -48,7 +48,7 @@ export const SCREEN_HELP = {
   TRN_MANIFEST: ['Daily bus manifest: who boards, who doesn’t and why, for morning and afternoon.', 'Pick date, trip and route. With attendant tracking on, mark Boarded / No-show. Send to transport team.'],
   TRN_SHEETS: ['One route sheet per driver with stop timings and who to wait for.', 'Pick the day → Send to all drivers (each gets only their route by SMS link) or Download all (Excel).'],
   TRN_CHANGES: ['Every request that changes the bus, today and coming days.', 'Read-only list for transport and front office.'],
-  TRN_ROUTES: ['Routes, stops, bus, driver, attendant and stop times.', 'Edit stop times; they are checked for order and school times.'],
+  TRN_ROUTES: ['Routes, stops, timings, the route map and route planning.', 'Pick a route. Plan the route compares orders of stops (shortest drive, farthest first, fewer stops). Pickup suggestions move riders to a nearer stop or add a new stop. Add or move stops on the map; times are worked out again.'],
   ANL_HOME: ['Catalogue of Power BI reports.', 'Open a report.'],
   ANL_RANK: ['Top 6 and bottom 6 per grade.', 'Pick grade (and sections, term, subject).'],
   ANL_TRANSPORT: ['Route use, cost per km, on-time and fee revenue.', 'Filter by grade.'],
@@ -62,7 +62,7 @@ export const SCREEN_HELP = {
   OPS_USERS: ['Accounts: filter by role, department and status, 25 to a page; see each parent’s student (admission no., name, grade), the created date and last sign-in; approve staff sign-ups, add users, change roles, designation and status; delete (the account moves to Archived).', 'Add user or Review a staff sign-up → pick the role (the designation list then shows only that role’s designations; parents show N/A) → Active. Parents never wait for approval: they are checked against the student record when they register. To delete, Edit → Status Deleted → pick a reason → confirm. ↻ Refresh brings in changes made in Roles & Permissions. Reset password shows only for the Admin, or people the Admin gives that permission in Edit. Archived is view only, with its own filters. Accounts are created when parents and staff register on the website or in the app; only the Admin can Add user, as an exception with a reason. Someone coming back: Add user → search the archive → Copy details (anything that no longer fits is pointed out). Edit shows how each account was created.'],
   OPS_ROLES: ['User management: profiles, departments and designations; add from the standard list for Indian schools or delete profiles. Permissions by department: No access, Read only or Full access for each main menu and sub-menu. Access summary: each person, their profile, department, designation and what they can open.', 'Permissions by department → pick a department → set a main menu (all its sub-menus) or expand it and set single sub-menus. Read only opens the screen but blocks saving. Access summary → filter by department or profile → Show access.'],
   OPS_TEMPLATES: ['Invoices, receipts, emails, payslips and letters in the school’s own format.', 'Use standard, Copy & edit, or Upload; set the default.'],
-  OPS_IMPORT: ['Bring in data from Excel, CSV or photos.', 'Upload → map columns → map values → check → Import (can be rolled back).'],
+  OPS_IMPORT: ['Load existing data with the conversion templates, or any Excel, CSV or photo.', 'Templates: download one per menu (01_Class_Section_Data.xlsx …). Fill and upload named NN_Name_Data_SCHOOL_YYYYMMDD.xlsx; the template is recognised and every row checked. Students and staff go through column mapping and can be rolled back.'],
   OPS_CHANNELS: ['Which screens each role sees on the website, in the mobile app, or both.', 'Pick a role → choose Website + app / Website only / App only → Send for approval → the Principal approves → published.'],
   OPS_APPEARANCE: ['Layout, colours and fonts.', 'Pick a template and colour → Publish.'],
   OPS_WEBSITE: ['Links between the app and the school website.', 'Copy deep links and the admission-form snippet into the school website.'],
@@ -72,6 +72,7 @@ export const SCREEN_HELP = {
   SELF_REQUESTS: ['Send the school a request: leave, late arrival, pickup or drop in person, early leave, own transport, meet a teacher, certificate or query.', 'Pick the request card → fill the form → Send. Track status and gate codes below; cancel while open.'],
   SELF_FEES: ['Fee dues and payment.', 'Pay online, or pay by bank transfer and enter the UTR.'],
   SELF_PAYSLIP: ['Your payslips.', 'Open and print.'],
+  SELF_LEAVE: ['Your leave: what is left of each type, apply, and your requests.', 'Pick the leave type and dates (or a half day), give a reason and send. The approvers are notified; you are told when they decide.'],
   SELF_MYPERF: ['Your own teaching results (only when shared).', 'Read-only.'],
   SELF_PROFILE: ['Your account: name, email or mobile, password, notifications, linked children; delete your account.', 'Change details (a code confirms new email or mobile).'],
   SELF_PREFS: ['Your display preferences.', 'Pick layout density and theme.'],
@@ -84,7 +85,9 @@ export const SCREEN_HELP = {
   VA_ACCOUNTANT: ['Admin only: see the app as the Accountant.', 'As above.'],
   VA_FRONT_OFFICE: ['Admin only: see the app as the Front Office.', 'As above.'],
   VA_TRANSPORT: ['Admin only: see the app as the Transport team.', 'As above.'],
-  HELP_GUIDE: ['This guide: guided demos, every menu explained, and what each role sees.', 'Start a guided demo — the bar at the bottom walks you through each step and signs you in as the right person.']
+  HELP_GUIDE: ['This guide: guided demos, the screen-by-screen flow, every menu explained, and what each role sees — filtered to what your school has and you can open.', 'Start a guided demo, or open Screen by screen for the steps on each screen.'],
+  HELP_FAQ: ['Frequently asked questions for your role, and the school’s documents.', 'Search or pick a topic and open a question.'],
+  OPS_HELPDOCS: ['The school’s own help documents and FAQs.', 'Add a document (link or file) or a question, and choose which roles see it. They appear in Help → FAQs.'],
 };
 
 // Guided demos: each step signs in as a demo person and opens a screen ("public" steps open a page without signing in)
@@ -92,7 +95,7 @@ export const WORKFLOWS = [
   { id: 'leave', title: 'Parent leave request → coordinator → attendance and bus', time: '3 min', roles: 'Parent, Teacher (coordinator), Transport', steps: [
     { as: 'U6', screen: 'SELF_REQUESTS', do: 'Click "Leave (child will be absent)". Choose Aarav, tomorrow to the day after, reason "Family function". Send request.', check: 'Status: Waiting for coordinator.' },
     { as: 'U4', screen: 'STU_REQUESTS', do: 'Sonia coordinates 8-A. Find Aarav’s leave and click Approve.', check: 'Status Approved; the parent is emailed.' },
-    { as: 'U4', screen: 'STU_ATT', do: 'Open 8-A attendance for tomorrow’s date (if the date picker shows today, that’s fine — leave appears on the leave days).', check: 'Aarav shows "On leave (approved)".' },
+    { as: 'U4', screen: 'STU_ATT', do: 'Open the 8-A register for this month (or This week).', check: 'Aarav’s row shows L on the leave days.' },
     { as: 'U20', screen: 'TRN_SHEETS', do: 'Pick tomorrow and Aarav’s route.', check: 'Aarav is marked ✗ — On leave; the driver does not wait.' },
     { as: 'U6', screen: 'SELF_REQUESTS', do: 'Back as the parent.', check: 'The leave shows Approved.' }] },
   { id: 'early', title: 'Early leave with a gate code', time: '3 min', roles: 'Parent, Coordinator, Front Office, Transport', steps: [
@@ -104,7 +107,7 @@ export const WORKFLOWS = [
   { id: 'late', title: 'Late arrival: parent drops the child', time: '2 min', roles: 'Parent, Front Office, Teacher', steps: [
     { as: 'U6', screen: 'SELF_REQUESTS', do: 'Click "Late arrival". Today, arriving at a time later today (after 08:45, before 15:00). Send.', check: 'Confirmed at once.' },
     { as: 'U5', screen: 'STU_GATE', do: 'Under "Expected late arrivals today", click Arrived when the child comes in.', check: 'Coordinators are told.' },
-    { as: 'U4', screen: 'STU_ATT', do: 'Open 8-A attendance for today.', check: 'Aarav shows "Late — dropped by parent".' }] },
+    { as: 'U4', screen: 'STU_ATT', do: 'Open the 8-A register; look at today’s column.', check: 'Aarav shows Lt (late — dropped by parent).' }] },
   { id: 'meeting', title: 'Parent asks to meet a teacher', time: '2 min', roles: 'Parent, Teacher', steps: [
     { as: 'U6', screen: 'SELF_REQUESTS', do: 'Click "Meet or call a teacher". Pick Sonia Mehta, Phone call, preferred date and time, topic "Maths homework". Send.', check: 'Waiting for teacher.' },
     { as: 'U4', screen: 'STU_MEETINGS', do: 'Click Reply on the request; pick a date and time → Confirm time.', check: 'Confirmed; the parent is emailed.' },
@@ -151,9 +154,22 @@ export const WORKFLOWS = [
     { as: 'U8', screen: 'OPS_CHANNELS', do: 'Start from recommended → adjust → Send for approval (the platform team can approve too, but a different person must).', check: 'Draft waiting for approval.' },
     { as: 'U1', screen: 'OPS_WEBSITE', do: 'Copy the deep links and the admission-form snippet for the school website.', check: 'Each school has its own addresses.' }] },
   { id: 'transport', title: 'A day for the transport team', time: '3 min', roles: 'Transport', steps: [
-    { as: 'U20', screen: 'TRN_ROUTES', do: 'Open a route; change a stop time.', check: 'Times checked for order.' },
+    { as: 'U20', screen: 'TRN_ROUTES', do: 'Pick R4 → Plan the route → Shortest drive → Use this route.', check: 'R4 is shorter; the new stop times show in Stops & timings.' },
     { as: 'U20', screen: 'TRN_SHEETS', do: 'Pick the day → What the driver sees → Send to all drivers.', check: 'Each driver gets only their route.' },
     { as: 'U20', screen: 'TRN_MANIFEST', do: 'Morning trip; mark Boarded / No-show.', check: 'Not-boarding children show the reason.' }] },
+  { id: 'staffleave', title: 'Staff leave: apply → approver notified → approve', time: '2 min', roles: 'Teacher, Vice Principal / Principal', steps: [
+    { as: 'U4', screen: 'SELF_LEAVE', do: 'Sonia: pick Casual leave, a date next week, reason "Family function" → Send for approval.', check: 'It shows Waiting for approval; casual leave left goes down by the days asked.' },
+    { as: 'U2', screen: 'STF_LEAVE', do: 'The Principal: the 🔔 bell shows a new notification. Open Waiting for approval → Approve Sonia’s leave.', check: 'Approved; Sonia is notified.' },
+    { as: 'U2', screen: 'STF_ATT', do: 'Open the staff register for next week.', check: 'Sonia’s row shows L on those days.' },
+    { as: 'U4', screen: 'SELF_LEAVE', do: 'Back as Sonia.', check: 'The request shows Approved by Dr. Kavita Menon; the bell has the decision.' }] },
+  { id: 'reportcard', title: 'Report cards: generate → publish → parent opens', time: '2 min', roles: 'Principal, Parent', steps: [
+    { as: 'U2', screen: 'STU_REPORTCARD', do: 'Grade VIII, section A, all students, Term 1 → Generate.', check: 'One card per student with marks, grades, rank and attendance.' },
+    { as: 'U2', screen: 'STU_REPORTCARD', do: 'Publish to parents.', check: 'Parents are notified.' },
+    { as: 'U6', screen: 'SELF_CHILD', do: 'The parent: Report cards → Open → Print / save as PDF.', check: 'Aarav’s Term 1 report card.' }] },
+  { id: 'routeplan', title: 'Plan a bus route and add a stop', time: '3 min', roles: 'Transport', steps: [
+    { as: 'U20', screen: 'TRN_ROUTES', do: 'R4 → Plan the route. Compare the options; pick Shortest drive → Use this route.', check: 'About 13 minutes shorter; stop times worked out again.' },
+    { as: 'U20', screen: 'TRN_ROUTES', do: 'R2 → Pickup suggestions → Add this stop (name it) for the three riders who live far from a stop.', check: 'The stop is added where it adds the least driving; the riders board there.' },
+    { as: 'U20', screen: 'TRN_SHEETS', do: 'Open R2’s route sheet.', check: 'The new stop and times are on the driver’s sheet.' }] },
   { id: 'analytics', title: 'Results and teacher performance', time: '2 min', roles: 'Principal, Head of Teaching Staff, Teacher', steps: [
     { as: 'U2', screen: 'ANL_RANK', do: 'Grade IX, all sections; then pick two sections.', check: 'Top 6 and bottom 6 change.' },
     { as: 'U21', screen: 'ANL_TEACHER', do: 'Switch "Share with teachers" on.', check: 'Teachers get My Teaching Performance (view only).' },
