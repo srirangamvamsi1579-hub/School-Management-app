@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '../data/store.js';
 import { mobileTabs, PLANS, LABEL } from '../data/menu.js';
 import { tenantOf, fullName, classLabel, openInvoices, balance } from '../lib/logic.js';
-import { screensFor, signIn, roleName } from '../lib/auth.js';
+import { screensFor, signIn, roleName, accessLevel } from '../lib/auth.js';
 import { applyTheme } from '../lib/theme.js';
 import { SCREENS } from '../screens/index.js';
 import { myChildren } from '../screens/Requests.jsx';
@@ -20,7 +20,7 @@ const ICON = { home: 'M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z', 
 export const Icon = ({ name, size = 22 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={ICON[name] || ICON.list} /></svg>;
 
 export default function MobileApp({ preview = false, school: fixedSchool = null }) {
-  const { db, session, login, logout, toast } = useStore();
+  const { db, session, login, logout, toast, setScreenLock } = useStore();
   const [school, setSchool] = useState(null);
   const [ready, setReady] = useState(false);
   const [tab, setTab] = useState('M_HOME');
@@ -44,6 +44,9 @@ export default function MobileApp({ preview = false, school: fixedSchool = null 
   const perms = useMemo(() => (role ? { [role]: screensFor(db, me, role) } : null), [db.perms, db.deptPerms, db.roleDepartments, db.customRoles, db.removedProfiles, db.designationAccess, me, role, db.settings]);
   const tabs = role ? mobileTabs(tenant, role, perms) : [];
   useEffect(() => { if (role && !tabs.some((t) => t[0] === tab)) setTab('M_HOME'); }, [tabs.map((t) => t[0]).join(), tab, role]);
+  // Read-only tabs: the person can look but not change anything
+  const roTab = !!role && tab !== 'M_HOME' && accessLevel(db, me, role, tab) === 'READ';
+  useEffect(() => { setScreenLock?.(roTab ? LABEL[tab] : null); return () => setScreenLock?.(null); }, [roTab, tab]);
 
   const shell = (body, bar = null) => (
     <div className={'mobile' + (preview ? ' framed' : '')} data-platform={platform()}>
@@ -67,7 +70,7 @@ export default function MobileApp({ preview = false, school: fixedSchool = null 
   return shell(
     <>
       <header className="m-top">{tab !== 'M_HOME' ? <button className="m-back" onClick={() => go('M_HOME')} aria-label="Back to Home">‹</button> : <div className="logo" aria-hidden="true">{tenant.name[0]}</div>}<div style={{ flex: 1, minWidth: 0 }}><div className="b m-trunc">{tab === 'M_HOME' ? tenant.name : LABEL[tab]}</div><div className="small m-trunc">{session.name} · {roleName(db, role)}</div></div></header>
-      <main className="m-body" id="m-main">{Screen ? <Screen go={go} code={tab} tabs={tabs} /> : <p>Not available.</p>}</main>
+      <main className="m-body" id="m-main">{roTab && <div className="ro-bar" role="status">Read only — you can view this but not change anything.</div>}{Screen ? <Screen go={go} code={tab} tabs={tabs} /> : <p>Not available.</p>}</main>
       {more && <div className="m-sheet" role="dialog" aria-label="More">{tabs.slice(4).map(([code, label, icon]) => <button key={code} className="m-sheet-item" onClick={() => go(code)}><Icon name={icon} />{label}</button>)}<button className="m-sheet-item" onClick={() => setMore(false)}>Close</button></div>}
     </>,
     <nav className="m-tabs" aria-label="Main">{shown.map(([code, label, icon]) => <button key={code} className={'m-tab' + ((code === tab || (code === 'MORE' && tabs.slice(4).some((x) => x[0] === tab))) ? ' on' : '')} aria-current={code === tab ? 'page' : undefined}

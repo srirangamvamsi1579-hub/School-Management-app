@@ -266,7 +266,7 @@ test('Roles & Permissions: User management tab (profiles, departments, designati
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
   const { page, errors } = await open(ctx, '#/s/OPS_ROLES');
   const tabs = (await page.getByRole('tab').allInnerTexts()).map((x) => x.trim());
-  assert.deepEqual(tabs, ['User management', 'Permissions by department']);
+  assert.deepEqual(tabs, ['User management', 'Permissions by department', 'Access summary']);
   const row = page.locator('tr', { hasText: 'Transport team' });
   assert.match(await row.innerText(), /Transport[\s\S]*Driver[\s\S]*Cleaner/);
   await page.getByRole('button', { name: 'Change department of Teacher' }).click();
@@ -346,29 +346,77 @@ test('side menu starts collapsed; groups open on click or Enter; no Expand all; 
   await ctx.close();
 });
 
-test('Permissions by department: every menu listed, give a whole menu or single sub-menus, expand/collapse levels; the department gets it', async () => {
+test('Permissions by department: every menu listed; No access / Read only / Full access for a whole menu or single sub-menus; expand/collapse levels', async () => {
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 1000 } });
   const { page, errors } = await open(ctx, '#/s/OPS_ROLES');
   await page.getByRole('tab', { name: 'Permissions by department' }).click();
   await page.getByRole('option', { name: /^Transport/ }).click();
   const tree = page.getByRole('tree', { name: 'Menus for Transport' });
   const { MENU } = await import('../../src/data/menu.js');
-  for (const m of MENU.filter((x) => x.code !== 'PLATFORM')) assert.equal(await tree.getByLabel('All of ' + m.label, { exact: true }).count(), 1, m.label + ' listed');
-  assert.equal(await tree.getByRole('checkbox', { name: 'Collect Fee', exact: true }).count(), 0, 'collapsed at first');
-  await tree.getByRole('checkbox', { name: 'All of Fees', exact: true }).check();
+  for (const m of MENU.filter((x) => x.code !== 'PLATFORM')) assert.equal(await tree.getByLabel('Access to all of ' + m.label, { exact: true }).count(), 1, m.label + ' listed');
+  assert.equal(await tree.getByLabel('Access to Collect Fee', { exact: true }).count(), 0, 'collapsed at first');
+  await tree.getByLabel('Access to all of Fees', { exact: true }).selectOption('READ');
   await tree.getByRole('button', { name: 'Expand Fees' }).click();
-  assert.ok(await tree.getByRole('checkbox', { name: 'Collect Fee', exact: true }).isChecked(), 'whole menu given');
-  await tree.getByRole('checkbox', { name: 'Collect Fee', exact: true }).uncheck();
-  assert.equal(await tree.getByRole('checkbox', { name: 'All of Fees', exact: true }).getAttribute('aria-checked'), 'mixed', 'some sub-menus');
+  assert.equal(await tree.getByLabel('Access to Collect Fee', { exact: true }).inputValue(), 'READ', 'whole menu read only');
+  await tree.getByLabel('Access to Dues & Reminders', { exact: true }).selectOption('FULL');
+  await tree.getByLabel('Access to Collect Fee', { exact: true }).selectOption('NONE');
+  assert.equal(await tree.getByLabel('Access to all of Fees', { exact: true }).inputValue(), 'MIXED');
   await tree.getByRole('button', { name: 'Collapse Fees' }).click();
-  assert.equal(await tree.getByRole('checkbox', { name: 'Collect Fee', exact: true }).count(), 0);
+  assert.equal(await tree.getByLabel('Access to Collect Fee', { exact: true }).count(), 0);
   await tree.getByRole('button', { name: 'Expand Exams' }).click();
-  await tree.getByRole('button', { name: /^Expand Exams / }).first().click();      // a group inside Exams
-  assert.ok(await tree.getByRole('checkbox').count() > 20);
+  await tree.getByRole('button', { name: /^Expand Exams / }).first().click();
+  await tree.getByLabel('Access to all of Papers', { exact: true }).selectOption('FULL');
+  assert.equal(await tree.getByLabel('Access to Question Bank', { exact: true }).inputValue(), 'FULL', 'group level sets its sub-menus');
   await page.locator('nav.side button.item', { hasText: /^Transport team$/ }).click();
   await page.getByRole('region', { name: 'Viewing as another profile' }).waitFor();
   const items = await page.locator('nav.side button.item').allInnerTexts();
-  assert.ok(items.includes('Dues & Reminders') && !items.includes('Collect Fee'), items.join());
+  assert.ok(items.includes('Dues & Reminders') && items.includes('Receipts') && !items.includes('Collect Fee'), items.join());
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('Read only: the screen opens with a notice and nothing on it can be saved; full access saves', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 1000 } });
+  const { page, errors } = await open(ctx, '#/s/OPS_ROLES');
+  await page.getByRole('tab', { name: 'Permissions by department' }).click();
+  await page.getByRole('option', { name: /^Transport/ }).click();
+  const tree = page.getByRole('tree', { name: 'Menus for Transport' });
+  await tree.getByRole('button', { name: 'Expand Transport' }).click();
+  await tree.getByLabel('Access to Routes, Stops & Timings', { exact: true }).selectOption('READ');
+  await page.locator('nav.side button.item', { hasText: /^Transport team$/ }).click();
+  const bar = page.getByRole('region', { name: 'Viewing as another profile' });
+  await bar.getByLabel(/Act as this person/).check();
+  await page.locator('nav.side button.item', { hasText: 'Routes, Stops & Timings' }).click();
+  await page.locator('.ro-bar', { hasText: 'Read only — you can view this screen' }).waitFor();
+  await page.getByRole('button', { name: 'Edit timings' }).first().click();
+  await page.locator('.modal').getByRole('button', { name: 'Save' }).click();
+  await page.locator('.toast', { hasText: 'Read only — you can view “Routes, Stops & Timings”' }).waitFor();
+  await page.locator('.modal').getByRole('button', { name: 'Close' }).click();
+  await page.locator('nav.side button.item', { hasText: 'Driver Route Sheets' }).click();
+  await page.locator('.crumbs', { hasText: 'Driver Route Sheets' }).waitFor();
+  assert.equal(await page.locator('.ro-bar').count(), 0, 'full-access screen has no notice');
+  assert.deepEqual(errors.filter((e) => !/Read only/.test(e)), []);
+  await ctx.close();
+});
+
+test('Access summary: each person with profile, department, designation and their screens by level', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 1000 } });
+  const { page, errors } = await open(ctx, '#/s/OPS_ROLES');
+  await page.getByRole('tab', { name: 'Permissions by department' }).click();
+  await page.getByRole('option', { name: /^Transport/ }).click();
+  await page.getByRole('tree').getByLabel('Access to all of Fees', { exact: true }).selectOption('READ');
+  await page.getByRole('tab', { name: 'Access summary' }).click();
+  const row = page.locator('tr', { hasText: 'Manjunath Gowda' });
+  const text = await row.innerText();
+  assert.match(text, /Transport team[\s\S]*Transport[\s\S]*Transport In-charge/);
+  assert.match(text, /\b8\b/, '8 read-only Fees screens');
+  await page.getByRole('button', { name: 'Show access of Manjunath Gowda' }).click();
+  const details = page.locator('tr', { hasText: 'Access comes from the department (Transport)' });
+  assert.match(await details.innerText(), /Collect Fee\s*Read only/);
+  assert.match(await details.innerText(), /Driver Route Sheets\s*Full/);
+  await page.getByLabel('Department', { exact: true }).selectOption('Academics');
+  const names = await page.locator('tbody tr td:first-child b').allInnerTexts();
+  assert.ok(names.includes('Sonia Mehta') && !names.includes('Manjunath Gowda'), names.join());
   assert.deepEqual(errors, []);
   await ctx.close();
 });

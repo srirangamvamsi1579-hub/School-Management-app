@@ -42,10 +42,16 @@ export function StoreProvider({ children }) {
   const readOnly = !!viewed && !viewAs.act;
   const [toast, setToast] = useState(null);
   const readOnlyRef = useRef(false);
+  // Read-only access to the screen in front of the person (set by the app shell from the department's access level)
+  const [screenLock, setScreenLock] = useState(null);
+  const lockRef = useRef(null);
+  lockRef.current = screenLock;
+  const lockMsg = () => `Read only — you can view “${lockRef.current}” but not change anything`;
 
   // mutate(fn): fn receives a copy it may change; returns fn's result
   const mutate = useCallback((fn) => {
     if (readOnlyRef.current) { notify('Preview only — switch on “Act as this person” to make changes'); return undefined; }
+    if (lockRef.current) { notify(lockMsg()); return undefined; }
     let result;
     setDb((prev) => {
       const base = latest(prev);
@@ -61,6 +67,7 @@ export function StoreProvider({ children }) {
   // Synchronous variant for actions whose result the screen needs immediately
   const run = (fn) => {
     if (readOnly) { notify('Preview only — switch on “Act as this person” to make changes'); throw new Error('Preview only — switch on “Act as this person” to make changes'); }
+    if (lockRef.current) { const m = lockMsg(); notify(m); throw new Error(m); }
     const base = latest(db);
     const next = structuredClone(base);
     const result = fn(next);          // throws → nothing saved
@@ -79,7 +86,7 @@ export function StoreProvider({ children }) {
     window.addEventListener('storage', h); return () => window.removeEventListener('storage', h); }, []);
   useEffect(() => { const h = (e) => notify(e.detail); document.addEventListener('app-toast', h); return () => document.removeEventListener('app-toast', h); }, []);
   readOnlyRef.current = readOnly;
-  return createElement(Ctx.Provider, { value: { db, mutate, run, session: effective, realSession: session, viewAs: viewed ? viewAs : null, setViewAs, readOnly, login, logout, reset, toast, notify } }, children);
+  return createElement(Ctx.Provider, { value: { db, mutate, run, session: effective, realSession: session, viewAs: viewed ? viewAs : null, setViewAs, readOnly, screenLock, setScreenLock, login, logout, reset, toast, notify } }, children);
 }
 
 export const useStore = () => useContext(Ctx);

@@ -105,3 +105,18 @@ test('a profile can be deleted (hidden for built-in, removed for school-added) a
   db.removedProfiles = [];
   assert.ok(allRoles(db).some((r) => r.code === 'ACCOUNTANT'));
 });
+
+test('read only is set per department; designation extras and personal grants are full; Admin is always full', async () => {
+  const { accessLevel } = await import('../src/lib/auth.js');
+  const db = buildSeed();
+  const t = db.users.find((u) => u.role === 'TRANSPORT');
+  assert.equal(accessLevel(db, t, 'TRANSPORT', 'TRN_ROUTES'), 'FULL');
+  db.deptReadOnly = { Transport: ['TRN_ROUTES'] };
+  assert.equal(accessLevel(db, t, 'TRANSPORT', 'TRN_ROUTES'), 'READ');
+  assert.equal(accessLevel(db, t, 'TRANSPORT', 'FEE_COLLECT'), null, 'no access');
+  t.extra = ['TRN_ROUTES'];
+  assert.equal(accessLevel(db, t, 'TRANSPORT', 'TRN_ROUTES'), 'FULL', 'given to the person: full');
+  const admin = db.users.find((u) => u.role === 'ADMIN');
+  db.deptReadOnly.Administration = ['OPS_USERS'];
+  assert.equal(accessLevel(db, admin, 'ADMIN', 'OPS_USERS'), 'FULL');
+});

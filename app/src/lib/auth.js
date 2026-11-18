@@ -161,5 +161,24 @@ export function screensFor(db, user, role) {
   // "View as Profile" is for the Admin role only — never given by designation, grant or edited permissions
   return [...new Set([...base, ...extra])].filter((c) => !c.startsWith('VA_') || role === 'ADMIN');
 }
+// Access to one screen: 'FULL', 'READ' (can look, can't change) or null. Admin and Platform: always full.
+// The department sets the level; screens given by designation or personally are full access.
+export function accessLevel(db, user, role, code) {
+  if (!role) return null;
+  if (role === 'ADMIN' || role === 'PLATFORM') return (ACCESS[role] || []).includes(code) || code === 'HOME' ? 'FULL' : null;
+  if (code === 'HOME') return 'FULL';
+  const extra = [...(user && db.designationAccess?.[user.designation] || []), ...(user?.extra || [])];
+  if (extra.includes(code)) return 'FULL';
+  if (!screensFor(db, user, role).includes(code)) return null;
+  return (db.deptReadOnly?.[departmentOf(db, role)] || []).includes(code) ? 'READ' : 'FULL';
+}
+// Where a person's access to a screen comes from (for the access summary)
+export function accessSource(db, user, role, code) {
+  if (role === 'ADMIN') return 'Admin profile';
+  if (user?.extra?.includes(code)) return 'Given to this person';
+  if (user && (db.designationAccess?.[user.designation] || []).includes(code)) return 'Designation: ' + user.designation;
+  if (code === 'SELF_MYPERF') return 'Shared by the Principal';
+  return 'Department: ' + departmentOf(db, role);
+}
 export const canSharePerf = (db, user, role) => role === 'PRINCIPAL' || user?.designation === 'Head of Teaching Staff';
 export const canManageUsers = (db, user, role) => role === 'ADMIN' || screensFor(db, user, role).includes('OPS_USERS');

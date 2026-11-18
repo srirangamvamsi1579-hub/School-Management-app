@@ -7,7 +7,7 @@ import { log, resolveTemplate, renderFor, categoryName, tenantOf } from '../lib/
 import { CATEGORIES, FIELDS, SAMPLE, renderTemplate, sanitize } from '../data/templates.js';
 import { MENU, ROLES, ACCESS, LABEL, PLANS, canSee, FUNCTIONS, funcOn, mobileTabs } from '../data/menu.js';
 import { PRESETS, TEMPLATES, contrast, accessible } from '../lib/theme.js';
-import { allRoles, roleName, rolePerms, departments, syncDeptPerms, defaultScreens, baseRoleOf, canManageUsers, accountEmail, createAccount, idType, isGmail, findUser } from '../lib/auth.js';
+import { allRoles, roleName, rolePerms, accessLevel, accessSource, screensFor, departments, syncDeptPerms, defaultScreens, baseRoleOf, canManageUsers, accountEmail, createAccount, idType, isGmail, findUser } from '../lib/auth.js';
 import { designationsFor, fitDesignation, designationProblem, departmentOf, STANDARD_PROFILES } from '../data/designations.js';
 import { AccountRequests, deleteAccount } from './Account.jsx';
 
@@ -117,22 +117,24 @@ export function Users() {
 
 export function Roles() {
   const [tab, setTab] = useState('users');
-  return <Page title="Roles & permissions" sub="User management: each user profile, the department it belongs to and its designations. Permissions: which menus each department can open — every profile in a department gets the same screens.">
-    <Tabs tabs={[['users', 'User management'], ['matrix', 'Permissions by department']]} value={tab} onChange={setTab} />
+  return <Page title="Roles & permissions" sub="User management: each user profile, its department and designations. Permissions: what each department can open — no access, read only or full access, for a whole menu or single sub-menus. Access summary: what each person can open, and why.">
+    <Tabs tabs={[['users', 'User management'], ['matrix', 'Permissions by department'], ['summary', 'Access summary']]} value={tab} onChange={setTab} />
     {tab === 'users' && <UserProfiles goMatrix={() => setTab('matrix')} />}
     {tab === 'matrix' && <DeptPermissions />}
+    {tab === 'summary' && <AccessSummary />}
   </Page>;
 }
 
-// A checkbox that can show "some ticked" (indeterminate)
-function TriBox({ state, onChange, label, disabled }) {
-  const ref = useRef(null);
-  useEffect(() => { if (ref.current) ref.current.indeterminate = state === 'some'; }, [state]);
-  return <input ref={ref} type="checkbox" aria-label={label} checked={state === 'all'} aria-checked={state === 'some' ? 'mixed' : state === 'all'} disabled={disabled} onChange={onChange} />;
+const LEVELS = [['NONE', 'No access'], ['READ', 'Read only'], ['FULL', 'Full access']];
+const LEVEL_NAME = { FULL: 'Full access', READ: 'Read only', NONE: 'No access' };
+function LevelSelect({ value, onChange, label, disabled }) {
+  return <select className={'lvl ' + (value === 'FULL' ? 'full' : value === 'READ' ? 'read' : '')} aria-label={label} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
+    {value === 'MIXED' && <option value="MIXED" disabled>Mixed</option>}
+    {LEVELS.map(([v, n]) => <option key={v} value={v}>{n}</option>)}</select>;
 }
 
-// Roles & Permissions → Permissions by department: pick a department, then tick whole menus or single sub-menus.
-// Every menu and sub-menu of the side menu is listed; menus and their groups expand and collapse (all collapsed at first).
+// Roles & Permissions → Permissions by department: pick a department, then set No access / Read only / Full access
+// for a whole main menu (every sub-menu under it), a group inside it, or single sub-menus. All levels start collapsed.
 function DeptPermissions() {
   const { db, run, notify, session } = useStore();
   const depts = departments(db);
@@ -142,51 +144,99 @@ function DeptPermissions() {
   const rank = PLANS.find((p) => p.code === t.plan).rank;
   const dept = depts.find((d) => d.name === sel) || depts[0];
   const screens = new Set(db.deptPerms?.[dept.name] || rolePerms(db, dept.profiles[0].code));
+  const ro = new Set(db.deptReadOnly?.[dept.name] || []);
   const hasAdmin = dept.profiles.some((p) => p.code === 'ADMIN');
   const others = dept.profiles.filter((p) => p.code !== 'ADMIN');
   const who = session.name || session.role;
   const mods = MENU.filter((m) => m.code !== 'PLATFORM');
-  // Split a menu into groups: items before the first heading, then one group per heading
   const groupsOf = (m) => { const out = []; let cur = { key: m.code + ':_', title: null, items: [] };
     for (const i of m.items) { if (i[0][0] === '#') { if (cur.items.length || cur.title) out.push(cur); cur = { key: m.code + ':' + i[0], title: i[1], items: [] }; } else cur.items.push(i); }
     out.push(cur); return out.filter((g) => g.items.length); };
-  const stateOf = (codes) => { const n = codes.filter((c) => screens.has(c)).length; return n === 0 ? 'none' : n === codes.length ? 'all' : 'some'; };
-  const locked = (code) => code.startsWith('VA_');           // View as Profile: Admin only
-  const set = (codes, on) => {
-    const list = codes.filter((c) => !locked(c));
-    run((d) => { syncDeptPerms(d); const cur = new Set(d.deptPerms[dept.name]); list.forEach((c) => (on ? cur.add(c) : cur.delete(c))); d.deptPerms = { ...d.deptPerms, [dept.name]: [...cur] };
-      log(d, who, 'Department access changed', `${dept.name}: ${on ? 'gave' : 'removed'} ${list.length === 1 ? LABEL[list[0]] : list.length + ' screens'}`); });
+  const levelOf = (c) => (!screens.has(c) ? 'NONE' : ro.has(c) ? 'READ' : 'FULL');
+  const levelOfAll = (codes) => { const l = [...new Set(codes.map(levelOf))]; return l.length === 1 ? l[0] : 'MIXED'; };
+  const countOf = (codes) => { const f = codes.filter((c) => levelOf(c) === 'FULL').length, r = codes.filter((c) => levelOf(c) === 'READ').length;
+    return [f && `${f} full`, r && `${r} read only`].filter(Boolean).join(' · ') || 'none'; };
+  const set = (codes, level) => {
+    const list = codes.filter((c) => !c.startsWith('VA_'));
+    run((d) => {
+      syncDeptPerms(d);
+      const cur = new Set(d.deptPerms[dept.name]); const r = new Set(d.deptReadOnly?.[dept.name] || []);
+      list.forEach((c) => { if (level === 'NONE') { cur.delete(c); r.delete(c); } else { cur.add(c); if (level === 'READ') r.add(c); else r.delete(c); } });
+      d.deptPerms = { ...d.deptPerms, [dept.name]: [...cur] };
+      d.deptReadOnly = { ...(d.deptReadOnly || {}), [dept.name]: [...r] };
+      log(d, who, 'Department access changed', `${dept.name}: ${list.length === 1 ? LABEL[list[0]] : list.length + ' screens'} → ${LEVEL_NAME[level]}`);
+    });
   };
-  const reset = () => { const from = others[0]?.code; if (!from) return; run((d) => { syncDeptPerms(d); d.deptPerms = { ...d.deptPerms, [dept.name]: defaultScreens(d, from) }; log(d, who, 'Department access reset', dept.name); }); notify(`${dept.name}: back to the standard screens for ${roleName(db, baseRoleOf(db, from))}`); };
+  const reset = () => { const from = others[0]?.code; if (!from) return; run((d) => { syncDeptPerms(d); d.deptPerms = { ...d.deptPerms, [dept.name]: defaultScreens(d, from) }; d.deptReadOnly = { ...(d.deptReadOnly || {}), [dept.name]: [] }; log(d, who, 'Department access reset', dept.name); }); notify(`${dept.name}: back to the standard screens for ${roleName(db, baseRoleOf(db, from))}, all full access`); };
   const toggle = (k) => setOpen({ ...open, [k]: !open[k] });
   const Chevron = ({ k, label }) => <button className="tree-tg" aria-expanded={!!open[k]} aria-label={(open[k] ? 'Collapse ' : 'Expand ') + label} onClick={() => toggle(k)}>{open[k] ? '▾' : '▸'}</button>;
   return <div className="grid dept-grid" style={{ marginTop: 12, alignItems: 'start' }}>
     <Card title="Departments">
       <p className="small muted">Departments come from User management — add a profile with a new department and it appears here.</p>
-      <div className="dept-list" role="listbox" aria-label="Departments">{depts.map((d) => { const n = d.profiles.some((p) => p.code === 'ADMIN') && d.profiles.length === 1 ? 'All' : (db.deptPerms?.[d.name] || rolePerms(db, d.profiles[0].code)).filter((c) => LABEL[c]).length;
+      <div className="dept-list" role="listbox" aria-label="Departments">{depts.map((d) => { const onlyAdmin = d.profiles.some((p) => p.code === 'ADMIN') && d.profiles.length === 1; const list = db.deptPerms?.[d.name] || rolePerms(db, d.profiles[0].code); const nr = (db.deptReadOnly?.[d.name] || []).filter((c) => list.includes(c) && LABEL[c]).length;
         return <button key={d.name} role="option" aria-selected={d.name === dept.name} className={'dept-item' + (d.name === dept.name ? ' on' : '')} onClick={() => setSel(d.name)}>
-          <b>{d.name}</b><span className="small muted">{d.profiles.map((p) => p.name).join(', ')} · {n} screens</span></button>; })}</div>
+          <b>{d.name}</b><span className="small muted">{d.profiles.map((p) => p.name).join(', ')} · {onlyAdmin ? 'All' : list.filter((c) => LABEL[c]).length} screens{nr ? ` (${nr} read only)` : ''}</span></button>; })}</div>
     </Card>
     <Card title={`What ${dept.name} can open`} right={others.length > 0 && <button className="btn sm" onClick={reset}>Reset to standard</button>}>
-      <p className="small">Profiles in this department: <b>{dept.profiles.map((p) => p.name).join(', ')}</b>. Tick a main menu to give every sub-menu under it, or open it and tick only the sub-menus needed.</p>
-      {hasAdmin && <p className="small pill info" style={{ display: 'block' }}>The Admin profile always opens every screen.{others.length ? ' These ticks apply to the other profiles in this department.' : ' Ticks here apply to any profile added to this department later.'}</p>}
-      <div className="tree" role="tree" aria-label={`Menus for ${dept.name}`}>{mods.map((m) => { const codes = m.items.filter((i) => i[0][0] !== '#').map((i) => i[0]); const st = stateOf(codes); const isVa = m.code === 'VIEWAS';
+      <p className="small">Profiles in this department: <b>{dept.profiles.map((p) => p.name).join(', ')}</b>. Set a main menu to give every sub-menu under it the same access, or open it and set sub-menus one by one. <b>Read only</b>: the screen opens, but nothing on it can be saved.</p>
+      {hasAdmin && <p className="small pill info" style={{ display: 'block' }}>The Admin profile always has full access to every screen.{others.length ? ' These settings apply to the other profiles in this department.' : ' Settings here apply to any profile added to this department later.'}</p>}
+      <div className="tree" role="tree" aria-label={`Menus for ${dept.name}`}>{mods.map((m) => { const codes = m.items.filter((i) => i[0][0] !== '#').map((i) => i[0]); const isVa = m.code === 'VIEWAS';
         return <div key={m.code} role="treeitem" aria-expanded={!!open[m.code]} className="tree-mod">
-          <div className="tree-row mod-row"><Chevron k={m.code} label={m.label} />
-            <label className="row"><TriBox state={isVa ? (hasAdmin ? 'all' : 'none') : st} disabled={isVa} label={'All of ' + m.label} onChange={() => set(codes, st !== 'all')} /><b>{m.label}</b></label>
-            <span className="small muted">{isVa ? 'Admin only' : `${codes.filter((c) => screens.has(c)).length} of ${codes.length}`}</span></div>
-          {open[m.code] && <div role="group">{groupsOf(m).map((g) => { const gc = g.items.map((i) => i[0]); const gs = stateOf(gc);
+          <div className="tree-row mod-row"><Chevron k={m.code} label={m.label} /><b style={{ flex: 1 }}>{m.label}</b>
+            <span className="small muted">{isVa ? 'Admin only' : countOf(codes)}</span>
+            <LevelSelect value={isVa ? (hasAdmin ? 'FULL' : 'NONE') : levelOfAll(codes)} disabled={isVa} label={'Access to all of ' + m.label} onChange={(v) => set(codes, v)} /></div>
+          {open[m.code] && <div role="group">{groupsOf(m).map((g) => { const gc = g.items.map((i) => i[0]);
             const rows = g.items.map((i) => { const inPlan = canSee(i[0], 'ADMIN', rank, t.overrides, null) || ['SELF_CHILD', 'SELF_FEES', 'SELF_MYPERF'].includes(i[0]) || i[0].startsWith('VA_');
-              return <div key={i[0]} role="treeitem" className={'tree-row leaf' + (g.title ? ' deep' : '')}><label className="row">
-                <input type="checkbox" aria-label={i[1]} checked={isVa ? hasAdmin : screens.has(i[0])} disabled={isVa} onChange={() => set([i[0]], !screens.has(i[0]))} />{i[1]}</label>
-                {!inPlan && <span className="pill">Not in plan</span>}</div>; });
+              return <div key={i[0]} role="treeitem" className={'tree-row leaf' + (g.title ? ' deep' : '')}><span style={{ flex: 1 }}>{i[1]}</span>
+                {!inPlan && <span className="pill">Not in plan</span>}
+                <LevelSelect value={isVa ? (hasAdmin ? 'FULL' : 'NONE') : levelOf(i[0])} disabled={isVa} label={'Access to ' + i[1]} onChange={(v) => set([i[0]], v)} /></div>; });
             return g.title ? <div key={g.key} role="treeitem" aria-expanded={!!open[g.key]}>
-              <div className="tree-row grp-row"><Chevron k={g.key} label={m.label + ' ' + g.title} /><label className="row"><TriBox state={isVa ? 'none' : gs} disabled={isVa} label={'All of ' + g.title} onChange={() => set(gc, gs !== 'all')} />{g.title}</label>
-                <span className="small muted">{gc.filter((c) => screens.has(c)).length} of {gc.length}</span></div>
+              <div className="tree-row grp-row"><Chevron k={g.key} label={m.label + ' ' + g.title} /><span style={{ flex: 1 }}>{g.title}</span>
+                <span className="small muted">{countOf(gc)}</span>
+                <LevelSelect value={isVa ? 'NONE' : levelOfAll(gc)} disabled={isVa} label={'Access to all of ' + g.title} onChange={(v) => set(gc, v)} /></div>
               {open[g.key] && <div role="group">{rows}</div>}</div> : <div key={g.key}>{rows}</div>; })}</div>}
         </div>; })}</div>
     </Card>
   </div>;
+}
+
+// Roles & Permissions → Access summary: each person, their profile, department and designation, and what they can open
+function AccessSummary() {
+  const { db } = useStore();
+  const [q, setQ] = useState('');
+  const [dep, setDep] = useState('');
+  const [prof, setProf] = useState('');
+  const [openRow, setOpenRow] = useState(null);
+  const people = db.users.filter((u) => u.role && u.role !== 'PLATFORM' && u.status !== 'DELETED' && allRoles(db).some((r) => r.code === u.role));
+  const deptNames = departments(db).map((d) => d.name);
+  const rows = people.map((u) => {
+    const codes = u.role === 'ADMIN' ? MENU.flatMap((m) => m.items.map((i) => i[0])).filter((c) => c[0] !== '#' && !c.startsWith('PLT_') && (ACCESS.ADMIN.includes(c))) : screensFor(db, u, u.role).filter((c) => LABEL[c]);
+    const lv = codes.map((c) => [c, accessLevel(db, u, u.role, c)]).filter(([, l]) => l);
+    return { u, dept: departmentOf(db, u.role), lv, full: lv.filter(([, l]) => l === 'FULL').length, read: lv.filter(([, l]) => l === 'READ').length };
+  }).filter((r) => (!dep || r.dept === dep) && (!prof || r.u.role === prof) && (!q || `${r.u.name} ${r.u.designation || ''} ${r.u.email || ''}`.toLowerCase().includes(q.toLowerCase())))
+    .sort((a, b) => a.dept.localeCompare(b.dept) || a.u.name.localeCompare(b.u.name));
+  return <>
+    <div className="row" style={{ marginTop: 12, gap: 8, flexWrap: 'wrap' }}>
+      <Input placeholder="Search name or designation" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search people" style={{ maxWidth: 280 }} />
+      <Select aria-label="Department" value={dep} onChange={(e) => setDep(e.target.value)} options={[['', 'All departments'], ...deptNames.map((n) => [n, n])]} />
+      <Select aria-label="Profile" value={prof} onChange={(e) => setProf(e.target.value)} options={[['', 'All profiles'], ...allRoles(db).filter((r) => r.code !== 'PLATFORM').map((r) => [r.code, r.name])]} />
+      <span className="small muted">{rows.length} people</span>
+    </div>
+    <div className="tw" style={{ marginTop: 10, maxHeight: 'none' }}><table className="t"><thead><tr><th>Name</th><th>Profile</th><th>Department</th><th>Designation</th><th>Full access</th><th>Read only</th><th /></tr></thead>
+      <tbody>{rows.map((r) => [<tr key={r.u.id}>
+        <td><b>{r.u.name}</b><div className="small muted">{r.u.email || r.u.mobile || ''}{r.u.status !== 'ACTIVE' ? ' · ' + r.u.status.toLowerCase() : ''}</div></td>
+        <td>{roleName(db, r.u.role)}</td><td>{r.dept}</td><td>{r.u.designation || '—'}</td>
+        <td><span className="pill badge-full">{r.u.role === 'ADMIN' ? 'All screens' : r.full}</span></td>
+        <td>{r.read ? <span className="pill badge-read">{r.read}</span> : <span className="muted">—</span>}</td>
+        <td><button className="btn sm" aria-expanded={openRow === r.u.id} aria-label={(openRow === r.u.id ? 'Hide' : 'Show') + ' access of ' + r.u.name} onClick={() => setOpenRow(openRow === r.u.id ? null : r.u.id)}>{openRow === r.u.id ? 'Hide' : 'Show'} access</button></td></tr>,
+        openRow === r.u.id && <tr key={r.u.id + '-d'}><td colSpan={7} style={{ background: 'var(--bg)' }}>
+          <div className="grid g3" style={{ gap: 10 }}>{MENU.filter((m) => m.code !== 'PLATFORM').map((m) => { const items = m.items.filter((i) => i[0][0] !== '#').map((i) => [i, r.lv.find(([c]) => c === i[0])?.[1]]).filter(([, l]) => l);
+            return items.length ? <div key={m.code} className="card" style={{ padding: 10 }}><b>{m.label}</b>
+              {items.map(([i, l]) => <div key={i[0]} className="row small" style={{ justifyContent: 'space-between', padding: '3px 0' }} title={accessSource(db, r.u, r.u.role, i[0])}>
+                <span>{i[1]}</span><span className={'pill ' + (l === 'FULL' ? 'badge-full' : 'badge-read')}>{l === 'FULL' ? 'Full' : 'Read only'}</span></div>)}</div> : null; })}</div>
+          <p className="small muted" style={{ marginTop: 8 }}>Access comes from the department ({r.dept}){r.u.designation && db.designationAccess?.[r.u.designation]?.length ? `, the designation ${r.u.designation}` : ''}{r.u.extra?.length ? ' and screens given to this person' : ''}. Hover a screen to see why.</p>
+        </td></tr>])}</tbody></table></div>
+  </>;
 }
 
 export function Templates() {

@@ -20,6 +20,7 @@ Run the files in order. Each one builds on the one before.
 | 14 | `014_role_departments.sql` | Department per user profile: `role_departments` (standard + school renames), `roles.department` for school-added profiles, `department_of()`, `set_role_department()`; department in `v_user_directory` |
 | 15 | `015_designation_removals.sql` | A school can remove any designation from a profile (standard ones too): `role_designation_removals`, `designations_for()` leaves them out, `remove_role_designation()` (refused while someone holds it or for the last one), `add_role_designation()` (brings one back) |
 | 16 | `016_department_access.sql` | Access by department: `department_menu_permissions` (every profile in a department opens the same screens; Admin keeps its full list), `sync_department_permissions()`, `set_department_menu()` (a sub-menu or a whole main menu), `v_user_screens` by department; deleting a profile: `v_tenant_profiles`, `remove_profile()`, `restore_profile()` |
+| 17 | `017_access_levels.sql` | Read only or full access per department, for a sub-menu or a whole main menu: `access_level` column, `set_department_access()`, `v_user_screens.access_level` (best level from any source), `can_edit_screen()` for the API, `v_access_summary` |
 
 ```bash
 createdb school

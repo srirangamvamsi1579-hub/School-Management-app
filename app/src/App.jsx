@@ -3,7 +3,7 @@ import { useStore } from './data/store.js';
 import { MENU, PLANS, ROLES, LABEL, MODULE_OF, canSee, onWeb, viewAsUser } from './data/menu.js';
 import { applyTheme } from './lib/theme.js';
 import { tenantOf } from './lib/logic.js';
-import { screensFor, roleName } from './lib/auth.js';
+import { screensFor, roleName, accessLevel } from './lib/auth.js';
 import Login from './screens/Login.jsx';
 import { SCREENS, Placeholder } from './screens/index.js';
 import { PublicEnquiry, PrivacyPolicy, DeleteAccountRequest } from './screens/Public.jsx';
@@ -12,7 +12,7 @@ import HelpGuide, { DemoBar } from './screens/Guide.jsx';
 import { parseHash } from './lib/links.js';
 
 export default function App() {
-  const { db, session, logout, toast, reset, notify, viewAs, setViewAs, readOnly } = useStore();
+  const { db, session, logout, toast, reset, notify, viewAs, setViewAs, readOnly, setScreenLock } = useStore();
   const [hash, setHash] = useState(() => (typeof location !== 'undefined' ? location.hash : ''));
   const link = parseHash(hash);
   const [screen, setScreen] = useState(() => (link?.kind === 's' ? link.code : null));
@@ -37,6 +37,10 @@ export default function App() {
     return arr.slice(k + 1, until).some((x) => show(x[0]));
   }) })).filter((m) => m.items.some((i) => i[0][0] !== '#')) : []), [role, rank, tenant, perms]);
   const links = db.links.filter((l) => role && l.roles.includes(role));
+  // Read-only screens: the person can look but not change anything (set per department in Roles & Permissions)
+  const level = role && screen ? accessLevel(db, me, role, screen) : null;
+  const locked = level === 'READ' && !(viewAs && readOnly);
+  useEffect(() => { setScreenLock(locked ? LABEL[screen] : null); }, [locked, screen]);
 
   // Website links (#/s/SCREEN) open that screen after sign-in; the role's access rules still decide
   useEffect(() => { const h = () => { setHash(location.hash); const l = parseHash(location.hash); if (l?.kind === 's') setScreen(l.code); }; window.addEventListener('hashchange', h); return () => window.removeEventListener('hashchange', h); }, []);
@@ -148,7 +152,8 @@ export default function App() {
           {!viewAs && <button className="btn sm" onClick={logout}>Switch user</button>}
         </header>
         {viewBar}
-        <main className="content"><Screen go={go} code={screen} menus={visible} /></main>
+        {locked && <div className="ro-bar" role="status">Read only — you can view this screen but not change anything. Your school sets this in Roles &amp; Permissions.</div>}
+        <main className={'content' + (locked ? ' ro' : '')}><Screen go={go} code={screen} menus={visible} /></main>
         <DemoBar />
       </div>
       {toast && <div className="toast" role="status">{toast.msg}</div>}

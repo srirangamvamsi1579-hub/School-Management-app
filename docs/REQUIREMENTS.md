@@ -1,6 +1,6 @@
 # School Management Platform — Requirements
 
-Updated 17 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos; release 7: opens on a Main menu, designations by role, account creation in the app, Admin View as Profile; 7.1–7.4: User management with departments, access by department, standard profiles for Indian schools). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
+Updated 17 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos; release 7: opens on a Main menu, designations by role, account creation in the app, Admin View as Profile; 7.1–7.5: User management with departments, access by department with read only / full access, access summary, standard profiles for Indian schools). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
 
 One platform runs Indian K-12 schools of every size, from under 250 to over 1,000 students. Each school gets only the modules its plan includes, and every person sees only the menus their role allows.
 
@@ -103,10 +103,11 @@ Operations → **Users** is open to Admins, and to anyone given the screen by de
 - **Reset password:** emails a set-password link.
 - **Rules:** nobody changes their own role; only an Admin can give the Admin role.
 
-Operations → **Roles & Permissions** has two tabs (from release 7.1; access by department from 7.4):
+Operations → **Roles & Permissions** has three tabs (from release 7.1; access by department from 7.4; access levels and summary from 7.5):
 
 - **User management:** every user profile (role), the **department** it belongs to, the designations it offers, how many people have it and how many screens it opens. Departments can be renamed (Parents have none). New profiles (e.g. Hostel Warden, Transport Manager) are added here with a department, starting screens and their own designations (Professional plan and above).
-- **Permissions by department:** every menu and sub-menu of the side menu as a tree, per department. Every profile in a department opens the same screens; the Admin profile always opens everything.
+- **Permissions by department:** every menu and sub-menu of the side menu as a tree, per department, each set to No access, Read only or Full access. Every profile in a department has the same access; the Admin profile always has full access.
+- **Access summary:** each person with their profile, department, designation and screens by level.
 
 The Access by designation tab was removed. Rules set there before (Vice Principal and Head of Teaching Staff extras) still apply, but can't be edited in the app.
 
@@ -487,9 +488,27 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 - `v_user_screens` now uses the department list (Admin keeps its full list), plus designation extras and personal grants.
 - `v_tenant_profiles`, `remove_profile()` (refused for Admin, or while anyone has the profile) and `restore_profile()` handle deleting and restoring profiles.
 
+## Added 17 Nov 2026 (release 7.5)
+
+**Access summary** (Roles & Permissions → third tab).
+- One row per person: name, profile, department, designation, and the number of screens with full access and with read-only access.
+- **Show access** lists every screen the person can open, grouped by main menu and marked Full or Read only. Hovering a screen shows where the access comes from: the department, the designation, or a personal grant.
+- Search by name or designation, and filter by department or profile.
+
+**Read only or full access.** In Permissions by department, every main menu, group and sub-menu has a choice of **No access**, **Read only** or **Full access**.
+- Setting a main menu (or a group, e.g. Exams → Papers) sets every sub-menu under it. A menu whose sub-menus differ shows **Mixed** and a counter such as "1 full · 7 read only".
+- **Read only** opens the screen with a notice ("Read only — you can view this screen but not change anything"), and every save on it is refused. This works on the website and in the phone app.
+- Screens given by designation or to one person are full access. The Admin profile always has full access to everything.
+- **Database (`017_access_levels.sql`):**
+  - `department_menu_permissions.access_level` (FULL / READ).
+  - `set_department_access()` sets a level for a sub-menu or a whole main menu.
+  - `v_user_screens.access_level` gives the best level from any source.
+  - `can_edit_screen()` is checked by the API before any save.
+  - `v_access_summary` lists each person's screens with their levels.
+
 ## Database schema summary
 
-PostgreSQL 15+, sixteen migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
+PostgreSQL 15+, seventeen migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
 
 | File | Adds | Key tables, views and functions |
 | --- | --- | --- |
@@ -509,6 +528,7 @@ PostgreSQL 15+, sixteen migration files loaded in order. Every table carries `te
 | 014_role_departments.sql | Departments per user profile | role_departments, roles.department, department_of(), set_role_department(); v_user_directory with department |
 | 015_designation_removals.sql | Removing designations | role_designation_removals; designations_for() without removed ones; remove_role_designation(), add_role_designation() |
 | 016_department_access.sql | Access by department; deleting a profile | department_menu_permissions, sync_department_permissions(), set_department_menu(); v_user_screens by department; v_tenant_profiles, tenant_profile_removals, remove_profile(), restore_profile() |
+| 017_access_levels.sql | Read only or full access | department_menu_permissions.access_level, set_department_access(), v_user_screens.access_level, can_edit_screen(), v_access_summary |
 
 The test build keeps the same entities in browser memory (`app/src/data`) and runs the same rules in JavaScript (`app/src/lib/logic.js`).
 
@@ -653,9 +673,9 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 
 One-time setup: create the dev, preprod and prod environments in GitHub, add required reviewers to preprod and prod, and add the secret `AWS_DEPLOY_ROLE_ARN` (an IAM role for GitHub OIDC).
 
-**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the sixteen migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
+**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the seventeen migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
-**Automated tests (release 7.4).** See `docs/TEST_REPORT.md`: 44 app tests, 30 SQL check groups (007–016), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 16 web end-to-end tests (including every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations, the collapsed side menu, permissions by department and deleting a profile) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
+**Automated tests (release 7.5).** See `docs/TEST_REPORT.md`: 45 app tests, 31 SQL check groups (007–017), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 18 web end-to-end tests (including every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations, the collapsed side menu, permissions by department with access levels, read-only screens, the access summary and deleting a profile) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
 
 **Earlier automated tests.** `npm test` ran 21 checks on the business rules (including the approved pickup list, route sheets, the attendant-tracking switch, requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
 
@@ -688,6 +708,8 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - [ ] Anyone: Create account with a mobile number (code shown on screen until SMS is connected)
 - [ ] Admin: Users → Review the new sign-up → pick the role → Active; the person can now sign in
 - [ ] Admin: Roles & Permissions → Permissions by department → Transport → tick Fees (whole menu) → expand it → untick Collect Fee; View as → Transport team shows Fees without Collect Fee
+- [ ] Admin: Permissions by department → Transport → Transport → Routes, Stops & Timings: Read only; View as Transport team (tick Act as) → Edit timings → Save is refused with a Read only message
+- [ ] Admin: Access summary → Transport department → Show access of Manjunath Gowda → screens marked Full / Read only
 - [ ] Admin: User management → Add Hostel Staff from the standard list → it appears with department Hostel & Boarding → Delete it (confirm)
 - [ ] Admin: Roles & Permissions → User management → rename Teacher's department; add a profile "Hostel Warden" (department Hostel, designations Hostel Warden, Assistant Warden); Users → Add user → Hostel Warden offers those designations
 - [ ] Front Office: Admissions & Enquiries → Application form → move it to In review, Offered, Enrolled; check the summary by grade
