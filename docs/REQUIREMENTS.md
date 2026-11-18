@@ -442,11 +442,12 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 - **Add a user profile:** name, department, the profile whose screens it starts with, and its designations. A school-added profile can be removed once nobody has it.
 - Operations → Users shows each person's department under their role, and Add user shows the department next to the role.
 - Existing designation extras (Vice Principal, Head of Teaching Staff) still work; they are no longer edited in the app.
-- **Database (`014_role_departments.sql`):** `role_departments` (standard + school renames, row-level security), `roles.department` for school-added profiles, `department_of()`, `set_role_department()`; `v_user_directory` now includes the department.
+- **Remove any designation (release 7.2):** every designation under *Designations offered* has a **×**, the standard ones included. It is refused while someone in that profile holds it (change their designation in Users first), and a profile keeps at least one. A removed designation is no longer offered in Add user, Edit user or sign-up; typing it in again brings it back. A profile copied from another also drops what was removed there.
+- **Database (`014_role_departments.sql`):** `role_departments` (standard + school renames, row-level security), `roles.department` for school-added profiles, `department_of()`, `set_role_department()`; `v_user_directory` now includes the department. `015_designation_removals.sql`: `role_designation_removals`, `designations_for()` leaves removed ones out, `remove_role_designation()` (refused while held or for the last one), `add_role_designation()`.
 
 ## Database schema summary
 
-PostgreSQL 15+, fourteen migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
+PostgreSQL 15+, fifteen migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
 
 | File | Adds | Key tables, views and functions |
 | --- | --- | --- |
@@ -464,6 +465,7 @@ PostgreSQL 15+, fourteen migration files loaded in order. Every table carries `t
 | 012_web_app_screens.sql | Web & App Screens | role_channel_defaults, channel_layouts (DRAFT → PENDING → PUBLISHED, versions, two-person rule), channel_layout_entries; start/submit/approve/send_back_channel_layout(), screen_channel(); v_user_web_screens, v_user_mobile_screens (replaces the 011 per-school switches) |
 | 013_designations_view_as.sql | Designations by role, View as Profile | role_designations, designations_for(), designation_problem() with deferred constraint triggers on users and user_roles, set_user_designation(); VIEWAS / VA_* menus (Admin only, enforced on role, designation and personal grants); view_as_log, start_view_as(), end_view_as(); v_user_directory |
 | 014_role_departments.sql | Departments per user profile | role_departments, roles.department, department_of(), set_role_department(); v_user_directory with department |
+| 015_designation_removals.sql | Removing designations | role_designation_removals; designations_for() without removed ones; remove_role_designation(), add_role_designation() |
 
 The test build keeps the same entities in browser memory (`app/src/data`) and runs the same rules in JavaScript (`app/src/lib/logic.js`).
 
@@ -608,9 +610,9 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 
 One-time setup: create the dev, preprod and prod environments in GitHub, add required reviewers to preprod and prod, and add the secret `AWS_DEPLOY_ROLE_ARN` (an IAM role for GitHub OIDC).
 
-**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the fourteen migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
+**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the fifteen migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
-**Automated tests (release 7.1).** See `docs/TEST_REPORT.md`: 41 app tests, 27 SQL check groups (007–014), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 12 web end-to-end tests (including every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as and the User management tab) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
+**Automated tests (release 7.2).** See `docs/TEST_REPORT.md`: 42 app tests, 28 SQL check groups (007–015), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 13 web end-to-end tests (including every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab and removing designations) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
 
 **Earlier automated tests.** `npm test` ran 21 checks on the business rules (including the approved pickup list, route sheets, the attendant-tracking switch, requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
 

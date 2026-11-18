@@ -19,7 +19,10 @@ export function designationsFor(db, role) {
   const custom = (db.customRoles || []).find((r) => r.code === role);
   const base = custom ? custom.basedOn : role;
   const extra = db.roleDesignations?.[role] || db.roleDesignations?.[base] || [];
-  return [...new Set([...(ROLE_DESIGNATIONS[base] || []), ...extra])];
+  // Designations the school removed from this profile (standard ones included). A profile copied from another also
+  // drops what was removed there, unless it added that designation back itself.
+  const removed = new Set([...(db.roleDesignationsRemoved?.[role] || []), ...(custom ? (db.roleDesignationsRemoved?.[base] || []).filter((d) => !(db.roleDesignations?.[role] || []).includes(d)) : [])]);
+  return [...new Set([...(ROLE_DESIGNATIONS[base] || []), ...extra])].filter((d) => !removed.has(d));
 }
 // The designation a person gets when their role changes: parents are always "Parent"; otherwise keep it if it fits, else the role's first
 export function fitDesignation(db, role, current) {

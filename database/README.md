@@ -18,6 +18,7 @@ Run the files in order. Each one builds on the one before.
 | 12 | `012_web_app_screens.sql` | Web & App Screens: per-role website/app channel for phone-ready screens; recommended defaults; layouts with draft → approval → published versions and a two-person rule; `screen_channel()`, `v_user_web_screens`, `v_user_mobile_screens` (replaces 011's per-school switches) |
 | 13 | `013_designations_view_as.sql` | Designations by role (standard + school extras) and `designations_for()`; a user's designation must fit their role or sign-up role (parents: Parent), checked at commit; `set_user_designation()`; View as Profile menus for Admin only (enforced on role, designation and personal grants); `view_as_log`, `start_view_as()`; `v_user_directory` incl. pending app sign-ups |
 | 14 | `014_role_departments.sql` | Department per user profile: `role_departments` (standard + school renames), `roles.department` for school-added profiles, `department_of()`, `set_role_department()`; department in `v_user_directory` |
+| 15 | `015_designation_removals.sql` | A school can remove any designation from a profile (standard ones too): `role_designation_removals`, `designations_for()` leaves them out, `remove_role_designation()` (refused while someone holds it or for the last one), `add_role_designation()` (brings one back) |
 
 ```bash
 createdb school

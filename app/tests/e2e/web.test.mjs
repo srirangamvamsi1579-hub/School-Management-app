@@ -285,3 +285,27 @@ test('Roles & Permissions: User management tab (profiles, departments, designati
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('User management: remove any designation (blocked while someone holds it), then add it back', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+  const { page, errors } = await open(ctx, '#/s/OPS_ROLES');
+  const row = page.locator('tr', { hasText: 'Transport team' });
+  await row.getByRole('button', { name: 'Remove Cleaner from Transport team' }).click();
+  await page.locator('.toast', { hasText: 'Removed “Cleaner”' }).waitFor();
+  assert.equal(await row.getByRole('button', { name: 'Remove Cleaner from Transport team' }).count(), 0);
+  await row.getByRole('button', { name: 'Remove Transport In-charge from Transport team' }).click();
+  await page.locator('.toast', { hasText: 'change their designation in Users first' }).waitFor();
+  assert.equal(await row.getByRole('button', { name: 'Remove Transport In-charge from Transport team' }).count(), 1, 'held by Manjunath, so kept');
+  await page.locator('nav.side button.item', { hasText: /^Users$/ }).click();
+  await page.getByRole('button', { name: 'Add user' }).click();
+  await page.locator('.modal').getByRole('combobox', { name: /^Role/ }).selectOption('TRANSPORT');
+  const opts = await page.locator('.modal').getByRole('combobox', { name: /Designation/ }).locator('option').allInnerTexts();
+  assert.ok(!opts.includes('Cleaner') && opts.includes('Driver'), opts.join());
+  await page.locator('.modal').getByRole('button', { name: 'Close' }).click();
+  await page.locator('nav.side button.item', { hasText: 'Roles & Permissions' }).click();
+  await page.getByLabel('New designation for Transport team').fill('cleaner');
+  await page.getByLabel('New designation for Transport team').press('Enter');
+  await page.locator('tr', { hasText: 'Transport team' }).getByRole('button', { name: 'Remove Cleaner from Transport team' }).waitFor();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

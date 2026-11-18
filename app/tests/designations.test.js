@@ -61,3 +61,15 @@ test('each user profile belongs to a department; schools can rename it; new prof
   assert.equal(departmentOf(db, 'R_WARDEN'), 'Hostel');
   assert.equal(departmentOf(db, 'R_TM'), 'Transport');
 });
+
+test('any designation can be removed from a profile, and added back', async () => {
+  const db = buildSeed();
+  db.roleDesignationsRemoved = { TRANSPORT: ['Cleaner'] };
+  assert.ok(!designationsFor(db, 'TRANSPORT').includes('Cleaner'), 'standard designation removed');
+  assert.ok(designationsFor(db, 'TRANSPORT').includes('Driver'));
+  assert.equal(fitDesignation(db, 'TRANSPORT', 'Cleaner'), '', 'a removed designation is not offered when picking a role');
+  db.customRoles.push({ code: 'R_TM', name: 'Transport Manager', basedOn: 'TRANSPORT' });
+  assert.ok(!designationsFor(db, 'R_TM').includes('Cleaner'), 'a copied profile drops it too');
+  db.roleDesignationsRemoved = {};
+  assert.ok(designationsFor(db, 'TRANSPORT').includes('Cleaner'), 'added back');
+});

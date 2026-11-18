@@ -353,16 +353,31 @@ function UserProfiles({ goMatrix }) {
   const perms = { ...ACCESS, ...(db.perms || {}) };
   const who = session.name || session.role;
   const profiles = allRoles(db).filter((r) => r.code !== 'PLATFORM');
-  const used = (d) => db.users.some((u) => u.designation === d && u.status !== 'DELETED');
   const count = (code) => db.users.filter((u) => u.role === code && u.status !== 'DELETED').length;
   const save = (role) => {
     const name = (add[role] || '').trim();
     if (name.length < 2) return;
     if (designationsFor(db, role).some((x) => x.toLowerCase() === name.toLowerCase())) { notify('Already in the list'); return; }
-    run((d) => { d.roleDesignations = { ...(d.roleDesignations || {}), [role]: [...(d.roleDesignations?.[role] || []), name] }; log(d, who, 'Designation added', `${name} (${roleName(d, role)})`); });
+    run((d) => {
+      const back = (d.roleDesignationsRemoved?.[role] || []).find((x) => x.toLowerCase() === name.toLowerCase());
+      if (back) d.roleDesignationsRemoved = { ...d.roleDesignationsRemoved, [role]: d.roleDesignationsRemoved[role].filter((x) => x !== back) };
+      if (!back || !designationsFor(d, role).includes(back)) d.roleDesignations = { ...(d.roleDesignations || {}), [role]: [...(d.roleDesignations?.[role] || []), back || name] };
+      log(d, who, 'Designation added', `${back || name} (${roleName(d, role)})`);
+    });
     setAdd({ ...add, [role]: '' }); notify('Added');
   };
-  const remove = (role, name) => run((d) => { d.roleDesignations = { ...(d.roleDesignations || {}), [role]: (d.roleDesignations?.[role] || []).filter((x) => x !== name) }; log(d, who, 'Designation removed', `${name} (${roleName(d, role)})`); });
+  const holders = (role, name) => db.users.filter((u) => u.role === role && u.designation === name && u.status !== 'DELETED').length;
+  const remove = (role, name) => {
+    const n = holders(role, name);
+    if (n) { notify(`${n} ${n === 1 ? 'person has' : 'people have'} “${name}” — change their designation in Users first`); return; }
+    if (designationsFor(db, role).length <= 1) { notify('A profile needs at least one designation — add another first'); return; }
+    run((d) => {
+      d.roleDesignations = { ...(d.roleDesignations || {}), [role]: (d.roleDesignations?.[role] || []).filter((x) => x !== name) };
+      if (designationsFor(d, role).includes(name)) d.roleDesignationsRemoved = { ...(d.roleDesignationsRemoved || {}), [role]: [...(d.roleDesignationsRemoved?.[role] || []), name] };
+      log(d, who, 'Designation removed', `${name} (${roleName(d, role)})`);
+    });
+    notify(`Removed “${name}” — it is no longer offered for ${roleName(db, role)}`);
+  };
   const saveDept = () => {
     const name = dept.name.trim(); if (name.length < 2) { notify('Enter a department name'); return; }
     run((d) => { d.roleDepartments = { ...(d.roleDepartments || {}), [dept.role]: name }; log(d, who, 'Department changed', `${roleName(d, dept.role)} → ${name}`); });
@@ -382,14 +397,14 @@ function UserProfiles({ goMatrix }) {
   };
   return <>
     <div className="tw" style={{ marginTop: 12, maxHeight: "none" }}><table className="t"><thead><tr><th>User profile</th><th>Department</th><th>Designations offered</th><th>People</th><th>Screens</th><th /></tr></thead>
-      <tbody>{profiles.map((r) => { const own = db.roleDesignations?.[r.code] || []; const list = designationsFor(db, r.code);
+      <tbody>{profiles.map((r) => { const list = designationsFor(db, r.code);
         return <tr key={r.code}>
           <td><b>{r.name}</b>{!r.builtIn && <div className="small muted">Added by the school · from {roleName(db, r.basedOn)}</div>}</td>
           <td style={{ minWidth: 190 }}>{dept?.role === r.code
             ? <div className="row"><Input value={dept.name} onChange={(e) => setDept({ ...dept, name: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && saveDept()} aria-label={'Department for ' + r.name} autoFocus /><button className="btn sm pri" onClick={saveDept}>Save</button><button className="btn sm" onClick={() => setDept(null)}>Cancel</button></div>
             : <div className="row">{departmentOf(db, r.code) || <span className="muted">—</span>}{r.code !== 'PARENT' && <button className="btn sm" aria-label={'Change department of ' + r.name} onClick={() => setDept({ role: r.code, name: departmentOf(db, r.code) })}>Change</button>}</div>}</td>
           <td style={{ maxWidth: 520 }}>{r.code === 'PARENT' ? <span className="small">No designation — every parent is marked <b>Parent</b></span> : <>
-            <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>{list.map((dname) => <span key={dname} className="pill">{dname}{own.includes(dname) && !used(dname) && <button className="btn sm" style={{ marginLeft: 6, minHeight: 0, padding: '0 6px' }} aria-label={'Remove ' + dname} onClick={() => remove(r.code, dname)}>×</button>}</span>)}</div>
+            <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>{list.map((dname) => <span key={dname} className="pill">{dname}<button className="btn sm" style={{ marginLeft: 6, minHeight: 0, padding: '0 6px' }} aria-label={`Remove ${dname} from ${r.name}`} title={holders(r.code, dname) ? `${holders(r.code, dname)} with this designation — change theirs first` : 'Remove'} onClick={() => remove(r.code, dname)}>×</button></span>)}</div>
             <div className="row" style={{ marginTop: 6 }}><Input placeholder="Add a designation" value={add[r.code] || ''} onChange={(e) => setAdd({ ...add, [r.code]: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && save(r.code)} aria-label={'New designation for ' + r.name} /><button className="btn sm" onClick={() => save(r.code)}>Add</button></div></>}</td>
           <td>{count(r.code)}</td>
           <td>{r.code === 'ADMIN' ? 'All' : <button className="btn sm" onClick={goMatrix}>{(perms[r.code] || []).length}</button>}</td>
