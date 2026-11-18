@@ -8,7 +8,7 @@ import { CATEGORIES, FIELDS, SAMPLE, renderTemplate, sanitize } from '../data/te
 import { MENU, ROLES, ACCESS, LABEL, PLANS, canSee, FUNCTIONS, funcOn, mobileTabs } from '../data/menu.js';
 import { PRESETS, TEMPLATES, contrast, accessible } from '../lib/theme.js';
 import { allRoles, roleName, canManageUsers, accountEmail, createAccount, idType, isGmail, findUser } from '../lib/auth.js';
-import { DESIGNATIONS } from '../data/seed2.js';
+import { designationsFor, fitDesignation, designationProblem, allDesignations, ROLE_DESIGNATIONS } from '../data/designations.js';
 import { AccountRequests, deleteAccount } from './Account.jsx';
 
 export function Users() {
@@ -30,7 +30,7 @@ export function Users() {
     const bad = kids.find((k) => !db.students.some((x) => x.admNo === k.toUpperCase()));
     const clash = [edit.email, edit.mobile].filter(Boolean).map((v) => findUser(db, v)).find((o) => o && o.id !== edit.id);
     const err = !edit.name?.trim() ? 'Name is required' : edit.email && !idType(edit.email) ? 'Email looks wrong' : edit.mobile && idType(edit.mobile) !== 'MOBILE' ? 'Mobile must be 10 digits'
-      : clash ? 'Another account already uses that email or mobile' : edit.role === 'PARENT' && bad ? `No student with admission no. ${bad}` : !edit.role ? 'Pick a role' : edit.role === 'ADMIN' && session.role !== 'ADMIN' ? 'Only an Admin can give the Admin role' : edit.id === me?.id && edit.role !== me.role ? "You can't change your own role" : '';
+      : clash ? 'Another account already uses that email or mobile' : edit.role === 'PARENT' && bad ? `No student with admission no. ${bad}` : designationProblem(db, edit.role, edit.designation) ? designationProblem(db, edit.role, edit.designation) : edit.role === 'ADMIN' && session.role !== 'ADMIN' ? 'Only an Admin can give the Admin role' : edit.id === me?.id && edit.role !== me.role ? "You can't change your own role" : '';
     if (err) { notify(err); return; }
     run((d) => {
       const u = d.users.find((x) => x.id === edit.id);
@@ -42,7 +42,7 @@ export function Users() {
       if (u.name !== edit.name) changes.push('name');
       if ((u.email || '') !== (edit.email || '') || (u.mobile || '') !== (edit.mobile || '')) changes.push('contact details');
       const kids = (edit.childrenText || '').split(/[\s,]+/).map((x) => x.trim().toUpperCase()).filter(Boolean);
-      Object.assign(u, { name: edit.name, email: (edit.email || '').toLowerCase(), mobile: edit.mobile || '', role: edit.role, designation: edit.designation || null, status: edit.status, extra: edit.extra, children: kids, linkedStudent: kids[0] || null });
+      Object.assign(u, { name: edit.name, email: (edit.email || '').toLowerCase(), mobile: edit.mobile || '', role: edit.role, designation: edit.role === 'PARENT' ? 'Parent' : edit.designation || null, status: edit.status, extra: edit.extra, children: kids, linkedStudent: kids[0] || null });
       if (u.loginType === 'EMAIL' && u.email) u.login = u.email;
       if (u.loginType === 'MOBILE' && u.mobile) u.login = u.mobile;
       if (u.status === 'ACTIVE') u.failed = 0;
@@ -54,10 +54,12 @@ export function Users() {
   const sendInvite = () => {
     if (!idType(invite.identifier)) { notify('Enter a Gmail / email or 10-digit mobile'); return; }
     if (findUser(db, invite.identifier)) { notify('That sign-in ID already has an account'); return; }
+    const dp = designationProblem(db, invite.role, invite.role === 'PARENT' ? 'Parent' : invite.designation); if (dp) { notify(dp); return; }
+    if (invite.role === 'PARENT' && invite.admissionNo && !db.students.some((x) => x.admNo === invite.admissionNo)) { notify('No student with admission no. ' + invite.admissionNo); return; }
     run((d) => {
       const tmp = Math.random().toString(36).slice(2) + 'A!9';
-      const u = createAccount(d, { name: invite.name, identifier: invite.identifier, password: tmp, requestedRole: invite.role, designation: invite.designation, email: invite.email });
-      Object.assign(u, { role: invite.role, status: 'ACTIVE' });
+      const u = createAccount(d, { name: invite.name, identifier: invite.identifier, password: tmp, requestedRole: invite.role, designation: invite.role === 'PARENT' ? 'Parent' : invite.designation, email: invite.email, admissionNo: invite.role === 'PARENT' ? invite.admissionNo || null : null });
+      Object.assign(u, { role: invite.role, status: 'ACTIVE', children: invite.role === 'PARENT' && invite.admissionNo ? [invite.admissionNo] : u.children });
       accountEmail(d, u, school, 'RESET');
       log(d, session.name || session.role, 'User invited', `${u.login} as ${roleName(d, u.role)}`);
     });
@@ -65,7 +67,7 @@ export function Users() {
   };
   if (!allowed) return <Page title="Users"><Card><p>You don't have access to manage users. An Admin can give access by role or by designation in Roles & Permissions.</p></Card></Page>;
   return <Page title="Users" sub={`${db.users.length} accounts · ${pending} waiting for approval. Change a person's role, designation or status here; changes apply at their next sign-in and are written to the audit log.`}
-    actions={<button className="btn pri" onClick={() => setInvite({ name: '', identifier: '', email: '', role: 'TEACHER', designation: 'TGT' })}>Add user</button>}>
+    actions={<button className="btn pri" onClick={() => setInvite({ name: '', identifier: '', email: '', role: 'TEACHER', designation: 'TGT', admissionNo: '' })}>Add user</button>}>
     <AccountRequests />
     {pending > 0 && <div className="note warn" style={{ marginBottom: 12 }}>{pending} new sign-up(s) waiting for approval — open each, check the details, pick the role and set status to Active.</div>}
     <div className="row" style={{ marginBottom: 12 }}><Input placeholder="Search name, email, mobile, designation" value={q} onChange={(e) => setQ(e.target.value)} style={{ minWidth: 300 }} />
@@ -75,12 +77,13 @@ export function Users() {
         <td>{u.role ? roleName(db, u.role) : <span className="muted">asked: {roleName(db, u.requestedRole)}</span>}</td><td>{u.designation || '—'}</td>
         <td className="small">{[...(db.designationAccess[u.designation] || []).map((c) => LABEL[c] + ' (designation)'), ...(u.extra || []).map((c) => LABEL[c])].join(', ') || '—'}</td>
         <td className="small">{u.lastLogin ? dmon(u.lastLogin) : '—'}</td><td><Status s={u.status === 'PENDING' ? 'Pending approval' : u.status} /></td>
-        <td><div className="row"><button className="btn sm" onClick={() => { setConfirmDel(''); setEdit({ ...u, role: u.role || u.requestedRole, extra: [...(u.extra || [])], childrenText: (u.children || (u.linkedStudent ? [u.linkedStudent] : [])).join(', ') }); }}>{u.status === 'PENDING' ? 'Review' : 'Edit'}</button>
+        <td><div className="row"><button className="btn sm" onClick={() => { setConfirmDel(''); setEdit({ ...u, role: u.role || u.requestedRole, designation: fitDesignation(db, u.role || u.requestedRole, u.designation), extra: [...(u.extra || [])], childrenText: (u.children || (u.linkedStudent ? [u.linkedStudent] : [])).join(', ') }); }}>{u.status === 'PENDING' ? 'Review' : 'Edit'}</button>
           {u.email && u.status !== 'PENDING' && <button className="btn sm" onClick={() => { run((d) => { accountEmail(d, d.users.find((x) => x.id === u.id), school, 'RESET'); log(d, session.name || session.role, 'Password reset sent', u.login); }); notify('Set-password link emailed'); }}>Reset password</button>}</div></td></tr>)}</tbody></table></div>
     {edit && <Modal title={(edit.status === 'PENDING' ? 'Review sign-up — ' : 'Edit user — ') + edit.name} onClose={() => setEdit(null)} actions={<button className="btn pri" onClick={save}>Save</button>}>
       <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        <Field label="Role (decides the menus)"><Select value={edit.role || ''} onChange={(e) => setEdit({ ...edit, role: e.target.value })} options={[['', 'Pick a role'], ...roles.map((r) => [r.code, r.name + (r.builtIn ? '' : ' (custom)')])]} /></Field>
-        <Field label="Designation"><Select value={edit.designation || ''} onChange={(e) => setEdit({ ...edit, designation: e.target.value })} options={[['', '—'], ...DESIGNATIONS]} /></Field>
+        <Field label="Role (decides the menus)"><Select value={edit.role || ''} onChange={(e) => setEdit({ ...edit, role: e.target.value, designation: fitDesignation(db, e.target.value, edit.designation) })} options={[['', 'Pick a role'], ...roles.map((r) => [r.code, r.name + (r.builtIn ? '' : ' (custom)')])]} /></Field>
+        {edit.role === 'PARENT' ? <Field label="Designation"><Input value="Parent" disabled aria-label="Designation: Parent" /></Field>
+          : <Field label={`Designation (${edit.role ? 'for this role' : 'pick a role first'})`}><Select value={edit.designation || ''} disabled={!edit.role} onChange={(e) => setEdit({ ...edit, designation: e.target.value })} options={[['', 'Pick a designation'], ...designationsFor(db, edit.role)]} /></Field>}
         <Field label="Status"><Select value={edit.status} onChange={(e) => setEdit({ ...edit, status: e.target.value })} options={[['PENDING', 'Waiting for approval'], ['ACTIVE', 'Active'], ['LOCKED', 'Locked'], ['DISABLED', 'Switched off']]} /></Field>
         <Field label="Name"><Input value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} /></Field>
         <Field label="Email (Gmail)"><Input value={edit.email || ''} onChange={(e) => setEdit({ ...edit, email: e.target.value })} /></Field>
@@ -102,8 +105,10 @@ export function Users() {
         <Field label="Full name" req><Input value={invite.name} onChange={(e) => setInvite({ ...invite, name: e.target.value })} /></Field>
         <Field label="Sign-in ID (Gmail / email or mobile)" req><Input value={invite.identifier} onChange={(e) => setInvite({ ...invite, identifier: e.target.value })} /></Field>
         {idType(invite.identifier) === 'MOBILE' && <Field label="Gmail for account emails"><Input value={invite.email} onChange={(e) => setInvite({ ...invite, email: e.target.value })} /></Field>}
-        <Field label="Role"><Select value={invite.role} onChange={(e) => setInvite({ ...invite, role: e.target.value })} options={roles.filter((r) => r.code !== 'PLATFORM').map((r) => [r.code, r.name])} /></Field>
-        <Field label="Designation"><Select value={invite.designation} onChange={(e) => setInvite({ ...invite, designation: e.target.value })} options={[['', '—'], ...DESIGNATIONS]} /></Field>
+        <Field label="Role"><Select value={invite.role} onChange={(e) => setInvite({ ...invite, role: e.target.value, designation: fitDesignation(db, e.target.value, invite.designation) })} options={roles.filter((r) => r.code !== 'PLATFORM').map((r) => [r.code, r.name])} /></Field>
+        {invite.role === 'PARENT' ? <Field label="Designation"><Input value="Parent" disabled aria-label="Designation: Parent" /></Field>
+          : <Field label="Designation (for this role)"><Select value={invite.designation} onChange={(e) => setInvite({ ...invite, designation: e.target.value })} options={[['', 'Pick a designation'], ...designationsFor(db, invite.role)]} /></Field>}
+        {invite.role === 'PARENT' && <Field label="Child's admission no."><Input value={invite.admissionNo || ''} onChange={(e) => setInvite({ ...invite, admissionNo: e.target.value.toUpperCase() })} placeholder="ADM-2025-0231" /></Field>}
       </div>
       <p className="small muted">They get an email with their account details and a link to set their own password. Passwords are never emailed.</p>
     </Modal>}
@@ -127,18 +132,19 @@ export function Roles() {
     run((d) => { d.customRoles.push({ code, name: nr.name.trim(), basedOn: nr.from }); d.perms = { ...ACCESS, ...(d.perms || {}), [code]: [...({ ...ACCESS, ...(d.perms || {}) })[nr.from]] }; log(d, session.name || session.role, 'Role added', `${nr.name} (copy of ${roleName(d, nr.from)})`); });
     notify('Role added — adjust its ticks in the matrix'); setNr({ name: '', from: 'TEACHER' }); setTab('matrix');
   };
-  const items = MENU.filter((m) => m.code !== 'PLATFORM').flatMap((m) => m.items.filter((i) => i[0][0] !== '#').map((i) => ({ code: i[0], label: i[1], mod: m.label })));
+  const items = MENU.filter((m) => !['PLATFORM', 'VIEWAS'].includes(m.code)).flatMap((m) => m.items.filter((i) => i[0][0] !== '#').map((i) => ({ code: i[0], label: i[1], mod: m.label })));
   return <Page title="Roles & permissions" sub="What each role can open, extra screens by designation, and new roles. A screen also has to be in the school's plan — greyed rows are not."
     actions={tab === 'matrix' && <button className="btn" onClick={() => { mutate((d) => { d.perms = Object.fromEntries((d.customRoles || []).map((r) => [r.code, [...ACCESS[r.basedOn]]])); }); notify('Back to defaults'); }}>Reset to defaults</button>}>
-    <Tabs tabs={[['matrix', 'Role permissions'], ['desig', 'Access by designation'], ['new', `Custom roles (${db.customRoles.length})`]]} value={tab} onChange={setTab} />
+    <Tabs tabs={[['matrix', 'Role permissions'], ['desig', 'Access by designation'], ['dlist', 'Designations by role'], ['new', `Custom roles (${db.customRoles.length})`]]} value={tab} onChange={setTab} />
+    {tab === 'dlist' && <DesignationLists />}
     {tab === 'matrix' && <div className="tw"><table className="t"><thead><tr><th>Menu</th>{roles.map((r) => <th key={r.code} style={{ textAlign: 'center' }}>{r.name}</th>)}</tr></thead>
-      <tbody>{MENU.filter((m) => m.code !== 'PLATFORM').map((m) => [<tr key={m.code}><td colSpan={roles.length + 1} className="b" style={{ background: 'var(--bg)' }}>{m.label}</td></tr>,
+      <tbody>{MENU.filter((m) => !['PLATFORM', 'VIEWAS'].includes(m.code)).map((m) => [<tr key={m.code}><td colSpan={roles.length + 1} className="b" style={{ background: 'var(--bg)' }}>{m.label}</td></tr>,
         ...m.items.filter((i) => i[0][0] !== '#').map((i) => { const inPlan = canSee(i[0], 'ADMIN', rank, t.overrides, null) || ['SELF_CHILD', 'SELF_FEES'].includes(i[0]); return <tr key={i[0]} style={{ opacity: inPlan ? 1 : .45 }}><td style={{ paddingLeft: 22 }}>{i[1]}</td>
           {roles.map((r) => <td key={r.code} style={{ textAlign: 'center' }}><input type="checkbox" aria-label={r.name + ' ' + i[1]} checked={(perms[r.code] || []).includes(i[0])} onChange={() => toggle(r.code, i[0])} /></td>)}</tr>; })])}</tbody></table></div>}
     {tab === 'desig' && <div className="grid g-side">
       <Card title="Screens opened by designation">
         <p className="small muted">A person keeps their role (e.g. Teacher) and also gets these screens because of their designation — e.g. a Vice Principal who teaches can manage users and admissions.</p>
-        <Field label="Designation"><Select value={desig} onChange={(e) => setDesig(e.target.value)} options={DESIGNATIONS} /></Field>
+        <Field label="Designation"><Select value={desig} onChange={(e) => setDesig(e.target.value)} options={allDesignations(db)} /></Field>
         <div className="grid g2" style={{ gap: 4, marginTop: 12 }}>{items.map((i) => <label key={i.code} className="row small"><input type="checkbox" checked={(db.designationAccess[desig] || []).includes(i.code)} onChange={() => toggleD(i.code)} />{i.label} <span className="muted">· {i.mod}</span></label>)}</div>
       </Card>
       <Card title="Who has this designation">{db.users.filter((u) => u.designation === desig).map((u) => <div key={u.id} className="small" style={{ padding: '4px 0' }}><b>{u.name}</b> · {roleName(db, u.role)}</div>)}
@@ -364,4 +370,27 @@ function WebsiteDeepLinks() {
         : <p className="small muted">Screens behind sign-in are linked, not embedded, so a parent's session is never shown inside another site.</p>}
     </div>
   </Card>;
+}
+
+// Roles & Permissions → Designations by role: the list offered when a role is picked (sign-up, Add user, Edit user)
+function DesignationLists() {
+  const { db, run, notify, session } = useStore();
+  const [add, setAdd] = useState({});
+  const roles = allRoles(db).filter((r) => r.code !== 'PLATFORM');
+  const used = (d) => db.users.some((u) => u.designation === d && u.status !== 'DELETED');
+  const save = (role) => {
+    const name = (add[role] || '').trim();
+    if (name.length < 2) return;
+    if (designationsFor(db, role).some((x) => x.toLowerCase() === name.toLowerCase())) { notify('Already in the list'); return; }
+    run((d) => { d.roleDesignations = { ...(d.roleDesignations || {}), [role]: [...(d.roleDesignations?.[role] || []), name] }; log(d, session.name || session.role, 'Designation added', `${name} (${roleName(d, role)})`); });
+    setAdd({ ...add, [role]: '' }); notify('Added');
+  };
+  const remove = (role, name) => run((d) => { d.roleDesignations = { ...(d.roleDesignations || {}), [role]: (d.roleDesignations?.[role] || []).filter((x) => x !== name) }; log(d, session.name || session.role, 'Designation removed', `${name} (${roleName(d, role)})`); });
+  return <div className="grid g2" style={{ marginTop: 12 }}>{roles.map((r) => { const own = db.roleDesignations?.[r.code] || []; const list = designationsFor(db, r.code);
+    return <Card key={r.code} title={r.name} right={<span className="small muted">{r.code === 'PARENT' ? 'Fixed' : `${list.length} designations`}</span>}>
+      {r.code === 'PARENT' ? <p className="small">Parents have no designation; every parent account is simply marked <b>Parent</b>.</p> : <>
+        <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>{list.map((dname) => <span key={dname} className="pill">{dname}{own.includes(dname) && !used(dname) && <button className="btn sm" style={{ marginLeft: 6, minHeight: 0, padding: '0 6px' }} aria-label={'Remove ' + dname} onClick={() => remove(r.code, dname)}>×</button>}</span>)}</div>
+        <div className="row" style={{ marginTop: 10 }}><Input placeholder="Add a designation" value={add[r.code] || ''} onChange={(e) => setAdd({ ...add, [r.code]: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && save(r.code)} aria-label={'New designation for ' + r.name} /><button className="btn sm" onClick={() => save(r.code)}>Add</button></div>
+        {!r.builtIn && <p className="small muted">Custom role: also gets the designations of the role it was copied from.</p>}</>}
+    </Card>; })}</div>;
 }

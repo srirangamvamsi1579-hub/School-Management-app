@@ -202,3 +202,9 @@ table.t tr:hover td { background: color-mix(in srgb, var(--brand-soft) 45%, tran
 .kbd { font-family: ui-monospace, monospace; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; font-size: 12px; }
 .demo-on .toast { bottom: 200px; }
 .demo-on .content, .demo-on .login { padding-bottom: 210px; }
+
+/* Admin "View as" bar */
+.va-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 16px; background: var(--info-bg, #E8F0FE); border-bottom: 2px solid var(--brand); position: sticky; top: 0; z-index: 15; }
+.va-phone { min-height: 100vh; background: var(--bg); }
+.va-phone .va-bar { position: static; }
+.m-back { width: 44px; height: 44px; border: 0; border-radius: 10px; background: rgba(255,255,255,.18); color: inherit; font-size: 26px; line-height: 1; cursor: pointer; flex: none; }

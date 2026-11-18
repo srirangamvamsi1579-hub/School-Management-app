@@ -2,6 +2,7 @@
 -- psql -d school -f database/tests/007_checks.sql   (expect four NOTICE lines: OTP ok, Roles ok, Admissions ok, Analytics ok)
 \set ON_ERROR_STOP 1
 SET client_min_messages = notice;
+SET TIME ZONE 'Asia/Kolkata';   -- the school's calendar day (checks use CURRENT_DATE)
 BEGIN;
 INSERT INTO academic_years (tenant_id, name, start_date, end_date, is_current) VALUES (1,'2027-28','2027-04-01','2028-03-31',TRUE);
 INSERT INTO classes (tenant_id, name, level_no) VALUES (1,'Grade IX',9);

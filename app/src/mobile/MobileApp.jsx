@@ -12,13 +12,14 @@ import { myChildren } from '../screens/Requests.jsx';
 import { REQ_TYPES, sectionsCoordinatedBy } from '../lib/pickup.js';
 import { parseHash } from '../lib/links.js';
 import { PrivacyPolicy, DeleteAccountRequest } from '../screens/Public.jsx';
+import { SignUp } from '../screens/Login.jsx';
 import { isNative, platform, enablePush, getPref, setPref, onBack, exitApp, onNetwork } from './native.js';
 
 const ICON = { home: 'M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z', send: 'M3 12l18-8-8 18-2-8z', receipt: 'M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6', user: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-8 9c0-4 4-6 8-6s8 2 8 6',
   calendar: 'M4 6h16v15H4zM4 10h16M8 3v4M16 3v4', check: 'M4 12l5 5L20 6', inbox: 'M4 4h16v16H4zM4 13h5l1 3h4l1-3h5', chat: 'M4 5h16v11H9l-5 4z', shield: 'M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z', bus: 'M5 4h14v12H5zM5 11h14M8 19v-3M16 19v-3', list: 'M8 6h12M8 12h12M8 18h12M4 6h0M4 12h0M4 18h0', more: 'M5 12h.01M12 12h.01M19 12h.01', settings: 'M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z' };
 export const Icon = ({ name, size = 22 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={ICON[name] || ICON.list} /></svg>;
 
-export default function MobileApp({ preview = false }) {
+export default function MobileApp({ preview = false, school: fixedSchool = null }) {
   const { db, session, login, logout, toast } = useStore();
   const [school, setSchool] = useState(null);
   const [ready, setReady] = useState(false);
@@ -27,7 +28,7 @@ export default function MobileApp({ preview = false }) {
   const [online, setOnline] = useState(true);
   const [hash, setHash] = useState(() => location.hash);
   useEffect(() => { const h = () => setHash(location.hash); window.addEventListener('hashchange', h); return () => window.removeEventListener('hashchange', h); }, []);
-  useEffect(() => { getPref('school').then((v) => { setSchool(v); setReady(true); }); }, []);
+  useEffect(() => { if (fixedSchool) { setSchool(fixedSchool); setReady(true); return; } getPref('school').then((v) => { setSchool(v); setReady(true); }); }, [fixedSchool]);
   useEffect(() => onNetwork(setOnline), []);
   useEffect(() => { applyTheme(db.theme); }, [db.theme]);
   // Anything that scrolls sideways (wide tables) must be reachable by keyboard and screen readers
@@ -65,7 +66,7 @@ export default function MobileApp({ preview = false }) {
   const go = (code) => { setTab(code); setMore(false); window.scrollTo?.(0, 0); };
   return shell(
     <>
-      <header className="m-top"><div className="logo" aria-hidden="true">{tenant.name[0]}</div><div style={{ flex: 1, minWidth: 0 }}><div className="b m-trunc">{tab === 'M_HOME' ? tenant.name : LABEL[tab]}</div><div className="small m-trunc">{session.name} · {roleName(db, role)}</div></div></header>
+      <header className="m-top">{tab !== 'M_HOME' ? <button className="m-back" onClick={() => go('M_HOME')} aria-label="Back to Home">‹</button> : <div className="logo" aria-hidden="true">{tenant.name[0]}</div>}<div style={{ flex: 1, minWidth: 0 }}><div className="b m-trunc">{tab === 'M_HOME' ? tenant.name : LABEL[tab]}</div><div className="small m-trunc">{session.name} · {roleName(db, role)}</div></div></header>
       <main className="m-body" id="m-main">{Screen ? <Screen go={go} code={tab} tabs={tabs} /> : <p>Not available.</p>}</main>
       {more && <div className="m-sheet" role="dialog" aria-label="More">{tabs.slice(4).map(([code, label, icon]) => <button key={code} className="m-sheet-item" onClick={() => go(code)}><Icon name={icon} />{label}</button>)}<button className="m-sheet-item" onClick={() => setMore(false)}>Close</button></div>}
     </>,
@@ -95,8 +96,10 @@ function MobileSignIn({ school, onChange, login }) {
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
   const [demo, setDemo] = useState(false);
+  const [signup, setSignup] = useState(false);
   const go = () => { const r = run((d) => signIn(d, id.trim(), pw)); if (r.error) { setErr(r.error); return; } login({ role: r.user.role, userId: r.user.id, name: r.user.name }); };
   const demoUsers = db.users.filter((u) => u.status === 'ACTIVE' && ['PARENT', 'TEACHER', 'FRONT_OFFICE', 'TRANSPORT', 'PRINCIPAL'].includes(u.role) && !['Vice Principal'].includes(u.designation));
+  if (signup) return <main className="m-center"><button className="btn m-link" onClick={() => setSignup(false)}>‹ Back to sign in</button><SignUp compact onDone={() => setSignup(false)} /></main>;
   return <main className="m-center">
     <div className="logo" style={{ width: 56, height: 56, fontSize: 24 }} aria-hidden="true">{school.name[0]}</div>
     <h1 style={{ marginBottom: 0 }}>{school.name}</h1><button className="btn m-link" onClick={onChange}>Not your school? Change</button>
@@ -104,7 +107,8 @@ function MobileSignIn({ school, onChange, login }) {
     <label className="m-field"><span>Password</span><input className="i" type="password" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && go()} /></label>
     {err && <p className="note warn" role="alert">{err}</p>}
     <button className="btn pri m-wide" onClick={go} disabled={!id || !pw}>Sign in</button>
-    <p className="small">New parent? <a href={`https://${school.subdomain}.yourapp.com/`} target="_blank" rel="noreferrer">Create your account on the school website</a> · <a href="#/p/privacy">Privacy</a></p>
+    <button className="btn m-wide" onClick={() => setSignup(true)}>Create an account</button>
+    <p className="small muted">Parents and school staff can create their own account here; the school approves it and sets your access. <a href="#/p/privacy">Privacy</a></p>
     <button className="btn m-link" onClick={() => setDemo(!demo)} aria-expanded={demo}>Demo accounts (test build)</button>
     {demo && <div className="m-list">{demoUsers.map((u) => <button key={u.id} className="m-row" onClick={() => login({ role: u.role, userId: u.id, name: u.name })}><b>{u.name}</b><span className="small muted">{roleName(db, u.role)}{u.designation ? ' · ' + u.designation : ''} · {u.login}</span></button>)}<p className="small muted">Password for every demo account: Demo@123</p></div>}
   </main>;

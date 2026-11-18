@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from './data/store.js';
-import { MENU, PLANS, ROLES, LABEL, MODULE_OF, canSee, onWeb } from './data/menu.js';
+import { MENU, PLANS, ROLES, LABEL, MODULE_OF, canSee, onWeb, viewAsUser } from './data/menu.js';
 import { applyTheme } from './lib/theme.js';
 import { tenantOf } from './lib/logic.js';
 import { screensFor, roleName } from './lib/auth.js';
@@ -12,7 +12,7 @@ import HelpGuide, { DemoBar } from './screens/Guide.jsx';
 import { parseHash } from './lib/links.js';
 
 export default function App() {
-  const { db, session, logout, toast, reset, notify } = useStore();
+  const { db, session, logout, toast, reset, notify, viewAs, setViewAs, readOnly } = useStore();
   const [hash, setHash] = useState(() => (typeof location !== 'undefined' ? location.hash : ''));
   const link = parseHash(hash);
   const [screen, setScreen] = useState(() => (link?.kind === 's' ? link.code : null));
@@ -46,15 +46,15 @@ export default function App() {
     const switched = lastUser.current !== session?.userId; lastUser.current = session?.userId;
     // A guided-demo step (or "Try") asked for a screen: open it once it is in this person's menu
     let want = null; try { want = sessionStorage.getItem('demo-screen'); } catch (e) { /* ignore */ }
-    if (want && visible.some((m) => m.items.some((i) => i[0] === want))) { try { sessionStorage.removeItem('demo-screen'); } catch (e) { /* ignore */ } if (want !== screen) { setScreen(want); return; } }
-    const ok = visible.some((m) => m.items.some((i) => i[0] === screen));
+    if (want && (want === 'HOME' || visible.some((m) => m.items.some((i) => i[0] === want)))) { try { sessionStorage.removeItem('demo-screen'); } catch (e) { /* ignore */ } if (want !== screen) { setScreen(want); return; } }
+    const ok = screen === 'HOME' || visible.some((m) => m.items.some((i) => i[0] === screen));
     if (!ok && visible.length) {
       if (screen && LABEL[screen] && !switched) notify(`“${LABEL[screen]}” is not available for your account on the website — opened your home screen`);
-      const home = role === 'PLATFORM' ? 'PLT_SCHOOLS' : visible[0].items.find((i) => i[0][0] !== '#')[0];
+      const home = 'HOME';                                  // the Main menu: every menu this person can open
       setScreen(home);
     }
   }, [visible, screen, demoTick]);
-  useEffect(() => { if (session && screen && visible.some((m) => m.items.some((i) => i[0] === screen))) { try { history.replaceState(null, '', '#/s/' + screen); } catch (e) { /* sandboxed frame */ } } }, [screen, session, visible]);
+  useEffect(() => { if (session && screen && (screen === 'HOME' || visible.some((m) => m.items.some((i) => i[0] === screen)))) { try { history.replaceState(null, '', '#/s/' + screen); } catch (e) { /* sandboxed frame */ } } }, [screen, session, visible]);
 
   if (link?.kind === 'p' && link.code === 'apply') return <PublicEnquiry embed={link.embed} />;
   if (link?.kind === 'p' && link.code === 'privacy') return <PrivacyPolicy />;
@@ -63,7 +63,36 @@ export default function App() {
   if (link?.kind === 'p' && link.code === 'guide' && !session) return <HelpGuide />;
   if (!session) return <><Login next={link?.kind === 's' ? LABEL[link.code] : null} /><DemoBar /></>;
 
-  const go = (code) => { setScreen(code); setNavOpen(false); };
+  const go = (code) => {
+    setNavOpen(false);
+    if (code.startsWith('VA_')) {                          // Admin: View as Profile
+      const u = viewAsUser(db, code);
+      if (!u) { notify('No account with this profile yet — add one in Operations → Users'); return; }
+      setViewAs({ userId: u.id, code, mode: 'web', act: false }); setScreen('HOME'); return;
+    }
+    setScreen(code);
+  };
+  const backToAdmin = () => { const from = viewAs?.code; setViewAs(null); setScreen(from || 'HOME'); };
+  const vaUser = viewAs ? db.users.find((u) => u.id === viewAs.userId) : null;
+  const viewBar = viewAs && vaUser && (
+    <div className="va-bar noprint" role="region" aria-label="Viewing as another profile">
+      <span className="pill info">Viewing as</span>
+      <b>{vaUser.name}</b><span className="small">{roleName(db, vaUser.role)}{vaUser.designation && vaUser.designation !== 'Parent' ? ' · ' + vaUser.designation : ''}</span>
+      <div className="seg" role="group" aria-label="Show">
+        <button className={'btn sm' + (viewAs.mode === 'web' ? ' pri' : '')} aria-pressed={viewAs.mode === 'web'} onClick={() => setViewAs({ ...viewAs, mode: 'web' })}>Website</button>
+        <button className={'btn sm' + (viewAs.mode === 'app' ? ' pri' : '')} aria-pressed={viewAs.mode === 'app'} onClick={() => setViewAs({ ...viewAs, mode: 'app' })}>Phone app</button>
+      </div>
+      <label className="row small"><input type="checkbox" checked={!!viewAs.act} onChange={(e) => setViewAs({ ...viewAs, act: e.target.checked })} />Act as this person (changes are saved as them)</label>
+      <span className="sp" />
+      <button className="btn sm pri" onClick={backToAdmin}>Back to Admin</button>
+    </div>
+  );
+  if (viewAs && vaUser && viewAs.mode === 'app') return (
+    <div className="va-phone">{viewBar}
+      <p className="small muted" style={{ textAlign: 'center' }}>{readOnly ? 'Preview only: you can open every tab; changes are blocked.' : 'Acting as this person: changes are saved under their name.'}</p>
+      <MobileApp preview school={tenant.code} />
+    </div>
+  );
   const Screen = SCREENS[screen] || Placeholder;
   const topnav = db.theme.template === 'TOPNAV';
   const user = ROLES.find((r) => r.code === role);
@@ -71,6 +100,7 @@ export default function App() {
   const sideNav = (
     <nav className={'side' + (navOpen ? ' open' : '')} aria-label="Main menu">
       <div className="school"><div className="logo">{tenant.name[0]}</div><div><div className="b" style={{ fontSize: 13 }}>{tenant.name}</div><div className="small" style={{ opacity: .7 }}>{PLANS.find((p) => p.rank === rank).name} plan</div></div></div>
+      <button className={'item' + (screen === 'HOME' ? ' on' : '')} onClick={() => go('HOME')} aria-current={screen === 'HOME' ? 'page' : undefined}>⌂ Main menu</button>
       {links.filter((l) => l.under === 'TOP').map((l) => <a key={l.id} className="item" href={l.url} target="_blank" rel="noreferrer">{l.label}<span className="ext">↗</span></a>)}
       {visible.map((m) => {
         const closed = openMods[m.code] === false;
@@ -105,14 +135,16 @@ export default function App() {
       <div className="main">
         <header className="topbar">
           {!topnav && <button className="btn sm mob-only" onClick={() => setNavOpen(!navOpen)} aria-label="Menu">☰</button>}
-          <span className="crumbs">{MODULE_OF[screen]} / <b style={{ color: 'var(--ink)' }}>{LABEL[screen]}</b></span>
+          <button className="btn sm" onClick={() => go('HOME')} aria-label="Main menu" disabled={screen === 'HOME'}>⌂ Main menu</button>
+          <span className="crumbs">{screen === 'HOME' ? <b style={{ color: 'var(--ink)' }}>Main menu</b> : <>{MODULE_OF[screen]} / <b style={{ color: 'var(--ink)' }}>{LABEL[screen]}</b></>}</span>
           <span className="sp" />
           <span className="pill info">Test build · in-memory data</span>
           <span className="small"><b>{session.name || user?.user}</b> · {roleName(db, role)}{me?.designation ? ' · ' + me.designation : ''}</span>
           <button className="btn sm" onClick={() => { if (armed) { reset(); setArmed(false); } else { setArmed(true); setTimeout(() => setArmed(false), 4000); } }}>{armed ? 'Click again to reset' : 'Reset demo data'}</button>
-          <button className="btn sm" onClick={logout}>Switch user</button>
+          {!viewAs && <button className="btn sm" onClick={logout}>Switch user</button>}
         </header>
-        <main className="content"><Screen go={go} code={screen} /></main>
+        {viewBar}
+        <main className="content"><Screen go={go} code={screen} menus={visible} /></main>
         <DemoBar />
       </div>
       {toast && <div className="toast" role="status">{toast.msg}</div>}

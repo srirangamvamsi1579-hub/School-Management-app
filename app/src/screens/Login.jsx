@@ -3,7 +3,8 @@ import { useStore } from '../data/store.js';
 import { ROLES, PLANS } from '../data/menu.js';
 import { Select, Field, Input, Html, Tabs } from '../components/ui.jsx';
 import { idType, normId, isGmail, isEmail, isMobile, normMobile, passwordProblems, findUser, sendOtp, checkOtp, createAccount, accountEmail, signIn, setPassword } from '../lib/auth.js';
-import { DESIGNATIONS } from '../data/seed2.js';
+import { designationsFor, fitDesignation, designationProblem, SIGNUP_ROLES } from '../data/designations.js';
+import { roleName } from '../lib/auth.js';
 import { tenantOf, log } from '../lib/logic.js';
 
 const WHAT = {
@@ -133,11 +134,11 @@ function SignIn({ onPeek, onSignup }) {
   );
 }
 
-function SignUp({ onPeek, onDone }) {
+export function SignUp({ onPeek = () => {}, onDone, compact = false }) {
   const { db, run, notify } = useStore();
   const school = tenantOf(db).name;
   const [step, setStep] = useState(1);
-  const [f, setF] = useState({ first: '', last: '', identifier: '', email: '', mobile: '', requestedRole: 'PARENT', admissionNo: '', designation: 'TGT', password: '', confirm: '', agree: false });
+  const [f, setF] = useState({ first: '', last: '', identifier: '', email: '', mobile: '', requestedRole: 'PARENT', admissionNo: '', designation: 'Parent', password: '', confirm: '', agree: false });
   const [sent, setSent] = useState(null);
   const [code, setCode] = useState('');
   const [err, setErr] = useState('');
@@ -158,10 +159,11 @@ function SignUp({ onPeek, onDone }) {
   const finish = () => {
     if (type === 'MOBILE' && f.email && !isEmail(f.email)) return setErr('That email address looks wrong');
     if (f.requestedRole === 'PARENT' && !/^ADM-\d{4}-\d{4}$/i.test(f.admissionNo.trim())) return setErr("Enter your child's admission number, like ADM-2025-0231");
+    const dp = designationProblem(db, f.requestedRole, f.requestedRole === 'PARENT' ? 'Parent' : f.designation); if (dp) return setErr(dp);
     if (!f.agree) return setErr('Please accept the terms and privacy notice');
     const u = run((d) => {
-      const x = createAccount(d, { ...f, name, admissionNo: f.requestedRole === 'PARENT' ? f.admissionNo.trim().toUpperCase() : null, designation: f.requestedRole === 'STAFF' ? f.designation : null,
-        requestedRole: f.requestedRole === 'STAFF' ? 'TEACHER' : 'PARENT', email: type === 'EMAIL' ? normId(f.identifier) : f.email, mobile: type === 'MOBILE' ? f.identifier : f.mobile });
+      const x = createAccount(d, { ...f, name, admissionNo: f.requestedRole === 'PARENT' ? f.admissionNo.trim().toUpperCase() : null, designation: f.requestedRole === 'PARENT' ? 'Parent' : f.designation,
+        requestedRole: f.requestedRole, email: type === 'EMAIL' ? normId(f.identifier) : f.email, mobile: type === 'MOBILE' ? f.identifier : f.mobile });
       accountEmail(d, x, school, 'WELCOME');
       log(d, x.name, 'Account created', `${x.login} · waiting for approval`);
       return x;
@@ -175,7 +177,7 @@ function SignUp({ onPeek, onDone }) {
       <div className="row small" style={{ marginBottom: 12 }}>{steps.map((s, i) => <span key={s} className={'pill' + (step === i + 1 ? ' info' : step > i + 1 ? ' ok' : '')}>{i + 1}. {s}</span>)}</div>
       {step === 1 && <>
         <h2>Create your {school} account</h2>
-        <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}><Field label="First name" req><Input autoComplete="given-name" value={f.first} onChange={set('first')} /></Field><Field label="Last name"><Input autoComplete="family-name" value={f.last} onChange={set('last')} /></Field></div>
+        <div className="form" style={{ gridTemplateColumns: compact ? '1fr' : '1fr 1fr' }}><Field label="First name" req><Input autoComplete="given-name" value={f.first} onChange={set('first')} /></Field><Field label="Last name"><Input autoComplete="family-name" value={f.last} onChange={set('last')} /></Field></div>
         <div className="row end" style={{ marginTop: 14 }}><button className="btn pri" onClick={next1}>Next</button></div>
       </>}
       {step === 2 && <>
@@ -206,9 +208,9 @@ function SignUp({ onPeek, onDone }) {
       {step === 5 && <>
         <h2>Your profile</h2>
         <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
-          <Field label="I am a"><Select value={f.requestedRole} onChange={set('requestedRole')} options={[['PARENT', 'Parent / guardian'], ['STAFF', 'Staff member']]} /></Field>
+          <Field label="I am a"><Select value={f.requestedRole} onChange={(e) => { setF({ ...f, requestedRole: e.target.value, designation: fitDesignation(db, e.target.value, f.designation) }); setErr(''); }} options={SIGNUP_ROLES.map((r) => [r, r === 'PARENT' ? 'Parent / guardian' : roleName(db, r) + ' (staff)'])} /></Field>
           {f.requestedRole === 'PARENT' ? <Field label="Child's admission number" req><Input value={f.admissionNo} onChange={set('admissionNo')} placeholder="ADM-2025-0231" /></Field>
-            : <Field label="Designation"><Select value={f.designation} onChange={set('designation')} options={DESIGNATIONS} /></Field>}
+            : <Field label={`Designation in ${roleName(db, f.requestedRole)}`} req><Select value={f.designation} onChange={set('designation')} options={[['', 'Pick a designation'], ...designationsFor(db, f.requestedRole)]} /></Field>}
           {type === 'MOBILE' ? <Field label="Gmail for account emails (recommended)"><Input value={f.email} onChange={set('email')} placeholder="name@gmail.com" /></Field>
             : <Field label="Mobile (for future SMS codes)"><Input value={f.mobile} onChange={set('mobile')} maxLength={10} /></Field>}
         </div>
@@ -219,8 +221,8 @@ function SignUp({ onPeek, onDone }) {
       {step === 6 && <>
         <h2>Account created</h2>
         <p>Thanks, {f.first}. The school office will check your details and approve your account — usually within a working day. We've emailed your account details{type === 'MOBILE' && !f.email ? ' (add a Gmail next time to receive them)' : ''}.</p>
-        <p className="small muted">To test approval now: use Demo quick access → Admin → Operations → Users.</p>
-        <button className="btn pri" onClick={onDone}>Back to sign in</button>
+        <p className="small muted">The account is in Operations → Users as “Waiting for approval”, where an Admin confirms the role and designation.</p>
+        <button className="btn pri" onClick={onDone}>{compact ? 'Back' : 'Back to sign in'}</button>
       </>}
       {err && <div className="note warn" style={{ marginTop: 12 }} role="alert">{err}</div>}
     </div>

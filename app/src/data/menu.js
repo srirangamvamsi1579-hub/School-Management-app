@@ -49,6 +49,8 @@ export const MENU = [
     ['OPS_CHANNELS', 'Web & App Screens', 1], ['OPS_APPEARANCE', 'Appearance & Branding', 1], ['OPS_WEBSITE', 'Website & Links', 1], ['OPS_OUTBOX', 'Email & SMS Outbox', 1], ['OPS_SMS', 'SMS Gateway', 1]] },
   { code: 'SELF', label: 'My Space', icon: 'user', min: 1, items: [
     ['SELF_CHILD', 'My Child', 1], ['SELF_REQUESTS', 'Requests to School', 1], ['SELF_FEES', 'Fee Dues & Pay', 1], ['SELF_PAYSLIP', 'My Payslips', 2], ['SELF_MYPERF', 'My Teaching Performance', 2], ['SELF_PROFILE', 'My Account', 1], ['SELF_PREFS', 'My Preferences', 1]] },
+  // Admin only: see the app as each profile sees it, without signing in as them
+  { code: 'VIEWAS', label: 'View as Profile', icon: 'eye', min: 1, items: [['VA_PARENT', 'Parent', 1], ['VA_TEACHER', 'Teacher (class coordinator)', 1], ['VA_VP', 'Teacher + Vice Principal', 1], ['VA_HOTS', 'Teacher + Head of Teaching Staff', 1], ['VA_PRINCIPAL', 'Principal', 1], ['VA_ACCOUNTANT', 'Accountant', 1], ['VA_FRONT_OFFICE', 'Front Office', 1], ['VA_TRANSPORT', 'Transport team', 1]] },
   { code: 'PLATFORM', label: 'Platform Console', icon: 'cloud', min: 1, items: [['PLT_SCHOOLS', 'Schools & Plans', 1]] },
   { code: 'HELP', label: 'Help', icon: 'book', min: 1, items: [['HELP_GUIDE', 'User Guide & Demo', 1]] }
 ];
@@ -73,6 +75,7 @@ export const ACCESS = {
 export const MIN_RANK = Object.fromEntries(MENU.flatMap((m) => m.items.filter((i) => i[0][0] !== '#').map((i) => [i[0], Math.max(i[2], m.min)])));
 export const MODULE_MIN = Object.fromEntries(MENU.map((m) => [m.code, m.min]));
 export const LABEL = Object.fromEntries(MENU.flatMap((m) => m.items.map((i) => [i[0], i[1]])));
+LABEL.HOME = 'Main menu';
 export const MODULE_OF = Object.fromEntries(MENU.flatMap((m) => m.items.map((i) => [i[0], m.label])));
 
 // Is this sub-menu switched on for the school (plan rank, add-ons, switched off) and allowed for the role?
@@ -153,3 +156,7 @@ export function webScreens(tenant, role, perms, layout = publishedLayout(tenant)
   const rank = PLANS.find((p) => p.code === tenant.plan).rank;
   return MENU.flatMap((m) => m.items.map((i) => i[0])).filter((c) => c[0] !== '#' && canSee(c, role, rank, tenant.overrides, perms) && (role === 'PLATFORM' || channelIn(layout, role, c) !== 'APP'));
 }
+
+// Which demo profile each View-as item shows: a role, and optionally a designation
+export const VIEW_AS = { VA_PARENT: ['PARENT'], VA_TEACHER: ['TEACHER', 'TGT'], VA_VP: ['TEACHER', 'Vice Principal'], VA_HOTS: ['TEACHER', 'Head of Teaching Staff'], VA_PRINCIPAL: ['PRINCIPAL'], VA_ACCOUNTANT: ['ACCOUNTANT'], VA_FRONT_OFFICE: ['FRONT_OFFICE'], VA_TRANSPORT: ['TRANSPORT'] };
+export const viewAsUser = (db, code) => { const [role, desig] = VIEW_AS[code] || []; return db.users.find((u) => u.role === role && u.status === 'ACTIVE' && (!desig || u.designation === desig)) || null; };

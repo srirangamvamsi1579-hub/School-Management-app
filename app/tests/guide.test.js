@@ -26,7 +26,7 @@ test('every guided-demo step opens for the person it signs in as', () => {
     const u = db.users.find((x) => x.id === s.as);
     assert.ok(u && DEMO_PEOPLE[s.as], `${w.id} step ${i + 1}: unknown person ${s.as}`);
     const perms = { [u.role]: screensFor(db, u, u.role) };
-    const ok = !!s.needs || (canSee(s.screen, u.role, rank, t.overrides, perms) && onWeb(t, u.role, s.screen));
+    const ok = !!s.needs || s.screen === 'HOME' || (canSee(s.screen, u.role, rank, t.overrides, perms) && onWeb(t, u.role, s.screen));
     assert.ok(ok, `${w.id} step ${i + 1}: ${u.name} cannot open ${s.screen}`);
   }
 });

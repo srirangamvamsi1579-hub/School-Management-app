@@ -374,6 +374,51 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 - **Getting started:** links, demo accounts and tips.
 - **Printable manual:** `docs/USER_GUIDE.md`, generated from the same content (`node app/scripts/user-guide.mjs`), and the shareable [User Guide doc](https://claude.ai/artifact/6ALh8LqsnVisEpf9Leq1LL) with screenshots.
 
+## Added 17 Nov 2026 (release 7)
+
+**Opens straight on the Main menu.** For testing, the website skips the sign-in page and opens as the school Admin on a new **Main menu** screen. It shows every menu and sub-menu as tiles. The sign-in page is still there through **Switch user** or `#/login`. The phone app still asks people to sign in.
+
+**Main menu from every screen.** Every screen has a **⌂ Main menu** button in the top bar and a **Main menu** item at the top of the side menu. In the phone app, every tab except Home has a **‹** back button to Home.
+
+**Designations follow the role (Operations → Users).** When you add or edit a user, the designation list shows only that role's designations:
+
+| Role | Designations offered |
+| --- | --- |
+| Admin | School Administrator, IT Administrator, Office Manager |
+| Principal | Principal, Vice Principal, Headmistress / Headmaster, Academic Director |
+| Accountant | Accountant, Senior Accountant, Accounts Assistant, Cashier, Fee Clerk |
+| Teacher | Pre-Primary Teacher, PRT, TGT, PGT, Class Teacher, Coordinator, Head of Department, Head of Teaching Staff, Vice Principal, Physical Education Teacher, Special Educator, Counsellor, Librarian, Lab Assistant |
+| Front Office | Receptionist, Front Office Executive, Admissions Officer, Office Assistant, Gate / Security Staff |
+| Transport team | Transport In-charge, Transport Supervisor, Driver, Cleaner, Bus Helper / Attendant |
+| Parent | No designation: marked **Parent** |
+
+- Changing the role clears a designation that does not fit.
+- Save is refused until a matching designation is picked.
+- A school can add its own designations per role in **Roles & Permissions → Designations by role**. A designation that is in use can't be removed.
+- A custom role uses the list of the role it was based on.
+- Adding a Parent asks for the child's admission number.
+
+**Create an account from the app.** The phone app's sign-in page has **Create an account**, for parents and for staff (Teacher, Front Office, Transport team, Accountant, Principal).
+- Staff pick their designation from their role's list.
+- Parents give their child's admission number.
+- The account goes into the same users table as Pending. It shows at the top of **Operations → Users** for approval, with the role and designation asked for already filled in.
+- Passwords are never emailed.
+
+**View as Profile (Admin only).** A new menu on the Main menu and in the side menu shows the app as a Parent, Teacher (class coordinator), Teacher + Vice Principal, Teacher + Head of Teaching Staff, Principal, Accountant, Front Office or Transport team. No sign-in is needed.
+- A bar shows who you are viewing as. It switches between **Website** and **Phone app** and has **Back to Admin**.
+- Viewing is read-only: anything that would save is blocked with a message. Ticking **Act as this person** lets changes through, saved under that person.
+- The menu is for the Admin role only. It can't be given by designation, by a personal grant or to another role. This is checked both in the app and in the database.
+- Each view is logged (`view_as_log`): who viewed whom, website or app, and whether they acted.
+
+**Database (`013_designations_view_as.sql`):**
+- `role_designations` holds the standard lists plus each school's extras, with row-level security.
+- `designations_for()` returns a role's list.
+- `designation_problem()` and two deferred constraint triggers make a designation fit the role, or the role asked for at sign-up. A parent's designation is always Parent.
+- `set_user_designation()` sets a designation.
+- View as menus, rows `VIEWAS` / `VA_*`, are for Admin only and enforced by triggers.
+- `start_view_as()` / `end_view_as()` and `view_as_log` record each view.
+- `v_user_directory` lists every account, pending sign-ups included.
+
 ## Database schema summary
 
 PostgreSQL 15+, twelve migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.

@@ -1,6 +1,7 @@
 -- Checks for 012 (Web & App Screens). One transaction, rolled back.  Expect NOTICE lines: Defaults ok, Workflow ok, Channels ok
 \set ON_ERROR_STOP 1
 SET client_min_messages = notice;
+SET TIME ZONE 'Asia/Kolkata';   -- the school's calendar day (checks use CURRENT_DATE)
 BEGIN;
 INSERT INTO academic_years (tenant_id, name, start_date, end_date, is_current) VALUES (1,'2026-27', CURRENT_DATE - 100, CURRENT_DATE + 200, TRUE);
 INSERT INTO users (tenant_id, username, email, password_hash, status) VALUES (1,'adm','a@x.in','COGNITO','ACTIVE'),(1,'adm2','a2@x.in','COGNITO','ACTIVE'),(1,'prin','p@x.in','COGNITO','ACTIVE'),(1,'gate','g@x.in','COGNITO','ACTIVE'),(1,'parent','pa@example.com','COGNITO','ACTIVE');

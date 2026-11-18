@@ -45,7 +45,7 @@ Website menus and phone tabs with the recommended layout. Schools change this in
 | **Transport team** | **Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Transport Reports<br>**My Space:** My Account, My Preferences<br>**Help:** User Guide & Demo | Home, Route sheet, Manifest, Bus changes, Account |
 | **Principal** | **Dashboard:** Dashboard<br>**Students:** Insights, All Students, Admissions & Enquiries, Attendance, Coordinator Desk, Parent Meetings, Office Requests<br>**Staff:** Insights, All Staff, Staff Attendance, Leave Requests<br>**Academics:** Classes & Sections, Class Coordinators, Boards, Syllabus & Textbooks, Timetable<br>**Exams:** Question Papers, Approved Papers, Question Bank, Paper Formats, Co-Scholastic Grades, Assessment Profiles<br>**Fees:** Insights, Fee Request Emails, Payment Matching, Dues & Reminders, Fee Structure, Concessions<br>**Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Bank & Payment Details, Account Statement, Income & Expenses<br>**Operations:** Templates, Web & App Screens<br>**My Space:** My Payslips, My Account, My Preferences<br>**Help:** User Guide & Demo | Home, Attendance, Approvals, Meetings, Office, Route sheet, Account |
 | **Accountant** | **Dashboard:** Dashboard<br>**Students:** All Students<br>**Staff:** All Staff<br>**Fees:** Insights, Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions<br>**Data Analytics:** Report Catalogue, Transport Reports<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Bank & Payment Details, Account Statement, Income & Expenses<br>**Operations:** Templates, Email & SMS Outbox<br>**My Space:** My Payslips, My Account, My Preferences<br>**Help:** User Guide & Demo | Home, Payslips, Account |
-| **Admin** | **Dashboard:** Dashboard<br>**Students:** Insights, All Students, Admissions & Enquiries, New Admission, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Gate Desk, Promote / Transfer, Documents & ID Cards<br>**Staff:** Insights, All Staff, Add Staff, Staff Attendance, Leave Requests<br>**Academics:** Classes & Sections, Class Coordinators, Boards, Syllabus & Textbooks, Timetable<br>**Exams:** Question Papers, Approved Papers, Question Bank, Paper Formats, Co-Scholastic Grades, Assessment Profiles<br>**Fees:** Insights, Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions<br>**Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Bank & Payment Details, Account Statement, Income & Expenses<br>**Operations:** Users, Roles & Permissions, Templates, Data Import, Web & App Screens, Appearance & Branding, Website & Links, Email & SMS Outbox, SMS Gateway<br>**My Space:** My Payslips, My Account, My Preferences<br>**Help:** User Guide & Demo | Home, Account |
+| **Admin** | **Dashboard:** Dashboard<br>**Students:** Insights, All Students, Admissions & Enquiries, New Admission, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Gate Desk, Promote / Transfer, Documents & ID Cards<br>**Staff:** Insights, All Staff, Add Staff, Staff Attendance, Leave Requests<br>**Academics:** Classes & Sections, Class Coordinators, Boards, Syllabus & Textbooks, Timetable<br>**Exams:** Question Papers, Approved Papers, Question Bank, Paper Formats, Co-Scholastic Grades, Assessment Profiles<br>**Fees:** Insights, Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions<br>**Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Bank & Payment Details, Account Statement, Income & Expenses<br>**Operations:** Users, Roles & Permissions, Templates, Data Import, Web & App Screens, Appearance & Branding, Website & Links, Email & SMS Outbox, SMS Gateway<br>**My Space:** My Payslips, My Account, My Preferences<br>**View as Profile:** Parent, Teacher (class coordinator), Teacher + Vice Principal, Teacher + Head of Teaching Staff, Principal, Accountant, Front Office, Transport team<br>**Help:** User Guide & Demo | Home, Account |
 | **Platform team** | **Operations:** Web & App Screens<br>**Platform Console:** Schools & Plans<br>**Help:** User Guide & Demo | Website only |
 
 ## 3. Web & App Screens (choosing what goes on the website and in the app)
@@ -194,16 +194,34 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 2. **Sonia Mehta (Teacher, class coordinator 8-A) → My Payslips:** Open the payslip.  
    *You should see:* Shows basic, allowances, PF, TDS and net.
 
-### 4.10 New parent account: sign up → approval
+### 4.10 New account from the app → approval in Users
 
-*Parent (new), Admin · about 3 min*
+*Parent or staff (new), Admin · about 3 min*
 
-1. **Without signing in → #/:** Sign out (top right) → Create account. Use a Gmail address, read the code in the Test inbox, set a password, give the child’s admission number.  
-   *You should see:* Account waiting for approval; details emailed (never the password).
-2. **Admin user (Admin) → Users:** Review the new sign-up → role Parent → Active.  
+1. **Without signing in → #/p/mobile:** Phone app → school code GVS → Create an account. Pick Parent (give the child’s admission number) or a staff role — e.g. Transport team → designation Driver. Verify the code (shown on screen), set a password.  
+   *You should see:* Account created, waiting for approval; details emailed (never the password).
+2. **Admin user (Admin) → Users:** The new account is at the top as “Waiting for approval”. Review → the role asked for is filled in and the designation list shows only that role’s designations → status Active → Save.  
    *You should see:* The person can now sign in.
 
-### 4.11 Choose what shows on the website and in the app
+### 4.11 Add a user: designations follow the role
+
+*Admin · about 2 min*
+
+1. **Admin user (Admin) → Users:** Add user → Role Transport team: the designations are Transport In-charge, Transport Supervisor, Driver, Cleaner, Bus Helper / Attendant. Change the role to Parent: the designation is simply Parent.  
+   *You should see:* Each role offers only its own designations.
+2. **Admin user (Admin) → Roles & Permissions:** Designations by role → Transport team → add “Route Marshal”.  
+   *You should see:* It is offered next time a Transport user is added.
+
+### 4.12 See the app as each profile (Admin)
+
+*Admin · about 2 min*
+
+1. **Admin user (Admin) → undefined:** Main menu → View as Profile → Parent (the same items are in the side menu).  
+   *You should see:* The menus change to the parent’s; a bar says who you are viewing as.
+2. **Admin user (Admin) → undefined:** In the bar, switch to Phone app, then Back to Admin.  
+   *You should see:* The parent’s phone tabs; changes are blocked unless you tick “Act as this person”.
+
+### 4.13 Choose what shows on the website and in the app
 
 *Admin, Principal · about 3 min*
 
@@ -218,7 +236,7 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 5. **Without signing in → #/p/mobile:** Open the phone preview, school code GVS, demo account Anita Rao.  
    *You should see:* Gate is a tab in the app.
 
-### 4.12 Onboard a school (platform team)
+### 4.14 Onboard a school (platform team)
 
 *Platform team, Admin · about 3 min*
 
@@ -229,7 +247,7 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 3. **Admin user (Admin) → Website & Links:** Copy the deep links and the admission-form snippet for the school website.  
    *You should see:* Each school has its own addresses.
 
-### 4.13 A day for the transport team
+### 4.15 A day for the transport team
 
 *Transport · about 3 min*
 
@@ -240,7 +258,7 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 3. **Manjunath Gowda (Transport In-charge) → Daily Bus Manifest:** Morning trip; mark Boarded / No-show.  
    *You should see:* Not-boarding children show the reason.
 
-### 4.14 Results and teacher performance
+### 4.16 Results and teacher performance
 
 *Principal, Head of Teaching Staff, Teacher · about 2 min*
 
@@ -356,8 +374,8 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |
-| **Users** | Accounts: approve sign-ups, change roles, designation, status, reset passwords, delete. | Review new sign-ups → pick the role → Active. | Admin | Website |
-| **Roles & Permissions** | Which screens each role can open; access by designation; custom roles. | Tick screens per role; add designation extras. | Admin | Website |
+| **Users** | Accounts: approve sign-ups, add users, change roles, designation, status, reset passwords, delete. | Add user or Review a sign-up → pick the role (the designation list then shows only that role’s designations; parents are simply Parent) → Active. | Admin | Website |
+| **Roles & Permissions** | Which screens each role can open; access by designation; the designations offered for each role; custom roles. | Tick screens per role; add designation extras; add designations to a role (e.g. Transport → Driver, Cleaner, Bus Helper). | Admin | Website |
 | **Templates** | Invoices, receipts, emails, payslips and letters in the school’s own format. | Use standard, Copy & edit, or Upload; set the default. | Teacher, Front Office, Principal, Accountant, Admin | Website |
 | **Data Import** | Bring in data from Excel, CSV or photos. | Upload → map columns → map values → check → Import (can be rolled back). | Admin | Website |
 | **Web & App Screens** | Which screens each role sees on the website, in the mobile app, or both. | Pick a role → choose Website + app / Website only / App only → Send for approval → the Principal approves → published. | Principal, Admin, Platform team | Website |
@@ -378,13 +396,26 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 | **My Account** | Your account: name, email or mobile, password, notifications, linked children; delete your account. | Change details (a code confirms new email or mobile). | Parent, Teacher, Front Office, Transport team, Principal, Accountant, Admin | Website; app for Parent, Teacher, Front Office, Transport team, Principal, Accountant, Admin |
 | **My Preferences** | Your display preferences. | Pick layout density and theme. | Parent, Teacher, Front Office, Transport team, Principal, Accountant, Admin | Website |
 
-### 5.13 Platform Console
+### 5.13 View as Profile
+
+| Sub-menu | What it is for | How to use it | Who can open it | Where |
+| --- | --- | --- | --- | --- |
+| **Parent** | Admin only: see the website and phone app exactly as a parent sees them. | Click it; a bar shows who you are viewing as. Switch Website / Phone app; Back to Admin returns. Preview only unless you tick “Act as this person”. | Admin | Website |
+| **Teacher (class coordinator)** | Admin only: see the app as a teacher who is a class coordinator. | As above. | Admin | Website |
+| **Teacher + Vice Principal** | Admin only: see the app as a teacher who is also Vice Principal (designation adds Users, Admissions and analytics). | As above. | Admin | Website |
+| **Teacher + Head of Teaching Staff** | Admin only: see the app as a teacher who is Head of Teaching Staff. | As above. | Admin | Website |
+| **Principal** | Admin only: see the app as the Principal. | As above. | Admin | Website |
+| **Accountant** | Admin only: see the app as the Accountant. | As above. | Admin | Website |
+| **Front Office** | Admin only: see the app as the Front Office. | As above. | Admin | Website |
+| **Transport team** | Admin only: see the app as the Transport team. | As above. | Admin | Website |
+
+### 5.14 Platform Console
 
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |
 | **Schools & Plans** | Platform Console: schools, plans, modules, functions and the mobile app switch. | Pick a school → plan → switch modules / sub-menus / functions → Mobile app on or off. | Platform team | Website |
 
-### 5.14 Help
+### 5.15 Help
 
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |

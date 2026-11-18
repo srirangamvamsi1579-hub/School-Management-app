@@ -31,7 +31,7 @@ npm run build        # static site in app/dist  → any web host
 npm run build:single # one self-contained file: app/dist-single/index.html
 ```
 
-Sign in with a demo account (password `Demo@123`): admin@greenvalley.example.in, principal@greenvalley.example.in, sana.accounts@example.com, sonia.teacher@example.com, meera.vp@example.com (Teacher + Vice Principal), mobile 9845011200 (Front Office), rohit.s@example.com (Parent), transport@greenvalley.example.in (Transport) or murali.hots@example.com (Head of Teaching Staff). Or use **Demo quick access**, or **Create account** to try the sign-up flow (codes appear in the "Test inbox" panel). Change the school on the sign-in page to see how the plan (Starter → Enterprise) changes the menus. "Reset demo data" in the top bar starts over.
+The test website opens straight on the **Main menu** as the school Admin. Use **View as Profile** to see any profile's website or phone app, or **Switch user** to sign in. Demo accounts (password `Demo@123`): admin@greenvalley.example.in, principal@greenvalley.example.in, sana.accounts@example.com, sonia.teacher@example.com, meera.vp@example.com (Teacher + Vice Principal), mobile 9845011200 (Front Office), rohit.s@example.com (Parent), transport@greenvalley.example.in (Transport) or murali.hots@example.com (Head of Teaching Staff). Or use **Demo quick access**, or **Create account** to try the sign-up flow (codes appear in the "Test inbox" panel). Change the school on the sign-in page to see how the plan (Starter → Enterprise) changes the menus. "Reset demo data" in the top bar starts over.
 
 ## Host it
 

@@ -12,7 +12,7 @@ let server, browser;
 before(async () => { server = await serve(DIST); browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ['--no-sandbox'] }); });
 after(async () => { await browser?.close(); server?.close(); });
 
-async function open(ctx, hash = '') {
+async function open(ctx, hash = '#/login') {
   const page = await ctx.newPage(); page.setDefaultTimeout(8000);
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -32,7 +32,9 @@ test('every demo role opens every screen without errors', async () => {
     const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
     const { page, errors } = await open(ctx);
     await demo(page, r);
-    const items = await page.locator('nav.side button.item').allInnerTexts();
+    const { MENU } = await import('../../src/data/menu.js');
+    const viewAs = MENU.find((m) => m.code === 'VIEWAS').items.map((i) => i[1]);   // tested on their own below
+    const items = (await page.locator('nav.side button.item').allInnerTexts()).filter((t) => !viewAs.includes(t));
     for (const it of items) { await page.locator('nav.side button.item', { hasText: it }).first().click(); await page.waitForTimeout(30); }
     assert.deepEqual(errors, [], r + ': ' + errors.join('; '));
     assert.ok(items.length > 0, r);
@@ -42,7 +44,8 @@ test('every demo role opens every screen without errors', async () => {
 
 test('website deep link: parent lands on Requests after sign-in; a staff link is refused for a parent', async () => {
   const ctx = await browser.newContext();
-  const { page } = await open(ctx, '#/s/SELF_REQUESTS');
+  const { page } = await open(ctx);
+  await page.evaluate(() => { location.hash = '#/s/SELF_REQUESTS'; });
   await page.getByText('Sign in to continue to').waitFor();
   await demo(page, 'Parent');
   await page.getByRole('heading', { name: 'Requests to school' }).waitFor();
@@ -60,7 +63,7 @@ test('public admission form: validates, then lands in the admissions pipeline', 
   await page.getByLabel(/may contact me/).check();
   await page.getByRole('button', { name: 'Send enquiry' }).click();
   const ref = (await page.getByRole('status').innerText()).match(/APP-\d{4}-\d{4}/)[0];
-  await page.goto(server.url + '#/');
+  await page.goto(server.url + '#/login');
   await demo(page, 'Admin');
   await page.locator('nav.side button.item', { hasText: 'Admissions & Enquiries' }).click();
   await page.getByRole('tab', { name: /Applications/ }).click();
@@ -96,7 +99,7 @@ test('web & app screens: admin drafts, principal approves, menus change on the w
   const { page, errors } = await open(ctx);
   await demo(page, 'Admin');
   await page.locator('nav.side button.item', { hasText: 'Web & App Screens' }).click();
-  await page.getByRole('button', { name: 'Front Office', exact: true }).click();
+  await page.locator('main').getByRole('button', { name: 'Front Office', exact: true }).click();
   await page.getByRole('radiogroup', { name: 'Gate Desk: where it shows' }).getByRole('radio', { name: 'App only' }).click();
   await page.getByText('Draft — not live yet').waitFor();
   await page.getByRole('button', { name: /Send for approval \(1\)/ }).click();
@@ -105,14 +108,14 @@ test('web & app screens: admin drafts, principal approves, menus change on the w
   await page.getByText('Waiting for approval').first().waitFor();
   assert.ok(!(await page.getByRole('button', { name: 'Approve and publish' }).count()), 'the editor cannot approve');
   // Principal approves
-  await page.evaluate(() => { sessionStorage.clear(); location.hash = '#/'; location.reload(); });
+  await page.evaluate(() => { sessionStorage.clear(); location.hash = '#/login'; location.reload(); });
   await demo(page, 'Principal');
   await page.locator('nav.side button.item', { hasText: 'Web & App Screens' }).click();
   await page.getByRole('button', { name: 'Approve and publish' }).click();
   await page.locator('.modal').getByRole('button', { name: 'Publish' }).click();
   await page.locator('.toast', { hasText: 'Published as version 2' }).waitFor();
   // Front Office no longer has the Gate Desk on the website
-  await page.evaluate(() => { sessionStorage.clear(); location.hash = '#/'; location.reload(); });
+  await page.evaluate(() => { sessionStorage.clear(); location.hash = '#/login'; location.reload(); });
   await demo(page, 'Front Office');
   const items = await page.locator('nav.side button.item').allInnerTexts();
   assert.ok(!items.includes('Gate Desk'), 'gate desk is app only now');
@@ -157,7 +160,7 @@ test('every step of every guided demo opens the right screen for the right perso
       if (i > 0) await bar.getByRole('button', { name: 'Next step ›' }).click();
       await bar.getByText(`step ${i + 1} of`).waitFor();
       if (s.public || s.needs) continue;            // public pages open in a new tab; 'needs' steps depend on an earlier action
-      try { await page.locator('.crumbs', { hasText: `${MODULE_OF[s.screen]} / ${LABEL[s.screen]}` }).waitFor({ timeout: 4000 }); }
+      try { await page.locator('.crumbs', { hasText: s.screen === 'HOME' ? 'Main menu' : `${MODULE_OF[s.screen]} / ${LABEL[s.screen]}` }).waitFor({ timeout: 4000 }); }
       catch (e) { bad.push(`${wf.id} step ${i + 1}: expected ${LABEL[s.screen]}`); }
       if (await page.locator('.toast', { hasText: 'not available' }).count()) bad.push(`${wf.id} step ${i + 1}: not available toast`);
     }
@@ -165,5 +168,91 @@ test('every step of every guided demo opens the right screen for the right perso
   }
   assert.deepEqual(bad, []);
   assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('opens straight on the Main menu as Admin; Main menu button works from any screen', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+  const { page, errors } = await open(ctx, '');
+  await page.getByRole('heading', { name: 'Main menu' }).waitFor();
+  assert.ok((await page.locator('main section.card').count()) >= 12, 'every menu shown as a tile');
+  await page.locator('main').getByRole('button', { name: 'Roles & Permissions' }).click();
+  await page.locator('.crumbs', { hasText: 'Operations / Roles & Permissions' }).waitFor();
+  await page.getByRole('button', { name: 'Main menu' }).first().click();
+  await page.getByRole('heading', { name: 'Main menu' }).waitFor();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('Add user: designations follow the role; Parent has none', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+  const { page, errors } = await open(ctx, '#/s/OPS_USERS');
+  await page.getByRole('button', { name: 'Add user' }).click();
+  const modal = page.locator('.modal');
+  await modal.getByRole('combobox', { name: /^Role/ }).selectOption('TRANSPORT');
+  const opts = await modal.getByLabel(/Designation/).locator('option').allInnerTexts();
+  assert.deepEqual(opts.slice(1), ['Transport In-charge', 'Transport Supervisor', 'Driver', 'Cleaner', 'Bus Helper / Attendant']);
+  await modal.getByRole('combobox', { name: /^Role/ }).selectOption('PARENT');
+  assert.equal(await modal.getByLabel('Designation: Parent').inputValue(), 'Parent');
+  await modal.getByRole('combobox', { name: /^Role/ }).selectOption('TRANSPORT');
+  await modal.getByLabel(/Designation/).selectOption('Driver');
+  await modal.getByLabel('Full name').fill('Ravi Driver');
+  await modal.getByLabel(/Sign-in ID/).fill('9876500001');
+  await modal.getByRole('button', { name: 'Create and email link' }).click();
+  await page.getByRole('cell', { name: 'Ravi Driver' }).waitFor();
+  assert.ok((await page.locator('tr', { hasText: 'Ravi Driver' }).innerText()).includes('Driver'));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('an account created in the phone app appears in Users for approval', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+  const { page, errors } = await open(ctx, '#/p/mobile');
+  await page.getByLabel('School code').fill('GVS'); await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: 'Create an account' }).click();
+  await page.getByLabel('First name').fill('Kiran'); await page.getByLabel('Last name').fill('Bus'); await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByLabel(/Gmail \/ email or mobile/).fill('kiran.bus@example.com'); await page.getByRole('button', { name: 'Send verification code' }).click();
+  const code = (await page.locator('text=/\\b\\d{6}\\b/').first().innerText().catch(() => '')).match(/\d{6}/)?.[0]
+    || await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('school-app-demo-v7')); return d.outbox.find((m) => m.to === 'kiran.bus@example.com')?.body.match(/\d{6}/)?.[0]; });
+  await page.getByLabel('Code').fill(code); await page.getByRole('button', { name: 'Verify' }).click();
+  await page.getByLabel('Password', { exact: true }).fill('Strong@123'); await page.getByLabel('Confirm').fill('Strong@123'); await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByLabel('I am a').selectOption('TRANSPORT');
+  await page.getByLabel(/Designation in/).selectOption('Cleaner');
+  await page.getByLabel(/I agree/).check();
+  await page.getByRole('button', { name: 'Create account' }).click();
+  await page.getByRole('heading', { name: 'Account created' }).waitFor();
+  const admin = await ctx.newPage();
+  await admin.goto(server.url + '#/s/OPS_USERS');
+  const row = admin.locator('tr', { hasText: 'Kiran Bus' });
+  await row.waitFor();
+  const text = await row.innerText();
+  assert.match(text, /Transport team/); assert.match(text, /Cleaner/); assert.match(text, /Pending approval|Waiting/);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('Admin views the app as a parent: menus change, preview is read-only, phone view, back to Admin', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+  const { page, errors } = await open(ctx, '');
+  await page.getByRole('heading', { name: 'Main menu' }).waitFor();
+  await page.locator('nav.side button.item', { hasText: /^Parent$/ }).click();
+  const bar = page.getByRole('region', { name: 'Viewing as another profile' });
+  await bar.getByText('Rohit Sharma').waitFor();
+  const items = await page.locator('nav.side button.item').allInnerTexts();
+  assert.ok(items.includes('Requests to School') && !items.includes('Users'), 'parent menus only');
+  await page.locator('nav.side button.item', { hasText: 'Requests to School' }).click();
+  await page.getByRole('button', { name: /^Leave \(child will be absent\)/ }).click();
+  await page.locator('.modal input[type=date]').first().fill(new Date(Date.now() + 9 * 864e5).toISOString().slice(0, 10));
+  await page.getByLabel(/Reason/).fill('Preview test');
+  await page.getByRole('button', { name: 'Send request' }).click();
+  await page.locator('.toast', { hasText: 'Preview only' }).waitFor();
+  await page.locator('.modal').getByRole('button', { name: /Cancel|Close/ }).first().click();
+  await bar.getByRole('button', { name: 'Phone app' }).click();
+  await page.locator('.m-tabs').waitFor();
+  assert.deepEqual((await page.locator('.m-tabs .m-tab').allInnerTexts()).map((x) => x.trim()), ['Home', 'Requests', 'Fees', 'My child', 'Account']);
+  await page.getByRole('button', { name: 'Back to Admin' }).click();
+  await page.locator('nav.side button.item', { hasText: 'Users' }).waitFor();
+  assert.equal(await page.getByRole('region', { name: 'Viewing as another profile' }).count(), 0);
+  assert.deepEqual(errors.filter((e) => !/Preview only/.test(e)), []);
   await ctx.close();
 });

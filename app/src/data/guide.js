@@ -59,8 +59,8 @@ export const SCREEN_HELP = {
   ACC_BANK: ['The school’s bank and UPI details shown on invoices.', 'Edit; a second person (Principal) approves before it is used.'],
   ACC_STMT: ['Account statement with running balance.', 'Pick account and dates.'],
   ACC_EXP: ['Income and expenses.', 'Add expenses; see the summary.'],
-  OPS_USERS: ['Accounts: approve sign-ups, change roles, designation, status, reset passwords, delete.', 'Review new sign-ups → pick the role → Active.'],
-  OPS_ROLES: ['Which screens each role can open; access by designation; custom roles.', 'Tick screens per role; add designation extras.'],
+  OPS_USERS: ['Accounts: approve sign-ups, add users, change roles, designation, status, reset passwords, delete.', 'Add user or Review a sign-up → pick the role (the designation list then shows only that role’s designations; parents are simply Parent) → Active.'],
+  OPS_ROLES: ['Which screens each role can open; access by designation; the designations offered for each role; custom roles.', 'Tick screens per role; add designation extras; add designations to a role (e.g. Transport → Driver, Cleaner, Bus Helper).'],
   OPS_TEMPLATES: ['Invoices, receipts, emails, payslips and letters in the school’s own format.', 'Use standard, Copy & edit, or Upload; set the default.'],
   OPS_IMPORT: ['Bring in data from Excel, CSV or photos.', 'Upload → map columns → map values → check → Import (can be rolled back).'],
   OPS_CHANNELS: ['Which screens each role sees on the website, in the mobile app, or both.', 'Pick a role → choose Website + app / Website only / App only → Send for approval → the Principal approves → published.'],
@@ -76,6 +76,14 @@ export const SCREEN_HELP = {
   SELF_PROFILE: ['Your account: name, email or mobile, password, notifications, linked children; delete your account.', 'Change details (a code confirms new email or mobile).'],
   SELF_PREFS: ['Your display preferences.', 'Pick layout density and theme.'],
   PLT_SCHOOLS: ['Platform Console: schools, plans, modules, functions and the mobile app switch.', 'Pick a school → plan → switch modules / sub-menus / functions → Mobile app on or off.'],
+  VA_PARENT: ['Admin only: see the website and phone app exactly as a parent sees them.', 'Click it; a bar shows who you are viewing as. Switch Website / Phone app; Back to Admin returns. Preview only unless you tick “Act as this person”.'],
+  VA_TEACHER: ['Admin only: see the app as a teacher who is a class coordinator.', 'As above.'],
+  VA_VP: ['Admin only: see the app as a teacher who is also Vice Principal (designation adds Users, Admissions and analytics).', 'As above.'],
+  VA_HOTS: ['Admin only: see the app as a teacher who is Head of Teaching Staff.', 'As above.'],
+  VA_PRINCIPAL: ['Admin only: see the app as the Principal.', 'As above.'],
+  VA_ACCOUNTANT: ['Admin only: see the app as the Accountant.', 'As above.'],
+  VA_FRONT_OFFICE: ['Admin only: see the app as the Front Office.', 'As above.'],
+  VA_TRANSPORT: ['Admin only: see the app as the Transport team.', 'As above.'],
   HELP_GUIDE: ['This guide: guided demos, every menu explained, and what each role sees.', 'Start a guided demo — the bar at the bottom walks you through each step and signs you in as the right person.']
 };
 
@@ -121,9 +129,15 @@ export const WORKFLOWS = [
   { id: 'payroll', title: 'Monthly payroll', time: '2 min', roles: 'Accountant, Teacher', steps: [
     { as: 'U3', screen: 'PAY_RUN', do: 'Pick the month → check figures → Approve → Post.', check: 'Voucher posted to accounts.' },
     { as: 'U4', screen: 'SELF_PAYSLIP', do: 'Open the payslip.', check: 'Shows basic, allowances, PF, TDS and net.' }] },
-  { id: 'signup', title: 'New parent account: sign up → approval', time: '3 min', roles: 'Parent (new), Admin', steps: [
-    { public: '#/', do: 'Sign out (top right) → Create account. Use a Gmail address, read the code in the Test inbox, set a password, give the child’s admission number.', check: 'Account waiting for approval; details emailed (never the password).' },
-    { as: 'U1', screen: 'OPS_USERS', do: 'Review the new sign-up → role Parent → Active.', check: 'The person can now sign in.' }] },
+  { id: 'signup', title: 'New account from the app → approval in Users', time: '3 min', roles: 'Parent or staff (new), Admin', steps: [
+    { public: '#/p/mobile', do: 'Phone app → school code GVS → Create an account. Pick Parent (give the child’s admission number) or a staff role — e.g. Transport team → designation Driver. Verify the code (shown on screen), set a password.', check: 'Account created, waiting for approval; details emailed (never the password).' },
+    { as: 'U1', screen: 'OPS_USERS', do: 'The new account is at the top as “Waiting for approval”. Review → the role asked for is filled in and the designation list shows only that role’s designations → status Active → Save.', check: 'The person can now sign in.' }] },
+  { id: 'adduser', title: 'Add a user: designations follow the role', time: '2 min', roles: 'Admin', steps: [
+    { as: 'U1', screen: 'OPS_USERS', do: 'Add user → Role Transport team: the designations are Transport In-charge, Transport Supervisor, Driver, Cleaner, Bus Helper / Attendant. Change the role to Parent: the designation is simply Parent.', check: 'Each role offers only its own designations.' },
+    { as: 'U1', screen: 'OPS_ROLES', do: 'Designations by role → Transport team → add “Route Marshal”.', check: 'It is offered next time a Transport user is added.' }] },
+  { id: 'viewas', title: 'See the app as each profile (Admin)', time: '2 min', roles: 'Admin', steps: [
+    { as: 'U1', screen: 'HOME', do: 'Main menu → View as Profile → Parent (the same items are in the side menu).', check: 'The menus change to the parent’s; a bar says who you are viewing as.' },
+    { as: 'U1', screen: 'HOME', do: 'In the bar, switch to Phone app, then Back to Admin.', check: 'The parent’s phone tabs; changes are blocked unless you tick “Act as this person”.' }] },
   { id: 'channels', title: 'Choose what shows on the website and in the app', time: '3 min', roles: 'Admin, Principal', steps: [
     { as: 'U1', screen: 'OPS_CHANNELS', do: 'Role Teacher → Leave Requests → "Website + app". Role Front Office → Gate Desk → "App only".', check: 'A draft starts; the preview shows the new phone tabs and website menu.' },
     { as: 'U1', screen: 'OPS_CHANNELS', do: 'Send for approval with a note.', check: 'Status: Waiting for approval; the Principal is emailed.' },

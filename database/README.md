@@ -14,12 +14,13 @@ Run the files in order. Each one builds on the one before.
 | 8 | `008_requests_transport_sms.sql` | SMS gateway framework (provider config, DLT templates, outbox, delivery reports), account self-service and deletion, teacher-performance sharing setting, class coordinators, parent pickup / drop / early-leave requests with cut-offs and gate codes, boarding log and `trip_manifest()`, Transport team role |
 | 9 | `009_route_sheets_collectors.sql` | No cut-off times; approved pickup people per child (photo, ID last 4, school verification); stop timings and per-route driver route sheets with private links; attendant boarding tracking as an optional platform-switched function |
 | 10 | `010_concurrency_fixes.sql` | Fixes found by the concurrency tests: collision-free receipt numbers (`doc_counters`), payment matching re-check and invoice locks, database-enforced one-request-per-day (btree_gist exclusion), seat lock on enrolment, hot-path indexes, `app_context()` for transaction-local school context |
-| 12 | `012_web_app_screens.sql` | Web & App Screens: per-role website/app channel for phone-ready screens; recommended defaults; layouts with draft → approval → published versions and a two-person rule; `screen_channel()`, `v_user_web_screens`, `v_user_mobile_screens` (replaces 011's per-school switches) |
 | 11 | `011_requests_website_mobile.sql` | Leave, late arrival, meet-a-teacher and office requests with the right decider; leave and late marks in attendance and the manifest; mobile app switches per school and `v_user_mobile_screens`; push devices removed on account deletion |
+| 12 | `012_web_app_screens.sql` | Web & App Screens: per-role website/app channel for phone-ready screens; recommended defaults; layouts with draft → approval → published versions and a two-person rule; `screen_channel()`, `v_user_web_screens`, `v_user_mobile_screens` (replaces 011's per-school switches) |
+| 13 | `013_designations_view_as.sql` | Designations by role (standard + school extras) and `designations_for()`; a user's designation must fit their role or sign-up role (parents: Parent), checked at commit; `set_user_designation()`; View as Profile menus for Admin only (enforced on role, designation and personal grants); `view_as_log`, `start_view_as()`; `v_user_directory` incl. pending app sign-ups |
 
 ```bash
 createdb school
-for f in 00*.sql; do psql -d school -v ON_ERROR_STOP=1 -f "$f"; done
+for f in 0*.sql; do psql -d school -v ON_ERROR_STOP=1 -f "$f"; done
 ```
 
 ## Rules the database enforces

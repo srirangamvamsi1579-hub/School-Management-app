@@ -125,7 +125,8 @@ export function screensFor(db, user, role) {
   const extra = [...(user && db.designationAccess?.[user.designation] || []), ...(user?.extra || [])];
   // Teachers see their own performance only when the Principal / Head of Teaching Staff has shared it
   if (role === 'TEACHER' && db.settings?.teacherPerfShared) extra.push('SELF_MYPERF');
-  return [...new Set([...base, ...extra])];
+  // "View as Profile" is for the Admin role only — never given by designation, grant or edited permissions
+  return [...new Set([...base, ...extra])].filter((c) => !c.startsWith('VA_') || role === 'ADMIN');
 }
 export const canSharePerf = (db, user, role) => role === 'PRINCIPAL' || user?.designation === 'Head of Teaching Staff';
 export const canManageUsers = (db, user, role) => role === 'ADMIN' || screensFor(db, user, role).includes('OPS_USERS');
