@@ -1,6 +1,6 @@
 # School Management Platform — Requirements
 
-Updated 17 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
+Updated 17 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos; release 7: opens on a Main menu, designations by role, account creation in the app, Admin View as Profile). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
 
 One platform runs Indian K-12 schools of every size, from under 250 to over 1,000 students. Each school gets only the modules its plan includes, and every person sees only the menus their role allows.
 
@@ -366,7 +366,7 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 ### User guide and guided demos
 
 - **Help → User Guide & Demo** (every role), also before sign-in at `#/p/guide` and linked from the sign-in page.
-  - **14 guided demos** of the main workflows: leave, early leave with gate code, late arrival, meet a teacher, certificate request, website enquiry to enrolment, fee request to automatic matching, question paper, payroll, new account approval, Web & App Screens change, onboarding a school, a transport day, and results/teacher performance.
+  - **16 guided demos** (release 7 adds: designations by role, View as a profile; the account demo now starts in the phone app) of the main workflows: leave, early leave with gate code, late arrival, meet a teacher, certificate request, website enquiry to enrolment, fee request to automatic matching, question paper, payroll, new account approval, Web & App Screens change, onboarding a school, a transport day, and results/teacher performance.
   - Press Start: a bar at the bottom shows each step, signs in as the right demo person and opens the right screen.
   - Steps show what to do and what you should see.
 - **Every menu explained:** every main menu and sub-menu, with what it is for, how to use it, who can open it, the plan it comes with, and where it shows. Each has a **Try** button.
@@ -421,7 +421,7 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 
 ## Database schema summary
 
-PostgreSQL 15+, twelve migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
+PostgreSQL 15+, thirteen migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
 
 | File | Adds | Key tables, views and functions |
 | --- | --- | --- |
@@ -435,8 +435,9 @@ PostgreSQL 15+, twelve migration files loaded in order. Every table carries `ten
 | 008_requests_transport_sms.sql | SMS framework, accounts, coordinators, requests, transport | sms_gateway_config (provider, status, endpoint, secret ARN), sms_templates, sms_outbox, sms_delivery_reports; user_children, notification_prefs, account_requests; tenant_settings; class_coordinators; parent_requests, parent_request_history; boarding_log; queue_sms(), close_account(), set_teacher_perf_visibility(), decide_parent_request(), hand_over_student(), trip_manifest(); v_my_teaching_performance; Transport team role |
 | 009_route_sheets_collectors.sql | No cut-offs, approved pickup list, stop timings, route sheets, optional attendant tracking | authorised_collectors, v_approved_collectors, parent_requests.collector_id; pickup_points am/pm times, transport_routes school times and attendant; route_sheet_shares, share_route_sheets(), driver_route_sheet(); FN_ATTENDANT_TRACKING enforced on boarding_log; ROUTE_SHEET SMS template |
 | 010_concurrency_fixes.sql | Fixes from the concurrency tests | doc_counters + next_doc_no() (receipt numbers), apply_payment() re-checks and locks, one_active_request_per_day exclusion constraint (btree_gist), enrol_applicant() seat lock, hot-path indexes, app_context() (transaction-local school) |
-| 012_web_app_screens.sql | Web & App Screens | role_channel_defaults, channel_layouts (DRAFT → PENDING → PUBLISHED, versions, two-person rule), channel_layout_entries; start/submit/approve/send_back_channel_layout(), screen_channel(); v_user_web_screens, v_user_mobile_screens (replaces the 011 per-school switches) |
 | 011_requests_website_mobile.sql | Leave, late arrival, meetings, office requests; mobile app | parent_requests new kinds and fields, request_decider(), decide_parent_request() by coordinator / teacher / office, mark_late_arrival(), trip_manifest() with leave and late drop-ins; STU_MEETINGS, STU_OFFICE menus; mobile_screen_catalog, tenant_mobile_app, tenant_mobile_screens, v_user_mobile_screens, push_devices |
+| 012_web_app_screens.sql | Web & App Screens | role_channel_defaults, channel_layouts (DRAFT → PENDING → PUBLISHED, versions, two-person rule), channel_layout_entries; start/submit/approve/send_back_channel_layout(), screen_channel(); v_user_web_screens, v_user_mobile_screens (replaces the 011 per-school switches) |
+| 013_designations_view_as.sql | Designations by role, View as Profile | role_designations, designations_for(), designation_problem() with deferred constraint triggers on users and user_roles, set_user_designation(); VIEWAS / VA_* menus (Admin only, enforced on role, designation and personal grants); view_as_log, start_view_as(), end_view_as(); v_user_directory |
 
 The test build keeps the same entities in browser memory (`app/src/data`) and runs the same rules in JavaScript (`app/src/lib/logic.js`).
 
@@ -581,14 +582,17 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 
 One-time setup: create the dev, preprod and prod environments in GitHub, add required reviewers to preprod and prod, and add the secret `AWS_DEPLOY_ROLE_ARN` (an IAM role for GitHub OIDC).
 
-**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the twelve migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
+**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the thirteen migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
-**Automated tests (release 6).** See `docs/TEST_REPORT.md`: 35 app tests, 25 SQL checks (007–012), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 7 web end-to-end tests (including every step of every guided demo) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
+**Automated tests (release 7).** See `docs/TEST_REPORT.md`: 40 app tests, 29 SQL checks (007–013), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 11 web end-to-end tests (including every step of all 16 guided demos, Main menu, designations by role, app sign-up and View as) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
 
 **Earlier automated tests.** `npm test` ran 21 checks on the business rules (including the approved pickup list, route sheets, the attendant-tracking switch, requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
 
 **User-testing script.** Easiest: open the guide (`#/p/guide`) and run the guided demos. Or step by step:
 
+- [ ] Admin: Main menu → View as Profile → Parent → switch to Phone app → try to send a request (blocked: preview only) → Back to Admin
+- [ ] Admin: Users → Add user → Role Transport team: only Transport designations; Role Parent: marked Parent
+- [ ] Phone app (`#/p/mobile`, school GVS) → Create an account as Transport team / Driver → Admin sees it in Users, waiting for approval
 - [ ] Admin: Web & App Screens → Front Office → Gate Desk "App only" → Send for approval; Principal approves; Front Office no longer has Gate Desk on the website, but has it in the phone preview
 - [ ] Anyone: Help → User Guide & Demo → run a guided demo with Start / Next step
 
