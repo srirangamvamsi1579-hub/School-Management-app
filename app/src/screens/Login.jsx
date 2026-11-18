@@ -121,7 +121,7 @@ function SignIn({ onPeek, onSignup }) {
       </>}
       {(mode === 'otp' || mode === 'forgot') && <>
         {!sent ? <div className="row" style={{ marginTop: 12 }}><button className="btn pri" disabled={!type} onClick={() => askCode(mode === 'otp' ? 'SIGNIN' : 'RESET')}>Send code {type === 'MOBILE' ? 'by SMS' : 'to my email'}</button><button className="btn" onClick={() => setMode('password')}>Back</button></div> : <>
-          <p className="small">{sent.channel === 'SMS' ? (sent.status === 'GATEWAY_PENDING' ? <>SMS isn't connected yet (Operations → SMS Gateway), so the code is shown here for testing: <b>{sent.code}</b></> : <>We sent a 6-digit code by SMS to {sent.to}.</>) : <>We sent a 6-digit code to <b>{sent.to}</b>. Open it in the test inbox on the right.</>}</p>
+          <p className="small">{sent.channel === 'SMS' ? (sent.status === 'GATEWAY_PENDING' ? <>SMS isn't connected yet (Settings → SMS Gateway), so the code is shown here for testing: <b>{sent.code}</b></> : <>We sent a 6-digit code by SMS to {sent.to}.</>) : <>We sent a 6-digit code to <b>{sent.to}</b>. Open it in the test inbox on the right.</>}</p>
           <Field label="6-digit code"><Input inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value)} /></Field>
           {mode === 'forgot' && <div style={{ marginTop: 10 }}><Field label="New password"><Input type="password" autoComplete="new-password" value={newPw} onChange={(e) => setNewPw(e.target.value)} /></Field></div>}
           <div className="row" style={{ marginTop: 12 }}><button className="btn pri" disabled={code.length !== 6} onClick={mode === 'otp' ? doOtp : doReset}>{mode === 'otp' ? 'Verify and sign in' : 'Save new password'}</button>

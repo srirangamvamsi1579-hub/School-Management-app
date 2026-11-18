@@ -1,4 +1,4 @@
-// Operations → Web & App Screens: for each role, choose which screens show on the website, in the app, or both.
+// Settings → Web & App Screens: for each role, choose which screens show on the website, in the app, or both.
 // Draft → send for approval → a different person approves → published as a new version (history + restore).
 import { useMemo, useState } from 'react';
 import { useStore } from '../data/store.js';

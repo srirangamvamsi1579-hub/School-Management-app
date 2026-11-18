@@ -76,7 +76,7 @@ export default function HelpGuide() {
       <Tabs tabs={[['demos', `Guided demos (${WORKFLOWS.length})`], ['menus', 'Every menu explained'], ['roles', 'What each role sees'], ['start', 'Getting started']]} value={tab} onChange={setTab} />
 
       {tab === 'demos' && <div style={{ marginTop: 12 }}>
-        <p className="small muted">Press <b>Start</b>. A bar at the bottom shows each step, signs you in as the right person and opens the right screen. Data is demo data in your browser; Operations → “Reset demo data” starts over.</p>
+        <p className="small muted">Press <b>Start</b>. A bar at the bottom shows each step, signs you in as the right person and opens the right screen. Data is demo data in your browser; the “Reset demo data” button at the top (Admin) starts over.</p>
         <div className="grid g2">{WORKFLOWS.map((w) => <Card key={w.id} title={w.title} right={<span className="small muted">{w.time}</span>}>
           <p className="small" style={{ marginTop: 0 }}>{w.roles}</p>
           {open === w.id ? <ol className="small" style={{ paddingLeft: 18 }}>{w.steps.map((s, i) => <li key={i} className="guide-step"><b>{s.public ? 'No sign-in' : DEMO_PEOPLE[s.as]}{s.screen ? ` → ${LABEL[s.screen]}` : ''}:</b> {s.do} <span className="muted">Check: {s.check}</span></li>)}</ol>
@@ -121,8 +121,8 @@ export default function HelpGuide() {
               <td><button className="btn sm" onClick={() => signInAs(login, db, id)}>Sign in</button></td></tr>; })}</tbody></table></div></Card>
         <Card title="Things to know">
           <ul className="small" style={{ paddingLeft: 18 }}>
-            <li>Emails and SMS are not really sent: read them in Operations → Email & SMS Outbox, or in the Test inbox on the sign-in page.</li>
-            <li>Data stays in this browser. Two tabs stay in step. Reset with Operations → Reset demo data (Admin), or the link at the bottom of the sign-in page.</li>
+            <li>Emails and SMS are not really sent: read them in Settings → Email & SMS Outbox, or in the Test inbox on the sign-in page.</li>
+            <li>Data stays in this browser. Two tabs stay in step. Reset with the Reset demo data button at the top (Admin), or the link at the bottom of the sign-in page.</li>
             <li>Plans: Starter, Growth, Professional, Enterprise. The demo school is on {PLANS.find((p) => p.rank === rank).name}. Menus marked “from Growth” or higher need that plan or an add-on.</li>
           </ul></Card>
       </div>}

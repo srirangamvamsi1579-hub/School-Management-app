@@ -99,7 +99,7 @@ export function MyAccount() {
       {chg && <Modal title={`Change ${chg.field}`} onClose={() => setChg(null)} actions={chg.sent ? <button className="btn pri" disabled={code.length !== 6} onClick={confirmChange}>Confirm</button> : <button className="btn pri" onClick={startChange}>Send code</button>}>
         <Field label={chg.field === 'email' ? 'New email (Gmail)' : 'New mobile'}><Input value={chg.value} disabled={!!chg.sent} onChange={(e) => setChg({ ...chg, value: e.target.value })} /></Field>
         {chg.sent && <div style={{ marginTop: 10 }}>
-          <p className="small">{chg.sent.channel === 'SMS' ? (chg.sent.status === 'GATEWAY_PENDING' ? <>SMS isn't connected yet, so the code is shown here for testing: <b>{chg.sent.code}</b></> : 'We sent a code by SMS.') : <>We sent a code to <b>{chg.sent.to}</b> (see Operations → Email & SMS Outbox in the test build). Test code: <b>{chg.sent.code}</b></>}</p>
+          <p className="small">{chg.sent.channel === 'SMS' ? (chg.sent.status === 'GATEWAY_PENDING' ? <>SMS isn't connected yet, so the code is shown here for testing: <b>{chg.sent.code}</b></> : 'We sent a code by SMS.') : <>We sent a code to <b>{chg.sent.to}</b> (see Settings → Email & SMS Outbox in the test build). Test code: <b>{chg.sent.code}</b></>}</p>
           <Field label="6-digit code"><Input maxLength={6} value={code} onChange={(e) => setCode(e.target.value)} /></Field></div>}
         {err && <div className="note warn" style={{ marginTop: 8 }}>{err}</div>}
       </Modal>}

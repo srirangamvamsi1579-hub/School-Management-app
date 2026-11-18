@@ -15,7 +15,7 @@
 
 They see a tab only when all three of these are true:
 - The school has the mobile app switched on (Platform Console → Schools & Plans → Mobile app).
-- Their role's layout puts that screen in the app (**Operations → Web & App Screens**: Website + app / Website only / App only, changed through draft → approval by a different person → publish).
+- Their role's layout puts that screen in the app (**Settings → Web & App Screens**: Website + app / Website only / App only, changed through draft → approval by a different person → publish).
 - The same rules as the website allow it: plan, school add-ons or switch-offs, role, designation, and screens granted by name.
 
 Home and Account are always in the app, because account deletion must stay reachable.

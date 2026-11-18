@@ -182,7 +182,7 @@ test('opens straight on the Main menu as Admin; Main menu button works from any 
   await page.getByRole('heading', { name: 'Main menu' }).waitFor();
   assert.ok((await page.locator('main section.card').count()) >= 12, 'every menu shown as a tile');
   await page.locator('main').getByRole('button', { name: 'Roles & Permissions' }).click();
-  await page.locator('.crumbs', { hasText: 'Operations / Roles & Permissions' }).waitFor();
+  await page.locator('.crumbs', { hasText: 'Settings / Roles & Permissions' }).waitFor();
   await page.getByRole('button', { name: 'Main menu' }).first().click();
   await page.getByRole('heading', { name: 'Main menu' }).waitFor();
   assert.deepEqual(errors, []);
@@ -340,7 +340,7 @@ test('side menu starts collapsed; groups open on click or Enter; no Expand all; 
   await side.getByRole('button', { name: /^Fees/ }).press('Enter');
   assert.equal(await side.locator('button.item', { hasText: 'Collect Fee' }).count(), 0, 'keyboard collapses it');
   await page.locator('main').getByRole('button', { name: 'Roles & Permissions' }).click();
-  await page.locator('.crumbs', { hasText: 'Operations / Roles & Permissions' }).waitFor();
+  await page.locator('.crumbs', { hasText: 'Settings / Roles & Permissions' }).waitFor();
   assert.equal(await side.locator('[aria-expanded="true"]').count(), 0, 'opening a screen does not expand the menu');
   await side.getByRole('button', { name: /^Transport/ }).click();
   await page.reload(); await page.locator('nav.side').waitFor();

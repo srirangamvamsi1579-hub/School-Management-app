@@ -28,18 +28,18 @@ p(`# User Guide — School Management Platform`, '',
   `| Person | Sign-in |`, `| --- | --- |`,
   ...Object.entries(DEMO_PEOPLE).map(([id, n]) => `| ${n} | ${db.users.find((u) => u.id === id)?.login} |`), '',
   `**Good to know**`, '',
-  `- Emails and SMS are simulated: read them in Operations → Email & SMS Outbox, or the Test inbox on the sign-in page.`,
-  `- Data stays in your browser; two tabs stay in step. Admins can reset it (Operations → Reset demo data).`,
+  `- Emails and SMS are simulated: read them in Settings → Email & SMS Outbox, or the Test inbox on the sign-in page.`,
+  `- Data stays in your browser; two tabs stay in step. Admins can reset it (Reset demo data button at the top).`,
   `- A school sees only the modules in its plan (Starter, Growth, Professional, Enterprise) or switched on for it. A person sees only the screens their role, designation or personal grants allow.`, '');
 
-p(`## 2. What each role sees`, '', `Website menus and phone tabs with the recommended layout. Schools change this in **Operations → Web & App Screens** (section 3).`, '',
+p(`## 2. What each role sees`, '', `Website menus and phone tabs with the recommended layout. Schools change this in **Settings → Web & App Screens** (section 3).`, '',
   `| Role | Website (main menus and sub-menus) | Phone app tabs |`, `| --- | --- | --- |`);
 ORDER.forEach((r) => { const perms = { [r]: ACCESS[r] }; const web = webScreens(t, r, perms); const app = r === 'PLATFORM' ? [] : mobileTabs({ ...t, mobile: { enabled: true } }, r, perms);
   p(`| **${NAMES[r]}** | ${MENU.filter((m) => m.items.some((i) => web.includes(i[0]))).map((m) => `**${m.label}:** ${m.items.filter((i) => web.includes(i[0])).map((i) => i[1]).join(', ')}`).join('<br>')} | ${app.length ? app.map((x) => x[1]).join(', ') : 'Website only'} |`); });
 p('');
 
 p(`## 3. Web & App Screens (choosing what goes on the website and in the app)`, '',
-  `**Operations → Web & App Screens.** For each role, each phone-ready screen is set to *Website + app*, *Website only* or *App only*. Screens not built for phones always stay on the website. Account is always on both, because the app stores require account deletion inside the app.`, '',
+  `**Settings → Web & App Screens.** For each role, each phone-ready screen is set to *Website + app*, *Website only* or *App only*. Screens not built for phones always stay on the website. Account is always on both, because the app stores require account deletion inside the app.`, '',
   `**Workflow**`, '',
   `1. **Edit a draft** (Admin or platform team): pick a role and change where screens show. The preview shows that role's website menu and phone tabs. Nothing changes for users yet.`,
   `2. **Send for approval** with a note. The Principal is emailed. The draft is locked while it waits; the editor can take it back.`,
@@ -69,7 +69,7 @@ p(`## 6. Mobile app`, '',
   `- Works offline with saved information; turn notifications on from Home.`,
   `- Parents delete their account in **Account → Delete my account**, or on the web at #/p/delete.`, '',
   `## 7. Common questions`, '',
-  `- **A menu is missing.** Check the school's plan and switches (Platform Console), the role's permissions (Operations → Roles & Permissions), and whether the screen is set to *App only* for the role (Web & App Screens).`,
+  `- **A menu is missing.** Check the school's plan and switches (Platform Console), the role's permissions (Settings → Roles & Permissions), and whether the screen is set to *App only* for the role (Web & App Screens).`,
   `- **A link from the school website says "not available".** The person's role can't open that screen on the website; they are taken to their home screen.`,
   `- **A parent can't choose a pickup person.** New pickup people must be checked by the Front Office first (Gate Desk → Approve pickup people).`,
   `- **The coordinator doesn't see a request.** Meetings go to the teacher asked, certificates to the office; coordinators see leave, early leave and transport requests for their sections.`,

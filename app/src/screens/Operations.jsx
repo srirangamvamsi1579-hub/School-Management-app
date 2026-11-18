@@ -511,8 +511,8 @@ export function Platform() {
         <Card title={t.name} right={<Select value={t.plan} onChange={(e) => { mutate((d) => { d.tenants.find((y) => y.id === sel).plan = e.target.value; }); notify('Plan changed — menus update straight away'); }} options={PLANS.map((p) => [p.code, `${p.name} (${p.range})`])} />}>
           <p className="small muted">Renews {t.renews}. Changes are written to the config audit log. Sign in to this school as any role to see the result.</p>
           {MENU.filter((m) => !['PLATFORM', 'SELF'].includes(m.code)).map((m) => <div key={m.code} style={{ borderTop: '1px solid var(--line)', padding: '8px 0' }}>
-            <div className="row"><Switch on={isOn(m.code, m.min)} label={m.label} onClick={() => toggle(m.code, m.min)} /><b>{m.label}</b>{t.overrides[m.code] !== undefined && <span className="pill info">{t.overrides[m.code] ? 'Add-on' : 'Switched off'}</span>}</div>
-            {isOn(m.code, m.min) && <div className="row" style={{ paddingLeft: 44, marginTop: 6 }}>{m.items.filter((i) => i[0][0] !== '#').map((i) => <label key={i[0]} className="row small" style={{ marginRight: 10 }}>
+            <div className="row">{m.code === 'SETTINGS' ? <span className="pill">Always on</span> : <Switch on={isOn(m.code, m.min)} label={m.label} onClick={() => toggle(m.code, m.min)} />}<b>{m.label}</b>{t.overrides[m.code] !== undefined && <span className="pill info">{t.overrides[m.code] ? 'Add-on' : 'Switched off'}</span>}</div>
+            {(m.code === 'SETTINGS' || isOn(m.code, m.min)) && <div className="row" style={{ paddingLeft: 44, marginTop: 6 }}>{m.items.filter((i) => i[0][0] !== '#').map((i) => <label key={i[0]} className="row small" style={{ marginRight: 10 }}>
               <input type="checkbox" checked={isOn(i[0], i[2])} onChange={() => toggle(i[0], i[2])} />{i[1]}{t.overrides[i[0]] && rank < i[2] ? ' (add-on)' : ''}{!isOn(i[0], i[2]) && rank < i[2] ? <span className="muted"> · {PLANS[i[2] - 1].name}+</span> : ''}</label>)}</div>}
           </div>)}
           <h3 style={{ marginTop: 16 }}>Functions</h3>
@@ -525,7 +525,7 @@ export function Platform() {
           <div className="row end" style={{ marginTop: 10 }}><button className="btn" onClick={() => mutate((d) => { d.tenants.find((y) => y.id === sel).overrides = {}; })}>Back to plan defaults</button></div>
         </Card>
         <Card title="Mobile app (Play Store & App Store)" right={<Switch on={!!t.mobile?.enabled} label="Mobile app for this school" onClick={() => mutate((d) => { const x = d.tenants.find((y) => y.id === sel); x.mobile = { ...(x.mobile || {}), enabled: !x.mobile?.enabled }; })} />}>
-          <p className="small muted">One app in the stores serves every school; parents and staff enter the school code <b>{t.code}</b> once. Which screens each role gets on the website and in the app is set in <b>Operations → Web & App Screens</b> (draft → approval → publish).</p>
+          <p className="small muted">One app in the stores serves every school; parents and staff enter the school code <b>{t.code}</b> once. Which screens each role gets on the website and in the app is set in <b>Settings → Web & App Screens</b> (draft → approval → publish).</p>
           {t.mobile?.enabled ? <div className="small">
               <div>Layout: version {t.channels?.version || 1}{t.channels?.status === 'PENDING' ? ' · a change is waiting for approval' : t.channels?.draft ? ' · a draft is being edited' : ''}</div>
               <ul style={{ paddingLeft: 18, margin: '6px 0' }}>{['PARENT', 'TEACHER', 'FRONT_OFFICE', 'TRANSPORT', 'PRINCIPAL'].map((r) => <li key={r}><b>{ROLES.find((x) => x.code === r).name}:</b> {mobileTabs(t, r, { [r]: db.perms?.[r] || ACCESS[r] }).map((x) => x[1]).join(', ')}</li>)}</ul></div>
@@ -541,7 +541,7 @@ export function MyPrefs() {
   const { db, session } = useStore();
   return <Page title="My preferences"><Card><p>Language: English · Notifications: email and app · Templates you use:</p>
     <table className="t"><tbody>{CATEGORIES.map((c) => <tr key={c.code}><td>{c.name}</td><td>{resolveTemplate(db, c.code, session.role)?.name}</td></tr>)}</tbody></table>
-    <p className="small muted">Change your own template choice in Operations → Templates (“My default”).</p></Card></Page>;
+    <p className="small muted">Change your own template choice in Settings → Templates (“My default”).</p></Card></Page>;
 }
 
 export { LABEL };

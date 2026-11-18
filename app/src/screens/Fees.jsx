@@ -72,7 +72,7 @@ export function InvoiceView({ inv, onClose }) {
     grand_total: num(inv.net) + '.00', previous_outstanding: num(inv.prev) + '.00', advance: num(inv.advance) + '.00', net_payable: num(balance(inv)) + '.00', net_payable_words: wordsINR(balance(inv)),
     bank_details: `${db.bank.holder} · ${db.bank.bank}, ${db.bank.branch} · A/c ••••${db.bank.account.slice(-4)} · IFSC ${db.bank.ifsc} · UPI ${db.bank.upi}`,
     pay_link: `https://${tenantOf(db).subdomain}.yourapp.com/pay/…` }, session.role);
-  return <Modal title={'Invoice ' + inv.no} onClose={onClose} actions={<button className="btn pri" onClick={() => printPage()}>Print</button>}><Html html={r.body} /><p className="small muted">Template: {r.template?.name} — change it in Operations → Templates.</p></Modal>;
+  return <Modal title={'Invoice ' + inv.no} onClose={onClose} actions={<button className="btn pri" onClick={() => printPage()}>Print</button>}><Html html={r.body} /><p className="small muted">Template: {r.template?.name} — change it in Settings → Templates.</p></Modal>;
 }
 
 export function FeeRequests() {

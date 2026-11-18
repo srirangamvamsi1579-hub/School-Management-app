@@ -73,7 +73,7 @@ export default function App() {
     setNavOpen(false);
     if (code.startsWith('VA_')) {                          // Admin: View as Profile
       const u = viewAsUser(db, code);
-      if (!u) { notify('No account with this profile yet — add one in Operations → Users'); return; }
+      if (!u) { notify('No account with this profile yet — add one in Settings → Users'); return; }
       setViewAs({ userId: u.id, code, mode: 'web', act: false }); setScreen('HOME'); return;
     }
     setScreen(code);

@@ -57,7 +57,7 @@ export function submitDraft(db, { by, byId, note = '' }) {
   if (!changes.length) throw new Error('The draft is the same as what is published');
   c.status = 'PENDING'; c.submittedBy = by; c.submittedById = byId; c.submittedAt = new Date().toISOString(); c.submitNote = note; c.rejectNote = null;
   people(db, CAN_APPROVE.filter((r) => r !== 'PLATFORM')).forEach((u) => mail(db, u.email, `Please approve: changes to app and website screens (${changes.length})`,
-    `<p>${by} has changed where screens show for ${[...new Set(changes.map((x) => x.role))].length} role(s).</p><p>${note || ''}</p><p>Review in Operations → Web & App Screens.</p>`, 'channels'));
+    `<p>${by} has changed where screens show for ${[...new Set(changes.map((x) => x.role))].length} role(s).</p><p>${note || ''}</p><p>Review in Settings → Web & App Screens.</p>`, 'channels'));
   log(db, by, 'Web & app screens sent for approval', `${changes.length} change(s)`);
   return changes;
 }

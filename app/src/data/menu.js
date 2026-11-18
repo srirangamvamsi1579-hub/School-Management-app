@@ -43,15 +43,19 @@ export const MENU = [
     ['ANL_HOME', 'Report Catalogue', 2], ['ANL_RANK', 'Top & Bottom Performers', 2], ['ANL_TRANSPORT', 'Transport Reports', 2], ['ANL_TEACHER', 'Teacher Performance', 2], ['ANL_ADMISSIONS', 'Admissions Funnel', 2]] },
   { code: 'PAYROLL', label: 'Payroll', icon: 'wallet', min: 2, items: [['PAY_RUN', 'Run Payroll', 2], ['PAY_SLIPS', 'Payslips', 2]] },
   { code: 'ACCOUNTS', label: 'Accounts', icon: 'chart', min: 1, items: [
-    ['ACC_BANK', 'Bank & Payment Details', 1], ['ACC_STMT', 'Account Statement', 3], ['ACC_EXP', 'Income & Expenses', 3]] },
-  { code: 'OPERATIONS', label: 'Operations', icon: 'shield', min: 1, items: [
-    ['OPS_USERS', 'Users', 1], ['OPS_ROLES', 'Roles & Permissions', 1], ['OPS_TEMPLATES', 'Templates', 1], ['OPS_IMPORT', 'Data Import', 1],
-    ['OPS_CHANNELS', 'Web & App Screens', 1], ['OPS_APPEARANCE', 'Appearance & Branding', 1], ['OPS_WEBSITE', 'Website & Links', 1], ['OPS_OUTBOX', 'Email & SMS Outbox', 1], ['OPS_SMS', 'SMS Gateway', 1]] },
+    ['ACC_STMT', 'Account Statement', 3], ['ACC_EXP', 'Income & Expenses', 3]] },
   { code: 'SELF', label: 'My Space', icon: 'user', min: 1, items: [
     ['SELF_CHILD', 'My Child', 1], ['SELF_REQUESTS', 'Requests to School', 1], ['SELF_FEES', 'Fee Dues & Pay', 1], ['SELF_PAYSLIP', 'My Payslips', 2], ['SELF_MYPERF', 'My Teaching Performance', 2], ['SELF_PROFILE', 'My Account', 1], ['SELF_PREFS', 'My Preferences', 1]] },
   // Admin only: see the app as each profile sees it, without signing in as them
   { code: 'VIEWAS', label: 'View as Profile', icon: 'eye', min: 1, items: [['VA_PARENT', 'Parent', 1], ['VA_TEACHER', 'Teacher (class coordinator)', 1], ['VA_VP', 'Teacher + Vice Principal', 1], ['VA_HOTS', 'Teacher + Head of Teaching Staff', 1], ['VA_PRINCIPAL', 'Principal', 1], ['VA_ACCOUNTANT', 'Accountant', 1], ['VA_FRONT_OFFICE', 'Front Office', 1], ['VA_TRANSPORT', 'Transport team', 1]] },
   { code: 'PLATFORM', label: 'Platform Console', icon: 'cloud', min: 1, items: [['PLT_SCHOOLS', 'Schools & Plans', 1]] },
+  // Settings: how the school and the app are set up (people and access, branding, connections, data). Not day-to-day school work.
+  // Always on for the school (Platform Console can't switch it off) so the Admin can always reach Users and Roles.
+  { code: 'SETTINGS', label: 'Settings', icon: 'settings', min: 1, items: [
+    ['#A', 'People & access'], ['OPS_USERS', 'Users', 1], ['OPS_ROLES', 'Roles & Permissions', 1],
+    ['#S', 'School setup'], ['OPS_APPEARANCE', 'Appearance & Branding', 1], ['OPS_WEBSITE', 'Website & Links', 1], ['OPS_CHANNELS', 'Web & App Screens', 1], ['OPS_TEMPLATES', 'Templates', 1], ['ACC_BANK', 'Bank & Payment Details', 1],
+    ['#M', 'Messages'], ['OPS_SMS', 'SMS Gateway', 1], ['OPS_OUTBOX', 'Email & SMS Outbox', 1],
+    ['#D', 'Data'], ['OPS_IMPORT', 'Data Import', 1]] },
   { code: 'HELP', label: 'Help', icon: 'book', min: 1, items: [['HELP_GUIDE', 'User Guide & Demo', 1]] }
 ];
 
@@ -83,7 +87,7 @@ export function canSee(code, role, rank, overrides = {}, perms = null) {
   const list = perms?.[role] || ACCESS[role] || [];
   if (!list.includes(code)) return false;
   const mod = MENU.find((m) => m.items.some((i) => i[0] === code));
-  const modOn = overrides[mod.code] !== undefined ? overrides[mod.code] : rank >= mod.min;
+  const modOn = mod.code === 'SETTINGS' || (overrides[mod.code] !== undefined ? overrides[mod.code] : rank >= mod.min);
   if (!modOn && role !== 'PLATFORM') return false;
   const on = overrides[code] !== undefined ? overrides[code] : rank >= (MIN_RANK[code] || 1);
   return on || role === 'PLATFORM';
@@ -93,11 +97,11 @@ export function canSee(code, role, rank, overrides = {}, perms = null) {
 // the platform team switches it on for the school (Platform Console → Schools & Plans → Functions).
 export const FUNCTIONS = [
   { code: 'FN_ATTENDANT_TRACKING', module: 'TRANSPORT', name: 'Bus attendant boarding tracking (Boarded / No-show)', minRank: null },
-  { code: 'FN_SELF_SIGNUP', module: 'OPERATIONS', name: 'Self sign-up with Gmail or mobile', minRank: 1 },
-  { code: 'FN_SMS_OTP', module: 'OPERATIONS', name: 'OTP and alerts by SMS (needs an SMS provider)', minRank: 2 },
-  { code: 'FN_CUSTOM_TEMPLATES', module: 'OPERATIONS', name: 'Edit and upload own templates', minRank: 2 },
-  { code: 'FN_CUSTOM_ROLES', module: 'OPERATIONS', name: 'Custom roles', minRank: 3 },
-  { code: 'FN_IMAGE_IMPORT', module: 'OPERATIONS', name: 'Import from photos / scans (OCR)', minRank: 3 }
+  { code: 'FN_SELF_SIGNUP', module: 'SETTINGS', name: 'Self sign-up with Gmail or mobile', minRank: 1 },
+  { code: 'FN_SMS_OTP', module: 'SETTINGS', name: 'OTP and alerts by SMS (needs an SMS provider)', minRank: 2 },
+  { code: 'FN_CUSTOM_TEMPLATES', module: 'SETTINGS', name: 'Edit and upload own templates', minRank: 2 },
+  { code: 'FN_CUSTOM_ROLES', module: 'SETTINGS', name: 'Custom roles', minRank: 3 },
+  { code: 'FN_IMAGE_IMPORT', module: 'SETTINGS', name: 'Import from photos / scans (OCR)', minRank: 3 }
 ];
 export function funcOn(tenant, code) {
   if (tenant.overrides?.[code] !== undefined) return !!tenant.overrides[code];
@@ -106,7 +110,7 @@ export function funcOn(tenant, code) {
   return !!f && f.minRank !== null && rank >= f.minRank;
 }
 
-// ---------- Website or mobile app, per role (Operations → Web & App Screens) ----------
+// ---------- Website or mobile app, per role (Settings → Web & App Screens) ----------
 // Each school decides, for each role, whether a screen shows on the WEBSITE, in the MOBILE APP, or BOTH.
 // Only phone-ready screens (built and store-tested for phones) can go in the app; every other screen is website only.
 // Access itself is still decided by the plan, role, designation and personal grants — this only picks where it shows.

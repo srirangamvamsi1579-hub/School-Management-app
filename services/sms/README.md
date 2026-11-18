@@ -6,7 +6,7 @@ The app already sends every SMS (OTP, gate code, pickup/drop notice, fee reminde
 
 1. Register the sender ID (6 letters), the principal entity and each template on a DLT portal (Jio, Airtel, Vi or BSNL).
 2. Put the vendor key or password in AWS Secrets Manager.
-3. In the app: **Operations → SMS Gateway**.
+3. In the app: **Settings → SMS Gateway**.
    - Pick the provider and fill in its settings, with the secret's ARN (never the key itself).
    - Enter the DLT template ID for each message. The text must match the DLT template exactly.
    - Run a dry run, then **Go live**.
