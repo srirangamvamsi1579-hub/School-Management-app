@@ -24,6 +24,7 @@ Run the files in order. Each one builds on the one before.
 | 18 | `018_question_paper_workflow.sql` | Question papers by topic: `exams`, `exam_schedule`, blueprint chapter rules, per-set status and approval, locked and edited questions, `paper_versions`, `paper_views`; `generate_topic_set()` (only the chosen topics, difficulty mix, no overlap with other sets, OR questions), `set_paper_topics()` (rebuilds drafts), `v_paper_topic_availability`, `decide_paper_set()`, `choose_exam_set()` |
 | 19 | `019_users_parents_archive.sql` | Users screen: `match_student()`, 5 tries per sign-in ID in `parent_signup_checks`, `users.updated_at / updated_by / last_change` (audit), `user_archive` with `archive_user()`, `close_account()` with a reason (archives first), `close_own_account()`; `v_user_directory` with department and students |
 | 20 | `020_users_status_reset.sql` | Parents never pending: `register_parent()` creates the account Active on a match or nothing, and a deferred trigger refuses a pending parent; DISABLED status removed (became LOCKED); `user_permissions`, `can_reset_passwords()`, `request_password_reset()` (Admin or the RESET_PASSWORDS permission, given only by an Admin); rejoin removed (archive is view only); `v_user_directory` with the created date and N/A for parents |
+| 21 | `021_copy_from_archive.sql` | Someone coming back: `users.copied_from_archive`, and `v_archive_copy` (archived details with whether the profile still exists, which children are still enrolled, and whether the contact details are already in use) |
 
 ```bash
 createdb school

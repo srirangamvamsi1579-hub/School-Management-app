@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildSeed } from '../src/data/seed.js';
 import { signIn } from '../src/lib/auth.js';
-import { checkStudent, childLines, parentTriesLeft, noteParentTry, MAX_PARENT_TRIES, deleteAccount, normalizeUsers, designationLabel, canResetPasswords, RESET_PW } from '../src/lib/users.js';
+import { checkStudent, childLines, parentTriesLeft, noteParentTry, MAX_PARENT_TRIES, deleteAccount, normalizeUsers, designationLabel, canResetPasswords, RESET_PW, archiveMatches, fromArchive } from '../src/lib/users.js';
 
 test('parent check: admission no., student name and grade must all match the student record', () => {
   const db = buildSeed();
@@ -70,4 +70,25 @@ test('parents never wait for approval; no switched-off status; N/A designation; 
   assert.ok(canResetPasswords({}, 'ADMIN'));
   assert.ok(!canResetPasswords({ perms: [] }, 'PRINCIPAL'));
   assert.ok(canResetPasswords({ perms: [RESET_PW] }, 'PRINCIPAL'));
+});
+
+test('coming back: Add user copies details from the archive and checks them against today', () => {
+  const db = buildSeed();
+  const t = db.users.find((u) => u.role === 'TRANSPORT' && u.status === 'ACTIVE' && u.email);
+  const email = t.email;
+  deleteAccount(db, t.id, 'Admin', { reason: 'Left the school' });
+  const roles = [{ code: 'TRANSPORT' }, { code: 'PARENT' }, { code: 'TEACHER' }];
+  const fit = (r, d) => d;
+  const [a] = archiveMatches(db, email.slice(0, 6));
+  assert.equal(a.userId, t.id, 'found by email');
+  const r = fromArchive(db, a, { roles, fit });
+  assert.equal(r.fields.identifier, a.login); assert.equal(r.fields.role, 'TRANSPORT'); assert.equal(r.notes.length, 0);
+  assert.equal(fromArchive(db, a, { roles: [{ code: 'PARENT' }], fit }).fields.role, '', 'a profile that no longer exists is left to pick');
+  const p = db.users.find((u) => u.role === 'PARENT' && u.email && (u.children?.length || u.linkedStudent));
+  deleteAccount(db, p.id, 'Parent (self)', { self: true });
+  const b = db.userArchive[0];
+  const rb = fromArchive(db, b, { roles, fit });
+  assert.equal(rb.fields.identifier, ''); assert.ok(rb.notes.some((n) => /not kept/.test(n)));
+  assert.equal(rb.fields.admissionNo, b.children[0].adm); assert.ok(rb.fields.studentName && rb.fields.grade, 'student details from today’s record');
+  assert.ok(checkStudent(db, rb.fields).student, 'copied student details pass the check');
 });

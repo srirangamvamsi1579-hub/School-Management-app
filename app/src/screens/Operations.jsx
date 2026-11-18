@@ -10,7 +10,7 @@ import { PRESETS, TEMPLATES, contrast, accessible } from '../lib/theme.js';
 import { allRoles, roleName, rolePerms, accessLevel, accessSource, screensFor, departments, syncDeptPerms, defaultScreens, baseRoleOf, canManageUsers, accountEmail, createAccount, idType, isGmail, findUser } from '../lib/auth.js';
 import { designationsFor, fitDesignation, designationProblem, departmentOf, STANDARD_PROFILES } from '../data/designations.js';
 import { AccountRequests, deleteAccount } from './Account.jsx';
-import { checkStudent, childLines, childrenOf, studentName, gradeOf, gradeOptions, touch, ARCHIVE_REASONS, designationLabel, canResetPasswords, RESET_PW } from '../lib/users.js';
+import { checkStudent, childLines, childrenOf, studentName, gradeOf, gradeOptions, touch, ARCHIVE_REASONS, designationLabel, canResetPasswords, RESET_PW, archiveMatches, fromArchive } from '../lib/users.js';
 
 const PAGE = 25;
 // Page controls under a long list: 25 rows at a time
@@ -103,10 +103,10 @@ export function Users() {
     run((d) => {
       const tmp = Math.random().toString(36).slice(2) + 'A!9';
       const u = createAccount(d, { name: invite.name, identifier: invite.identifier, password: tmp, requestedRole: invite.role, designation: invite.role === 'PARENT' ? 'Parent' : invite.designation, email: invite.email, admissionNo: kid });
-      Object.assign(u, { role: invite.role, status: 'ACTIVE', children: kid ? [kid] : u.children });
+      Object.assign(u, { role: invite.role, status: 'ACTIVE', children: kid ? [kid] : u.children, ...(invite.fromArchive ? { copiedFrom: invite.fromArchive } : {}) });
       touch(u, by);
       accountEmail(d, u, school, 'RESET');
-      log(d, by, 'User invited', `${u.login} as ${roleName(d, u.role)}`);
+      log(d, by, invite.fromArchive ? 'User added again from the archive' : 'User invited', `${u.login} as ${roleName(d, u.role)}`);
     });
     notify('Account created — a set-password link was emailed'); setInvite(null);
   };
@@ -166,6 +166,14 @@ export function Users() {
     {confirmDel && edit && <Modal title={`Delete ${edit.name}?`} onClose={() => setConfirmDel(false)} actions={<><button className="btn" onClick={() => setConfirmDel(false)}>Cancel</button><button className="btn danger" onClick={doDelete}>Delete</button></>}>
       <p>{edit.name} will no longer be able to sign in. The account moves to <b>Archived</b> with the reason “{edit.reason}”.</p></Modal>}
     {invite && <Modal title="Add user" onClose={() => setInvite(null)} actions={<button className="btn pri" disabled={!invite.name} onClick={sendInvite}>Create and email link</button>}>
+      {(db.userArchive || []).length > 0 && <div className="card" style={{ marginBottom: 12 }}>
+        <h3>Coming back? Copy details from the archive</h3>
+        <Input placeholder="Search the archive by name, email, mobile or student" aria-label="Search the archive to copy" value={invite.archQ || ''} onChange={(e) => setInvite({ ...invite, archQ: e.target.value })} />
+        {archiveMatches(db, invite.archQ).map((a) => <div key={a.id} className="row small" style={{ justifyContent: 'space-between', marginTop: 6 }}>
+          <span><b>{a.name}</b> · {a.roleName}{a.designation && a.role !== 'PARENT' ? ' · ' + a.designation : ''} · deleted {dmon(a.deletedAt)}</span>
+          <button className="btn sm" aria-label={'Copy details of ' + a.name} onClick={() => { const r = fromArchive(db, a, { roles: roles.filter((x) => x.code !== 'PLATFORM'), fit: (ro, de) => fitDesignation(db, ro, de) }); setInvite({ ...invite, ...r.fields, archQ: '', copyNotes: r.notes, copiedName: a.name }); }}>Copy details</button></div>)}
+        {invite.copiedName && <div className={'note small ' + (invite.copyNotes?.length ? 'warn' : 'ok')} style={{ marginTop: 8 }}>Details copied from {invite.copiedName}'s archived account{invite.copyNotes?.length ? ':' : ' — everything still fits.'}{(invite.copyNotes || []).map((n) => <div key={n}>{n}</div>)}</div>}
+      </div>}
       <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
         <Field label="Full name" req><Input value={invite.name} onChange={(e) => setInvite({ ...invite, name: e.target.value })} /></Field>
         <Field label="Sign-in ID (Gmail / email or mobile)" req><Input value={invite.identifier} onChange={(e) => setInvite({ ...invite, identifier: e.target.value })} /></Field>

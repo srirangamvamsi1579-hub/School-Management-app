@@ -75,3 +75,28 @@ export const designationLabel = (u) => ((u.role || u.requestedRole) === 'PARENT'
 // Reset password: the Admin role, or people given the permission one by one (Edit user → Permissions)
 export const RESET_PW = 'RESET_PASSWORDS';
 export const canResetPasswords = (me, role) => role === 'ADMIN' || role === 'PLATFORM' || !!me?.perms?.includes(RESET_PW);
+
+// Someone coming back: find them in the archive and copy what still fits today into Add user.
+export function archiveMatches(db, text) {
+  const t = String(text || '').trim().toLowerCase();
+  if (t.length < 2) return [];
+  return (db.userArchive || []).filter((a) => (a.name + ' ' + a.login + ' ' + a.email + ' ' + a.mobile + ' ' + a.children.map((k) => k.name + ' ' + k.adm).join(' ')).toLowerCase().includes(t)).slice(0, 5);
+}
+export function fromArchive(db, a, { roles, fit }) {
+  const notes = [];
+  const roleOk = roles.some((r) => r.code === a.role);
+  if (!roleOk) notes.push(`The ${a.roleName} profile no longer exists — pick a role.`);
+  const role = roleOk ? a.role : '';
+  const designation = role && role !== 'PARENT' ? fit(role, a.designation) : '';
+  if (role && role !== 'PARENT' && a.designation && designation !== a.designation) notes.push(`${a.designation} is no longer offered — pick a designation.`);
+  const id = a.login || a.email || a.mobile || '';
+  if (!id) notes.push('Their sign-in ID, email and mobile were not kept — enter them again.');
+  let kid = null;
+  if (role === 'PARENT') {
+    const now = a.children.map((k) => db.students.find((s) => s.admNo === k.adm && s.status !== 'Left')).filter(Boolean);
+    a.children.filter((k) => !now.some((s) => s.admNo === k.adm)).forEach((k) => notes.push(`${k.name} (${k.adm}) is no longer enrolled.`));
+    kid = now[0] || null;
+    if (kid) { const g = gradeOf(db, kid); if (g?.name !== a.children.find((k) => k.adm === kid.admNo)?.grade) notes.push(`${studentName(kid)} is now in ${g?.name}.`); }
+  }
+  return { fields: { name: a.name, identifier: id, email: a.email || '', role, designation, admissionNo: kid?.admNo || '', studentName: kid ? studentName(kid) : '', grade: kid ? String(gradeOf(db, kid)?.level || '') : '', fromArchive: a.id }, notes };
+}

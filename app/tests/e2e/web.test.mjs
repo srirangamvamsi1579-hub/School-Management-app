@@ -643,3 +643,37 @@ test('Users: Delete is a status in Edit; the archive is view only; 25 per page; 
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('Users: someone coming back is added with details copied from the archive', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
+  const { page, errors } = await open(ctx, '#/s/OPS_USERS');
+  const users = page.getByRole('table', { name: 'Users' });
+  await page.getByLabel('Role filter').selectOption('TRANSPORT');
+  const name = (await users.locator('tbody tr').first().locator('td').first().innerText()).split('\n')[0].trim();
+  const login = (await users.locator('tbody tr').first().locator('td').nth(1).innerText()).split('\n')[0].trim();
+  await page.getByRole('button', { name: 'Edit ' + name }).click();
+  const m = page.getByRole('dialog', { name: /^Edit user/ });
+  await m.getByLabel('Status').selectOption('DELETED');
+  await m.getByRole('button', { name: 'Delete and archive' }).click();
+  await page.getByRole('dialog', { name: `Delete ${name}?` }).getByRole('button', { name: 'Delete', exact: true }).click();
+  await page.locator('.toast', { hasText: 'kept under Archived' }).waitFor();
+  // they come back
+  await page.getByRole('button', { name: 'Add user' }).click();
+  const add = page.getByRole('dialog', { name: 'Add user' });
+  await add.getByLabel('Search the archive to copy').fill(name.split(' ')[0]);
+  await add.getByRole('button', { name: 'Copy details of ' + name }).click();
+  await add.getByText(`Details copied from ${name}'s archived account — everything still fits.`).waitFor();
+  assert.equal(await add.getByLabel('Full name').inputValue(), name);
+  assert.equal(await add.getByLabel(/Sign-in ID/).inputValue(), login);
+  assert.equal(await add.getByRole('combobox', { name: /^Role/ }).inputValue(), 'TRANSPORT');
+  await add.getByRole('button', { name: 'Create and email link' }).click();
+  await page.locator('.toast', { hasText: 'set-password link was emailed' }).waitFor();
+  assert.match(await users.locator('tr', { hasText: login }).innerText(), /Transport team[\s\S]*ACTIVE/i);
+  // the archive stays as it was: view only, no rejoin status
+  await page.getByRole('tab', { name: /Archived/ }).click();
+  const arch = page.getByRole('table', { name: 'Archived users' });
+  assert.ok(await arch.locator('tr', { hasText: name }).count() === 1);
+  assert.equal(await arch.getByRole('button').count(), 0);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
