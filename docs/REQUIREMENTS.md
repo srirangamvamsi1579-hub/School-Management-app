@@ -555,7 +555,7 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 
 ## Database schema summary
 
-PostgreSQL 15+, seventeen migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
+PostgreSQL 15+, eighteen migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
 
 | File | Adds | Key tables, views and functions |
 | --- | --- | --- |
