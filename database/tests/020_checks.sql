@@ -10,16 +10,10 @@ DO $$ DECLARE a INT; v INT; t INT; BEGIN
   SELECT user_id INTO a FROM users WHERE username = 'adm20'; SELECT user_id INTO v FROM users WHERE username = 'vp20'; SELECT user_id INTO t FROM users WHERE username = 't20';
   BEGIN UPDATE users SET status = 'DISABLED' WHERE user_id = t; RAISE EXCEPTION 'switched off allowed';
   EXCEPTION WHEN check_violation THEN NULL; END;
-  -- a parent left waiting for approval is refused when the transaction ends
-  BEGIN
-    INSERT INTO users (tenant_id, username, email, password_hash, status, full_name, requested_role) VALUES (1,'pp20','pp20@example.com','COGNITO','PENDING','Pending Parent','PARENT');
-    SET CONSTRAINTS parent_not_pending IMMEDIATE;
-    RAISE EXCEPTION 'pending parent allowed';
+  -- nobody waits for approval (023): PENDING is no longer a status
+  BEGIN INSERT INTO users (tenant_id, username, email, password_hash, status, full_name, requested_role) VALUES (1,'pp20','pp20@example.com','COGNITO','PENDING','Pending Parent','PARENT');
+        RAISE EXCEPTION 'pending allowed';
   EXCEPTION WHEN check_violation THEN NULL; END;
-  SET CONSTRAINTS parent_not_pending DEFERRED;
-  -- staff can still wait for approval
-  INSERT INTO users (tenant_id, username, email, password_hash, status, full_name, requested_role) VALUES (1,'ps20','ps20@example.com','COGNITO','PENDING','Pending Teacher','TEACHER');
-  SET CONSTRAINTS parent_not_pending IMMEDIATE; SET CONSTRAINTS parent_not_pending DEFERRED;
   -- reset password
   ASSERT can_reset_passwords(a), 'admin';
   ASSERT NOT can_reset_passwords(v), 'not without the permission';

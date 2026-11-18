@@ -41,12 +41,12 @@ DO $$ DECLARE drv INT; tch INT; par INT; BEGIN
   RAISE NOTICE 'Fit ok';
 END $$;
 
--- A sign-up from the app: Pending, the role asked for, a designation from that role; it shows in the user directory
+-- A sign-up from the app: the role from the staff record, a designation from that role; it shows in the user directory (023: no Pending status)
 DO $$ DECLARE s INT; BEGIN
   INSERT INTO users (tenant_id, username, email, password_hash, status, full_name, requested_role)
-  VALUES (1, 'kiran', 'kiran.bus@example.com', 'COGNITO', 'PENDING', 'Kiran Bus', 'TRANSPORT') RETURNING user_id INTO s;
+  VALUES (1, 'kiran', 'kiran.bus@example.com', 'COGNITO', 'ACTIVE', 'Kiran Bus', 'TRANSPORT') RETURNING user_id INTO s;
   PERFORM set_user_designation(s, 'Cleaner');
-  ASSERT (SELECT role_code || '|' || designation || '|' || status FROM v_user_directory WHERE user_id = s) = 'TRANSPORT|Cleaner|PENDING', 'pending sign-up listed';
+  ASSERT (SELECT role_code || '|' || designation || '|' || status FROM v_user_directory WHERE user_id = s) = 'TRANSPORT|Cleaner|ACTIVE', 'sign-up listed';
   BEGIN PERFORM set_user_designation(s, 'Principal'); RAISE EXCEPTION 'sign-up got Principal';
   EXCEPTION WHEN check_violation THEN NULL; END;
   INSERT INTO users (tenant_id, username, email, password_hash, status, full_name, requested_role, linked_admission_no)

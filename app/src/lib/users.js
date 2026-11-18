@@ -1,6 +1,6 @@
 // Users: parents checked against the student record, archive of deleted accounts, rejoining.
-import { roleName, allRoles } from './auth.js';
-import { departmentOf } from '../data/designations.js';
+import { roleName, allRoles, normId, normMobile } from './auth.js';
+import { departmentOf, designationsFor } from '../data/designations.js';
 
 const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean);
 export const studentName = (s) => `${s.first} ${s.last || ''}`.trim();
@@ -63,6 +63,12 @@ export function normalizeUsers(db) {
     const parent = (u.role || u.requestedRole) === 'PARENT';
     if (u.status === 'DISABLED') u.status = 'LOCKED';
     if (!u.source) u.source = ['ADMIN', 'PLATFORM'].includes(u.role) ? 'SEED' : 'WEBSITE';
+    if (!parent && u.status === 'PENDING') {
+      // staff: verified against the staff record, or locked until the school office sorts it out
+      const st = (db.staff || []).find((x) => x.status === 'Active' && [String(x.email || '').toLowerCase(), x.mobile && normMobile(x.mobile)].includes(u.login));
+      const role = st && roleForStaff(db, st);
+      Object.assign(u, role ? { role, designation: st.desig, status: 'ACTIVE', staffId: st.id } : { role: u.role || u.requestedRole, status: 'LOCKED', note: 'Not on the staff record' });
+    }
     if (parent && u.status === 'PENDING') {
       const kids = childrenOf(u).filter((k) => db.students.some((s) => s.admNo === k && s.status !== 'Left'));
       Object.assign(u, kids.length ? { role: 'PARENT', status: 'ACTIVE', children: kids, designation: 'Parent' } : { role: 'PARENT', status: 'LOCKED', designation: 'Parent', note: 'Admission number not on the student record' });
@@ -106,3 +112,24 @@ export function fromArchive(db, a, { roles, fit }) {
 export const ADD_REASONS = ['Has no email or mobile of their own', 'Needs help to register', 'Coming back (details from the archive)', 'Other'];
 export const canAddUsers = (role) => role === 'ADMIN' || role === 'PLATFORM';
 export const sourceLabel = (u) => (u.source === 'APP' ? 'Registered in the app' : u.source === 'ADMIN' ? 'Added by the Admin' + (u.addReason ? ' — ' + u.addReason : '') : u.source === 'SEED' ? 'Set up with the school' : 'Registered on the website');
+
+// Staff register against the staff record: employee code, their name and the email or mobile the school has for them.
+// On a match the account is Active straight away, with the role and designation from the staff record — nobody approves it.
+const STAFF_ROLE_ORDER = ['TEACHER', 'PRINCIPAL', 'ACCOUNTANT', 'FRONT_OFFICE', 'TRANSPORT'];
+export function roleForStaff(db, st) {
+  const roles = [...STAFF_ROLE_ORDER, ...(db.customRoles || []).map((r) => r.code)].filter((r) => allRoles(db).some((x) => x.code === r));
+  return roles.find((r) => designationsFor(db, r).map((d) => (Array.isArray(d) ? d[0] : d)).includes(st.desig)) || null;
+}
+export function checkStaff(db, { employeeCode, first, last, identifier }) {
+  const code = String(employeeCode || '').trim().toUpperCase();
+  if (!/^EMP-\d{3,6}$/.test(code)) return { error: 'Enter your employee code as on your staff ID card, like EMP-0012' };
+  const st = (db.staff || []).find((x) => x.code === code && x.status === 'Active');
+  const words = norm(st ? `${st.first} ${st.last}` : '');
+  const typed = norm(`${first} ${last || ''}`);
+  const nameOk = st && typed.length && typed.every((w) => words.includes(w)) && typed.includes(norm(st.first)[0]);
+  const id = normId(identifier || '');
+  const contactOk = st && (id === String(st.email || '').toLowerCase() || (st.mobile && id === normMobile(st.mobile)));
+  const role = st && roleForStaff(db, st);
+  if (!st || !nameOk || !contactOk || !role) return { error: "These details don't match the school's staff record. Use the email or mobile the school has for you, or contact the school office." };
+  return { staff: st, role, designation: st.desig };
+}

@@ -3,6 +3,7 @@ import { rng } from '../lib/format.js';
 import { hashPassword, syncDeptPerms } from '../lib/auth.js';
 import { seedPapers } from './seedPapers.js';
 import { normalizeUsers } from '../lib/users.js';
+import { seedDashboard } from './seedDashboard.js';
 import { PURPOSES } from '../lib/sms.js';
 
 const STOPS = {
@@ -99,6 +100,7 @@ export function extendSeed3(db) {
   const ab = riders[20];
   db.attendance[ab.sectionId + ':' + today] = { [ab.id]: 'A' };
   seedPapers(db);
+  seedDashboard(db);
   normalizeUsers(db);
   return db;
 }

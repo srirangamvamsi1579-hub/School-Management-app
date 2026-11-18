@@ -252,3 +252,47 @@ nav.side .mod:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
 .slot-acts { gap: 4px; flex-wrap: wrap; margin-top: 6px; }
 .note.ok { background: #E6F4EA; color: #1E5B24; padding: 8px 10px; border-radius: 8px; }
 .linkish { background: none; border: 0; padding: 0; text-align: left; cursor: pointer; font: inherit; color: inherit; flex: 1; }
+
+/* ---------- Dashboard charts (palette: categorical slots 1–3; dark steps under data-mode) ---------- */
+:root { --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --grid: #e1e0d9; --axis: #c3c2b7; --track: #cde2fb; --up: #006300; --down: #b42318; }
+[data-mode="DARK"] { --s1: #3987e5; --s2: #d95926; --s3: #199e70; --grid: #2c2c2a; --axis: #383835; --track: #184f95; --up: #0ca30c; --down: #ff8a80; }
+.dash-tabs { margin-bottom: 14px; }
+.dash-section h2 { margin: 0 0 4px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.kpi-label { color: var(--ink-2); font-size: 13px; }
+.kpi-value { font-size: 28px; font-weight: 650; margin: 2px 0; }
+.kpi-delta { font-size: 13px; }
+.delta.good { color: var(--up); } .delta.bad { color: var(--down); } .delta.flat { color: var(--ink-2); }
+.delta .muted { color: var(--ink-3); }
+.matrix td, .matrix th { text-align: right; } .matrix td:first-child, .matrix th:first-child { text-align: left; }
+.viz { margin: 0; position: relative; }
+.viz-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.viz-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); }
+.viz-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.viz-legend .key { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.viz-legend .key-line { width: 14px; height: 2px; display: inline-block; }
+.viz-scroll { position: relative; overflow-x: auto; }
+.viz svg .grid { stroke: var(--grid); stroke-width: 1; }
+.viz svg .axis { stroke: var(--axis); stroke-width: 1; }
+.viz svg .tick { fill: var(--ink-3); font-size: 11px; font-variant-numeric: tabular-nums; }
+.viz svg .cap { fill: var(--ink); font-size: 11px; font-weight: 600; }
+.viz svg .limit { stroke: var(--ink); stroke-width: 2; }
+.viz svg .flag { font-size: 10px; } .viz svg .flag.over { fill: var(--down); } .viz svg .flag.under { fill: var(--ink-3); }
+.viz svg .mark:hover, .viz svg .mark:focus { opacity: .82; outline: none; }
+.viz-tip { position: absolute; transform: translate(-50%, calc(-100% - 8px)); background: var(--surface); color: var(--ink); border: 1px solid var(--line);
+  box-shadow: 0 4px 14px rgba(0,0,0,.12); border-radius: 8px; padding: 6px 9px; font-size: 12px; pointer-events: none; white-space: nowrap; z-index: 5; }
+.hbars { position: relative; display: grid; gap: 8px; }
+.hbar-row { display: grid; grid-template-columns: minmax(110px, 190px) 1fr minmax(90px, auto); align-items: center; gap: 10px; font-size: 13px; }
+.hbar-plot { position: relative; height: 18px; }
+.hbar-track { position: absolute; top: 0; height: 18px; background: var(--track); border-radius: 0 4px 4px 0; }
+.hbar { position: absolute; top: 0; height: 18px; } .hbar.end { border-radius: 0 4px 4px 0; }
+.hbar:hover, .hbar:focus { opacity: .82; outline: none; }
+.hbar-target { position: absolute; top: -3px; width: 2px; height: 24px; background: var(--ink); }
+.hbar-value { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.flag-chip { margin-left: 6px; font-size: 11px; padding: 1px 6px; border-radius: 10px; }
+.flag-chip.over { background: var(--bad-bg); color: var(--bad); } .flag-chip.under { background: var(--info-bg); color: var(--ink-2); } .flag-chip.ok { background: var(--ok-bg); color: var(--ok); }
+.segbar { display: flex; gap: 2px; height: 28px; margin: 6px 0 8px; }
+.segbar .seg { border-radius: 4px; color: #fff; font-size: 12px; font-weight: 600; display: flex; align-items: center; padding-left: 8px; min-width: 4px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.limit-chips { display: flex; flex-wrap: wrap; gap: 6px; }

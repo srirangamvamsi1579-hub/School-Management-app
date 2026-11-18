@@ -111,7 +111,7 @@ function MobileSignIn({ school, onChange, login }) {
     {err && <p className="note warn" role="alert">{err}</p>}
     <button className="btn pri m-wide" onClick={go} disabled={!id || !pw}>Sign in</button>
     <button className="btn m-wide" onClick={() => setSignup(true)}>Create an account</button>
-    <p className="small muted">Parents and school staff can create their own account here. Parents get access straight away when the student's details match the school's record; the school approves staff accounts. <a href="#/p/privacy">Privacy</a></p>
+    <p className="small muted">Parents and school staff can create their own account here. Your details are checked against the school's records, so the account opens straight away — no waiting for approval. <a href="#/p/privacy">Privacy</a></p>
     <button className="btn m-link" onClick={() => setDemo(!demo)} aria-expanded={demo}>Demo accounts (test build)</button>
     {demo && <div className="m-list">{demoUsers.map((u) => <button key={u.id} className="m-row" onClick={() => login({ role: u.role, userId: u.id, name: u.name })}><b>{u.name}</b><span className="small muted">{roleName(db, u.role)}{u.designation ? ' · ' + u.designation : ''} · {u.login}</span></button>)}<p className="small muted">Password for every demo account: Demo@123</p></div>}
   </main>;

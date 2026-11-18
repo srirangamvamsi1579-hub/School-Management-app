@@ -213,28 +213,30 @@ test('Add user: designations follow the role; Parent has none', async () => {
   await ctx.close();
 });
 
-test('an account created in the phone app appears in Users for approval', async () => {
+test('staff register in the phone app against the staff record: the account opens at once with the role from the record', async () => {
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
   const { page, errors } = await open(ctx, '#/p/mobile');
   await page.getByLabel('School code').fill('GVS'); await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('button', { name: 'Create an account' }).click();
-  await page.getByLabel('First name').fill('Kiran'); await page.getByLabel('Last name').fill('Bus'); await page.getByRole('button', { name: 'Next' }).click();
-  await page.getByLabel(/Gmail \/ email or mobile/).fill('kiran.bus@example.com'); await page.getByRole('button', { name: 'Send verification code' }).click();
-  const code = (await page.locator('text=/\\b\\d{6}\\b/').first().innerText().catch(() => '')).match(/\d{6}/)?.[0]
-    || await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('school-app-demo-v9')); return d.outbox.find((m) => m.to === 'kiran.bus@example.com')?.body.match(/\d{6}/)?.[0]; });
+  await page.getByLabel('First name').fill('Kavya'); await page.getByLabel('Last name').fill('Iyer'); await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByLabel(/Gmail \/ email or mobile/).fill('kavya.iyer@example.com'); await page.getByRole('button', { name: 'Send verification code' }).click();
+  const code = await page.evaluate(() => JSON.parse(localStorage.getItem('school-app-demo-v9')).outbox.find((m) => m.to === 'kavya.iyer@example.com')?.body.match(/\d{6}/)?.[0]);
   await page.getByLabel('Code').fill(code); await page.getByRole('button', { name: 'Verify' }).click();
   await page.getByLabel('Password', { exact: true }).fill('Strong@123'); await page.getByLabel('Confirm').fill('Strong@123'); await page.getByRole('button', { name: 'Next' }).click();
-  await page.getByLabel('I am a').selectOption('TRANSPORT');
-  await page.getByLabel(/Designation in/).selectOption('Cleaner');
+  await page.getByLabel('I am a').selectOption('STAFF');
+  await page.getByLabel('Employee code').fill('EMP-0999');
   await page.getByLabel(/I agree/).check();
   await page.getByRole('button', { name: 'Create account' }).click();
-  await page.getByRole('heading', { name: 'Account created' }).waitFor();
+  assert.match(await page.getByRole('alert').innerText(), /don't match the school's staff record[\s\S]*4 tries left/);
+  await page.getByLabel('Employee code').fill('EMP-0131');
+  await page.getByRole('button', { name: 'Create account' }).click();
+  await page.getByRole('heading', { name: 'Your account is ready' }).waitFor();
+  await page.getByText(/open as Teacher · PRT/).waitFor();
   const admin = await ctx.newPage();
   await admin.goto(server.url + '#/s/OPS_USERS');
-  const row = admin.locator('tr', { hasText: 'Kiran Bus' });
-  await row.waitFor();
-  const text = await row.innerText();
-  assert.match(text, /Transport team/); assert.match(text, /Cleaner/); assert.match(text, /Pending approval|Waiting/);
+  const text = await admin.locator('tr', { hasText: 'kavya.iyer@example.com' }).innerText();
+  assert.match(text, /Teacher[\s\S]*Academics[\s\S]*PRT[\s\S]*ACTIVE/i);
+  assert.equal(await admin.getByText(/Waiting for approval|Pending/).count(), 0, 'nobody waits for approval');
   assert.deepEqual(errors, []);
   await ctx.close();
 });
@@ -539,7 +541,7 @@ test('Users: role and department filters, department column, student details for
   assert.ok(rows.length > 0 && rows.every((r) => /Parent/.test(r)), 'only parents');
   assert.match(rows.find((r) => r.includes('Rohit Sharma')), /N\/A[\s\S]*Aarav Sharma[\s\S]*Grade VIII[\s\S]*ADM-2025-0231[\s\S]*01 Apr 2026/);
   assert.ok(rows.every((r) => !/Pending/.test(r)), 'no parent waits for approval');
-  assert.deepEqual((await page.getByLabel('Status filter').locator('option').allInnerTexts()), ['All statuses', 'Waiting for approval', 'Active', 'Locked'], 'no Switched off');
+  assert.deepEqual((await page.getByLabel('Status filter').locator('option').allInnerTexts()), ['All statuses', 'Active', 'Locked'], 'no Switched off, nobody waiting for approval');
   await page.getByLabel('Role filter').selectOption('');
   await page.getByLabel('Department filter').selectOption('Transport');
   assert.ok((await users.locator('tbody tr').allInnerTexts()).every((r) => /Transport/.test(r)), 'only the Transport department');
@@ -684,7 +686,7 @@ test('Users: someone coming back is added with details copied from the archive',
 test('Users: accounts come from registration; only the Admin can add someone, with a reason; each account shows how it was created', async () => {
   const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
   const { page, errors } = await open(ctx, '#/s/OPS_USERS');
-  await page.getByText(/Accounts are created when parents and staff register/).waitFor();
+  await page.getByText(/Parents and staff open their own accounts by registering/).waitFor();
   await page.getByRole('button', { name: 'Edit Rohit Sharma' }).click();
   await page.getByRole('dialog', { name: /^Edit user/ }).getByText(/How the account was created: Registered (on the website|in the app)/).waitFor();
   await page.getByRole('dialog', { name: /^Edit user/ }).getByRole('button', { name: 'Close' }).click();
@@ -705,6 +707,38 @@ test('Users: accounts come from registration; only the Admin can add someone, wi
   await page.evaluate((v) => { sessionStorage.setItem('school-app-demo-v9-s', JSON.stringify({ role: v.role, userId: v.id, name: v.name })); location.hash = '#/s/OPS_USERS'; location.reload(); }, vp);
   await page.getByRole('table', { name: 'Users' }).waitFor();
   assert.equal(await page.getByRole('button', { name: 'Add user' }).count(), 0, 'no Add user for the Vice Principal');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('Dashboard: students, staff, transport, fees and enrolment sections with arrows, gender split, grade limits and registrations by source', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const { page, errors } = await open(ctx, '#/s/DASH');
+  const tabs = (await page.getByRole('tab').allInnerTexts()).map((x) => x.trim());
+  assert.deepEqual(tabs, ['Students', 'Staff', 'Transport', 'Fees', 'Enrolment', 'Needs attention']);
+  await page.getByRole('tab', { name: 'Students', exact: true }).click();
+  const students = page.getByRole('region', { name: 'Students' });
+  assert.match(await students.locator('.kpi').first().innerText(), /Total students\s+\d+\s+[▲▼▬][\s\S]*vs 2025-26/);
+  await students.getByRole('table', { name: 'Students', exact: true }).waitFor();             // boys and girls, last year vs this year
+  assert.ok(await students.locator('path.mark').count() >= 12, 'a column per class');
+  await students.locator('path.mark').first().focus();
+  await page.locator('.viz-tip').waitFor();
+  await students.getByRole('button', { name: /Show as table — Students by class/ }).click();
+  await students.getByRole('table', { name: 'Students by class (table)' }).waitFor();
+  assert.ok(await students.getByRole('table', { name: 'Grade limits' }).getByText(/over|free/).count() > 0);
+  // the Admin changes a grade limit and the indicator follows
+  await students.getByRole('button', { name: 'Edit grade limits' }).click();
+  await page.getByRole('dialog', { name: 'Grade limits' }).getByLabel('Grade I', { exact: true }).fill('1');
+  await page.getByRole('dialog', { name: 'Grade limits' }).getByRole('button', { name: 'Save' }).click();
+  assert.match(await students.getByRole('table', { name: 'Grade limits' }).locator('tr', { hasText: 'Grade I' }).first().innerText(), /▲ \d+ over/);
+  for (const [tab, re] of [['Staff', /Total staff[\s\S]*vs 2025-26[\s\S]*Students per teacher/], ['Transport', /Students on school transport[\s\S]*Seats used/],
+    ['Fees', /Fees collected[\s\S]*Collected of what is due so far/], ['Enrolment', /Accounts registered this year[\s\S]*Website[\s\S]*Mobile app[\s\S]*Added by the Admin/]]) {
+    await page.getByRole('tab', { name: tab, exact: true }).click();
+    assert.match(await page.locator('main .kpis').innerText(), re, tab);
+  }
+  await page.getByLabel('Registered from').selectOption('APP');
+  const rows = await page.getByRole('table', { name: 'Registrations' }).locator('tbody tr').allInnerTexts();
+  assert.ok(rows.length > 0 && rows.every((r) => /Mobile app/.test(r)));
   assert.deepEqual(errors, []);
   await ctx.close();
 });

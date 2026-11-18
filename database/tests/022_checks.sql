@@ -7,9 +7,9 @@ INSERT INTO users (tenant_id, username, email, password_hash, status, full_name)
 INSERT INTO user_roles SELECT u.user_id, r.role_id FROM users u JOIN roles r ON (u.username, r.code) IN (('adm22','ADMIN'),('vp22','TEACHER'));
 DO $$ DECLARE a INT; v INT; n INT; BEGIN
   SELECT user_id INTO a FROM users WHERE username = 'adm22'; SELECT user_id INTO v FROM users WHERE username = 'vp22';
-  -- a staff sign-up from the app
+  -- a staff account from the app
   INSERT INTO users (tenant_id, username, email, password_hash, status, full_name, requested_role, created_via)
-  VALUES (1, 'app22', 'app22@example.com', 'COGNITO', 'PENDING', 'App Teacher', 'TEACHER', 'APP') RETURNING user_id INTO n;
+  VALUES (1, 'app22', 'app22@example.com', 'COGNITO', 'ACTIVE', 'App Teacher', 'TEACHER', 'APP') RETURNING user_id INTO n;
   ASSERT (SELECT how_created FROM v_user_source WHERE user_id = n) = 'Registered in the app';
   -- the Vice Principal can't add anyone
   PERFORM set_config('app.user_id', v::text, true);

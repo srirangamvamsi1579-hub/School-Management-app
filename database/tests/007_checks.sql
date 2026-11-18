@@ -22,14 +22,14 @@ DO $$ DECLARE r RECORD; BEGIN
   RAISE NOTICE 'OTP ok';
 END $$;
 -- 2. Roles
-INSERT INTO users (tenant_id, username, email, password_hash, status) VALUES (1,'admin','admin@x.in','COGNITO','ACTIVE'),(1,'teach','t@gmail.com','COGNITO','ACTIVE'),(1,'new','new@gmail.com','COGNITO','PENDING');
+INSERT INTO users (tenant_id, username, email, password_hash, status) VALUES (1,'admin','admin@x.in','COGNITO','ACTIVE'),(1,'teach','t@gmail.com','COGNITO','ACTIVE'),(1,'new','new@gmail.com','COGNITO','LOCKED');   -- 023: no PENDING status; set_user_role still activates
 INSERT INTO user_roles SELECT u.user_id, r.role_id FROM users u JOIN roles r ON (u.username,r.code) IN (('admin','ADMIN'),('teach','TEACHER'));
 DO $$ DECLARE a INT; t INT; n INT; BEGIN
   SELECT user_id INTO a FROM users WHERE username='admin'; SELECT user_id INTO t FROM users WHERE username='teach'; SELECT user_id INTO n FROM users WHERE username='new';
   BEGIN PERFORM set_user_role(t, n, 'PARENT', 'ACTIVE'); RAISE EXCEPTION 'teacher should not manage users'; EXCEPTION WHEN raise_exception THEN IF SQLERRM NOT LIKE 'Not allowed%' THEN RAISE; END IF; END;
   BEGIN PERFORM set_user_role(a, a, 'TEACHER'); RAISE EXCEPTION 'self change'; EXCEPTION WHEN raise_exception THEN IF SQLERRM NOT LIKE '%own role%' THEN RAISE; END IF; END;
   PERFORM set_user_role(a, n, 'PARENT', 'ACTIVE');
-  ASSERT (SELECT status FROM users WHERE user_id=n) = 'ACTIVE' AND (SELECT approved_by FROM users WHERE user_id=n) = a;
+  ASSERT (SELECT status FROM users WHERE user_id=n) = 'ACTIVE';
   ASSERT (SELECT count(*) FROM user_role_changes WHERE user_id=n) = 1;
   -- designation grant lets the teacher manage users
   UPDATE users SET designation_id = (SELECT designation_id FROM designations WHERE tenant_id=1 AND name='Vice Principal') WHERE user_id=t;

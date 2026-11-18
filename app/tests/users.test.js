@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildSeed } from '../src/data/seed.js';
 import { signIn } from '../src/lib/auth.js';
-import { checkStudent, childLines, parentTriesLeft, noteParentTry, MAX_PARENT_TRIES, deleteAccount, normalizeUsers, designationLabel, canResetPasswords, RESET_PW, archiveMatches, fromArchive, canAddUsers, sourceLabel } from '../src/lib/users.js';
+import { checkStudent, childLines, parentTriesLeft, noteParentTry, MAX_PARENT_TRIES, deleteAccount, normalizeUsers, designationLabel, canResetPasswords, RESET_PW, archiveMatches, fromArchive, canAddUsers, sourceLabel, checkStaff, roleForStaff } from '../src/lib/users.js';
 
 test('parent check: admission no., student name and grade must all match the student record', () => {
   const db = buildSeed();
@@ -99,4 +99,18 @@ test('accounts come from registration; only the Admin adds someone, with a reaso
   assert.ok(db.users.filter((u) => !['ADMIN', 'PLATFORM'].includes(u.role)).every((u) => ['WEBSITE', 'APP'].includes(u.source)), 'demo accounts registered themselves');
   assert.equal(sourceLabel({ source: 'APP' }), 'Registered in the app');
   assert.equal(sourceLabel({ source: 'ADMIN', addReason: 'Needs help to register' }), 'Added by the Admin — Needs help to register');
+});
+
+test('staff are checked against the staff record: employee code, name and the email or mobile on file; role from the record', () => {
+  const db = buildSeed();
+  const ok = checkStaff(db, { employeeCode: 'emp-0131', first: 'kavya', last: 'IYER', identifier: 'kavya.iyer@example.com' });
+  assert.equal(ok.role, 'TEACHER'); assert.equal(ok.designation, 'PRT');
+  assert.ok(checkStaff(db, { employeeCode: 'EMP-0131', first: 'Kavya', last: '', identifier: '9845077001' }).staff, 'mobile on file, first name only');
+  assert.match(checkStaff(db, { employeeCode: 'EMP-0131', first: 'Kavya', last: 'Iyer', identifier: 'someone@gmail.com' }).error, /don't match/, 'email not on the record');
+  assert.match(checkStaff(db, { employeeCode: 'EMP-0131', first: 'Divya', last: 'Iyer', identifier: 'kavya.iyer@example.com' }).error, /don't match/, 'wrong name');
+  assert.match(checkStaff(db, { employeeCode: 'EMP-0999', first: 'Kavya', last: 'Iyer', identifier: 'kavya.iyer@example.com' }).error, /don't match/, 'unknown code');
+  assert.match(checkStaff(db, { employeeCode: '131', first: 'Kavya' }).error, /like EMP-/);
+  const roles = Object.fromEntries(db.staff.map((s) => [s.desig, roleForStaff(db, s)]));
+  assert.equal(roles.Principal, 'PRINCIPAL'); assert.equal(roles.Accountant, 'ACCOUNTANT'); assert.equal(roles.Driver, 'TRANSPORT'); assert.equal(roles['Office Assistant'], 'FRONT_OFFICE');
+  assert.ok(!db.users.some((u) => u.status === 'PENDING'), 'nobody is waiting for approval');
 });

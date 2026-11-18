@@ -1,6 +1,6 @@
 # School Management Platform — Requirements
 
-Updated 18 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos; release 7: opens on a Main menu, designations by role, account creation in the app, Admin View as Profile; 7.1–7.5: User management with departments, access by department with read only / full access, access summary, standard profiles for Indian schools; release 8: question papers driven by topic selection, up to 10 sets, approval per set, question bank with topics, blueprints; release 9: accounts come from registration (Add user is Admin-only, with a reason), Users filters, copy a returning person's details from the archive, department, student and created columns, 25 per page, refresh, parents checked against the student record with no approval, no switched-off status, reset password for Admin or by permission, delete as a status with a view-only archive). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
+Updated 18 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos; release 7: opens on a Main menu, designations by role, account creation in the app, Admin View as Profile; 7.1–7.5: User management with departments, access by department with read only / full access, access summary, standard profiles for Indian schools; release 8: question papers driven by topic selection, up to 10 sets, approval per set, question bank with topics, blueprints; release 10: nobody waits for approval (staff checked against the staff record), dashboard in sections (students, staff, transport, fees, enrolment) with year-on-year arrows, gender split and grade limits; release 9: accounts come from registration (Add user is Admin-only, with a reason), Users filters, copy a returning person's details from the archive, department, student and created columns, 25 per page, refresh, parents checked against the student record with no approval, no switched-off status, reset password for Admin or by permission, delete as a status with a view-only archive). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
 
 One platform runs Indian K-12 schools of every size, from under 250 to over 1,000 students. Each school gets only the modules its plan includes, and every person sees only the menus their role allows.
 
@@ -23,7 +23,7 @@ One platform runs Indian K-12 schools of every size, from under 250 to over 1,00
 9. **Branding.** Each school picks a layout template, colours and fonts. Colours are checked for readability.
 10. **Website.** The app links to the school's existing website, or hosts a simple new one. Website pages can be added as menu items.
 11. **Mobile.** Parents and staff use one store app (Google Play and App Store, built with Capacitor from the same code) with a small set of screens that each school switches on, under the same access rules as the website. The web app also installs as a PWA.
-12. **Own sign-in page per school.** Each client gets its own sign-in page and accounts. People create an account Gmail-style with a Gmail/email or mobile number, verify it with a one-time code and set a password. Parents get access at once when their child's details match the student record; staff wait for the school to approve. Account details go to their Gmail. OTP by SMS is built as a workflow and switches on when an SMS gateway is connected.
+12. **Own sign-in page per school.** Each client gets its own sign-in page and accounts. People create an account Gmail-style with a Gmail/email or mobile number, verify it with a one-time code and set a password. Accounts open at once when the details match the school's records: parents against the student record, staff against the staff record. Account details go to their Gmail. OTP by SMS is built as a workflow and switches on when an SMS gateway is connected.
 13. **User management.** An Admin, or anyone given the Users screen by designation or personally, approves sign-ups and changes roles, designations and status. Schools can add their own roles.
 14. **Admissions.** Enquiries and application forms move through Enquiry → Submitted → In review → Offered → Enrolled, or Opted out, with a summary by grade.
 15. **Data Analytics.** A separate menu of Power BI reports: top 6 and bottom 6 per grade (sections together or picked), transport, teacher performance and the admissions funnel.
@@ -85,8 +85,8 @@ Each school (client) has its own sign-in page at `<school>.yourapp.com`, branded
 | 2. Sign-in ID | A Gmail/email address **or** a 10-digit Indian mobile (+91 and spaces are accepted). It must not already have an account. |
 | 3. Verify | Email: a 6-digit code goes to the inbox. Mobile: the OTP request is recorded as *gateway pending* and the test build shows the code on screen until an SMS gateway is connected. |
 | 4. Password | 8+ characters with upper and lower case, a number and a symbol, and not their name. |
-| 5. Profile | Parent (the student's admission number, name and grade, checked against the student record) or staff (designation); a Gmail for account emails when they signed up with a mobile; consent under the DPDP Act 2023. |
-| 6. Done | Parent with matching details: the account is **Active** at once. Staff: **Waiting for approval**. The account details (name, sign-in ID, mobile, requested access, status) are emailed to their Gmail. |
+| 5. Profile | Parent (the student's admission number, name and grade, checked against the student record) or staff (employee code, checked with the name and sign-in ID against the staff record); a Gmail for account emails when they signed up with a mobile; consent under the DPDP Act 2023. |
+| 6. Done | Details match the student or staff record: the account is **Active** at once (staff get the role and designation from the staff record). The account details (name, sign-in ID, mobile, requested access, status) are emailed to their Gmail. |
 
 **Passwords are never emailed.** The account email confirms the sign-in ID and gives a link to change the password; staff created by an Admin get a set-password link instead of a temporary password. In production Amazon Cognito (one user pool per client) stores passwords, SES sends emails, and a DLT-registered SMS gateway sends OTPs.
 
@@ -96,7 +96,7 @@ Each school (client) has its own sign-in page at `<school>.yourapp.com`, branded
 
 Operations → **Users** is open to Admins, and to anyone given the screen by designation or personally (e.g. a Vice Principal who is a Teacher).
 
-- **Approve sign-ups:** review the details, pick the role, set status to Active; the person is emailed that the account is ready.
+- **No approvals:** accounts open when the registration details match the student or staff record.
 - **Change role, designation or status** (Active, Locked, Deleted) for anyone; changes apply at the next sign-in and are logged with who and when.
 - **Extra screens for one person**, on top of their role.
 - **Add user:** Admin only, as an exception with a reason (people normally register on the website or in the app); creates the account and emails a set-password link.
@@ -617,9 +617,41 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
   - `register_parent_via()` records the channel.
   - `v_user_source`.
 
+## Added 18 Nov 2026 (release 10)
+
+### Nobody waits for approval
+
+Every account opens as soon as the details given at registration match the school's records.
+- **Parents:** the student's admission number, name and grade must match the student record (release 9).
+- **Staff:** the employee code, their name, and the email or mobile the school has on the staff record must match.
+  - The role and designation come from the staff record. For example, PRT gives Teacher · PRT, and Driver gives Transport team.
+  - Staff no longer pick a role at sign-up.
+- **On a mismatch** nothing is created. The same message shows whichever detail was wrong, with the tries left (5 per sign-in ID).
+- **The school's part** is keeping the student and staff records up to date (Staff → Add Staff), not approving accounts.
+- **"Waiting for approval" is no longer a status.** Statuses are Active, Locked and Deleted. Older pending accounts became Active if they match a record, and Locked otherwise.
+- **Database (`023_register_no_approval.sql`):**
+  - `register_staff_via()` and `role_for_designation()`.
+  - `users.staff_id`.
+  - No PENDING status.
+
+### Dashboard in sections
+
+The dashboard has tabs. Each section compares this year with last year (2025-26) using ▲ / ▼ arrows.
+
+| Section | Who sees it | What it shows |
+| --- | --- | --- |
+| Students | All staff | Total students with change; new enrolments this year (boys / girls); grades over their limit; seats free. For co-ed schools, a boys / girls table (last year, this year, change). A column per class split into boys and girls, with the grade limit marked and ▲ (over) / ▼ (seats free) above each column. A table of every grade against its limit, and new enrolments by class. **Edit grade limits** (Admin, Principal) sets the limit per grade and whether the school is co-educational. |
+| Staff | Admin, Principal, Accountant | Total staff with change; joined this year; students per teacher against the norm (30); staff by department split men / women; men / women last year vs this year; list of joiners. |
+| Transport | Admin, Principal, Transport, Front Office | Students on transport with change and share of students; seats used; full routes and routes under half full; riders per route against the bus's seats, with last year's riders. |
+| Fees | Admin, Principal, Accountant | Collected, with change against the same time last year; collected as % of what is due so far against the target (95%); still to collect; overdue. By class against the target. |
+| Enrolment | Admin, Principal | Accounts registered this year from the website, the app or added by the Admin, each with change; a bar of the split; the list of who registered (filter by source, search, 25 at a time). |
+| Needs attention | Everyone | The previous to-do list and recent activity. |
+
+Charts have a legend, a tooltip on hover and keyboard focus, a **Show as table** view, and colours checked for colour-blind readers in light and dark mode.
+
 ## Database schema summary
 
-PostgreSQL 15+, twenty-two migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
+PostgreSQL 15+, twenty-three migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
 
 | File | Adds | Key tables, views and functions |
 | --- | --- | --- |
@@ -645,6 +677,7 @@ PostgreSQL 15+, twenty-two migration files loaded in order. Every table carries 
 | 020_users_status_reset.sql | Parents never pending, no switched-off status, reset-password permission, view-only archive | register_parent(), parent_not_pending deferred trigger; users_status_check without DISABLED; user_permissions, can_reset_passwords(), request_password_reset(); rejoin removed; v_user_directory with created date, N/A for parents |
 | 021_copy_from_archive.sql | Someone coming back: copy details from the archive | users.copied_from_archive; v_archive_copy (profile exists, children still enrolled, contact in use) |
 | 022_account_source.sql | Accounts come from registration | users.created_via (WEBSITE / APP / ADMIN / SETUP), admin_add_reason; admin_added trigger (Admin only); register_parent_via(); v_user_source |
+| 023_register_no_approval.sql | Nobody waits for approval | register_staff_via() (employee code, name, email/mobile on the staff record), role_for_designation(), users.staff_id; PENDING removed from users_status_check |
 
 The test build keeps the same entities in browser memory (`app/src/data`) and runs the same rules in JavaScript (`app/src/lib/logic.js`).
 
@@ -694,14 +727,14 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 
 **Accounts and access**
 
-1. One sign-in ID per account (email or mobile) per school. A parent account opens at once when the student's admission number, name and grade match an enrolled student (5 wrong tries per sign-in ID, then the school office). Staff accounts start as Waiting for approval and cannot sign in until approved.
+1. One sign-in ID per account (email or mobile) per school. Accounts open at once when the details match the school's records: parents against the student record (admission number, name, grade), staff against the staff record (employee code, name, email or mobile on file). 5 wrong tries per sign-in ID, then the school office. Nobody waits for approval.
 2. Passwords: 8+ characters, upper and lower case, number, symbol, not the person's name; never emailed or shown.
 3. One-time codes: 6 digits, 10 minutes, 5 tries, single use, at most 5 per address per hour; only a hash is stored.
 4. 5 wrong passwords lock the account.
 5. Only Admins, or people given the Users screen by designation or personally, manage users. Nobody changes their own role; only an Admin gives the Admin role. Every change is logged.
 6. A parent account is linked to a child by admission number, checked against the student record (name and grade too).
 7. Deleting an account (Edit → Status Deleted) archives it first, with a reason. The school keeps the contact details of accounts it deletes; for people who delete their own account, only their name, role and children are kept. The archive is view only.
-8. Statuses are Waiting for approval (staff only), Active, Locked and Deleted. Parents are never waiting for approval.
+8. Statuses are Active, Locked and Deleted.
 9. Only the Admin role, or a person the Admin gives the permission to, can reset passwords.
 10. Accounts are created by registering on the website or in the app. Only the Admin adds someone directly, as an exception with a recorded reason.
 
@@ -795,9 +828,9 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 
 One-time setup: create the dev, preprod and prod environments in GitHub, add required reviewers to preprod and prod, and add the secret `AWS_DEPLOY_ROLE_ARN` (an IAM role for GitHub OIDC).
 
-**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the twenty-two migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
+**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the twenty-three migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
-**Automated tests (release 9.3).** See `docs/TEST_REPORT.md`: 59 app tests, 37 SQL check groups (007–022), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 25 web end-to-end tests (including Add user for the Admin only with a reason, copying a returning person's details from the archive, the Users filters, columns, paging and Refresh, parent sign-up checked against the student record, delete as a status with the view-only archive, reset password by permission, the question-paper flow from topics to approval and print, the question bank and blueprints, every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations, the collapsed side menu, permissions by department with access levels, read-only screens, the access summary and deleting a profile) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
+**Automated tests (release 10).** See `docs/TEST_REPORT.md`: 62 app tests, 38 SQL check groups (007–023), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 26 web end-to-end tests (including the dashboard sections, staff registration against the staff record, Add user for the Admin only with a reason, copying a returning person's details from the archive, the Users filters, columns, paging and Refresh, parent sign-up checked against the student record, delete as a status with the view-only archive, reset password by permission, the question-paper flow from topics to approval and print, the question bank and blueprints, every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations, the collapsed side menu, permissions by department with access levels, read-only screens, the access summary and deleting a profile) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
 
 **Earlier automated tests.** `npm test` ran 21 checks on the business rules (including the approved pickup list, route sheets, the attendant-tracking switch, requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
 
@@ -813,7 +846,8 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - [ ] Teacher: Exams → Question Papers → Unit Test 2 → Start Class 9 Mathematics → untick a chapter: the paper is rebuilt without it → Add a set → Send for approval; Principal: Approve → choose the set → Approved Papers → Print
 - [ ] Admin: Main menu → View as Profile → Parent → switch to Phone app → try to send a request (blocked: preview only) → Back to Admin
 - [ ] Admin: Users → Add user → Role Transport team: only Transport designations; Role Parent: designation N/A
-- [ ] Phone app (`#/p/mobile`, school GVS) → Create an account as Transport team / Driver → Admin sees it in Users, waiting for approval
+- [ ] Phone app (`#/p/mobile`, school GVS) → Create an account as School staff: Kavya Iyer, kavya.iyer@example.com, employee code EMP-0131 → the account opens at once as Teacher · PRT
+- [ ] Admin: Dashboard → Students (arrows, boys and girls, columns per class with grade limits; Edit grade limits) → Staff → Transport → Fees → Enrolment (filter by Mobile app)
 - [ ] Admin: Web & App Screens → Front Office → Gate Desk "App only" → Send for approval; Principal approves; Front Office no longer has Gate Desk on the website, but has it in the phone preview
 - [ ] Anyone: Help → User Guide & Demo → run a guided demo with Start / Next step
 
@@ -834,9 +868,8 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - [ ] Head of Teaching Staff (murali.hots@example.com): Teacher Performance → Share with teachers; then the teacher sees My Teaching Performance
 - [ ] Parent: My Account → change mobile, change password, ask to close the account; Admin handles it in Users
 - [ ] Admin: Operations → SMS Gateway → choose MSG91 or Amazon SNS → fill DLT IDs → Dry run
-- [ ] Staff: Create account with a Gmail → read the code in the test inbox → set a password → try to sign in (waiting for approval)
+- [ ] Staff: Create account with a Gmail that is not on the staff record → refused, tries left shown
 - [ ] Anyone: Create account with a mobile number (code shown on screen until SMS is connected)
-- [ ] Admin: Users → Review the new sign-up → pick the role → Active; the person can now sign in
 - [ ] Admin: Roles & Permissions → Permissions by department → Transport → tick Fees (whole menu) → expand it → untick Collect Fee; View as → Transport team shows Fees without Collect Fee
 - [ ] Admin: Permissions by department → Transport → Transport → Routes, Stops & Timings: Read only; View as Transport team (tick Act as) → Edit timings → Save is refused with a Read only message
 - [ ] Admin: Access summary → Transport department → Show access of Manjunath Gowda → screens marked Full / Read only

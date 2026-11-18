@@ -17,8 +17,8 @@ DO $$ DECLARE s INT; BEGIN
   BEGIN PERFORM set_role_department(1, 'PARENT', 'X'); RAISE EXCEPTION 'parent got a department';
   EXCEPTION WHEN raise_exception THEN IF SQLERRM NOT LIKE 'Parents are not%' THEN RAISE; END IF; END;
   INSERT INTO users (tenant_id, username, email, password_hash, status, full_name, requested_role)
-  VALUES (1, 'kiran', 'kiran.bus@example.com', 'COGNITO', 'PENDING', 'Kiran Bus', 'TRANSPORT') RETURNING user_id INTO s;
-  ASSERT (SELECT department FROM v_user_directory WHERE user_id = s) = 'Transport', 'pending sign-up shows its department';
+  VALUES (1, 'kiran', 'kiran.bus@example.com', 'COGNITO', 'ACTIVE', 'Kiran Bus', 'TRANSPORT') RETURNING user_id INTO s;
+  ASSERT (SELECT department FROM v_user_directory WHERE user_id = s) = 'Transport', 'a new account shows its department';
   RAISE NOTICE 'Departments ok';
 END $$;
 ROLLBACK;

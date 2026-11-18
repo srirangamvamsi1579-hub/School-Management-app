@@ -10,7 +10,7 @@ export const DEMO_PEOPLE = {
 
 // [what it is for, how to use it]
 export const SCREEN_HELP = {
-  DASH: ['Your home page: the numbers and to-dos that matter for your role.', 'Check the cards each morning; click a needs-attention item to open it.'],
+  DASH: ['The school at a glance, in sections: Students, Staff, Transport, Fees, Enrolment and Needs attention. Each compares this year with last year (▲ up, ▼ down).', 'Students: total and new enrolments with arrows, boys and girls (co-ed schools), a column per class split by gender with the grade limit marked, and which grades are over or under their limit (Edit grade limits). Staff: total, joiners, students per teacher against the norm, by department. Transport: riders per route against seats. Fees: collected against what is due so far and the target, by class. Enrolment: who registered from the website, the app or was added by the Admin.'],
   STU_INS: ['Student numbers, attendance and fee trends (Power BI).', 'Use the grade and month filters; export from the report menu.'],
   STU_LIST: ['Every student with class, guardian and transport.', 'Search by name or admission number; click a student to open the profile.'],
   STU_ADMISSIONS: ['Enquiries and applications for next year, from first call to enrolment, with a summary by grade.', 'Add an enquiry or application form; move it Submitted → In review → Offered → Enrolled, or Opted out with a reason. Website enquiries arrive here automatically.'],
@@ -130,10 +130,10 @@ export const WORKFLOWS = [
   { id: 'payroll', title: 'Monthly payroll', time: '2 min', roles: 'Accountant, Teacher', steps: [
     { as: 'U3', screen: 'PAY_RUN', do: 'Pick the month → check figures → Approve → Post.', check: 'Voucher posted to accounts.' },
     { as: 'U4', screen: 'SELF_PAYSLIP', do: 'Open the payslip.', check: 'Shows basic, allowances, PF, TDS and net.' }] },
-  { id: 'signup', title: 'New account from the app: parents checked automatically, staff approved in Users', time: '4 min', roles: 'Parent or staff (new), Admin', steps: [
-    { public: '#/p/mobile', do: 'Phone app → school code GVS → Create an account as a Parent. Give the student’s admission number ADM-2025-0231, name Aarav Sharma and grade Grade VIII. Verify the code (shown on screen), set a password.', check: 'The details match the student record, so the account is ready at once — no approval. A wrong grade or name is refused (5 tries).' },
-    { public: '#/p/mobile', do: 'Create another account, this time as staff: Transport team → designation Driver.', check: 'Account created, waiting for approval; details emailed (never the password).' },
-    { as: 'U1', screen: 'OPS_USERS', do: 'The parent is Active with Aarav Sharma · Grade VIII shown. The driver is at the top as “Waiting for approval”: Review → the designation list shows only that role’s designations → status Active → Save.', check: 'Both can now sign in.' }] },
+  { id: 'signup', title: 'New accounts from the app: checked against the school records, no approval', time: '4 min', roles: 'Parent or staff (new), Admin', steps: [
+    { public: '#/p/mobile', do: 'Phone app → school code GVS → Create an account as a Parent. Give the student’s admission number ADM-2025-0231, name Aarav Sharma and grade Grade VIII. Verify the code (shown on screen), set a password.', check: 'The details match the student record, so the account is ready at once. A wrong grade or name is refused (5 tries).' },
+    { public: '#/p/mobile', do: 'Create another account as School staff: name Kavya Iyer, sign-in ID kavya.iyer@example.com, employee code EMP-0131.', check: 'The details match the staff record, so the account opens at once as Teacher · PRT.' },
+    { as: 'U1', screen: 'OPS_USERS', do: 'Both new accounts are Active: the parent with Aarav Sharma · Grade VIII, Kavya as Teacher · PRT. Edit shows how each was created.', check: 'Nobody waited for approval.' }] },
   { id: 'adduser', title: 'Add a user: designations follow the role', time: '2 min', roles: 'Admin', steps: [
     { as: 'U1', screen: 'OPS_USERS', do: 'Add user → Role Transport team: the designations are Transport In-charge, Transport Supervisor, Driver, Cleaner, Bus Helper / Attendant. Change the role to Parent: the designation is simply Parent.', check: 'Each role offers only its own designations.' },
     { as: 'U1', screen: 'OPS_ROLES', do: 'User management → Transport team (department Transport) → add the designation “Route Marshal”.', check: 'It is offered next time a Transport user is added.' }] },

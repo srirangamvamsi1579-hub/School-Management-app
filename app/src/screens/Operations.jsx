@@ -58,10 +58,9 @@ export function Users() {
   const live = db.users.filter((u) => u.status !== 'DELETED');
   const list = live.filter((u) => (!st || u.status === st) && (!rf || roleOf(u) === rf) && (!df || departmentOf(db, roleOf(u)) === df)
     && (!q || (u.name + u.login + (u.email || '') + (u.designation || '') + childLines(db, u).map((k) => k.adm + k.name).join(' ')).toLowerCase().includes(q.toLowerCase())))
-    .sort((a, b) => (a.status === 'PENDING' ? -1 : 0) - (b.status === 'PENDING' ? -1 : 0) || a.name.localeCompare(b.name));
+    .sort((a, b) => a.name.localeCompare(b.name));
   const pg = Math.min(page, Math.max(0, Math.ceil(list.length / PAGE) - 1));
   const shown = list.slice(pg * PAGE, pg * PAGE + PAGE);
-  const pending = live.filter((u) => u.status === 'PENDING').length;
   const attention = live.filter(issue).length;
   const doRefresh = () => { const changed = refresh(); setStamp(new Date()); notify(changed ? 'Users updated with the latest changes' : `Users are up to date${attention ? ` · ${attention} need attention` : ''}`); };
   const problem = () => {
@@ -115,19 +114,18 @@ export function Users() {
   };
   if (!allowed) return <Page title="Users"><Card><p>You don't have access to manage users. An Admin can give access by role or by designation in Roles & Permissions.</p></Card></Page>;
   const arch = db.userArchive || [];
-  const statusOpts = (u) => [...(u.status === 'PENDING' ? [['PENDING', 'Waiting for approval']] : []), ['ACTIVE', 'Active'], ['LOCKED', 'Locked'], ...(u.id !== me?.id ? [['DELETED', 'Deleted (moves to Archived)']] : [])];
-  return <Page title="Users" sub={`${live.length} accounts · ${pending} staff waiting for approval · ${arch.length} archived. Accounts are created when parents and staff register on the website or in the app; changes apply at the person's next sign-in and are written to the audit log.`}
+  const statusOpts = (u) => [['ACTIVE', 'Active'], ['LOCKED', 'Locked'], ...(u.id !== me?.id ? [['DELETED', 'Deleted (moves to Archived)']] : [])];
+  return <Page title="Users" sub={`${live.length} accounts · ${arch.length} archived. Parents and staff open their own accounts by registering on the website or in the app; their details are checked against the student and staff records, so nobody waits for approval. Changes apply at the person's next sign-in and are written to the audit log.`}
     actions={<><button className="btn" onClick={doRefresh} aria-label="Refresh users">↻ Refresh</button>{canAddUsers(session.role) && <button className="btn pri" title="Only for exceptions: people normally register on the website or in the app" onClick={() => setInvite({ name: '', identifier: '', email: '', role: 'TEACHER', designation: 'TGT', admissionNo: '', studentName: '', grade: '', reason: '' })}>Add user</button>}</>}>
     <Tabs tabs={[['users', 'Users'], ['archive', `Archived (${arch.length})`]]} value={tab} onChange={setTab} />
     {tab === 'archive' ? <UserArchive /> : <>
     <AccountRequests />
-    {pending > 0 && <div className="note warn" style={{ marginBottom: 12 }}>{pending} staff sign-up(s) waiting for approval — open each, check the details, pick the role and set status to Active. Parents never wait: they are checked against the student record when they register.</div>}
     {attention > 0 && <div className="note warn" style={{ marginBottom: 12 }}>{attention} account(s) need attention after a change in Roles & Permissions or the student record — marked ⚠ below.</div>}
     <div className="row" style={{ marginBottom: 12 }}>
       <Input placeholder="Search name, email, mobile, designation, student" aria-label="Search users" value={q} onChange={filter(setQ)} style={{ minWidth: 280 }} />
       <Select aria-label="Role filter" value={rf} onChange={filter(setRf)} options={[['', 'All roles'], ...roles.map((r) => [r.code, r.name])]} />
       <Select aria-label="Department filter" value={df} onChange={filter(setDf)} options={[['', 'All departments'], ...depts.map((x) => [x, x])]} />
-      <Select aria-label="Status filter" value={st} onChange={filter(setSt)} options={[['', 'All statuses'], ['PENDING', 'Waiting for approval'], ['ACTIVE', 'Active'], ['LOCKED', 'Locked']]} />
+      <Select aria-label="Status filter" value={st} onChange={filter(setSt)} options={[['', 'All statuses'], ['ACTIVE', 'Active'], ['LOCKED', 'Locked']]} />
       <span className="small muted">updated {stamp.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span></div>
     <div className="tw"><table className="t" aria-label="Users"><thead><tr><th>Name</th><th>Sign-in ID</th><th>Role</th><th>Department</th><th>Designation</th><th>Student (parents)</th><th>Created</th><th>Last sign-in</th><th>Status</th><th /></tr></thead>
       <tbody>{shown.map((u) => { const warn = issue(u); return <tr key={u.id}><td className="b">{u.name}{warn && <div className="small" style={{ color: 'var(--bad)' }}>⚠ {warn}</div>}</td>
@@ -137,12 +135,12 @@ export function Users() {
         <td className="small">{roleOf(u) === 'PARENT' ? childLines(db, u).map((k) => <div key={k.adm}>{k.ok ? <><b>{k.name}</b> · {k.grade}</> : <span style={{ color: 'var(--bad)' }}>Not found</span>}<div className="muted">{k.adm}</div></div>) : '—'}</td>
         <td className="small">{u.createdAt ? dmon(u.createdAt) : '—'}</td>
         <td className="small">{u.lastLogin ? dmon(u.lastLogin) : '—'}</td>
-        <td><Status s={u.status === 'PENDING' ? 'Pending approval' : u.status} /></td>
-        <td><div className="row"><button className="btn sm" aria-label={(u.status === 'PENDING' ? 'Review ' : 'Edit ') + u.name} onClick={() => setEdit({ ...u, role: roleOf(u), designation: fitDesignation(db, roleOf(u), u.designation), extra: [...(u.extra || [])], perms: [...(u.perms || [])], childrenText: childrenOf(u).join(', '), reason: ARCHIVE_REASONS[0] })}>{u.status === 'PENDING' ? 'Review' : 'Edit'}</button>
-          {canReset && u.email && u.status !== 'PENDING' && <button className="btn sm" onClick={() => { run((d) => { accountEmail(d, d.users.find((x) => x.id === u.id), school, 'RESET'); log(d, by, 'Password reset sent', u.login); }); notify('Set-password link emailed'); }}>Reset password</button>}</div></td></tr>; })}</tbody></table></div>
+        <td><Status s={u.status} /></td>
+        <td><div className="row"><button className="btn sm" aria-label={'Edit ' + u.name} onClick={() => setEdit({ ...u, role: roleOf(u), designation: fitDesignation(db, roleOf(u), u.designation), extra: [...(u.extra || [])], perms: [...(u.perms || [])], childrenText: childrenOf(u).join(', '), reason: ARCHIVE_REASONS[0] })}>Edit</button>
+          {canReset && u.email && <button className="btn sm" onClick={() => { run((d) => { accountEmail(d, d.users.find((x) => x.id === u.id), school, 'RESET'); log(d, by, 'Password reset sent', u.login); }); notify('Set-password link emailed'); }}>Reset password</button>}</div></td></tr>; })}</tbody></table></div>
     <Pager page={pg} total={list.length} onPage={setPage} label="users" />
     </>}
-    {edit && <Modal title={(edit.status === 'PENDING' ? 'Review sign-up — ' : 'Edit user — ') + edit.name} onClose={() => setEdit(null)} actions={<button className={'btn ' + (edit.status === 'DELETED' ? 'danger' : 'pri')} onClick={save}>{edit.status === 'DELETED' ? 'Delete and archive' : 'Save'}</button>}>
+    {edit && <Modal title={'Edit user — ' + edit.name} onClose={() => setEdit(null)} actions={<button className={'btn ' + (edit.status === 'DELETED' ? 'danger' : 'pri')} onClick={save}>{edit.status === 'DELETED' ? 'Delete and archive' : 'Save'}</button>}>
       <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
         <Field label={'Role (decides the menus)' + (departmentOf(db, edit.role) ? ' · ' + departmentOf(db, edit.role) : '')}><Select value={edit.role || ''} disabled={edit.status === 'DELETED'} onChange={(e) => setEdit({ ...edit, role: e.target.value, designation: fitDesignation(db, e.target.value, edit.designation) })} options={[['', 'Pick a role'], ...roles.map((r) => [r.code, r.name + (r.builtIn ? '' : ' (custom)')])]} /></Field>
         {edit.role === 'PARENT' ? <Field label="Designation"><Input value="N/A" disabled aria-label="Designation: N/A" /></Field>
@@ -165,7 +163,7 @@ export function Users() {
       {session.role === 'ADMIN' && edit.role !== 'ADMIN' && edit.role !== 'PARENT' && <>
         <h3 style={{ marginTop: 14 }}>Permissions</h3>
         <label className="row small"><input type="checkbox" checked={edit.perms.includes(RESET_PW)} onChange={() => setEdit({ ...edit, perms: edit.perms.includes(RESET_PW) ? edit.perms.filter((x) => x !== RESET_PW) : [...edit.perms, RESET_PW] })} />Can reset passwords in Users (the Admin role always can)</label></>}
-      {edit.status === 'PENDING' && <p className="small note" style={{ marginTop: 12 }}>Setting status to Active approves the account and emails {edit.email || 'them'} that it's ready.</p>}</>}
+      </>}
     </Modal>}
     {confirmDel && edit && <Modal title={`Delete ${edit.name}?`} onClose={() => setConfirmDel(false)} actions={<><button className="btn" onClick={() => setConfirmDel(false)}>Cancel</button><button className="btn danger" onClick={doDelete}>Delete</button></>}>
       <p>{edit.name} will no longer be able to sign in. The account moves to <b>Archived</b> with the reason “{edit.reason}”.</p></Modal>}
