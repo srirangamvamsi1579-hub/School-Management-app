@@ -97,10 +97,10 @@ Each school (client) has its own sign-in page at `<school>.yourapp.com`, branded
 Operations → **Users** is open to Admins, and to anyone given the screen by designation or personally (e.g. a Vice Principal who is a Teacher).
 
 - **Approve sign-ups:** review the details, pick the role, set status to Active; the person is emailed that the account is ready.
-- **Change role, designation or status** (Active, Locked, Switched off) for anyone; changes apply at the next sign-in and are logged with who and when.
+- **Change role, designation or status** (Active, Locked, Deleted) for anyone; changes apply at the next sign-in and are logged with who and when.
 - **Extra screens for one person**, on top of their role.
 - **Add user:** creates the account and emails a set-password link.
-- **Reset password:** emails a set-password link.
+- **Reset password:** emails a set-password link. Only the Admin role, or a person the Admin gives the permission to, sees it.
 - **Rules:** nobody changes their own role; only an Admin can give the Admin role.
 
 Operations → **Roles & Permissions** has three tabs (from release 7.1; access by department from 7.4; access levels and summary from 7.5):
@@ -209,7 +209,7 @@ Server side: `services/sms/dispatcher.mjs` sends queued messages with retries; `
 - **School back office (Operations → Users):**
   - Edit anyone's name, email, mobile and linked children.
   - Handle link and close requests.
-  - Delete an account (type DELETE to confirm): sign-in and contact details are erased; fees, marks and receipts stay.
+  - Delete an account (Edit → Status Deleted → reason → confirm): the sign-in is removed and a copy is kept in the view-only archive; fees, marks and receipts stay.
 
 ## Teacher performance visibility
 
@@ -398,7 +398,7 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 | Teacher | Pre-Primary Teacher, PRT, TGT, PGT, Class Teacher, Coordinator, Head of Department, Head of Teaching Staff, Vice Principal, Physical Education Teacher, Special Educator, Counsellor, Librarian, Lab Assistant |
 | Front Office | Receptionist, Front Office Executive, Admissions Officer, Office Assistant, Gate / Security Staff |
 | Transport team | Transport In-charge, Transport Supervisor, Driver, Cleaner, Bus Helper / Attendant |
-| Parent | No designation: marked **Parent** |
+| Parent | No designation: shown as **N/A** |
 
 - Changing the role clears a designation that does not fit.
 - Save is refused until a matching designation is picked.
@@ -786,7 +786,7 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - [ ] Admin: Users → Edit the Vice Principal → Permissions → Can reset passwords; sign in as the Vice Principal: Reset password shows; without the permission it doesn't
 - [ ] Teacher: Exams → Question Papers → Unit Test 2 → Start Class 9 Mathematics → untick a chapter: the paper is rebuilt without it → Add a set → Send for approval; Principal: Approve → choose the set → Approved Papers → Print
 - [ ] Admin: Main menu → View as Profile → Parent → switch to Phone app → try to send a request (blocked: preview only) → Back to Admin
-- [ ] Admin: Users → Add user → Role Transport team: only Transport designations; Role Parent: marked Parent
+- [ ] Admin: Users → Add user → Role Transport team: only Transport designations; Role Parent: designation N/A
 - [ ] Phone app (`#/p/mobile`, school GVS) → Create an account as Transport team / Driver → Admin sees it in Users, waiting for approval
 - [ ] Admin: Web & App Screens → Front Office → Gate Desk "App only" → Send for approval; Principal approves; Front Office no longer has Gate Desk on the website, but has it in the phone preview
 - [ ] Anyone: Help → User Guide & Demo → run a guided demo with Start / Next step
