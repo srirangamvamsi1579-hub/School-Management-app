@@ -1,6 +1,6 @@
 # School Management Platform — Requirements
 
-Updated 18 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos; release 7: opens on a Main menu, designations by role, account creation in the app, Admin View as Profile; 7.1–7.5: User management with departments, access by department with read only / full access, access summary, standard profiles for Indian schools; release 8: question papers driven by topic selection, up to 10 sets, approval per set, question bank with topics, blueprints; release 9: Users filters, department and student columns, last change, refresh, parents checked against the student record with no approval, archive of deleted accounts and rejoin). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
+Updated 18 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos; release 7: opens on a Main menu, designations by role, account creation in the app, Admin View as Profile; 7.1–7.5: User management with departments, access by department with read only / full access, access summary, standard profiles for Indian schools; release 8: question papers driven by topic selection, up to 10 sets, approval per set, question bank with topics, blueprints; release 9: Users filters, department, student and created columns, 25 per page, refresh, parents checked against the student record with no approval, no switched-off status, reset password for Admin or by permission, delete as a status with a view-only archive). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
 
 One platform runs Indian K-12 schools of every size, from under 250 to over 1,000 students. Each school gets only the modules its plan includes, and every person sees only the menus their role allows.
 
@@ -553,44 +553,52 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
   - `v_paper_topic_availability` shows what the chosen topics hold per section.
   - `decide_paper_set()` (submit, approve, send back, take back, reopen) and `choose_exam_set()` enforce the approval rules; a trigger blocks changes to submitted and approved sets.
 
-## Added 18 Nov 2026 (release 9)
+## Added 18 Nov 2026 (release 9, revised in 9.1)
 
 **Users screen (Operations → Users).**
-- **Filters:** search (name, email, mobile, designation or student), **Role**, **Department** and **Status**. The count shown and the time of the last update sit beside them.
-- **Columns:** Name, Sign-in ID, Role, **Department**, Designation, **Student (parents)**, Last sign-in, **Last change**, Status. The Extra screens column was removed; extra screens are still set in Edit.
+- **Filters:** search (name, email, mobile, designation or student), **Role**, **Department** and **Status** (Waiting for approval, Active, Locked).
+- **Columns:** Name, Sign-in ID, Role, **Department**, Designation, **Student (parents)**, **Created**, Last sign-in, Status.
   - **Student (parents):** each child's name, grade and admission number.
-  - **Last change:** when the account was last changed, what changed (role, designation, status, name, contact details, children) and who changed it.
-- **↻ Refresh** reloads the latest saved data, including changes made in Roles & Permissions or in another tab. Accounts that no longer fit after such a change are marked ⚠ with the reason: a deleted profile, a designation that is no longer offered, or an admission number that is not on the student record.
+  - A parent's designation shows **N/A**.
+- **25 users to a page**, with Previous, Next and page numbers.
+- **↻ Refresh** loads the latest changes, including those made in Roles & Permissions. Accounts that no longer fit after a change are marked ⚠ with the reason.
+- **Statuses:** Waiting for approval (staff sign-ups only), Active, Locked, Deleted. **Switched off** was removed; any switched-off accounts became Locked.
+- **Reset password** shows only for the **Admin** role, or for a person the Admin gives the permission to (Edit user → Permissions → *Can reset passwords*). The database refuses a reset from anyone else.
 
-**Parents are checked against the student record, with no approval.**
-- When a parent creates an account (website or phone app), they give the student's **admission number**, **name** and **grade**.
+**Parents never wait for approval.**
+- When a parent registers (website or phone app), they give the student's **admission number**, **name** and **grade**.
 - All three must match an enrolled student. Case, spacing and word order don't matter, and the first name must be included.
-- On a match, the account is **Active straight away** and linked to the child; there is no "Waiting for approval" step. The parent can sign in at once and is emailed that the account is ready.
-- A mismatch opens nothing. The message is the same whichever detail was wrong, and it says how many tries are left. After 5 wrong tries, that email or mobile must go through the school office.
+- On a match, the account is created **Active**, linked to the child, and the parent can sign in at once.
+- A mismatch creates no account. The message is the same whichever detail was wrong, and it says how many tries are left. After 5 wrong tries, that email or mobile must go through the school office.
 - Staff sign-ups still wait for approval, because the school sets their role and designation.
 - **Add user** for a parent asks for the same three details and checks them the same way.
+- Parent accounts that were waiting from before became Active if their child is on the record, or Locked if not. The database refuses any parent account left waiting for approval.
 
-**Archive of deleted accounts.** Deleting an account (now **Delete and archive**, with a reason: Left the school, Child left the school, Duplicate account, Asked to close the account, Other) keeps a copy under **Users → Archived**.
-- **What is kept:** name, sign-in ID, email, mobile, role, department, designation, children (admission number, name and grade at the time), extra screens, date joined, last sign-in, and when, why and by whom the account was deleted.
-- When people delete **their own** account (in the app or on the web), their email, mobile and sign-in ID are **not** kept, because they asked for them to be erased. The rest is kept.
-- **Filters:** search, role, department, reason, still archived / rejoined, and a deleted-between date range. **View** shows everything kept.
-- **Rejoin** starts a new account from the archive, checked against today's state:
-  - a profile that was deleted must be replaced;
-  - a designation no longer offered must be picked again;
-  - children who are no longer enrolled are left out;
-  - a child's new grade is shown.
-  The person is emailed a set-password link, and the archive entry is marked "Rejoined" with the date.
+**Deleting and the archive.**
+- **To delete:** Edit → Status **Deleted** → pick a reason (Left the school, Child left the school, Duplicate account, Asked to close the account, Other) → confirm. The sign-in is removed and a copy moves to **Users → Archived**.
+- **Archived is view only.** Columns: Name, Sign-in ID, Role, Department, Designation, Student (parents), Email, Mobile, Created, Last sign-in, Deleted on, Reason, Deleted by.
+- **Archive filters:** search, role, department, reason, and a deleted-between date range. 25 to a page.
+- Accounts can't be brought back from the archive; Rejoin and its statuses were removed.
+- When people delete their own account (app or web), their sign-in ID, email and mobile are not kept, because they asked for them to be erased.
 
-- **Database (`019_users_parents_archive.sql`):**
-  - `match_student()` and `open_parent_account()` (counts wrong tries in `parent_signup_checks`, 5 allowed).
-  - `users.updated_at`, `updated_by` and `last_change`, kept by a trigger.
-  - `user_archive` and `archive_user()`. `close_account()` now archives first and takes a reason; `close_own_account()` is for self-deletion.
-  - `rejoin_user()`.
-  - `v_user_directory` now shows the department, each parent's students, the last sign-in and the last change, and leaves deleted accounts out.
+- **Database:**
+  - `019_users_parents_archive.sql`:
+    - `match_student()`.
+    - `parent_signup_checks` (5 tries).
+    - `users.updated_at`, `updated_by` and `last_change`, kept for the audit.
+    - `user_archive` and `archive_user()`.
+    - `close_account()` with a reason (archives first), and `close_own_account()`.
+  - `020_users_status_reset.sql`:
+    - `register_parent()` checks first, then creates the account Active, or creates nothing.
+    - A deferred trigger stops any parent account being left Waiting for approval.
+    - No DISABLED status.
+    - `user_permissions`, `can_reset_passwords()` and `request_password_reset()`.
+    - Rejoin removed.
+    - `v_user_directory` shows the created date and N/A for parents.
 
 ## Database schema summary
 
-PostgreSQL 15+, nineteen migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
+PostgreSQL 15+, twenty migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
 
 | File | Adds | Key tables, views and functions |
 | --- | --- | --- |
@@ -612,7 +620,8 @@ PostgreSQL 15+, nineteen migration files loaded in order. Every table carries `t
 | 016_department_access.sql | Access by department; deleting a profile | department_menu_permissions, sync_department_permissions(), set_department_menu(); v_user_screens by department; v_tenant_profiles, tenant_profile_removals, remove_profile(), restore_profile() |
 | 017_access_levels.sql | Read only or full access | department_menu_permissions.access_level, set_department_access(), v_user_screens.access_level, can_edit_screen(), v_access_summary |
 | 018_question_paper_workflow.sql | Question papers by topic | exams, exam_schedule, blueprint chapter rules, set status and approval, locked questions, paper_versions, paper_views; generate_topic_set(), set_paper_topics(), v_paper_topic_availability, decide_paper_set(), choose_exam_set() |
-| 019_users_parents_archive.sql | Users screen, parents checked against the student record, archive | match_student(), open_parent_account(), parent_signup_checks; users.updated_at / updated_by / last_change; user_archive, archive_user(), close_account() with reason, close_own_account(), rejoin_user(); v_user_directory with department, students, last change |
+| 019_users_parents_archive.sql | Users screen, parents checked against the student record, archive | match_student(), parent_signup_checks; users.updated_at / updated_by / last_change (audit); user_archive, archive_user(), close_account() with reason, close_own_account(); v_user_directory with department and students |
+| 020_users_status_reset.sql | Parents never pending, no switched-off status, reset-password permission, view-only archive | register_parent(), parent_not_pending deferred trigger; users_status_check without DISABLED; user_permissions, can_reset_passwords(), request_password_reset(); rejoin removed; v_user_directory with created date, N/A for parents |
 
 The test build keeps the same entities in browser memory (`app/src/data`) and runs the same rules in JavaScript (`app/src/lib/logic.js`).
 
@@ -668,7 +677,9 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 4. 5 wrong passwords lock the account.
 5. Only Admins, or people given the Users screen by designation or personally, manage users. Nobody changes their own role; only an Admin gives the Admin role. Every change is logged.
 6. A parent account is linked to a child by admission number, checked against the student record (name and grade too).
-7. Deleting an account archives it first, with a reason. The school keeps the contact details of accounts it deletes; people who delete their own account keep only their name, role and children in the archive. Rejoining makes a new account from the archive and is checked against today's profiles, designations and enrolments.
+7. Deleting an account (Edit → Status Deleted) archives it first, with a reason. The school keeps the contact details of accounts it deletes; for people who delete their own account, only their name, role and children are kept. The archive is view only.
+8. Statuses are Waiting for approval (staff only), Active, Locked and Deleted. Parents are never waiting for approval.
+9. Only the Admin role, or a person the Admin gives the permission to, can reset passwords.
 
 **Admissions**
 
@@ -760,18 +771,19 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 
 One-time setup: create the dev, preprod and prod environments in GitHub, add required reviewers to preprod and prod, and add the secret `AWS_DEPLOY_ROLE_ARN` (an IAM role for GitHub OIDC).
 
-**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the nineteen migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
+**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the twenty migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
-**Automated tests (release 9).** See `docs/TEST_REPORT.md`: 56 app tests, 34 SQL check groups (007–019), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 23 web end-to-end tests (including the Users filters, columns and Refresh, parent sign-up checked against the student record, delete-archive-rejoin, the question-paper flow from topics to approval and print, the question bank and blueprints, every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations, the collapsed side menu, permissions by department with access levels, read-only screens, the access summary and deleting a profile) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
+**Automated tests (release 9.1).** See `docs/TEST_REPORT.md`: 57 app tests, 35 SQL check groups (007–020), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 23 web end-to-end tests (including the Users filters, columns, paging and Refresh, parent sign-up checked against the student record, delete as a status with the view-only archive, reset password by permission, the question-paper flow from topics to approval and print, the question bank and blueprints, every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations, the collapsed side menu, permissions by department with access levels, read-only screens, the access summary and deleting a profile) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
 
 **Earlier automated tests.** `npm test` ran 21 checks on the business rules (including the approved pickup list, route sheets, the attendant-tracking switch, requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
 
 **User-testing script.** Easiest: open the guide (`#/p/guide`) and run the guided demos. Or step by step:
 
 - [ ] Phone app (`#/p/mobile`, GVS) → Create an account as a Parent → admission no. ADM-2025-0231, name Aarav Sharma, grade Grade VII (refused, 4 tries left) → Grade VIII → the account is ready; sign in at once
-- [ ] Admin: Users → Role filter Parent → see Aarav Sharma · Grade VIII · ADM-2025-0231 against the parent; Department filter; Last change after an edit
+- [ ] Admin: Users → Role filter Parent → no parent waits for approval; designation N/A; Aarav Sharma · Grade VIII · ADM-2025-0231; Created date; Department filter; 25 to a page
 - [ ] Admin: Roles & Permissions → rename the Teacher department; Users → ↻ Refresh → the Department column and filter show the new name
-- [ ] Admin: Users → Edit a driver → Delete and archive (reason Left the school) → Archived → filter, View → Rejoin → the driver is back with a set-password link
+- [ ] Admin: Users → Edit a driver → Status Deleted → reason Left the school → confirm → Archived (view only) → filter by reason and date
+- [ ] Admin: Users → Edit the Vice Principal → Permissions → Can reset passwords; sign in as the Vice Principal: Reset password shows; without the permission it doesn't
 - [ ] Teacher: Exams → Question Papers → Unit Test 2 → Start Class 9 Mathematics → untick a chapter: the paper is rebuilt without it → Add a set → Send for approval; Principal: Approve → choose the set → Approved Papers → Print
 - [ ] Admin: Main menu → View as Profile → Parent → switch to Phone app → try to send a request (blocked: preview only) → Back to Admin
 - [ ] Admin: Users → Add user → Role Transport team: only Transport designations; Role Parent: marked Parent
@@ -822,6 +834,7 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - Which state boards come after Maharashtra, Karnataka, Tamil Nadu, Telangana and Andhra Pradesh, and who loads their chapters and topics?
 - Question bank content: written by schools, licensed from a publisher, or AI-drafted then reviewed?
 - Data retention for students who leave (and for rolled-back imports), and how long the archive of deleted accounts is kept.
+- If someone in the archive comes back, they are added as a new user (rejoin was removed). Should the Add user form offer to copy details from an archived account?
 - Should parent sign-up also ask for the student's date of birth? Classmates may know a child's name, grade and admission number.
 - Plan prices per tier and add-on, to fill `plan_prices`.
 - SMS OTP provider (MSG91, Gupshup or Amazon SNS) and the DLT-approved OTP template.

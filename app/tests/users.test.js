@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildSeed } from '../src/data/seed.js';
 import { signIn } from '../src/lib/auth.js';
-import { checkStudent, childLines, parentTriesLeft, noteParentTry, MAX_PARENT_TRIES, rejoinPlan, deleteAccount } from '../src/lib/users.js';
+import { checkStudent, childLines, parentTriesLeft, noteParentTry, MAX_PARENT_TRIES, deleteAccount, normalizeUsers, designationLabel, canResetPasswords, RESET_PW } from '../src/lib/users.js';
 
 test('parent check: admission no., student name and grade must all match the student record', () => {
   const db = buildSeed();
@@ -39,7 +39,7 @@ test('Users shows each parent\'s student: admission no., name and grade', () => 
   assert.ok(lines.length >= 1 && lines.every((k) => k.ok && /^ADM-/.test(k.adm) && k.name && /^Grade /.test(k.grade)));
 });
 
-test('deleting archives the account; the school keeps contact details, a self-deletion does not; rejoin plan checks today\'s state', () => {
+test('deleting archives the account; the school keeps contact details, a self-deletion does not', () => {
   const db = buildSeed();
   const t = db.users.find((u) => u.role === 'TEACHER' && u.status === 'ACTIVE' && u.email);
   const email = t.email;
@@ -48,13 +48,26 @@ test('deleting archives the account; the school keeps contact details, a self-de
   assert.ok(signIn(db, email, 'Demo@123').error, 'cannot sign in');
   const a = db.userArchive[0];
   assert.equal(a.email, email); assert.equal(a.reason, 'Left the school'); assert.equal(a.department, 'Academics'); assert.equal(a.deletedBy, 'Admin');
-  assert.equal(rejoinPlan(db, a).notes.length, 0, 'still fits');
+  assert.equal(a.rejoined, undefined, 'no rejoin status');
   const p = db.users.find((u) => u.role === 'PARENT' && u.email && (u.children?.length || u.linkedStudent));
   deleteAccount(db, p.id, 'Parent (self)', { self: true });
   const b = db.userArchive[0];
   assert.equal(b.email, ''); assert.equal(b.mobile, ''); assert.equal(b.login, ''); assert.ok(b.children.length, 'children kept');
-  const kid = db.students.find((s) => s.admNo === b.children[0].adm); kid.status = 'Left';
-  const plan = rejoinPlan(db, b);
-  assert.equal(plan.children.length, b.children.length - 1);
-  assert.ok(plan.notes.some((n) => /no longer enrolled/.test(n)));
+});
+
+test('parents never wait for approval; no switched-off status; N/A designation; reset password only for Admin or a granted person', () => {
+  const db = buildSeed();
+  assert.ok(!db.users.some((u) => (u.role || u.requestedRole) === 'PARENT' && u.status === 'PENDING'), 'seed has no pending parent');
+  // older saved data: a pending parent and a switched-off account
+  db.users.push({ id: 'X1', name: 'Old Parent', requestedRole: 'PARENT', role: null, status: 'PENDING', linkedStudent: 'ADM-2025-0231', login: 'old@example.com' });
+  db.users.push({ id: 'X2', name: 'Old Off', role: 'TEACHER', status: 'DISABLED', login: 'off@example.com' });
+  normalizeUsers(db);
+  const x1 = db.users.find((u) => u.id === 'X1');
+  assert.equal(x1.status, 'ACTIVE'); assert.equal(x1.role, 'PARENT'); assert.deepEqual(x1.children, ['ADM-2025-0231']);
+  assert.equal(db.users.find((u) => u.id === 'X2').status, 'LOCKED');
+  assert.equal(designationLabel(x1), 'N/A');
+  assert.equal(designationLabel({ role: 'TEACHER', designation: 'TGT' }), 'TGT');
+  assert.ok(canResetPasswords({}, 'ADMIN'));
+  assert.ok(!canResetPasswords({ perms: [] }, 'PRINCIPAL'));
+  assert.ok(canResetPasswords({ perms: [RESET_PW] }, 'PRINCIPAL'));
 });

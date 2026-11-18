@@ -10,7 +10,21 @@ import { PRESETS, TEMPLATES, contrast, accessible } from '../lib/theme.js';
 import { allRoles, roleName, rolePerms, accessLevel, accessSource, screensFor, departments, syncDeptPerms, defaultScreens, baseRoleOf, canManageUsers, accountEmail, createAccount, idType, isGmail, findUser } from '../lib/auth.js';
 import { designationsFor, fitDesignation, designationProblem, departmentOf, STANDARD_PROFILES } from '../data/designations.js';
 import { AccountRequests, deleteAccount } from './Account.jsx';
-import { checkStudent, childLines, childrenOf, studentName, gradeOf, gradeOptions, touch, ARCHIVE_REASONS, rejoinPlan } from '../lib/users.js';
+import { checkStudent, childLines, childrenOf, studentName, gradeOf, gradeOptions, touch, ARCHIVE_REASONS, designationLabel, canResetPasswords, RESET_PW } from '../lib/users.js';
+
+const PAGE = 25;
+// Page controls under a long list: 25 rows at a time
+function Pager({ page, total, onPage, label }) {
+  const pages = Math.max(1, Math.ceil(total / PAGE));
+  if (total <= PAGE) return <p className="small muted" style={{ marginTop: 8 }}>{total} {label}</p>;
+  const nums = [...Array(pages).keys()].filter((i) => i === 0 || i === pages - 1 || Math.abs(i - page) <= 2);
+  return <nav className="row" aria-label={'Pages of ' + label} style={{ marginTop: 10, justifyContent: 'space-between' }}>
+    <span className="small muted">Showing {page * PAGE + 1}–{Math.min(total, (page + 1) * PAGE)} of {total} {label}</span>
+    <div className="row"><button className="btn sm" disabled={page === 0} onClick={() => onPage(page - 1)}>‹ Previous</button>
+      {nums.map((i, k) => <span key={i} className="row">{k > 0 && i - nums[k - 1] > 1 && <span className="muted">…</span>}<button className={'btn sm' + (i === page ? ' pri' : '')} aria-current={i === page ? 'page' : undefined} aria-label={'Page ' + (i + 1)} onClick={() => onPage(i)}>{i + 1}</button></span>)}
+      <button className="btn sm" disabled={page >= pages - 1} onClick={() => onPage(page + 1)}>Next ›</button></div>
+  </nav>;
+}
 
 export function Users() {
   const { db, run, notify, session, refresh } = useStore();
@@ -22,71 +36,75 @@ export function Users() {
   const [st, setSt] = useState('');
   const [rf, setRf] = useState('');
   const [df, setDf] = useState('');
+  const [page, setPage] = useState(0);
   const [edit, setEdit] = useState(null);
+  const [confirmDel, setConfirmDel] = useState(false);
   const [invite, setInvite] = useState(null);
-  const [confirmDel, setConfirmDel] = useState('');
-  const [delReason, setDelReason] = useState(ARCHIVE_REASONS[0]);
   const [stamp, setStamp] = useState(() => new Date());
   const allowed = canManageUsers(db, me, session.role);
+  const canReset = canResetPasswords(me, session.role);
   const roles = allRoles(db).filter((r) => r.code !== 'PLATFORM' || session.role === 'PLATFORM');
   const roleOf = (u) => u.role || u.requestedRole;
+  const filter = (fn) => (e) => { fn(e.target.value); setPage(0); };
   const depts = [...new Set(db.users.filter((u) => u.status !== 'DELETED').map((u) => departmentOf(db, roleOf(u))).filter(Boolean))].sort();
   // People whose details no longer fit after a change in Roles & Permissions or a student leaving
   const issue = (u) => {
-    if (u.status === 'DELETED') return '';
     const r = roleOf(u);
     if (r && !allRoles(db).some((x) => x.code === r)) return `The ${roleName(db, r)} profile was deleted — pick another role`;
     if (r && r !== 'PARENT' && u.designation && designationProblem(db, r, u.designation)) return `${u.designation} is no longer offered for ${roleName(db, r)}`;
     if (r === 'PARENT' && childLines(db, u).some((k) => !k.ok)) return 'A linked admission number is not on the student record';
     return '';
   };
-  const list = db.users.filter((u) => u.status !== 'DELETED' && (!st || u.status === st) && (!rf || roleOf(u) === rf) && (!df || departmentOf(db, roleOf(u)) === df)
+  const live = db.users.filter((u) => u.status !== 'DELETED');
+  const list = live.filter((u) => (!st || u.status === st) && (!rf || roleOf(u) === rf) && (!df || departmentOf(db, roleOf(u)) === df)
     && (!q || (u.name + u.login + (u.email || '') + (u.designation || '') + childLines(db, u).map((k) => k.adm + k.name).join(' ')).toLowerCase().includes(q.toLowerCase())))
     .sort((a, b) => (a.status === 'PENDING' ? -1 : 0) - (b.status === 'PENDING' ? -1 : 0) || a.name.localeCompare(b.name));
-  const live = db.users.filter((u) => u.status !== 'DELETED');
+  const pg = Math.min(page, Math.max(0, Math.ceil(list.length / PAGE) - 1));
+  const shown = list.slice(pg * PAGE, pg * PAGE + PAGE);
   const pending = live.filter((u) => u.status === 'PENDING').length;
-  const pendingParents = live.filter((u) => u.status === 'PENDING' && roleOf(u) === 'PARENT').length;
   const attention = live.filter(issue).length;
   const doRefresh = () => { const changed = refresh(); setStamp(new Date()); notify(changed ? 'Users updated with the latest changes' : `Users are up to date${attention ? ` · ${attention} need attention` : ''}`); };
-  const save = () => {
+  const problem = () => {
     const kids = (edit.childrenText || '').split(/[\s,]+/).filter(Boolean);
     const bad = kids.find((k) => !db.students.some((x) => x.admNo === k.toUpperCase()));
     const clash = [edit.email, edit.mobile].filter(Boolean).map((v) => findUser(db, v)).find((o) => o && o.id !== edit.id);
-    const err = !edit.name?.trim() ? 'Name is required' : edit.email && !idType(edit.email) ? 'Email looks wrong' : edit.mobile && idType(edit.mobile) !== 'MOBILE' ? 'Mobile must be 10 digits'
-      : clash ? 'Another account already uses that email or mobile' : edit.role === 'PARENT' && bad ? `No student with admission no. ${bad}` : designationProblem(db, edit.role, edit.designation) ? designationProblem(db, edit.role, edit.designation) : edit.role === 'ADMIN' && session.role !== 'ADMIN' ? 'Only an Admin can give the Admin role' : edit.id === me?.id && edit.role !== me.role ? "You can't change your own role" : '';
-    if (err) { notify(err); return; }
+    return !edit.name?.trim() ? 'Name is required' : edit.email && !idType(edit.email) ? 'Email looks wrong' : edit.mobile && idType(edit.mobile) !== 'MOBILE' ? 'Mobile must be 10 digits'
+      : clash ? 'Another account already uses that email or mobile' : edit.role === 'PARENT' && !kids.length ? 'A parent needs at least one admission number' : edit.role === 'PARENT' && bad ? `No student with admission no. ${bad}`
+      : edit.role !== 'PARENT' && designationProblem(db, edit.role, edit.designation) ? designationProblem(db, edit.role, edit.designation) : edit.role === 'ADMIN' && session.role !== 'ADMIN' ? 'Only an Admin can give the Admin role' : edit.id === me?.id && edit.role !== me.role ? "You can't change your own role" : '';
+  };
+  const save = () => {
+    if (edit.status === 'DELETED') { setConfirmDel(true); return; }
+    const err = problem(); if (err) { notify(err); return; }
     run((d) => {
       const u = d.users.find((x) => x.id === edit.id);
       const wasPending = u.status === 'PENDING';
-      const changes = [];
-      if (u.role !== edit.role) changes.push(`role ${roleName(d, u.role)} → ${roleName(d, edit.role)}`);
-      if ((u.designation || '') !== (edit.designation || '')) changes.push(`designation → ${edit.designation || '—'}`);
-      if (u.status !== edit.status) changes.push(`status → ${edit.status}`);
-      if (u.name !== edit.name) changes.push('name');
-      if ((u.email || '') !== (edit.email || '') || (u.mobile || '') !== (edit.mobile || '')) changes.push('contact details');
       const kids = (edit.childrenText || '').split(/[\s,]+/).map((x) => x.trim().toUpperCase()).filter(Boolean);
-      if (kids.join() !== childrenOf(u).join()) changes.push('children');
-      Object.assign(u, { name: edit.name, email: (edit.email || '').toLowerCase(), mobile: edit.mobile || '', role: edit.role, designation: edit.role === 'PARENT' ? 'Parent' : edit.designation || null, status: edit.status, extra: edit.extra, children: kids, linkedStudent: kids[0] || null });
+      const changes = [u.role !== edit.role && 'role', (u.designation || '') !== (edit.designation || '') && 'designation', u.status !== edit.status && 'status', u.name !== edit.name && 'name'].filter(Boolean);
+      Object.assign(u, { name: edit.name, email: (edit.email || '').toLowerCase(), mobile: edit.mobile || '', role: edit.role, designation: edit.role === 'PARENT' ? 'Parent' : edit.designation || null, status: edit.status, extra: edit.extra, perms: edit.perms, children: edit.role === 'PARENT' ? kids : [], linkedStudent: edit.role === 'PARENT' ? kids[0] || null : null });
       if (u.loginType === 'EMAIL' && u.email) u.login = u.email;
       if (u.loginType === 'MOBILE' && u.mobile) u.login = u.mobile;
       if (u.status === 'ACTIVE') u.failed = 0;
-      touch(u, by); u.lastChange = changes.join(', ') || 'details';
+      touch(u, by);
       if (wasPending && u.status === 'ACTIVE') accountEmail(d, u, school, 'APPROVED');
-      log(d, by, 'User updated', `${u.login}: ${u.lastChange}`);
+      log(d, by, 'User updated', `${u.login}: ${changes.join(', ') || 'details'}`);
     });
     notify('Saved — takes effect at their next sign-in'); setEdit(null);
+  };
+  const doDelete = () => {
+    run((d) => { deleteAccount(d, edit.id, by, { reason: edit.reason }); log(d, by, 'Account deleted and archived', `${edit.login} · ${edit.reason}`); });
+    notify(`${edit.name} deleted — kept under Archived`); setConfirmDel(false); setEdit(null);
   };
   const sendInvite = () => {
     if (!idType(invite.identifier)) { notify('Enter a Gmail / email or 10-digit mobile'); return; }
     if (findUser(db, invite.identifier)) { notify('That sign-in ID already has an account'); return; }
-    const dp = designationProblem(db, invite.role, invite.role === 'PARENT' ? 'Parent' : invite.designation); if (dp) { notify(dp); return; }
+    const dp = invite.role !== 'PARENT' && designationProblem(db, invite.role, invite.designation); if (dp) { notify(dp); return; }
     let kid = null;
     if (invite.role === 'PARENT') { const c = checkStudent(db, invite); if (c.error) { notify(c.error); return; } kid = c.student.admNo; }
     run((d) => {
       const tmp = Math.random().toString(36).slice(2) + 'A!9';
       const u = createAccount(d, { name: invite.name, identifier: invite.identifier, password: tmp, requestedRole: invite.role, designation: invite.role === 'PARENT' ? 'Parent' : invite.designation, email: invite.email, admissionNo: kid });
       Object.assign(u, { role: invite.role, status: 'ACTIVE', children: kid ? [kid] : u.children });
-      touch(u, by); u.lastChange = 'account created';
+      touch(u, by);
       accountEmail(d, u, school, 'RESET');
       log(d, by, 'User invited', `${u.login} as ${roleName(d, u.role)}`);
     });
@@ -94,60 +112,66 @@ export function Users() {
   };
   if (!allowed) return <Page title="Users"><Card><p>You don't have access to manage users. An Admin can give access by role or by designation in Roles & Permissions.</p></Card></Page>;
   const arch = db.userArchive || [];
-  return <Page title="Users" sub={`${live.length} accounts · ${pending} waiting for approval · ${arch.length} archived. Changes apply at the person's next sign-in and are written to the audit log.`}
+  const statusOpts = (u) => [...(u.status === 'PENDING' ? [['PENDING', 'Waiting for approval']] : []), ['ACTIVE', 'Active'], ['LOCKED', 'Locked'], ...(u.id !== me?.id ? [['DELETED', 'Deleted (moves to Archived)']] : [])];
+  return <Page title="Users" sub={`${live.length} accounts · ${pending} staff waiting for approval · ${arch.length} archived. Changes apply at the person's next sign-in and are written to the audit log.`}
     actions={<><button className="btn" onClick={doRefresh} aria-label="Refresh users">↻ Refresh</button><button className="btn pri" onClick={() => setInvite({ name: '', identifier: '', email: '', role: 'TEACHER', designation: 'TGT', admissionNo: '', studentName: '', grade: '' })}>Add user</button></>}>
     <Tabs tabs={[['users', 'Users'], ['archive', `Archived (${arch.length})`]]} value={tab} onChange={setTab} />
     {tab === 'archive' ? <UserArchive /> : <>
     <AccountRequests />
-    {pending > 0 && <div className="note warn" style={{ marginBottom: 12 }}>{pending} sign-up(s) waiting for approval{pendingParents ? ` (${pendingParents} parent account${pendingParents > 1 ? 's' : ''} made before the student-record check)` : ''} — open each, check the details, pick the role and set status to Active. New parents whose details match the student record get access straight away.</div>}
+    {pending > 0 && <div className="note warn" style={{ marginBottom: 12 }}>{pending} staff sign-up(s) waiting for approval — open each, check the details, pick the role and set status to Active. Parents never wait: they are checked against the student record when they register.</div>}
     {attention > 0 && <div className="note warn" style={{ marginBottom: 12 }}>{attention} account(s) need attention after a change in Roles & Permissions or the student record — marked ⚠ below.</div>}
     <div className="row" style={{ marginBottom: 12 }}>
-      <Input placeholder="Search name, email, mobile, designation, student" aria-label="Search users" value={q} onChange={(e) => setQ(e.target.value)} style={{ minWidth: 280 }} />
-      <Select aria-label="Role filter" value={rf} onChange={(e) => setRf(e.target.value)} options={[['', 'All roles'], ...roles.map((r) => [r.code, r.name])]} />
-      <Select aria-label="Department filter" value={df} onChange={(e) => setDf(e.target.value)} options={[['', 'All departments'], ...depts.map((x) => [x, x])]} />
-      <Select aria-label="Status filter" value={st} onChange={(e) => setSt(e.target.value)} options={[['', 'All statuses'], ['PENDING', 'Waiting for approval'], ['ACTIVE', 'Active'], ['LOCKED', 'Locked'], ['DISABLED', 'Switched off']]} />
-      <span className="small muted">{list.length} shown · updated {stamp.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span></div>
-    <div className="tw"><table className="t" aria-label="Users"><thead><tr><th>Name</th><th>Sign-in ID</th><th>Role</th><th>Department</th><th>Designation</th><th>Student (parents)</th><th>Last sign-in</th><th>Last change</th><th>Status</th><th /></tr></thead>
-      <tbody>{list.map((u) => { const warn = issue(u); return <tr key={u.id}><td className="b">{u.name}{warn && <div className="small" style={{ color: 'var(--bad)' }}>⚠ {warn}</div>}{u.note && <div className="small muted">{u.note}</div>}</td>
+      <Input placeholder="Search name, email, mobile, designation, student" aria-label="Search users" value={q} onChange={filter(setQ)} style={{ minWidth: 280 }} />
+      <Select aria-label="Role filter" value={rf} onChange={filter(setRf)} options={[['', 'All roles'], ...roles.map((r) => [r.code, r.name])]} />
+      <Select aria-label="Department filter" value={df} onChange={filter(setDf)} options={[['', 'All departments'], ...depts.map((x) => [x, x])]} />
+      <Select aria-label="Status filter" value={st} onChange={filter(setSt)} options={[['', 'All statuses'], ['PENDING', 'Waiting for approval'], ['ACTIVE', 'Active'], ['LOCKED', 'Locked']]} />
+      <span className="small muted">updated {stamp.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span></div>
+    <div className="tw"><table className="t" aria-label="Users"><thead><tr><th>Name</th><th>Sign-in ID</th><th>Role</th><th>Department</th><th>Designation</th><th>Student (parents)</th><th>Created</th><th>Last sign-in</th><th>Status</th><th /></tr></thead>
+      <tbody>{shown.map((u) => { const warn = issue(u); return <tr key={u.id}><td className="b">{u.name}{warn && <div className="small" style={{ color: 'var(--bad)' }}>⚠ {warn}</div>}</td>
         <td>{u.login}<div className="small muted">{u.loginType === 'MOBILE' ? 'Mobile' : isGmail(u.login) ? 'Gmail' : 'Email'}</div></td>
         <td>{u.role ? roleName(db, u.role) : <span className="muted">asked: {roleName(db, u.requestedRole)}</span>}</td>
-        <td>{departmentOf(db, roleOf(u)) || '—'}</td><td>{u.designation || '—'}</td>
+        <td>{departmentOf(db, roleOf(u)) || '—'}</td><td>{designationLabel(u)}</td>
         <td className="small">{roleOf(u) === 'PARENT' ? childLines(db, u).map((k) => <div key={k.adm}>{k.ok ? <><b>{k.name}</b> · {k.grade}</> : <span style={{ color: 'var(--bad)' }}>Not found</span>}<div className="muted">{k.adm}</div></div>) : '—'}</td>
+        <td className="small">{u.createdAt ? dmon(u.createdAt) : '—'}</td>
         <td className="small">{u.lastLogin ? dmon(u.lastLogin) : '—'}</td>
-        <td className="small">{u.updatedAt ? <>{dmon(u.updatedAt)}<div className="muted">{u.lastChange ? u.lastChange + ' · ' : ''}{u.updatedBy}</div></> : u.createdAt ? <>{dmon(u.createdAt)}<div className="muted">account created</div></> : '—'}</td>
         <td><Status s={u.status === 'PENDING' ? 'Pending approval' : u.status} /></td>
-        <td><div className="row"><button className="btn sm" aria-label={(u.status === 'PENDING' ? 'Review ' : 'Edit ') + u.name} onClick={() => { setConfirmDel(''); setDelReason(ARCHIVE_REASONS[0]); setEdit({ ...u, role: roleOf(u), designation: fitDesignation(db, roleOf(u), u.designation), extra: [...(u.extra || [])], childrenText: childrenOf(u).join(', ') }); }}>{u.status === 'PENDING' ? 'Review' : 'Edit'}</button>
-          {u.email && u.status !== 'PENDING' && <button className="btn sm" onClick={() => { run((d) => { accountEmail(d, d.users.find((x) => x.id === u.id), school, 'RESET'); log(d, by, 'Password reset sent', u.login); }); notify('Set-password link emailed'); }}>Reset password</button>}</div></td></tr>; })}</tbody></table></div>
+        <td><div className="row"><button className="btn sm" aria-label={(u.status === 'PENDING' ? 'Review ' : 'Edit ') + u.name} onClick={() => setEdit({ ...u, role: roleOf(u), designation: fitDesignation(db, roleOf(u), u.designation), extra: [...(u.extra || [])], perms: [...(u.perms || [])], childrenText: childrenOf(u).join(', '), reason: ARCHIVE_REASONS[0] })}>{u.status === 'PENDING' ? 'Review' : 'Edit'}</button>
+          {canReset && u.email && u.status !== 'PENDING' && <button className="btn sm" onClick={() => { run((d) => { accountEmail(d, d.users.find((x) => x.id === u.id), school, 'RESET'); log(d, by, 'Password reset sent', u.login); }); notify('Set-password link emailed'); }}>Reset password</button>}</div></td></tr>; })}</tbody></table></div>
+    <Pager page={pg} total={list.length} onPage={setPage} label="users" />
     </>}
-    {edit && <Modal title={(edit.status === 'PENDING' ? 'Review sign-up — ' : 'Edit user — ') + edit.name} onClose={() => setEdit(null)} actions={<button className="btn pri" onClick={save}>Save</button>}>
+    {edit && <Modal title={(edit.status === 'PENDING' ? 'Review sign-up — ' : 'Edit user — ') + edit.name} onClose={() => setEdit(null)} actions={<button className={'btn ' + (edit.status === 'DELETED' ? 'danger' : 'pri')} onClick={save}>{edit.status === 'DELETED' ? 'Delete and archive' : 'Save'}</button>}>
       <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        <Field label={'Role (decides the menus)' + (departmentOf(db, edit.role) ? ' · ' + departmentOf(db, edit.role) : '')}><Select value={edit.role || ''} onChange={(e) => setEdit({ ...edit, role: e.target.value, designation: fitDesignation(db, e.target.value, edit.designation) })} options={[['', 'Pick a role'], ...roles.map((r) => [r.code, r.name + (r.builtIn ? '' : ' (custom)')])]} /></Field>
-        {edit.role === 'PARENT' ? <Field label="Designation"><Input value="Parent" disabled aria-label="Designation: Parent" /></Field>
-          : <Field label={`Designation (${edit.role ? 'for this role' : 'pick a role first'})`}><Select value={edit.designation || ''} disabled={!edit.role} onChange={(e) => setEdit({ ...edit, designation: e.target.value })} options={[['', 'Pick a designation'], ...designationsFor(db, edit.role)]} /></Field>}
-        <Field label="Status"><Select value={edit.status} onChange={(e) => setEdit({ ...edit, status: e.target.value })} options={[['PENDING', 'Waiting for approval'], ['ACTIVE', 'Active'], ['LOCKED', 'Locked'], ['DISABLED', 'Switched off']]} /></Field>
-        <Field label="Name"><Input value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} /></Field>
-        <Field label="Email (Gmail)"><Input value={edit.email || ''} onChange={(e) => setEdit({ ...edit, email: e.target.value })} /></Field>
-        <Field label="Mobile"><Input value={edit.mobile || ''} maxLength={10} onChange={(e) => setEdit({ ...edit, mobile: e.target.value })} /></Field>
-        {(edit.role === 'PARENT') && <Field label="Children (admission nos., comma-separated)"><Input value={edit.childrenText} onChange={(e) => setEdit({ ...edit, childrenText: e.target.value.toUpperCase() })} /></Field>}
+        <Field label={'Role (decides the menus)' + (departmentOf(db, edit.role) ? ' · ' + departmentOf(db, edit.role) : '')}><Select value={edit.role || ''} disabled={edit.status === 'DELETED'} onChange={(e) => setEdit({ ...edit, role: e.target.value, designation: fitDesignation(db, e.target.value, edit.designation) })} options={[['', 'Pick a role'], ...roles.map((r) => [r.code, r.name + (r.builtIn ? '' : ' (custom)')])]} /></Field>
+        {edit.role === 'PARENT' ? <Field label="Designation"><Input value="N/A" disabled aria-label="Designation: N/A" /></Field>
+          : <Field label={`Designation (${edit.role ? 'for this role' : 'pick a role first'})`}><Select value={edit.designation || ''} disabled={!edit.role || edit.status === 'DELETED'} onChange={(e) => setEdit({ ...edit, designation: e.target.value })} options={[['', 'Pick a designation'], ...designationsFor(db, edit.role)]} /></Field>}
+        <Field label="Status"><Select value={edit.status} onChange={(e) => setEdit({ ...edit, status: e.target.value })} options={statusOpts(edit)} /></Field>
+        {edit.status === 'DELETED' ? <Field label="Reason for deleting"><Select value={edit.reason} onChange={(e) => setEdit({ ...edit, reason: e.target.value })} options={ARCHIVE_REASONS.map((x) => [x, x])} /></Field>
+          : <Field label="Name"><Input value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} /></Field>}
+        {edit.status !== 'DELETED' && <>
+          <Field label="Email (Gmail)"><Input value={edit.email || ''} onChange={(e) => setEdit({ ...edit, email: e.target.value })} /></Field>
+          <Field label="Mobile"><Input value={edit.mobile || ''} maxLength={10} onChange={(e) => setEdit({ ...edit, mobile: e.target.value })} /></Field>
+          {edit.role === 'PARENT' && <Field label="Children (admission nos., comma-separated)"><Input value={edit.childrenText} onChange={(e) => setEdit({ ...edit, childrenText: e.target.value.toUpperCase() })} /></Field>}</>}
       </div>
+      {edit.status === 'DELETED' ? <p className="note small" style={{ marginTop: 12 }}>The sign-in is removed and a copy of the account is kept under <b>Archived</b> (view only). Records the school must keep (fees, marks, receipts) stay.</p> : <>
       {edit.role === 'PARENT' && edit.childrenText && <p className="small">{edit.childrenText.split(/[\s,]+/).filter(Boolean).map((k) => { const x = db.students.find((y) => y.admNo === k); return x ? `✓ ${k} ${studentName(x)} · ${gradeOf(db, x)?.name}` : `⚠ ${k} not found`; }).join(' · ')}</p>}
       <h3 style={{ marginTop: 14 }}>Extra screens for this person only</h3>
       <p className="small muted">On top of the role{edit.designation && db.designationAccess[edit.designation] ? ` and the ${edit.designation} designation (${db.designationAccess[edit.designation].map((c) => LABEL[c]).join(', ')})` : ''}.</p>
       <div className="row">{['OPS_USERS', 'OPS_ROLES', 'STU_ADMISSIONS', 'ANL_RANK', 'ANL_TEACHER', 'ANL_TRANSPORT', 'FEE_DUES'].map((c) => <label key={c} className="row small" style={{ marginRight: 10 }}>
         <input type="checkbox" checked={edit.extra.includes(c)} onChange={() => setEdit({ ...edit, extra: edit.extra.includes(c) ? edit.extra.filter((x) => x !== c) : [...edit.extra, c] })} />{LABEL[c]}</label>)}</div>
-      {edit.id !== me?.id && <div className="card" style={{ marginTop: 14, borderColor: 'var(--bad)' }}>
-        <h3>Delete account</h3><p className="small">Removes the sign-in. A copy of the account (name, contact details, role, designation, department, children, dates) is kept under <b>Archived</b>, so the person can be looked up later or rejoin. Records the school must keep (fees, marks, receipts) stay. Type DELETE to confirm.</p>
-        <div className="row"><Select aria-label="Reason" value={delReason} onChange={(e) => setDelReason(e.target.value)} options={ARCHIVE_REASONS.map((x) => [x, x])} />
-          <Input value={confirmDel} onChange={(e) => setConfirmDel(e.target.value)} style={{ width: 120 }} aria-label="Type DELETE" /><button className="btn danger" disabled={confirmDel !== 'DELETE'} onClick={() => { run((d) => { deleteAccount(d, edit.id, by, { reason: delReason }); log(d, by, 'Account deleted and archived', `${edit.login} · ${delReason}`); }); notify('Account deleted — kept under Archived'); setEdit(null); }}>Delete and archive</button></div></div>}
-      {edit.status === 'PENDING' && <p className="small note" style={{ marginTop: 12 }}>Setting status to Active approves the account and emails {edit.email || 'them'} that it's ready.</p>}
+      {session.role === 'ADMIN' && edit.role !== 'ADMIN' && edit.role !== 'PARENT' && <>
+        <h3 style={{ marginTop: 14 }}>Permissions</h3>
+        <label className="row small"><input type="checkbox" checked={edit.perms.includes(RESET_PW)} onChange={() => setEdit({ ...edit, perms: edit.perms.includes(RESET_PW) ? edit.perms.filter((x) => x !== RESET_PW) : [...edit.perms, RESET_PW] })} />Can reset passwords in Users (the Admin role always can)</label></>}
+      {edit.status === 'PENDING' && <p className="small note" style={{ marginTop: 12 }}>Setting status to Active approves the account and emails {edit.email || 'them'} that it's ready.</p>}</>}
     </Modal>}
+    {confirmDel && edit && <Modal title={`Delete ${edit.name}?`} onClose={() => setConfirmDel(false)} actions={<><button className="btn" onClick={() => setConfirmDel(false)}>Cancel</button><button className="btn danger" onClick={doDelete}>Delete</button></>}>
+      <p>{edit.name} will no longer be able to sign in. The account moves to <b>Archived</b> with the reason “{edit.reason}”.</p></Modal>}
     {invite && <Modal title="Add user" onClose={() => setInvite(null)} actions={<button className="btn pri" disabled={!invite.name} onClick={sendInvite}>Create and email link</button>}>
       <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
         <Field label="Full name" req><Input value={invite.name} onChange={(e) => setInvite({ ...invite, name: e.target.value })} /></Field>
         <Field label="Sign-in ID (Gmail / email or mobile)" req><Input value={invite.identifier} onChange={(e) => setInvite({ ...invite, identifier: e.target.value })} /></Field>
         {idType(invite.identifier) === 'MOBILE' && <Field label="Gmail for account emails"><Input value={invite.email} onChange={(e) => setInvite({ ...invite, email: e.target.value })} /></Field>}
         <Field label={'Role' + (departmentOf(db, invite.role) ? ' · ' + departmentOf(db, invite.role) : '')}><Select value={invite.role} onChange={(e) => setInvite({ ...invite, role: e.target.value, designation: fitDesignation(db, e.target.value, invite.designation) })} options={roles.filter((r) => r.code !== 'PLATFORM').map((r) => [r.code, r.name])} /></Field>
-        {invite.role === 'PARENT' ? <Field label="Designation"><Input value="Parent" disabled aria-label="Designation: Parent" /></Field>
+        {invite.role === 'PARENT' ? <Field label="Designation"><Input value="N/A" disabled aria-label="Designation: N/A" /></Field>
           : <Field label="Designation (for this role)"><Select value={invite.designation} onChange={(e) => setInvite({ ...invite, designation: e.target.value })} options={[['', 'Pick a designation'], ...designationsFor(db, invite.role)]} /></Field>}
         {invite.role === 'PARENT' && <>
           <Field label="Student's admission no." req><Input value={invite.admissionNo || ''} onChange={(e) => setInvite({ ...invite, admissionNo: e.target.value.toUpperCase() })} placeholder="ADM-2025-0231" /></Field>
@@ -159,79 +183,42 @@ export function Users() {
   </Page>;
 }
 
-// Accounts that were deleted, kept for reference; a person can rejoin from here with their old details brought up to date
+// Deleted accounts, kept for reference. View only.
 function UserArchive() {
-  const { db, run, notify, session } = useStore();
-  const by = session.name || session.role;
-  const school = tenantOf(db).name;
+  const { db } = useStore();
   const arch = db.userArchive || [];
   const [q, setQ] = useState('');
   const [rf, setRf] = useState('');
   const [df, setDf] = useState('');
   const [why, setWhy] = useState('');
-  const [state, setState] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
-  const [view, setView] = useState(null);
-  const [rj, setRj] = useState(null);
+  const [page, setPage] = useState(0);
+  const filter = (fn) => (e) => { fn(e.target.value); setPage(0); };
   const roles = [...new Map(arch.map((a) => [a.role, a.roleName])).entries()];
   const depts = [...new Set(arch.map((a) => a.department).filter(Boolean))].sort();
-  const list = arch.filter((a) => (!rf || a.role === rf) && (!df || a.department === df) && (!why || a.reason === why) && (!state || (state === 'REJOINED' ? a.rejoined : !a.rejoined))
+  const list = arch.filter((a) => (!rf || a.role === rf) && (!df || a.department === df) && (!why || a.reason === why)
     && (!from || a.deletedAt.slice(0, 10) >= from) && (!to || a.deletedAt.slice(0, 10) <= to)
     && (!q || (a.name + a.login + a.email + a.mobile + (a.designation || '') + a.children.map((k) => k.adm + k.name).join(' ')).toLowerCase().includes(q.toLowerCase())));
-  const startRejoin = (a) => { const p = rejoinPlan(db, a); setRj({ a, p, identifier: a.login || a.email || a.mobile || '', email: a.email, role: p.roleOk ? p.role : '', designation: p.designation || '' }); };
-  const rejoin = () => {
-    const { a, p } = rj;
-    if (!idType(rj.identifier)) { notify('Enter a Gmail / email or 10-digit mobile for signing in'); return; }
-    if (findUser(db, rj.identifier)) { notify('That sign-in ID already has an account'); return; }
-    if (!rj.role) { notify('Pick a role'); return; }
-    const dp = designationProblem(db, rj.role, rj.role === 'PARENT' ? 'Parent' : rj.designation); if (dp) { notify(dp); return; }
-    if (rj.role === 'PARENT' && !p.children.length) { notify('None of the children are enrolled now — add the parent with a current admission number instead'); return; }
-    run((d) => {
-      const u = createAccount(d, { name: a.name, identifier: rj.identifier, password: Math.random().toString(36).slice(2) + 'A!9', requestedRole: rj.role, designation: rj.role === 'PARENT' ? 'Parent' : rj.designation, email: rj.email, admissionNo: p.children[0] || null });
-      Object.assign(u, { role: rj.role, status: 'ACTIVE', children: rj.role === 'PARENT' ? p.children : [], extra: a.extra.filter((c) => LABEL[c]), rejoinedFrom: a.id });
-      touch(u, by); u.lastChange = 'rejoined from the archive';
-      d.userArchive.find((x) => x.id === a.id).rejoined = { at: new Date().toISOString(), by, userId: u.id };
-      accountEmail(d, u, school, 'RESET');
-      log(d, by, 'Rejoined from the archive', `${u.login} as ${roleName(d, u.role)}`);
-    });
-    notify(`${a.name} has rejoined — a set-password link was emailed`); setRj(null);
-  };
+  const pg = Math.min(page, Math.max(0, Math.ceil(list.length / PAGE) - 1));
   return <>
-    <p className="small muted">Accounts deleted by the school keep the person's details here. When people delete their own account, their email and mobile are not kept. Rejoining starts a new account from these details, checked against today's profiles, designations and student record.</p>
+    <p className="small muted">Accounts that were deleted, kept for reference (view only). When people delete their own account, their sign-in ID, email and mobile are not kept.</p>
     <div className="row" style={{ marginBottom: 12 }}>
-      <Input placeholder="Search name, email, mobile, designation, student" aria-label="Search archive" value={q} onChange={(e) => setQ(e.target.value)} style={{ minWidth: 260 }} />
-      <Select aria-label="Archive role filter" value={rf} onChange={(e) => setRf(e.target.value)} options={[['', 'All roles'], ...roles]} />
-      <Select aria-label="Archive department filter" value={df} onChange={(e) => setDf(e.target.value)} options={[['', 'All departments'], ...depts.map((x) => [x, x])]} />
-      <Select aria-label="Reason filter" value={why} onChange={(e) => setWhy(e.target.value)} options={[['', 'All reasons'], ...ARCHIVE_REASONS.map((x) => [x, x])]} />
-      <Select aria-label="Rejoined filter" value={state} onChange={(e) => setState(e.target.value)} options={[['', 'Archived and rejoined'], ['ARCHIVED', 'Still archived'], ['REJOINED', 'Rejoined']]} />
-      <label className="row small">Deleted from <Input type="date" aria-label="Deleted from" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
-      <label className="row small">to <Input type="date" aria-label="Deleted to" value={to} onChange={(e) => setTo(e.target.value)} /></label></div>
-    {!arch.length ? <Card><p className="muted">No deleted accounts yet. When an account is deleted, a copy is kept here.</p></Card> :
-    <div className="tw"><table className="t" aria-label="Archived users"><thead><tr><th>Name</th><th>Role</th><th>Department</th><th>Designation</th><th>Student (parents)</th><th>Contact</th><th>Joined · last sign-in</th><th>Deleted</th><th /></tr></thead>
-      <tbody>{list.map((a) => <tr key={a.id}><td className="b">{a.name}{a.rejoined && <div className="small"><span className="pill ok">Rejoined {dmon(a.rejoined.at)}</span></div>}</td><td>{a.roleName}</td><td>{a.department || '—'}</td><td>{a.designation || '—'}</td>
+      <Input placeholder="Search name, email, mobile, designation, student" aria-label="Search archive" value={q} onChange={filter(setQ)} style={{ minWidth: 260 }} />
+      <Select aria-label="Archive role filter" value={rf} onChange={filter(setRf)} options={[['', 'All roles'], ...roles]} />
+      <Select aria-label="Archive department filter" value={df} onChange={filter(setDf)} options={[['', 'All departments'], ...depts.map((x) => [x, x])]} />
+      <Select aria-label="Reason filter" value={why} onChange={filter(setWhy)} options={[['', 'All reasons'], ...ARCHIVE_REASONS.map((x) => [x, x])]} />
+      <label className="row small">Deleted from <Input type="date" aria-label="Deleted from" value={from} onChange={filter(setFrom)} /></label>
+      <label className="row small">to <Input type="date" aria-label="Deleted to" value={to} onChange={filter(setTo)} /></label></div>
+    {!arch.length ? <Card><p className="muted">No deleted accounts yet. When an account is deleted, a copy is kept here.</p></Card> : <>
+    <div className="tw"><table className="t" aria-label="Archived users"><thead><tr><th>Name</th><th>Sign-in ID</th><th>Role</th><th>Department</th><th>Designation</th><th>Student (parents)</th><th>Email</th><th>Mobile</th><th>Created</th><th>Last sign-in</th><th>Deleted on</th><th>Reason</th><th>Deleted by</th></tr></thead>
+      <tbody>{list.slice(pg * PAGE, pg * PAGE + PAGE).map((a) => <tr key={a.id}><td className="b">{a.name}</td><td>{a.login || <span className="muted">Not kept</span>}</td><td>{a.roleName}</td><td>{a.department || '—'}</td>
+        <td>{a.role === 'PARENT' ? 'N/A' : a.designation || '—'}</td>
         <td className="small">{a.children.length ? a.children.map((k) => <div key={k.adm}><b>{k.name}</b> · {k.grade}<div className="muted">{k.adm}</div></div>) : '—'}</td>
-        <td className="small">{a.self ? <span className="muted">Not kept (deleted by the person)</span> : <>{a.email || '—'}<div className="muted">{a.mobile || ''}</div></>}</td>
-        <td className="small">{a.createdAt ? dmon(a.createdAt) : '—'}<div className="muted">{a.lastLogin ? 'last ' + dmon(a.lastLogin) : 'never signed in'}</div></td>
-        <td className="small">{dmon(a.deletedAt)}<div className="muted">{a.reason} · {a.deletedBy}</div></td>
-        <td><div className="row"><button className="btn sm" onClick={() => setView(a)} aria-label={'View ' + a.name}>View</button>{!a.rejoined && <button className="btn sm pri" onClick={() => startRejoin(a)} aria-label={'Rejoin ' + a.name}>Rejoin</button>}</div></td></tr>)}</tbody></table></div>}
-    {view && <Modal title={'Archived — ' + view.name} onClose={() => setView(null)}>
-      <table className="t"><tbody>{[['Role', view.roleName], ['Department', view.department || '—'], ['Designation', view.designation || '—'], ['Sign-in ID', view.login || 'Not kept'], ['Email', view.email || '—'], ['Mobile', view.mobile || '—'],
-        ['Children', view.children.map((k) => `${k.name} (${k.adm}, ${k.grade})`).join('; ') || '—'], ['Extra screens', view.extra.map((c) => LABEL[c] || c).join(', ') || '—'], ['Joined', view.createdAt ? dmon(view.createdAt) : '—'], ['Last sign-in', view.lastLogin ? dmon(view.lastLogin) : '—'],
-        ['Deleted', `${dmon(view.deletedAt)} by ${view.deletedBy}`], ['Reason', view.reason], ['Rejoined', view.rejoined ? `${dmon(view.rejoined.at)} by ${view.rejoined.by}` : 'No']].map(([k, v]) => <tr key={k}><td className="muted">{k}</td><td>{v}</td></tr>)}</tbody></table>
-    </Modal>}
-    {rj && <Modal title={'Rejoin — ' + rj.a.name} onClose={() => setRj(null)} actions={<button className="btn pri" onClick={rejoin}>Rejoin and email link</button>}>
-      {rj.p.notes.length > 0 || !rj.p.roleOk ? <div className="note warn small" style={{ marginBottom: 10 }}>{!rj.p.roleOk && <div>The {rj.a.roleName} profile no longer exists — pick a role.</div>}{rj.p.notes.map((n) => <div key={n}>{n}</div>)}</div>
-        : <div className="note ok small" style={{ marginBottom: 10 }}>Everything from the archive still fits today's profiles and student record.</div>}
-      <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        <Field label="Sign-in ID (Gmail / email or mobile)" req><Input value={rj.identifier} onChange={(e) => setRj({ ...rj, identifier: e.target.value })} /></Field>
-        <Field label="Gmail for account emails"><Input value={rj.email} onChange={(e) => setRj({ ...rj, email: e.target.value })} /></Field>
-        <Field label={'Role' + (departmentOf(db, rj.role) ? ' · ' + departmentOf(db, rj.role) : '')}><Select value={rj.role} onChange={(e) => setRj({ ...rj, role: e.target.value, designation: fitDesignation(db, e.target.value, rj.designation) })} options={[['', 'Pick a role'], ...allRoles(db).filter((r) => r.code !== 'PLATFORM').map((r) => [r.code, r.name])]} /></Field>
-        {rj.role === 'PARENT' ? <Field label="Children linked"><Input disabled value={rj.p.children.join(', ') || 'None enrolled now'} aria-label="Children linked" /></Field>
-          : <Field label="Designation"><Select value={rj.designation} onChange={(e) => setRj({ ...rj, designation: e.target.value })} options={[['', 'Pick a designation'], ...designationsFor(db, rj.role)]} /></Field>}
-      </div>
-      <p className="small muted">A new account is made with these details and they get a link to set a password. The archive entry is kept and marked as rejoined.</p>
-    </Modal>}
+        <td className="small">{a.email || <span className="muted">{a.self ? 'Not kept' : '—'}</span>}</td><td className="small">{a.mobile || <span className="muted">{a.self ? 'Not kept' : '—'}</span>}</td>
+        <td className="small">{a.createdAt ? dmon(a.createdAt) : '—'}</td><td className="small">{a.lastLogin ? dmon(a.lastLogin) : '—'}</td>
+        <td className="small">{dmon(a.deletedAt)}</td><td className="small">{a.reason}</td><td className="small">{a.deletedBy}</td></tr>)}</tbody></table></div>
+    <Pager page={pg} total={list.length} onPage={setPage} label="archived accounts" /></>}
   </>;
 }
 
@@ -345,7 +332,7 @@ function AccessSummary() {
     <div className="tw" style={{ marginTop: 10, maxHeight: 'none' }}><table className="t"><thead><tr><th>Name</th><th>Profile</th><th>Department</th><th>Designation</th><th>Full access</th><th>Read only</th><th /></tr></thead>
       <tbody>{rows.map((r) => [<tr key={r.u.id}>
         <td><b>{r.u.name}</b><div className="small muted">{r.u.email || r.u.mobile || ''}{r.u.status !== 'ACTIVE' ? ' · ' + r.u.status.toLowerCase() : ''}</div></td>
-        <td>{roleName(db, r.u.role)}</td><td>{r.dept}</td><td>{r.u.designation || '—'}</td>
+        <td>{roleName(db, r.u.role)}</td><td>{r.dept}</td><td>{designationLabel(r.u)}</td>
         <td><span className="pill badge-full">{r.u.role === 'ADMIN' ? 'All screens' : r.full}</span></td>
         <td>{r.read ? <span className="pill badge-read">{r.read}</span> : <span className="muted">—</span>}</td>
         <td><button className="btn sm" aria-expanded={openRow === r.u.id} aria-label={(openRow === r.u.id ? 'Hide' : 'Show') + ' access of ' + r.u.name} onClick={() => setOpenRow(openRow === r.u.id ? null : r.u.id)}>{openRow === r.u.id ? 'Hide' : 'Show'} access</button></td></tr>,

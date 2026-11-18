@@ -2,6 +2,7 @@
 // changes between visits; "Reset demo data" puts everything back. In production these calls go to the API.
 import { createContext, useContext, useState, useCallback, useEffect, useRef, createElement } from 'react';
 import { buildSeed } from './seed.js';
+import { normalizeUsers } from '../lib/users.js';
 
 const KEY = 'school-app-demo-v9';
 const Ctx = createContext(null);
@@ -9,7 +10,7 @@ const Ctx = createContext(null);
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) { const d = JSON.parse(raw); if (d.version === 9) return d; }
+    if (raw) { const d = JSON.parse(raw); if (d.version === 9) return normalizeUsers(d); }
   } catch (e) { /* storage blocked — run from memory only */ }
   return buildSeed();
 }

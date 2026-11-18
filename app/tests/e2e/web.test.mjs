@@ -198,7 +198,7 @@ test('Add user: designations follow the role; Parent has none', async () => {
   const opts = await modal.getByLabel(/Designation/).locator('option').allInnerTexts();
   assert.deepEqual(opts.slice(1), ['Transport In-charge', 'Transport Supervisor', 'Driver', 'Cleaner', 'Bus Helper / Attendant']);
   await modal.getByRole('combobox', { name: /^Role/ }).selectOption('PARENT');
-  assert.equal(await modal.getByLabel('Designation: Parent').inputValue(), 'Parent');
+  assert.equal(await modal.getByLabel('Designation: N/A').inputValue(), 'N/A');
   await modal.getByRole('combobox', { name: /^Role/ }).selectOption('TRANSPORT');
   await modal.getByLabel(/Designation/).selectOption('Driver');
   await modal.getByLabel('Full name').fill('Ravi Driver');
@@ -525,25 +525,22 @@ test('Question bank and Blueprints: chapters with topics, filters, add a questio
   await ctx.close();
 });
 
-test('Users: role and department filters, department column, student details for parents, last change, no screens column; Refresh picks up Roles & Permissions changes', async () => {
+test('Users: role and department filters, department column, student details for parents, N/A designation, created date, no Switched off, no screens column; Refresh picks up Roles & Permissions changes', async () => {
   const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
   const { page, errors } = await open(ctx, '#/s/OPS_USERS');
   const users = page.getByRole('table', { name: 'Users' });
   const heads = (await users.locator('thead th').allInnerTexts()).map((x) => x.trim()).filter(Boolean);
-  assert.deepEqual(heads, ['Name', 'Sign-in ID', 'Role', 'Department', 'Designation', 'Student (parents)', 'Last sign-in', 'Last change', 'Status']);
+  assert.deepEqual(heads, ['Name', 'Sign-in ID', 'Role', 'Department', 'Designation', 'Student (parents)', 'Created', 'Last sign-in', 'Status']);
   await page.getByLabel('Role filter').selectOption('PARENT');
   const rows = await users.locator('tbody tr').allInnerTexts();
   assert.ok(rows.length > 0 && rows.every((r) => /Parent/.test(r)), 'only parents');
-  assert.match(rows.find((r) => r.includes('Rohit Sharma')), /Aarav Sharma[\s\S]*Grade VIII[\s\S]*ADM-2025-0231/);
+  assert.match(rows.find((r) => r.includes('Rohit Sharma')), /N\/A[\s\S]*Aarav Sharma[\s\S]*Grade VIII[\s\S]*ADM-2025-0231[\s\S]*01 Apr 2026/);
+  assert.ok(rows.every((r) => !/Pending/.test(r)), 'no parent waits for approval');
+  assert.deepEqual((await page.getByLabel('Status filter').locator('option').allInnerTexts()), ['All statuses', 'Waiting for approval', 'Active', 'Locked'], 'no Switched off');
   await page.getByLabel('Role filter').selectOption('');
   await page.getByLabel('Department filter').selectOption('Transport');
   assert.ok((await users.locator('tbody tr').allInnerTexts()).every((r) => /Transport/.test(r)), 'only the Transport department');
-  // an edit shows in Last change
   await page.getByLabel('Department filter').selectOption('');
-  await page.getByRole('button', { name: 'Edit Rohit Sharma' }).click();
-  await page.locator('.modal').getByLabel('Mobile').fill('9812344411');
-  await page.locator('.modal').getByRole('button', { name: 'Save' }).click();
-  assert.match(await users.locator('tr', { hasText: 'Rohit Sharma' }).innerText(), /contact details/);
   // Roles & Permissions changes in another tab; Refresh brings them in
   const other = await ctx.newPage();
   await other.goto(server.url + '#/s/OPS_ROLES');
@@ -595,36 +592,54 @@ test('Parent sign-up: admission no., student name and grade checked against the 
   await ctx.close();
 });
 
-test('Users: deleting archives the account; archive filters; rejoin brings the person back with current details', async () => {
-  const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
+test('Users: Delete is a status in Edit; the archive is view only; 25 per page; reset password only for Admin or a granted person', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1700, height: 1000 } });
   const { page, errors } = await open(ctx, '#/s/OPS_USERS');
   const users = page.getByRole('table', { name: 'Users' });
   await page.getByLabel('Role filter').selectOption('TRANSPORT');
-  const row = users.locator('tbody tr').first();
-  const name = (await row.locator('td').first().innerText()).split('\n')[0].trim();
+  const name = (await users.locator('tbody tr').first().locator('td').first().innerText()).split('\n')[0].trim();
   await page.getByRole('button', { name: 'Edit ' + name }).click();
-  await page.locator('.modal').getByLabel('Reason').selectOption('Left the school');
-  await page.locator('.modal').getByLabel('Type DELETE').fill('DELETE');
-  await page.locator('.modal').getByRole('button', { name: 'Delete and archive' }).click();
+  const m = page.getByRole('dialog', { name: /^Edit user/ });
+  assert.deepEqual(await m.getByLabel('Status').locator('option').allInnerTexts(), ['Active', 'Locked', 'Deleted (moves to Archived)']);
+  await m.getByLabel('Status').selectOption('DELETED');
+  await m.getByLabel('Reason for deleting').selectOption('Left the school');
+  await m.getByRole('button', { name: 'Delete and archive' }).click();
+  await page.getByRole('dialog', { name: `Delete ${name}?` }).getByRole('button', { name: 'Delete', exact: true }).click();
   await page.locator('.toast', { hasText: 'kept under Archived' }).waitFor();
   assert.equal(await users.locator('tr', { hasText: name }).count(), 0, 'gone from Users');
   await page.getByRole('tab', { name: /Archived \(1\)/ }).click();
   const arch = page.getByRole('table', { name: 'Archived users' });
+  assert.deepEqual((await arch.locator('thead th').allInnerTexts()).map((x) => x.trim()), ['Name', 'Sign-in ID', 'Role', 'Department', 'Designation', 'Student (parents)', 'Email', 'Mobile', 'Created', 'Last sign-in', 'Deleted on', 'Reason', 'Deleted by']);
   assert.match(await arch.locator('tr', { hasText: name }).innerText(), /Transport team[\s\S]*Transport[\s\S]*Left the school/);
-  await page.getByLabel('Archive role filter').selectOption({ label: 'Teacher' }).catch(() => {});
+  assert.equal(await arch.getByRole('button').count(), 0, 'view only');
+  assert.equal(await page.getByText(/Rejoin/).count(), 0, 'no rejoin');
   await page.getByLabel('Reason filter').selectOption('Duplicate account');
   assert.equal(await arch.locator('tbody tr').count(), 0, 'filtered out');
-  await page.getByLabel('Reason filter').selectOption('');
-  await page.getByRole('button', { name: 'View ' + name }).click();
-  await page.locator('.modal').getByText('Left the school').waitFor();
-  await page.locator('.modal').getByRole('button', { name: 'Close' }).click();
-  await page.getByRole('button', { name: 'Rejoin ' + name }).click();
-  await page.locator('.modal').getByText("Everything from the archive still fits today's profiles and student record.").waitFor();
-  await page.locator('.modal').getByRole('button', { name: 'Rejoin and email link' }).click();
-  await page.locator('.toast', { hasText: 'has rejoined' }).waitFor();
-  assert.match(await arch.locator('tr', { hasText: name }).innerText(), /Rejoined/);
-  await page.getByRole('tab', { name: 'Users', exact: true }).click();
-  assert.match(await users.locator('tr', { hasText: name }).innerText(), /Transport team[\s\S]*rejoined from the archive/);
+  // 25 a page
+  await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('school-app-demo-v9'));
+    for (let i = 1; i <= 40; i++) d.users.push({ id: 'T' + i, name: 'Test Teacher ' + String(i).padStart(2, '0'), login: `tt${i}@example.com`, loginType: 'EMAIL', email: `tt${i}@example.com`, mobile: '', role: 'TEACHER', designation: 'TGT', status: 'ACTIVE', createdAt: '2026-06-01T09:00:00Z', extra: [] });
+    d.rev = (d.rev || 0) + 1; localStorage.setItem('school-app-demo-v9', JSON.stringify(d)); });
+  await page.reload();
+  await page.getByRole('tab', { name: 'Users', exact: true }).waitFor();
+  assert.equal(await users.locator('tbody tr').count(), 25);
+  const pager = page.getByRole('navigation', { name: 'Pages of users' });
+  assert.match(await pager.innerText(), /Showing 1–25 of \d+ users/);
+  await pager.getByRole('button', { name: 'Next ›' }).click();
+  assert.match(await pager.innerText(), /Showing 26–/);
+  await pager.getByRole('button', { name: 'Page 1' }).click();
+  // Reset password: Admin sees it; the Vice Principal (Users screen by designation) doesn't until given the permission
+  assert.ok(await page.getByRole('button', { name: 'Reset password' }).count() > 0, 'Admin can reset');
+  const vp = await page.evaluate(() => JSON.parse(localStorage.getItem('school-app-demo-v9')).users.find((u) => u.designation === 'Vice Principal' && u.role === 'TEACHER'));
+  await page.getByLabel('Search users').fill(vp.name);
+  await page.getByRole('button', { name: 'Edit ' + vp.name }).click();
+  await page.getByLabel(/Can reset passwords/).check();
+  await page.getByRole('dialog', { name: /^Edit user/ }).getByRole('button', { name: 'Save' }).click();
+  await page.evaluate((v) => { sessionStorage.setItem('school-app-demo-v9-s', JSON.stringify({ role: v.role, userId: v.id, name: v.name })); location.hash = '#/s/OPS_USERS'; location.reload(); }, vp);
+  await users.waitFor();
+  assert.ok(await page.getByRole('button', { name: 'Reset password' }).count() > 0, 'granted person can reset');
+  await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('school-app-demo-v9')); d.users.forEach((u) => { u.perms = []; }); d.rev += 1; localStorage.setItem('school-app-demo-v9', JSON.stringify(d)); location.reload(); });
+  await users.waitFor();
+  assert.equal(await page.getByRole('button', { name: 'Reset password' }).count(), 0, 'not without the permission');
   assert.deepEqual(errors, []);
   await ctx.close();
 });

@@ -33,10 +33,10 @@ export function extendSeed(db) {
     role, designation, status: 'ACTIVE', verified: true, salt, pw: hashPassword(DEMO_PW, salt), failed: 0, createdAt: '2026-04-01T09:00:00Z', lastLogin: null,
     extra: [], linkedStudent: role === 'PARENT' ? 'ADM-2025-0231' : null
   }));
-  // A sign-up waiting for approval, so the approval step can be tested
-  db.users.push({ id: 'U9', name: 'Farhan Ali', login: 'farhan.ali@example.com', loginType: 'EMAIL', email: 'farhan.ali@example.com', mobile: '9845077001',
-    role: null, requestedRole: 'PARENT', designation: null, status: 'PENDING', verified: true, salt, pw: hashPassword(DEMO_PW, salt), failed: 0,
-    createdAt: '2026-11-15T10:20:00Z', lastLogin: null, extra: [], linkedStudent: 'ADM-2022-0263', note: 'Parent of a Grade VIII student' });
+  // A staff sign-up waiting for approval, so the approval step can be tested (parents never wait: they are checked against the student record)
+  db.users.push({ id: 'U9', name: 'Kavya Iyer', login: 'kavya.iyer@example.com', loginType: 'EMAIL', email: 'kavya.iyer@example.com', mobile: '9845077001',
+    role: null, requestedRole: 'TEACHER', designation: 'PRT', status: 'PENDING', verified: true, salt, pw: hashPassword(DEMO_PW, salt), failed: 0,
+    createdAt: '2026-11-15T10:20:00Z', lastLogin: null, extra: [], linkedStudent: null, note: 'Primary teacher, joining in December' });
   db.customRoles = [];
   // Designations that open extra screens without changing the person's role
   db.designationAccess = { 'Vice Principal': ['OPS_USERS', 'OPS_ROLES', 'STU_ADMISSIONS', 'ANL_RANK', 'ANL_TEACHER'], 'Admissions Officer': ['STU_ADMISSIONS'] };

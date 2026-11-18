@@ -50,9 +50,9 @@ DO $$ DECLARE s INT; BEGIN
   BEGIN PERFORM set_user_designation(s, 'Principal'); RAISE EXCEPTION 'sign-up got Principal';
   EXCEPTION WHEN check_violation THEN NULL; END;
   INSERT INTO users (tenant_id, username, email, password_hash, status, full_name, requested_role, linked_admission_no)
-  VALUES (1, 'newpar', 'new.parent@example.com', 'COGNITO', 'PENDING', 'New Parent', 'PARENT', 'ADM-2025-0001') RETURNING user_id INTO s;
+  VALUES (1, 'newpar', 'new.parent@example.com', 'COGNITO', 'ACTIVE', 'New Parent', 'PARENT', 'ADM-2025-0001') RETURNING user_id INTO s;
   PERFORM set_user_designation(s, NULL);
-  ASSERT (SELECT designation FROM v_user_directory WHERE user_id = s) = 'Parent', 'parent sign-up marked Parent';
+  ASSERT (SELECT designation FROM v_user_directory WHERE user_id = s) = 'N/A', 'parent designation shown as N/A (020)';
   RAISE NOTICE 'Sign-up ok';
 END $$;
 

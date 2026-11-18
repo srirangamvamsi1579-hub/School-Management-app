@@ -99,7 +99,6 @@ export function signIn(db, identifier, password) {
   const u = findUser(db, identifier);
   if (!u) return { error: 'No account with that email or mobile' };
   if (u.status === 'LOCKED') return { error: 'Account locked after 5 wrong passwords — use “Forgot password” or ask the school office' };
-  if (u.status === 'DISABLED') return { error: 'This account has been switched off by the school' };
   if (u.pw !== hashPassword(password, u.salt)) {
     u.failed += 1;
     if (u.failed >= 5) u.status = 'LOCKED';

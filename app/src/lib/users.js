@@ -1,6 +1,6 @@
 // Users: parents checked against the student record, archive of deleted accounts, rejoining.
 import { roleName, allRoles } from './auth.js';
-import { departmentOf, fitDesignation, designationsFor } from '../data/designations.js';
+import { departmentOf } from '../data/designations.js';
 
 const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean);
 export const studentName = (s) => `${s.first} ${s.last || ''}`.trim();
@@ -43,22 +43,9 @@ export function archiveUser(db, u, { by, reason, self }) {
   const entry = { id: 'A' + db.seq.archive, userId: u.id, name: u.name, login: self ? '' : u.login, loginType: u.loginType, email: self ? '' : u.email || '', mobile: self ? '' : u.mobile || '',
     role: u.role || u.requestedRole, roleName: roleName(db, u.role || u.requestedRole), department: departmentOf(db, u.role || u.requestedRole), designation: u.designation || null,
     children: kids.map((k) => ({ adm: k.adm, name: k.name, grade: k.grade })), extra: [...(u.extra || [])], createdAt: u.createdAt || null, lastLogin: u.lastLogin || null,
-    deletedAt: new Date().toISOString(), deletedBy: by, reason: reason || (self ? 'Asked to close the account' : 'Other'), self: !!self, rejoined: null };
+    deletedAt: new Date().toISOString(), deletedBy: by, reason: reason || (self ? 'Asked to close the account' : 'Other'), self: !!self };
   db.userArchive.unshift(entry);
   return entry;
-}
-
-// What changes if an archived person rejoins today: the profile, designation and children are checked against the current state
-export function rejoinPlan(db, a) {
-  const roleOk = allRoles(db).some((r) => r.code === a.role);
-  const notes = [];
-  const role = a.role;
-  const designation = role === 'PARENT' ? 'Parent' : fitDesignation(db, role, a.designation);
-  if (role !== 'PARENT' && a.designation && designation !== a.designation) notes.push(`Designation ${a.designation} is no longer offered for ${a.roleName}; pick another.`);
-  const kids = a.children.map((k) => ({ ...k, now: db.students.find((s) => s.admNo === k.adm && s.status !== 'Left') }));
-  kids.filter((k) => !k.now).forEach((k) => notes.push(`${k.name} (${k.adm}) is no longer enrolled and won't be linked.`));
-  kids.filter((k) => k.now && gradeOf(db, k.now)?.name !== k.grade).forEach((k) => notes.push(`${studentName(k.now)} is now in ${gradeOf(db, k.now)?.name}.`));
-  return { role, roleOk, designation, designations: role === 'PARENT' ? [] : designationsFor(db, role), children: kids.filter((k) => k.now).map((k) => k.adm), notes };
 }
 
 // Close an account: archive a copy, then remove the sign-in and clear the live record. Records the school must keep (fees, marks) stay.
@@ -68,3 +55,23 @@ export function deleteAccount(db, userId, by, { reason, self = false } = {}) {
   Object.assign(u, { status: 'DELETED', name: 'Closed account', login: 'deleted-' + u.id, email: '', mobile: '', pw: '', children: [], extra: [], deletedAt: new Date().toISOString(), deletedBy: by });
   return u;
 }
+
+// Parents never wait for approval: a parent with a child on the student record is Active; "Switched off" is no longer a status.
+// Runs on saved demo data too, so older copies follow the same rules.
+export function normalizeUsers(db) {
+  (db.users || []).forEach((u) => {
+    const parent = (u.role || u.requestedRole) === 'PARENT';
+    if (u.status === 'DISABLED') u.status = 'LOCKED';
+    if (parent && u.status === 'PENDING') {
+      const kids = childrenOf(u).filter((k) => db.students.some((s) => s.admNo === k && s.status !== 'Left'));
+      Object.assign(u, kids.length ? { role: 'PARENT', status: 'ACTIVE', children: kids, designation: 'Parent' } : { role: 'PARENT', status: 'LOCKED', designation: 'Parent', note: 'Admission number not on the student record' });
+    }
+  });
+  (db.userArchive || []).forEach((a) => { delete a.rejoined; });
+  return db;
+}
+// Parents have no designation: shown as N/A
+export const designationLabel = (u) => ((u.role || u.requestedRole) === 'PARENT' ? 'N/A' : u.designation || '—');
+// Reset password: the Admin role, or people given the permission one by one (Edit user → Permissions)
+export const RESET_PW = 'RESET_PASSWORDS';
+export const canResetPasswords = (me, role) => role === 'ADMIN' || role === 'PLATFORM' || !!me?.perms?.includes(RESET_PW);

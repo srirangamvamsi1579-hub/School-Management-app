@@ -10,7 +10,7 @@ test('sign-in: password, lock after 5 wrong tries, pending accounts blocked', ()
   assert.ok(signIn(db, '+91 98450 11200', 'Demo@123').user, 'mobile with +91 and spaces');
   for (let i = 0; i < 5; i++) signIn(db, 'sonia.teacher@example.com', 'nope');
   assert.match(signIn(db, 'sonia.teacher@example.com', 'Demo@123').error, /locked/);
-  assert.match(signIn(db, 'farhan.ali@example.com', 'Demo@123').error, /waiting/);
+  assert.match(signIn(db, 'kavya.iyer@example.com', 'Demo@123').error, /waiting/, 'a staff sign-up waits for approval');
 });
 
 test('sign-up: gmail or mobile, OTP, password rules, account email never contains the password', () => {
