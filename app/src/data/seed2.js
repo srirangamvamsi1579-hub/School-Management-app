@@ -31,12 +31,12 @@ export function extendSeed(db) {
   ].map(([name, login, type, role, designation], i) => ({
     id: 'U' + (i + 1), name, login, loginType: type, email: type === 'EMAIL' ? login : '', mobile: type === 'MOBILE' ? login : '',
     role, designation, status: 'ACTIVE', verified: true, salt, pw: hashPassword(DEMO_PW, salt), failed: 0, createdAt: '2026-04-01T09:00:00Z', lastLogin: null,
-    extra: [], linkedStudent: role === 'PARENT' ? 'ADM-2025-0231' : null
+    extra: [], linkedStudent: role === 'PARENT' ? 'ADM-2025-0231' : null, source: role === 'ADMIN' || role === 'PLATFORM' ? 'SEED' : i % 2 ? 'APP' : 'WEBSITE'
   }));
   // A staff sign-up waiting for approval, so the approval step can be tested (parents never wait: they are checked against the student record)
   db.users.push({ id: 'U9', name: 'Kavya Iyer', login: 'kavya.iyer@example.com', loginType: 'EMAIL', email: 'kavya.iyer@example.com', mobile: '9845077001',
     role: null, requestedRole: 'TEACHER', designation: 'PRT', status: 'PENDING', verified: true, salt, pw: hashPassword(DEMO_PW, salt), failed: 0,
-    createdAt: '2026-11-15T10:20:00Z', lastLogin: null, extra: [], linkedStudent: null, note: 'Primary teacher, joining in December' });
+    createdAt: '2026-11-15T10:20:00Z', lastLogin: null, extra: [], linkedStudent: null, note: 'Primary teacher, joining in December', source: 'APP' });
   db.customRoles = [];
   // Designations that open extra screens without changing the person's role
   db.designationAccess = { 'Vice Principal': ['OPS_USERS', 'OPS_ROLES', 'STU_ADMISSIONS', 'ANL_RANK', 'ANL_TEACHER'], 'Admissions Officer': ['STU_ADMISSIONS'] };

@@ -62,6 +62,7 @@ export function normalizeUsers(db) {
   (db.users || []).forEach((u) => {
     const parent = (u.role || u.requestedRole) === 'PARENT';
     if (u.status === 'DISABLED') u.status = 'LOCKED';
+    if (!u.source) u.source = ['ADMIN', 'PLATFORM'].includes(u.role) ? 'SEED' : 'WEBSITE';
     if (parent && u.status === 'PENDING') {
       const kids = childrenOf(u).filter((k) => db.students.some((s) => s.admNo === k && s.status !== 'Left'));
       Object.assign(u, kids.length ? { role: 'PARENT', status: 'ACTIVE', children: kids, designation: 'Parent' } : { role: 'PARENT', status: 'LOCKED', designation: 'Parent', note: 'Admission number not on the student record' });
@@ -100,3 +101,8 @@ export function fromArchive(db, a, { roles, fit }) {
   }
   return { fields: { name: a.name, identifier: id, email: a.email || '', role, designation, admissionNo: kid?.admNo || '', studentName: kid ? studentName(kid) : '', grade: kid ? String(gradeOf(db, kid)?.level || '') : '', fromArchive: a.id }, notes };
 }
+
+// Accounts are created when people register on the website or in the app. The Admin can add someone only as an exception, with a reason.
+export const ADD_REASONS = ['Has no email or mobile of their own', 'Needs help to register', 'Coming back (details from the archive)', 'Other'];
+export const canAddUsers = (role) => role === 'ADMIN' || role === 'PLATFORM';
+export const sourceLabel = (u) => (u.source === 'APP' ? 'Registered in the app' : u.source === 'ADMIN' ? 'Added by the Admin' + (u.addReason ? ' — ' + u.addReason : '') : u.source === 'SEED' ? 'Set up with the school' : 'Registered on the website');

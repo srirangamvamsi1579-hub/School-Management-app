@@ -173,7 +173,7 @@ export function SignUp({ onPeek = () => {}, onDone, compact = false }) {
       kid = c.student;
     }
     const u = run((d) => {
-      const x = createAccount(d, { ...f, name, admissionNo: kid ? kid.admNo : null, designation: parent ? 'Parent' : f.designation,
+      const x = createAccount(d, { ...f, name, source: compact ? 'APP' : 'WEBSITE', admissionNo: kid ? kid.admNo : null, designation: parent ? 'Parent' : f.designation,
         requestedRole: f.requestedRole, email: type === 'EMAIL' ? normId(f.identifier) : f.email, mobile: type === 'MOBILE' ? f.identifier : f.mobile });
       if (kid) {
         Object.assign(x, { role: 'PARENT', status: 'ACTIVE', children: [kid.admNo], verifiedStudent: { adm: kid.admNo, at: new Date().toISOString() } });

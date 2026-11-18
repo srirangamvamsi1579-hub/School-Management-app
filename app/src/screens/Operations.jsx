@@ -10,7 +10,7 @@ import { PRESETS, TEMPLATES, contrast, accessible } from '../lib/theme.js';
 import { allRoles, roleName, rolePerms, accessLevel, accessSource, screensFor, departments, syncDeptPerms, defaultScreens, baseRoleOf, canManageUsers, accountEmail, createAccount, idType, isGmail, findUser } from '../lib/auth.js';
 import { designationsFor, fitDesignation, designationProblem, departmentOf, STANDARD_PROFILES } from '../data/designations.js';
 import { AccountRequests, deleteAccount } from './Account.jsx';
-import { checkStudent, childLines, childrenOf, studentName, gradeOf, gradeOptions, touch, ARCHIVE_REASONS, designationLabel, canResetPasswords, RESET_PW, archiveMatches, fromArchive } from '../lib/users.js';
+import { checkStudent, childLines, childrenOf, studentName, gradeOf, gradeOptions, touch, ARCHIVE_REASONS, designationLabel, canResetPasswords, RESET_PW, archiveMatches, fromArchive, ADD_REASONS, canAddUsers, sourceLabel } from '../lib/users.js';
 
 const PAGE = 25;
 // Page controls under a long list: 25 rows at a time
@@ -95,6 +95,9 @@ export function Users() {
     notify(`${edit.name} deleted — kept under Archived`); setConfirmDel(false); setEdit(null);
   };
   const sendInvite = () => {
+    if (!canAddUsers(session.role)) { notify('Only the Admin can add a user'); return; }
+    const why = invite.reason === 'Other' ? (invite.reasonText || '').trim() : invite.reason;
+    if (!why) { notify('Say why this person is being added instead of registering'); return; }
     if (!idType(invite.identifier)) { notify('Enter a Gmail / email or 10-digit mobile'); return; }
     if (findUser(db, invite.identifier)) { notify('That sign-in ID already has an account'); return; }
     const dp = invite.role !== 'PARENT' && designationProblem(db, invite.role, invite.designation); if (dp) { notify(dp); return; }
@@ -102,19 +105,19 @@ export function Users() {
     if (invite.role === 'PARENT') { const c = checkStudent(db, invite); if (c.error) { notify(c.error); return; } kid = c.student.admNo; }
     run((d) => {
       const tmp = Math.random().toString(36).slice(2) + 'A!9';
-      const u = createAccount(d, { name: invite.name, identifier: invite.identifier, password: tmp, requestedRole: invite.role, designation: invite.role === 'PARENT' ? 'Parent' : invite.designation, email: invite.email, admissionNo: kid });
+      const u = createAccount(d, { source: 'ADMIN', addReason: why, name: invite.name, identifier: invite.identifier, password: tmp, requestedRole: invite.role, designation: invite.role === 'PARENT' ? 'Parent' : invite.designation, email: invite.email, admissionNo: kid });
       Object.assign(u, { role: invite.role, status: 'ACTIVE', children: kid ? [kid] : u.children, ...(invite.fromArchive ? { copiedFrom: invite.fromArchive } : {}) });
       touch(u, by);
       accountEmail(d, u, school, 'RESET');
-      log(d, by, invite.fromArchive ? 'User added again from the archive' : 'User invited', `${u.login} as ${roleName(d, u.role)}`);
+      log(d, by, invite.fromArchive ? 'User added again from the archive' : 'User added by the Admin', `${u.login} as ${roleName(d, u.role)} · ${why}`);
     });
     notify('Account created — a set-password link was emailed'); setInvite(null);
   };
   if (!allowed) return <Page title="Users"><Card><p>You don't have access to manage users. An Admin can give access by role or by designation in Roles & Permissions.</p></Card></Page>;
   const arch = db.userArchive || [];
   const statusOpts = (u) => [...(u.status === 'PENDING' ? [['PENDING', 'Waiting for approval']] : []), ['ACTIVE', 'Active'], ['LOCKED', 'Locked'], ...(u.id !== me?.id ? [['DELETED', 'Deleted (moves to Archived)']] : [])];
-  return <Page title="Users" sub={`${live.length} accounts · ${pending} staff waiting for approval · ${arch.length} archived. Changes apply at the person's next sign-in and are written to the audit log.`}
-    actions={<><button className="btn" onClick={doRefresh} aria-label="Refresh users">↻ Refresh</button><button className="btn pri" onClick={() => setInvite({ name: '', identifier: '', email: '', role: 'TEACHER', designation: 'TGT', admissionNo: '', studentName: '', grade: '' })}>Add user</button></>}>
+  return <Page title="Users" sub={`${live.length} accounts · ${pending} staff waiting for approval · ${arch.length} archived. Accounts are created when parents and staff register on the website or in the app; changes apply at the person's next sign-in and are written to the audit log.`}
+    actions={<><button className="btn" onClick={doRefresh} aria-label="Refresh users">↻ Refresh</button>{canAddUsers(session.role) && <button className="btn pri" title="Only for exceptions: people normally register on the website or in the app" onClick={() => setInvite({ name: '', identifier: '', email: '', role: 'TEACHER', designation: 'TGT', admissionNo: '', studentName: '', grade: '', reason: '' })}>Add user</button>}</>}>
     <Tabs tabs={[['users', 'Users'], ['archive', `Archived (${arch.length})`]]} value={tab} onChange={setTab} />
     {tab === 'archive' ? <UserArchive /> : <>
     <AccountRequests />
@@ -152,6 +155,7 @@ export function Users() {
           <Field label="Mobile"><Input value={edit.mobile || ''} maxLength={10} onChange={(e) => setEdit({ ...edit, mobile: e.target.value })} /></Field>
           {edit.role === 'PARENT' && <Field label="Children (admission nos., comma-separated)"><Input value={edit.childrenText} onChange={(e) => setEdit({ ...edit, childrenText: e.target.value.toUpperCase() })} /></Field>}</>}
       </div>
+      <p className="small muted" style={{ marginTop: 10 }}>How the account was created: {sourceLabel(edit)}{edit.createdAt ? ' on ' + dmon(edit.createdAt) : ''}.</p>
       {edit.status === 'DELETED' ? <p className="note small" style={{ marginTop: 12 }}>The sign-in is removed and a copy of the account is kept under <b>Archived</b> (view only). Records the school must keep (fees, marks, receipts) stay.</p> : <>
       {edit.role === 'PARENT' && edit.childrenText && <p className="small">{edit.childrenText.split(/[\s,]+/).filter(Boolean).map((k) => { const x = db.students.find((y) => y.admNo === k); return x ? `✓ ${k} ${studentName(x)} · ${gradeOf(db, x)?.name}` : `⚠ ${k} not found`; }).join(' · ')}</p>}
       <h3 style={{ marginTop: 14 }}>Extra screens for this person only</h3>
@@ -166,12 +170,13 @@ export function Users() {
     {confirmDel && edit && <Modal title={`Delete ${edit.name}?`} onClose={() => setConfirmDel(false)} actions={<><button className="btn" onClick={() => setConfirmDel(false)}>Cancel</button><button className="btn danger" onClick={doDelete}>Delete</button></>}>
       <p>{edit.name} will no longer be able to sign in. The account moves to <b>Archived</b> with the reason “{edit.reason}”.</p></Modal>}
     {invite && <Modal title="Add user" onClose={() => setInvite(null)} actions={<button className="btn pri" disabled={!invite.name} onClick={sendInvite}>Create and email link</button>}>
+      <p className="note small" style={{ marginBottom: 12 }}>Parents and staff normally create their own account by registering on the school website or in the app. Add someone here only as an exception; the reason is recorded.</p>
       {(db.userArchive || []).length > 0 && <div className="card" style={{ marginBottom: 12 }}>
         <h3>Coming back? Copy details from the archive</h3>
         <Input placeholder="Search the archive by name, email, mobile or student" aria-label="Search the archive to copy" value={invite.archQ || ''} onChange={(e) => setInvite({ ...invite, archQ: e.target.value })} />
         {archiveMatches(db, invite.archQ).map((a) => <div key={a.id} className="row small" style={{ justifyContent: 'space-between', marginTop: 6 }}>
           <span><b>{a.name}</b> · {a.roleName}{a.designation && a.role !== 'PARENT' ? ' · ' + a.designation : ''} · deleted {dmon(a.deletedAt)}</span>
-          <button className="btn sm" aria-label={'Copy details of ' + a.name} onClick={() => { const r = fromArchive(db, a, { roles: roles.filter((x) => x.code !== 'PLATFORM'), fit: (ro, de) => fitDesignation(db, ro, de) }); setInvite({ ...invite, ...r.fields, archQ: '', copyNotes: r.notes, copiedName: a.name }); }}>Copy details</button></div>)}
+          <button className="btn sm" aria-label={'Copy details of ' + a.name} onClick={() => { const r = fromArchive(db, a, { roles: roles.filter((x) => x.code !== 'PLATFORM'), fit: (ro, de) => fitDesignation(db, ro, de) }); setInvite({ ...invite, ...r.fields, archQ: '', copyNotes: r.notes, copiedName: a.name, reason: 'Coming back (details from the archive)' }); }}>Copy details</button></div>)}
         {invite.copiedName && <div className={'note small ' + (invite.copyNotes?.length ? 'warn' : 'ok')} style={{ marginTop: 8 }}>Details copied from {invite.copiedName}'s archived account{invite.copyNotes?.length ? ':' : ' — everything still fits.'}{(invite.copyNotes || []).map((n) => <div key={n}>{n}</div>)}</div>}
       </div>}
       <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
@@ -185,6 +190,8 @@ export function Users() {
           <Field label="Student's admission no." req><Input value={invite.admissionNo || ''} onChange={(e) => setInvite({ ...invite, admissionNo: e.target.value.toUpperCase() })} placeholder="ADM-2025-0231" /></Field>
           <Field label="Student's name" req><Input value={invite.studentName} onChange={(e) => setInvite({ ...invite, studentName: e.target.value })} /></Field>
           <Field label="Student's grade" req><Select value={invite.grade} onChange={(e) => setInvite({ ...invite, grade: e.target.value })} options={[['', 'Pick a grade'], ...gradeOptions(db)]} /></Field></>}
+        <Field label="Why is this person being added instead of registering?" req><Select value={invite.reason} onChange={(e) => setInvite({ ...invite, reason: e.target.value })} options={[['', 'Pick a reason'], ...ADD_REASONS.map((x) => [x, x])]} /></Field>
+        {invite.reason === 'Other' && <Field label="Reason" req><Input value={invite.reasonText || ''} onChange={(e) => setInvite({ ...invite, reasonText: e.target.value })} /></Field>}
       </div>
       <p className="small muted">They get an email with their account details and a link to set their own password. Passwords are never emailed.{invite.role === 'PARENT' ? ' The student details are checked against the student record.' : ''}</p>
     </Modal>}

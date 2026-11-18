@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildSeed } from '../src/data/seed.js';
 import { signIn } from '../src/lib/auth.js';
-import { checkStudent, childLines, parentTriesLeft, noteParentTry, MAX_PARENT_TRIES, deleteAccount, normalizeUsers, designationLabel, canResetPasswords, RESET_PW, archiveMatches, fromArchive } from '../src/lib/users.js';
+import { checkStudent, childLines, parentTriesLeft, noteParentTry, MAX_PARENT_TRIES, deleteAccount, normalizeUsers, designationLabel, canResetPasswords, RESET_PW, archiveMatches, fromArchive, canAddUsers, sourceLabel } from '../src/lib/users.js';
 
 test('parent check: admission no., student name and grade must all match the student record', () => {
   const db = buildSeed();
@@ -91,4 +91,12 @@ test('coming back: Add user copies details from the archive and checks them agai
   assert.equal(rb.fields.identifier, ''); assert.ok(rb.notes.some((n) => /not kept/.test(n)));
   assert.equal(rb.fields.admissionNo, b.children[0].adm); assert.ok(rb.fields.studentName && rb.fields.grade, 'student details from today’s record');
   assert.ok(checkStudent(db, rb.fields).student, 'copied student details pass the check');
+});
+
+test('accounts come from registration; only the Admin adds someone, with a reason', () => {
+  const db = buildSeed();
+  assert.ok(canAddUsers('ADMIN')); assert.ok(!canAddUsers('PRINCIPAL')); assert.ok(!canAddUsers('TEACHER'));
+  assert.ok(db.users.filter((u) => !['ADMIN', 'PLATFORM'].includes(u.role)).every((u) => ['WEBSITE', 'APP'].includes(u.source)), 'demo accounts registered themselves');
+  assert.equal(sourceLabel({ source: 'APP' }), 'Registered in the app');
+  assert.equal(sourceLabel({ source: 'ADMIN', addReason: 'Needs help to register' }), 'Added by the Admin — Needs help to register');
 });

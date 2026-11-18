@@ -74,7 +74,7 @@ export function createAccount(db, f) {
   db.seq.user += 1;
   const u = { id: 'U' + db.seq.user, name: f.name.trim(), login: id, loginType: type, email: type === 'EMAIL' ? id : (f.email || '').toLowerCase(), mobile: type === 'MOBILE' ? id : normMobile(f.mobile || ''),
     role: null, requestedRole: f.requestedRole, designation: f.designation || null, status: 'PENDING', verified: true, salt, pw: hashPassword(f.password, salt), failed: 0,
-    createdAt: new Date().toISOString(), lastLogin: null, extra: [], linkedStudent: f.admissionNo || null, note: f.note || '' };
+    createdAt: new Date().toISOString(), lastLogin: null, extra: [], linkedStudent: f.admissionNo || null, note: f.note || '', source: f.source || 'WEBSITE', addReason: f.addReason || null };
   db.users.push(u);
   return u;
 }

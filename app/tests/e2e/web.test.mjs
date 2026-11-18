@@ -204,6 +204,9 @@ test('Add user: designations follow the role; Parent has none', async () => {
   await modal.getByLabel('Full name').fill('Ravi Driver');
   await modal.getByLabel(/Sign-in ID/).fill('9876500001');
   await modal.getByRole('button', { name: 'Create and email link' }).click();
+  await page.locator('.toast', { hasText: 'Say why this person is being added' }).waitFor();
+  await modal.getByLabel(/Why is this person being added/).selectOption('Needs help to register');
+  await modal.getByRole('button', { name: 'Create and email link' }).click();
   await page.getByRole('cell', { name: 'Ravi Driver', exact: true }).waitFor();
   assert.ok((await page.locator('tr', { hasText: 'Ravi Driver' }).innerText()).includes('Driver'));
   assert.deepEqual(errors, []);
@@ -674,6 +677,34 @@ test('Users: someone coming back is added with details copied from the archive',
   const arch = page.getByRole('table', { name: 'Archived users' });
   assert.ok(await arch.locator('tr', { hasText: name }).count() === 1);
   assert.equal(await arch.getByRole('button').count(), 0);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('Users: accounts come from registration; only the Admin can add someone, with a reason; each account shows how it was created', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
+  const { page, errors } = await open(ctx, '#/s/OPS_USERS');
+  await page.getByText(/Accounts are created when parents and staff register/).waitFor();
+  await page.getByRole('button', { name: 'Edit Rohit Sharma' }).click();
+  await page.getByRole('dialog', { name: /^Edit user/ }).getByText(/How the account was created: Registered (on the website|in the app)/).waitFor();
+  await page.getByRole('dialog', { name: /^Edit user/ }).getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('button', { name: 'Add user' }).click();
+  const add = page.getByRole('dialog', { name: 'Add user' });
+  await add.getByText(/Add someone here only as an exception/).waitFor();
+  await add.getByLabel('Full name').fill('Lakshmi Amma');
+  await add.getByRole('combobox', { name: /^Role/ }).selectOption('FRONT_OFFICE');
+  await add.getByLabel(/Designation/).selectOption({ index: 1 });
+  await add.getByLabel(/Sign-in ID/).fill('9876500077');
+  await add.getByLabel(/Why is this person being added/).selectOption('Has no email or mobile of their own');
+  await add.getByRole('button', { name: 'Create and email link' }).click();
+  await page.locator('.toast', { hasText: 'Account created' }).waitFor();
+  await page.getByRole('button', { name: 'Edit Lakshmi Amma' }).click();
+  await page.getByRole('dialog', { name: /^Edit user/ }).getByText('How the account was created: Added by the Admin — Has no email or mobile of their own', { exact: false }).waitFor();
+  // the Vice Principal can open Users (by designation) but can't add anyone
+  const vp = await page.evaluate(() => JSON.parse(localStorage.getItem('school-app-demo-v9')).users.find((u) => u.designation === 'Vice Principal' && u.role === 'TEACHER'));
+  await page.evaluate((v) => { sessionStorage.setItem('school-app-demo-v9-s', JSON.stringify({ role: v.role, userId: v.id, name: v.name })); location.hash = '#/s/OPS_USERS'; location.reload(); }, vp);
+  await page.getByRole('table', { name: 'Users' }).waitFor();
+  assert.equal(await page.getByRole('button', { name: 'Add user' }).count(), 0, 'no Add user for the Vice Principal');
   assert.deepEqual(errors, []);
   await ctx.close();
 });
