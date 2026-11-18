@@ -383,6 +383,8 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 
 **Opens straight on the Main menu.** For testing, the website skips the sign-in page and opens as the school Admin on a new **Main menu** screen. It shows every menu and sub-menu as tiles. The sign-in page is still there through **Switch user** or `#/login`. The phone app still asks people to sign in.
 
+**Side menu starts collapsed (release 7.3).** Every group in the left menu (Students, Fees, Transport…) starts collapsed. Click a group, or press Enter on it, to open it. The group holding the screen you are on opens by itself. **Expand all** and **Collapse all** sit at the top of the menu, and what each person opens is remembered in their browser.
+
 **Main menu from every screen.** Every screen has a **⌂ Main menu** button in the top bar and a **Main menu** item at the top of the side menu. In the phone app, every tab except Home has a **‹** back button to Home.
 
 **Designations follow the role (Operations → Users).** When you add or edit a user, the designation list shows only that role's designations:
@@ -612,7 +614,7 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 
 **Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the fifteen migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
-**Automated tests (release 7.2).** See `docs/TEST_REPORT.md`: 42 app tests, 28 SQL check groups (007–015), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 13 web end-to-end tests (including every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab and removing designations) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
+**Automated tests (release 7.3).** See `docs/TEST_REPORT.md`: 42 app tests, 28 SQL check groups (007–015), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 14 web end-to-end tests (including every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations and the collapsed side menu) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
 
 **Earlier automated tests.** `npm test` ran 21 checks on the business rules (including the approved pickup list, route sheets, the attendant-tracking switch, requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
 

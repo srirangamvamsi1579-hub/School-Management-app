@@ -17,7 +17,9 @@ export default function App() {
   const link = parseHash(hash);
   const [screen, setScreen] = useState(() => (link?.kind === 's' ? link.code : null));
   const [navOpen, setNavOpen] = useState(false);
-  const [openMods, setOpenMods] = useState({});
+  // Side menu groups start collapsed; what a person opens is remembered in this browser
+  const [openMods, setOpenModsRaw] = useState(() => { try { return JSON.parse(localStorage.getItem('school-side-open') || '{}') || {}; } catch (e) { return {}; } });
+  const setOpenMods = (v) => { setOpenModsRaw(v); try { localStorage.setItem('school-side-open', JSON.stringify(v)); } catch (e) { /* storage off */ } };
   const [armed, setArmed] = useState(false);
   useEffect(() => { applyTheme(db.theme); }, [db.theme]);
 
@@ -102,11 +104,18 @@ export default function App() {
       <div className="school"><div className="logo">{tenant.name[0]}</div><div><div className="b" style={{ fontSize: 13 }}>{tenant.name}</div><div className="small" style={{ opacity: .7 }}>{PLANS.find((p) => p.rank === rank).name} plan</div></div></div>
       <button className={'item' + (screen === 'HOME' ? ' on' : '')} onClick={() => go('HOME')} aria-current={screen === 'HOME' ? 'page' : undefined}>⌂ Main menu</button>
       {links.filter((l) => l.under === 'TOP').map((l) => <a key={l.id} className="item" href={l.url} target="_blank" rel="noreferrer">{l.label}<span className="ext">↗</span></a>)}
+      <div className="side-tools">
+        <button className="linkbtn" onClick={() => setOpenMods(Object.fromEntries(visible.map((m) => [m.code, true])))}>Expand all</button>
+        <button className="linkbtn" onClick={() => setOpenMods(Object.fromEntries(visible.map((m) => [m.code, false])))}>Collapse all</button>
+      </div>
       {visible.map((m) => {
-        const closed = openMods[m.code] === false;
+        // Collapsed unless the person opened it, or it holds the screen they are on (and they haven't closed it)
+        const here = m.items.some((i) => i[0] === screen);
+        const closed = openMods[m.code] === undefined ? !here : !openMods[m.code];
+        const toggle = () => setOpenMods({ ...openMods, [m.code]: closed });
         return (
           <div key={m.code}>
-            <div className="mod" onClick={() => setOpenMods({ ...openMods, [m.code]: closed })}>{m.label}<span>{closed ? '+' : '–'}</span></div>
+            <div className="mod" role="button" tabIndex={0} aria-expanded={!closed} onClick={toggle} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } }}>{m.label}<span aria-hidden="true">{closed ? '+' : '–'}</span></div>
             {!closed && m.items.map((i) => (i[0][0] === '#'
               ? <div key={i[0]} className="head">{i[1]}</div>
               : <button key={i[0]} className={'item' + (screen === i[0] ? ' on' : '')} onClick={() => go(i[0])} aria-current={screen === i[0] ? 'page' : undefined}>{i[1]}</button>))}

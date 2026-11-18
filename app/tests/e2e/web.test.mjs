@@ -12,7 +12,12 @@ let server, browser;
 before(async () => { server = await serve(DIST); browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ['--no-sandbox'] }); });
 after(async () => { await browser?.close(); server?.close(); });
 
-async function open(ctx, hash = '#/login') {
+// Most tests click through the side menu, so they start with every group expanded (the default is collapsed;
+// see the 'side menu starts collapsed' test). Set once per browser context; a test's own toggles are kept.
+const { MENU: ALL_MENUS } = await import('../../src/data/menu.js');
+const EXPANDED = JSON.stringify(Object.fromEntries(ALL_MENUS.map((m) => [m.code, true])));
+async function open(ctx, hash = '#/login', { collapsed = false } = {}) {
+  if (!collapsed && !ctx._expanded) { ctx._expanded = true; await ctx.addInitScript((v) => { if (!localStorage.getItem('school-side-open')) localStorage.setItem('school-side-open', v); }, EXPANDED); }
   const page = await ctx.newPage(); page.setDefaultTimeout(8000);
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -306,6 +311,35 @@ test('User management: remove any designation (blocked while someone holds it), 
   await page.getByLabel('New designation for Transport team').fill('cleaner');
   await page.getByLabel('New designation for Transport team').press('Enter');
   await page.locator('tr', { hasText: 'Transport team' }).getByRole('button', { name: 'Remove Cleaner from Transport team' }).waitFor();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('side menu starts collapsed; groups open on click, Expand all / Collapse all, and the choice is remembered', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+  const { page, errors } = await open(ctx, '', { collapsed: true });
+  await page.getByRole('heading', { name: 'Main menu' }).waitFor();
+  const side = page.locator('nav.side');
+  const groups = side.locator('.mod');
+  const n = await groups.count();
+  assert.ok(n >= 12, 'every menu group listed');
+  assert.equal(await side.locator('[aria-expanded="true"]').count(), 0, 'all collapsed on the Main menu');
+  assert.deepEqual(await side.locator('button.item').allInnerTexts(), ['⌂ Main menu'], 'no sub-menus shown');
+  await side.getByRole('button', { name: /^Fees/ }).click();
+  await side.locator('button.item', { hasText: 'Collect Fee' }).waitFor();
+  assert.equal(await side.locator('[aria-expanded="true"]').count(), 1);
+  await side.getByRole('button', { name: /^Fees/ }).press('Enter');
+  assert.equal(await side.locator('button.item', { hasText: 'Collect Fee' }).count(), 0, 'keyboard collapses it');
+  await page.locator('main').getByRole('button', { name: 'Roles & Permissions' }).click();
+  await side.locator('button.item', { hasText: 'Roles & Permissions' }).waitFor();
+  assert.equal(await side.locator('[aria-expanded="true"]').count(), 1, 'the group of the open screen opens by itself');
+  await side.getByRole('button', { name: 'Expand all' }).click();
+  assert.equal(await side.locator('[aria-expanded="true"]').count(), n);
+  await side.getByRole('button', { name: 'Collapse all' }).click();
+  assert.equal(await side.locator('[aria-expanded="true"]').count(), 0);
+  await side.getByRole('button', { name: /^Transport/ }).click();
+  await page.reload(); await page.locator('nav.side').waitFor();
+  assert.equal(await page.locator('nav.side [aria-expanded="true"]').count(), 1, 'remembered after reload');
   assert.deepEqual(errors, []);
   await ctx.close();
 });
