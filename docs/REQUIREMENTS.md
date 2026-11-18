@@ -1,6 +1,6 @@
 # School Management Platform — Requirements
 
-Updated 18 Nov 2026 (release 11: a Settings menu for the setup screens; release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos; release 7: opens on a Main menu, designations by role, account creation in the app, Admin View as Profile; 7.1–7.5: User management with departments, access by department with read only / full access, access summary, standard profiles for Indian schools; release 8: question papers driven by topic selection, up to 10 sets, approval per set, question bank with topics, blueprints; release 10: nobody waits for approval (staff checked against the staff record), dashboard in sections (students, staff, transport, fees, enrolment) with year-on-year arrows, gender split and grade limits; release 9: accounts come from registration (Add user is Admin-only, with a reason), Users filters, copy a returning person's details from the archive, department, student and created columns, 25 per page, refresh, parents checked against the student record with no approval, no switched-off status, reset password for Admin or by permission, delete as a status with a view-only archive). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
+Updated 18 Nov 2026 (release 11: a Settings menu for the setup screens, with Operations kept for user management and data upload; release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos; release 7: opens on a Main menu, designations by role, account creation in the app, Admin View as Profile; 7.1–7.5: User management with departments, access by department with read only / full access, access summary, standard profiles for Indian schools; release 8: question papers driven by topic selection, up to 10 sets, approval per set, question bank with topics, blueprints; release 10: nobody waits for approval (staff checked against the staff record), dashboard in sections (students, staff, transport, fees, enrolment) with year-on-year arrows, gender split and grade limits; release 9: accounts come from registration (Add user is Admin-only, with a reason), Users filters, copy a returning person's details from the archive, department, student and created columns, 25 per page, refresh, parents checked against the student record with no approval, no switched-off status, reset password for Admin or by permission, delete as a status with a view-only archive). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
 
 One platform runs Indian K-12 schools of every size, from under 250 to over 1,000 students. Each school gets only the modules its plan includes, and every person sees only the menus their role allows.
 
@@ -48,7 +48,7 @@ Seven roles see different menus. Four plans decide which modules a school has. A
 
 | Plan | Students | Adds |
 | --- | --- | --- |
-| Starter | Up to 250 | Students, staff, academics, exams, fees, settings (users, roles, branding, bank details) |
+| Starter | Up to 250 | Students, staff, academics, exams, fees, operations (users, roles, data import), settings (branding, bank details) |
 | Growth | 251–500 | Insights, payroll, payment matching, promotions, concessions, custom brand colour, custom templates |
 | Professional | 501–1,000 | Account statement, income & expenses, image (OCR) import |
 | Enterprise | 1,000+ | Dedicated database option, white-label mobile app, custom fonts |
@@ -69,7 +69,8 @@ Seven roles see different menus. Four plans decide which modules a school has. A
 | Data Analytics | Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel | Grade, sections, term, subject filters; Power BI pages |
 | Payroll | Run Payroll, Payslips | Basic, HRA, DA, transport, PF, TDS, net; approve and post |
 | Accounts | Account Statement, Income & Expenses | Ledger with running balance |
-| Settings | People & access: Users, Roles & Permissions · School setup: Appearance & Branding, Website & Links, Web & App Screens, Templates, Bank & Payment Details · Messages: SMS Gateway, Email & SMS Outbox · Data: Data Import | Permission grid; template versions and defaults; bank holder, account (encrypted), IFSC, UPI ID, QR; import mapping; theme; menu links. Always on |
+| Operations | User management: Users, Roles & Permissions · Data upload: Data Import | Permission grid; import mapping. Always on |
+| Settings | School setup: Appearance & Branding, Website & Links, Web & App Screens, Templates, Bank & Payment Details · Messages: SMS Gateway, Email & SMS Outbox | Template versions and defaults; bank holder, account (encrypted), IFSC, UPI ID, QR; theme; menu links. Always on |
 | My Space | My Child, Requests to School, Fee Dues & Pay, My Payslips, My Teaching Performance, My Account, My Preferences | Parent pay page with online pay or bank transfer + UTR |
 | Platform Console | Schools & Plans | Plan per school, module and sub-menu switches, add-ons, mobile app on/off |
 | Help | User Guide & Demo | Guided demos, every menu explained, what each role sees |
@@ -94,7 +95,7 @@ Each school (client) has its own sign-in page at `<school>.yourapp.com`, branded
 
 ## User and role management
 
-Settings → **Users** is open to Admins, and to anyone given the screen by designation or personally (e.g. a Vice Principal who is a Teacher).
+Operations → **Users** is open to Admins, and to anyone given the screen by designation or personally (e.g. a Vice Principal who is a Teacher).
 
 - **No approvals:** accounts open when the registration details match the student or staff record.
 - **Change role, designation or status** (Active, Locked, Deleted) for anyone; changes apply at the next sign-in and are logged with who and when.
@@ -103,7 +104,7 @@ Settings → **Users** is open to Admins, and to anyone given the screen by desi
 - **Reset password:** emails a set-password link. Only the Admin role, or a person the Admin gives the permission to, sees it.
 - **Rules:** nobody changes their own role; only an Admin can give the Admin role.
 
-Settings → **Roles & Permissions** has three tabs (from release 7.1; access by department from 7.4; access levels and summary from 7.5):
+Operations → **Roles & Permissions** has three tabs (from release 7.1; access by department from 7.4; access levels and summary from 7.5):
 
 - **User management:** every user profile (role), the **department** it belongs to, the designations it offers, how many people have it and how many screens it opens. Departments can be renamed (Parents have none). New profiles (e.g. Hostel Warden, Transport Manager) are added here with a department, starting screens and their own designations (Professional plan and above).
 - **Permissions by department:** every menu and sub-menu of the side menu as a tree, per department, each set to No access, Read only or Full access. Every profile in a department has the same access; the Admin profile always has full access.
@@ -206,7 +207,7 @@ Server side: `services/sms/dispatcher.mjs` sends queued messages with retries; `
   - Notification choices; safety messages are always sent.
   - Parents: their linked children, and asking to link a sibling.
   - Asking to close the account.
-- **School back office (Settings → Users):**
+- **School back office (Operations → Users):**
   - Edit anyone's name, email, mobile and linked children.
   - Handle link and close requests.
   - Delete an account (Edit → Status Deleted → reason → confirm): the sign-in is removed and a copy is kept in the view-only archive; fees, marks and receipts stay.
@@ -388,7 +389,7 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 
 **Main menu from every screen.** Every screen has a **⌂ Main menu** button in the top bar and a **Main menu** item at the top of the side menu. In the phone app, every tab except Home has a **‹** back button to Home.
 
-**Designations follow the role (Settings → Users).** When you add or edit a user, the designation list shows only that role's designations:
+**Designations follow the role (Operations → Users).** When you add or edit a user, the designation list shows only that role's designations:
 
 | Role | Designations offered |
 | --- | --- |
@@ -409,7 +410,7 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 **Create an account from the app.** The phone app's sign-in page has **Create an account**, for parents and for staff (Teacher, Front Office, Transport team, Accountant, Principal).
 - Staff pick their designation from their role's list.
 - Parents give their child's admission number.
-- The account goes into the same users table as Pending. It shows at the top of **Settings → Users** for approval, with the role and designation asked for already filled in.
+- The account goes into the same users table as Pending. It shows at the top of **Operations → Users** for approval, with the role and designation asked for already filled in.
 - Passwords are never emailed.
 
 **View as Profile (Admin only).** A new menu on the Main menu and in the side menu shows the app as a Parent, Teacher (class coordinator), Teacher + Vice Principal, Teacher + Head of Teaching Staff, Principal, Accountant, Front Office or Transport team. No sign-in is needed.
@@ -443,7 +444,7 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 
 - Each row shows the profile, its department (**Change** to rename it), the designations it offers (add or remove), how many people have it, and how many screens it opens (click to go to Role permissions).
 - **Add a user profile:** name, department, the profile whose screens it starts with, and its designations. A school-added profile can be removed once nobody has it.
-- Settings → Users shows each person's department under their role, and Add user shows the department next to the role.
+- Operations → Users shows each person's department under their role, and Add user shows the department next to the role.
 - Existing designation extras (Vice Principal, Head of Teaching Staff) still work; they are no longer edited in the app.
 - **Remove any designation (release 7.2):** every designation under *Designations offered* has a **×**, the standard ones included. It is refused while someone in that profile holds it (change their designation in Users first), and a profile keeps at least one. A removed designation is no longer offered in Add user, Edit user or sign-up; typing it in again brings it back. A profile copied from another also drops what was removed there.
 - **Database (`014_role_departments.sql`):** `role_departments` (standard + school renames, row-level security), `roles.department` for school-added profiles, `department_of()`, `set_role_department()`; `v_user_directory` now includes the department. `015_designation_removals.sql`: `role_designation_removals`, `designations_for()` leaves removed ones out, `remove_role_designation()` (refused while held or for the last one), `add_role_designation()`.
@@ -555,7 +556,7 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 
 ## Added 18 Nov 2026 (release 9, revised in 9.1)
 
-**Users screen (Settings → Users).**
+**Users screen (Operations → Users).**
 - **Filters:** search (name, email, mobile, designation or student), **Role**, **Department** and **Status** (Waiting for approval, Active, Locked).
 - **Columns:** Name, Sign-in ID, Role, **Department**, Designation, **Student (parents)**, **Created**, Last sign-in, Status.
   - **Student (parents):** each child's name, grade and admission number.
@@ -653,23 +654,23 @@ Charts have a legend, a tooltip on hover and keyboard focus, a **Show as table**
 
 ### Settings menu
 
-Screens that set up the school and the app, rather than day-to-day school work, are in one **Settings** menu. It replaces Operations.
+Screens that set up the school and the app, rather than day-to-day school work, are in a **Settings** menu. **Operations** keeps user management and data upload (revised in release 11.1).
 
-| Group | Screens |
-| --- | --- |
-| People & access | Users; Roles & Permissions |
-| School setup | Appearance & Branding; Website & Links; Web & App Screens; Templates; Bank & Payment Details (moved from Accounts) |
-| Messages | SMS Gateway; Email & SMS Outbox |
-| Data | Data Import |
+| Menu | Group | Screens |
+| --- | --- | --- |
+| Operations | User management | Users; Roles & Permissions |
+| Operations | Data upload | Data Import |
+| Settings | School setup | Appearance & Branding; Website & Links; Web & App Screens; Templates; Bank & Payment Details (moved from Accounts) |
+| Settings | Messages | SMS Gateway; Email & SMS Outbox |
 
 - **Who sees what is unchanged.** Screen codes stay the same, so role, department, designation and personal permissions carry over. Settings shows only the screens a person already had. For example, the Accountant sees Bank & Payment Details, Templates and the Outbox.
-- **Always on.** The Platform Console can't switch Settings off for a school, so the Admin can always reach Users and Roles. Single screens inside it can still be switched off.
+- **Always on.** The Platform Console can't switch Operations or Settings off for a school, so the Admin can always reach Users and Roles. Single screens inside them can still be switched off.
 - **Not moved:** My Preferences and My Account (personal, in My Space), View as Profile (Admin tool, its own menu), Fee Structure and Concessions (used in fee work, in Fees), and Classes & Sections (in Academics).
-- **Database (`024_settings_menu.sql`):** the Operations menu and plan feature become Settings; Bank & Payment Details moves under Settings; `menus.menu_group` holds the groups; a trigger stops Settings being switched off.
+- **Database:** `024_settings_menu.sql` turns the Operations menu and plan feature into Settings, moves Bank & Payment Details under it, adds `menus.menu_group` for the groups and a trigger that stops Settings being switched off. `025_operations_menu.sql` brings Operations back with Users, Roles & Permissions and Data Import (and the self sign-up, custom roles and photo import functions), gives everyone who could open those screens the Operations menu, and stops Operations being switched off too.
 
 ## Database schema summary
 
-PostgreSQL 15+, twenty-four migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
+PostgreSQL 15+, twenty-five migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
 
 | File | Adds | Key tables, views and functions |
 | --- | --- | --- |
@@ -697,6 +698,7 @@ PostgreSQL 15+, twenty-four migration files loaded in order. Every table carries
 | 022_account_source.sql | Accounts come from registration | users.created_via (WEBSITE / APP / ADMIN / SETUP), admin_add_reason; admin_added trigger (Admin only); register_parent_via(); v_user_source |
 | 023_register_no_approval.sql | Nobody waits for approval | register_staff_via() (employee code, name, email/mobile on the staff record), role_for_designation(), users.staff_id; PENDING removed from users_status_check |
 | 024_settings_menu.sql | Settings menu | Operations menu and feature renamed Settings; ACC_BANK moved under it; menus.menu_group; Settings can't be switched off (trigger) |
+| 025_operations_menu.sql | Operations for user management and data upload | Operations menu and feature again, with OPS_USERS, OPS_ROLES, OPS_IMPORT (menu_group User management / Data upload); permissions copied to the Operations heading; Operations and Settings can't be switched off |
 
 The test build keeps the same entities in browser memory (`app/src/data`) and runs the same rules in JavaScript (`app/src/lib/logic.js`).
 
@@ -823,7 +825,7 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 3. **Upload existing** — HTML is used directly. A PDF, Word file or image is kept as the reference copy, and the layout is rebuilt with placeholders.
 4. **Choose who uses it** — the template used is the user's choice, else their role's, else the school default, else the standard.
 
-**Data import (Settings → Data Import).** Students (with guardians) and staff in the test build; fees, marks and payroll history follow the same pattern.
+**Data import (Operations → Data Import).** Students (with guardians) and staff in the test build; fees, marks and payroll history follow the same pattern.
 
 1. **Upload** an Excel (.xlsx), CSV, or a photo (.jpg / .png) of a register. Photos go through Amazon Textract in production; in the test build the rows are typed or pasted.
 2. **Map columns.** The app suggests a field for each heading from a synonym list ("Adm No" → admission no., "Father Name" → guardian name). A saved mapping is reused automatically when the headings match.
@@ -847,9 +849,9 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 
 One-time setup: create the dev, preprod and prod environments in GitHub, add required reviewers to preprod and prod, and add the secret `AWS_DEPLOY_ROLE_ARN` (an IAM role for GitHub OIDC).
 
-**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the twenty-four migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
+**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the twenty-five migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
-**Automated tests (release 10).** See `docs/TEST_REPORT.md`: 62 app tests, 39 SQL check groups (007–024), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 26 web end-to-end tests (including the dashboard sections, staff registration against the staff record, Add user for the Admin only with a reason, copying a returning person's details from the archive, the Users filters, columns, paging and Refresh, parent sign-up checked against the student record, delete as a status with the view-only archive, reset password by permission, the question-paper flow from topics to approval and print, the question bank and blueprints, every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations, the collapsed side menu, permissions by department with access levels, read-only screens, the access summary and deleting a profile) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
+**Automated tests (release 10).** See `docs/TEST_REPORT.md`: 62 app tests, 40 SQL check groups (007–025), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 26 web end-to-end tests (including the dashboard sections, staff registration against the staff record, Add user for the Admin only with a reason, copying a returning person's details from the archive, the Users filters, columns, paging and Refresh, parent sign-up checked against the student record, delete as a status with the view-only archive, reset password by permission, the question-paper flow from topics to approval and print, the question bank and blueprints, every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations, the collapsed side menu, permissions by department with access levels, read-only screens, the access summary and deleting a profile) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
 
 **Earlier automated tests.** `npm test` ran 21 checks on the business rules (including the approved pickup list, route sheets, the attendant-tracking switch, requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
 
@@ -868,7 +870,7 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - [ ] Phone app (`#/p/mobile`, school GVS) → Create an account as School staff: Kavya Iyer, kavya.iyer@example.com, employee code EMP-0131 → the account opens at once as Teacher · PRT
 - [ ] Admin: Dashboard → Students (arrows, boys and girls, columns per class with grade limits; Edit grade limits) → Staff → Transport → Fees → Enrolment (filter by Mobile app)
 - [ ] Admin: Web & App Screens → Front Office → Gate Desk "App only" → Send for approval; Principal approves; Front Office no longer has Gate Desk on the website, but has it in the phone preview
-- [ ] Admin: side menu → Settings → People & access, School setup (Bank & Payment Details now here), Messages, Data; Accountant: Settings shows only Bank & Payment Details, Templates and the Outbox; Platform team: Schools & Plans → Settings shows Always on
+- [ ] Admin: side menu → Operations → User management (Users, Roles & Permissions), Data upload (Data Import); Settings → School setup (Bank & Payment Details now here), Messages; Accountant: no Operations, Settings shows only Bank & Payment Details, Templates and the Outbox; Platform team: Schools & Plans → Operations and Settings show Always on
 - [ ] Anyone: Help → User Guide & Demo → run a guided demo with Start / Next step
 
 - [ ] Parent: Requests to School → Leave for next week; Coordinator (Sonia) approves; Attendance shows *On leave*; the route sheet says *On leave*

@@ -10,7 +10,7 @@ const Ctx = createContext(null);
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) { const d = JSON.parse(raw); if (d.version === 9) { (d.links || []).forEach((l) => { if (l.under === 'OPERATIONS') l.under = 'SETTINGS'; }); return normalizeUsers(d); } }
+    if (raw) { const d = JSON.parse(raw); if (d.version === 9) { return normalizeUsers(d); } }
   } catch (e) { /* storage blocked — run from memory only */ }
   return buildSeed();
 }

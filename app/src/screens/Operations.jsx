@@ -5,7 +5,7 @@ import { Page, Card, Field, Input, Select, Status, Modal, Html, Tabs, Switch } f
 import { dmon } from '../lib/format.js';
 import { log, resolveTemplate, renderFor, categoryName, tenantOf } from '../lib/logic.js';
 import { CATEGORIES, FIELDS, SAMPLE, renderTemplate, sanitize } from '../data/templates.js';
-import { MENU, ROLES, ACCESS, LABEL, PLANS, canSee, FUNCTIONS, funcOn, mobileTabs } from '../data/menu.js';
+import { MENU, ROLES, ACCESS, LABEL, PLANS, canSee, FUNCTIONS, funcOn, mobileTabs, ALWAYS_ON } from '../data/menu.js';
 import { PRESETS, TEMPLATES, contrast, accessible } from '../lib/theme.js';
 import { allRoles, roleName, rolePerms, accessLevel, accessSource, screensFor, departments, syncDeptPerms, defaultScreens, baseRoleOf, canManageUsers, accountEmail, createAccount, idType, isGmail, findUser } from '../lib/auth.js';
 import { designationsFor, fitDesignation, designationProblem, departmentOf, STANDARD_PROFILES } from '../data/designations.js';
@@ -511,8 +511,8 @@ export function Platform() {
         <Card title={t.name} right={<Select value={t.plan} onChange={(e) => { mutate((d) => { d.tenants.find((y) => y.id === sel).plan = e.target.value; }); notify('Plan changed — menus update straight away'); }} options={PLANS.map((p) => [p.code, `${p.name} (${p.range})`])} />}>
           <p className="small muted">Renews {t.renews}. Changes are written to the config audit log. Sign in to this school as any role to see the result.</p>
           {MENU.filter((m) => !['PLATFORM', 'SELF'].includes(m.code)).map((m) => <div key={m.code} style={{ borderTop: '1px solid var(--line)', padding: '8px 0' }}>
-            <div className="row">{m.code === 'SETTINGS' ? <span className="pill">Always on</span> : <Switch on={isOn(m.code, m.min)} label={m.label} onClick={() => toggle(m.code, m.min)} />}<b>{m.label}</b>{t.overrides[m.code] !== undefined && <span className="pill info">{t.overrides[m.code] ? 'Add-on' : 'Switched off'}</span>}</div>
-            {(m.code === 'SETTINGS' || isOn(m.code, m.min)) && <div className="row" style={{ paddingLeft: 44, marginTop: 6 }}>{m.items.filter((i) => i[0][0] !== '#').map((i) => <label key={i[0]} className="row small" style={{ marginRight: 10 }}>
+            <div className="row">{ALWAYS_ON.includes(m.code) ? <span className="pill">Always on</span> : <Switch on={isOn(m.code, m.min)} label={m.label} onClick={() => toggle(m.code, m.min)} />}<b>{m.label}</b>{t.overrides[m.code] !== undefined && <span className="pill info">{t.overrides[m.code] ? 'Add-on' : 'Switched off'}</span>}</div>
+            {(ALWAYS_ON.includes(m.code) || isOn(m.code, m.min)) && <div className="row" style={{ paddingLeft: 44, marginTop: 6 }}>{m.items.filter((i) => i[0][0] !== '#').map((i) => <label key={i[0]} className="row small" style={{ marginRight: 10 }}>
               <input type="checkbox" checked={isOn(i[0], i[2])} onChange={() => toggle(i[0], i[2])} />{i[1]}{t.overrides[i[0]] && rank < i[2] ? ' (add-on)' : ''}{!isOn(i[0], i[2]) && rank < i[2] ? <span className="muted"> · {PLANS[i[2] - 1].name}+</span> : ''}</label>)}</div>}
           </div>)}
           <h3 style={{ marginTop: 16 }}>Functions</h3>

@@ -1,14 +1,13 @@
--- Checks for 024 (Settings menu). Rolled back.  Expect NOTICE: Settings menu ok
+-- Checks for 024 (Settings menu; Users, Roles and Data Import moved back to Operations in 025). Rolled back.  Expect NOTICE: Settings menu ok
 \set ON_ERROR_STOP 1
 SET client_min_messages = notice;
 BEGIN;
 DO $$ BEGIN
-  ASSERT NOT EXISTS (SELECT 1 FROM menus WHERE code = 'OPERATIONS'), 'Operations is gone';
   ASSERT (SELECT label FROM menus WHERE code = 'SETTINGS' AND parent_id IS NULL) = 'Settings', 'Settings is a top menu';
   ASSERT (SELECT p.code FROM menus m JOIN menus p ON p.menu_id = m.parent_id WHERE m.code = 'ACC_BANK') = 'SETTINGS', 'bank details under Settings';
   ASSERT NOT EXISTS (SELECT 1 FROM menus m JOIN menus p ON p.menu_id = m.parent_id
-                     WHERE m.code IN ('OPS_USERS', 'OPS_ROLES', 'OPS_TEMPLATES', 'OPS_IMPORT', 'OPS_CHANNELS', 'OPS_APPEARANCE', 'OPS_WEBSITE', 'OPS_SMS') AND p.code <> 'SETTINGS'), 'setup screens under Settings';
-  ASSERT (SELECT menu_group FROM menus WHERE code = 'OPS_USERS') = 'People & access', 'grouped';
+                     WHERE m.code IN ('OPS_TEMPLATES', 'OPS_CHANNELS', 'OPS_APPEARANCE', 'OPS_WEBSITE', 'OPS_SMS') AND p.code <> 'SETTINGS'), 'setup screens under Settings';
+  ASSERT (SELECT menu_group FROM menus WHERE code = 'OPS_SMS') = 'Messages', 'grouped';
   ASSERT EXISTS (SELECT 1 FROM role_menu_permissions p JOIN roles r ON r.role_id = p.role_id JOIN menus m ON m.menu_id = p.menu_id
                  WHERE r.code = 'ADMIN' AND m.code = 'ACC_BANK'), 'permissions carried over';
   BEGIN

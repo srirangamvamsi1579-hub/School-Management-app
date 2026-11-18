@@ -28,6 +28,7 @@ Run the files in order. Each one builds on the one before.
 | 22 | `022_account_source.sql` | Accounts come from registration: `users.created_via` (WEBSITE, APP, ADMIN, SETUP) and `admin_add_reason` (required for ADMIN); `admin_added` trigger refuses ADMIN-created accounts unless the person acting is an Admin; `register_parent_via()`; `v_user_source` |
 | 23 | `023_register_no_approval.sql` | Nobody waits for approval: `register_staff_via()` matches employee code, name and the email or mobile on the staff record and creates the account Active with the role from `role_for_designation()`; `users.staff_id`; PENDING removed from `users_status_check` (older pending accounts became Active or Locked) |
 | 24 | `024_settings_menu.sql` | Settings menu: the Operations menu and plan feature become `SETTINGS`; Bank & Payment Details (`ACC_BANK`) moves under it; `menus.menu_group` for the groups; trigger `settings_always_on` stops a school switching Settings off |
+| 25 | `025_operations_menu.sql` | Operations menu back for user management and data upload: `OPS_USERS`, `OPS_ROLES` (User management) and `OPS_IMPORT` (Data upload) move under a new `OPERATIONS` menu and plan feature; anyone with those screens gets the Operations heading; `settings_always_on` now covers Operations and Settings |
 
 ```bash
 createdb school

@@ -44,18 +44,19 @@ export const MENU = [
   { code: 'PAYROLL', label: 'Payroll', icon: 'wallet', min: 2, items: [['PAY_RUN', 'Run Payroll', 2], ['PAY_SLIPS', 'Payslips', 2]] },
   { code: 'ACCOUNTS', label: 'Accounts', icon: 'chart', min: 1, items: [
     ['ACC_STMT', 'Account Statement', 3], ['ACC_EXP', 'Income & Expenses', 3]] },
+  // Operations: user management and data upload. Always on, so the Admin can always reach Users and Roles.
+  { code: 'OPERATIONS', label: 'Operations', icon: 'shield', min: 1, items: [
+    ['#U', 'User management'], ['OPS_USERS', 'Users', 1], ['OPS_ROLES', 'Roles & Permissions', 1],
+    ['#D', 'Data upload'], ['OPS_IMPORT', 'Data Import', 1]] },
   { code: 'SELF', label: 'My Space', icon: 'user', min: 1, items: [
     ['SELF_CHILD', 'My Child', 1], ['SELF_REQUESTS', 'Requests to School', 1], ['SELF_FEES', 'Fee Dues & Pay', 1], ['SELF_PAYSLIP', 'My Payslips', 2], ['SELF_MYPERF', 'My Teaching Performance', 2], ['SELF_PROFILE', 'My Account', 1], ['SELF_PREFS', 'My Preferences', 1]] },
   // Admin only: see the app as each profile sees it, without signing in as them
   { code: 'VIEWAS', label: 'View as Profile', icon: 'eye', min: 1, items: [['VA_PARENT', 'Parent', 1], ['VA_TEACHER', 'Teacher (class coordinator)', 1], ['VA_VP', 'Teacher + Vice Principal', 1], ['VA_HOTS', 'Teacher + Head of Teaching Staff', 1], ['VA_PRINCIPAL', 'Principal', 1], ['VA_ACCOUNTANT', 'Accountant', 1], ['VA_FRONT_OFFICE', 'Front Office', 1], ['VA_TRANSPORT', 'Transport team', 1]] },
   { code: 'PLATFORM', label: 'Platform Console', icon: 'cloud', min: 1, items: [['PLT_SCHOOLS', 'Schools & Plans', 1]] },
-  // Settings: how the school and the app are set up (people and access, branding, connections, data). Not day-to-day school work.
-  // Always on for the school (Platform Console can't switch it off) so the Admin can always reach Users and Roles.
+  // Settings: how the school and the app are set up (branding, website, screens, templates, bank details, messages).
   { code: 'SETTINGS', label: 'Settings', icon: 'settings', min: 1, items: [
-    ['#A', 'People & access'], ['OPS_USERS', 'Users', 1], ['OPS_ROLES', 'Roles & Permissions', 1],
     ['#S', 'School setup'], ['OPS_APPEARANCE', 'Appearance & Branding', 1], ['OPS_WEBSITE', 'Website & Links', 1], ['OPS_CHANNELS', 'Web & App Screens', 1], ['OPS_TEMPLATES', 'Templates', 1], ['ACC_BANK', 'Bank & Payment Details', 1],
-    ['#M', 'Messages'], ['OPS_SMS', 'SMS Gateway', 1], ['OPS_OUTBOX', 'Email & SMS Outbox', 1],
-    ['#D', 'Data'], ['OPS_IMPORT', 'Data Import', 1]] },
+    ['#M', 'Messages'], ['OPS_SMS', 'SMS Gateway', 1], ['OPS_OUTBOX', 'Email & SMS Outbox', 1]] },
   { code: 'HELP', label: 'Help', icon: 'book', min: 1, items: [['HELP_GUIDE', 'User Guide & Demo', 1]] }
 ];
 
@@ -76,6 +77,9 @@ export const ACCESS = {
   PLATFORM: ['PLT_SCHOOLS', 'OPS_CHANNELS', 'HELP_GUIDE']
 };
 
+// Modules a school can't switch off (Platform Console shows them as Always on)
+export const ALWAYS_ON = ['OPERATIONS', 'SETTINGS'];
+
 export const MIN_RANK = Object.fromEntries(MENU.flatMap((m) => m.items.filter((i) => i[0][0] !== '#').map((i) => [i[0], Math.max(i[2], m.min)])));
 export const MODULE_MIN = Object.fromEntries(MENU.map((m) => [m.code, m.min]));
 export const LABEL = Object.fromEntries(MENU.flatMap((m) => m.items.map((i) => [i[0], i[1]])));
@@ -87,7 +91,7 @@ export function canSee(code, role, rank, overrides = {}, perms = null) {
   const list = perms?.[role] || ACCESS[role] || [];
   if (!list.includes(code)) return false;
   const mod = MENU.find((m) => m.items.some((i) => i[0] === code));
-  const modOn = mod.code === 'SETTINGS' || (overrides[mod.code] !== undefined ? overrides[mod.code] : rank >= mod.min);
+  const modOn = ALWAYS_ON.includes(mod.code) || (overrides[mod.code] !== undefined ? overrides[mod.code] : rank >= mod.min);
   if (!modOn && role !== 'PLATFORM') return false;
   const on = overrides[code] !== undefined ? overrides[code] : rank >= (MIN_RANK[code] || 1);
   return on || role === 'PLATFORM';
@@ -97,11 +101,11 @@ export function canSee(code, role, rank, overrides = {}, perms = null) {
 // the platform team switches it on for the school (Platform Console → Schools & Plans → Functions).
 export const FUNCTIONS = [
   { code: 'FN_ATTENDANT_TRACKING', module: 'TRANSPORT', name: 'Bus attendant boarding tracking (Boarded / No-show)', minRank: null },
-  { code: 'FN_SELF_SIGNUP', module: 'SETTINGS', name: 'Self sign-up with Gmail or mobile', minRank: 1 },
+  { code: 'FN_SELF_SIGNUP', module: 'OPERATIONS', name: 'Self sign-up with Gmail or mobile', minRank: 1 },
   { code: 'FN_SMS_OTP', module: 'SETTINGS', name: 'OTP and alerts by SMS (needs an SMS provider)', minRank: 2 },
   { code: 'FN_CUSTOM_TEMPLATES', module: 'SETTINGS', name: 'Edit and upload own templates', minRank: 2 },
-  { code: 'FN_CUSTOM_ROLES', module: 'SETTINGS', name: 'Custom roles', minRank: 3 },
-  { code: 'FN_IMAGE_IMPORT', module: 'SETTINGS', name: 'Import from photos / scans (OCR)', minRank: 3 }
+  { code: 'FN_CUSTOM_ROLES', module: 'OPERATIONS', name: 'Custom roles', minRank: 3 },
+  { code: 'FN_IMAGE_IMPORT', module: 'OPERATIONS', name: 'Import from photos / scans (OCR)', minRank: 3 }
 ];
 export function funcOn(tenant, code) {
   if (tenant.overrides?.[code] !== undefined) return !!tenant.overrides[code];
