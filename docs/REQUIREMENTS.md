@@ -884,7 +884,7 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 3. **Upload existing** — HTML is used directly. A PDF, Word file or image is kept as the reference copy, and the layout is rebuilt with placeholders.
 4. **Choose who uses it** — the template used is the user's choice, else their role's, else the school default, else the standard.
 
-**Data import (Operations → Data Import).** Students (with guardians) and staff in the test build; fees, marks and payroll history follow the same pattern.
+**Data import (Operations → Data Import).** 20 conversion templates, one per menu (release 12, see above), plus any Excel, CSV or photo for students (with guardians) and staff through the steps below.
 
 1. **Upload** an Excel (.xlsx), CSV, or a photo (.jpg / .png) of a register. Photos go through Amazon Textract in production; in the test build the rows are typed or pasted.
 2. **Map columns.** The app suggests a field for each heading from a synonym list ("Adm No" → admission no., "Father Name" → guardian name). A saved mapping is reused automatically when the headings match.
