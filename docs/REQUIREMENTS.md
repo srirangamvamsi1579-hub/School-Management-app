@@ -864,7 +864,7 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - Should parent sign-up also ask for the student's date of birth? Classmates may know a child's name, grade and admission number.
 - Plan prices per tier and add-on, to fill `plan_prices`.
 - SMS OTP provider (MSG91, Gupshup or Amazon SNS) and the DLT-approved OTP template.
-- Can parents sign up themselves, or only accounts the school creates? (Both are built; self sign-up is a plan function.)
+- ~~Can parents sign up themselves?~~ — decided: accounts come from registration on the website or in the app; the Admin adds someone only as an exception, with a reason (release 9.3).
 - Should the teacher index be shown to teachers themselves, or only to the Principal?
 - Admission fee and offer expiry: is 7 days right, and does an unaccepted offer move to Opted out automatically?
 - ~~Cut-off times~~ — decided: no cut-offs; a route sheet is shared with every driver instead.
