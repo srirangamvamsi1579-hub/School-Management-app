@@ -3,7 +3,7 @@ import { useStore } from '../data/store.js';
 import { ROLES, PLANS } from '../data/menu.js';
 import { Select, Field, Input, Html, Tabs } from '../components/ui.jsx';
 import { idType, normId, isGmail, isEmail, isMobile, normMobile, passwordProblems, findUser, sendOtp, checkOtp, createAccount, accountEmail, signIn, setPassword } from '../lib/auth.js';
-import { designationsFor, fitDesignation, designationProblem, SIGNUP_ROLES } from '../data/designations.js';
+import { designationsFor, fitDesignation, designationProblem, signupRoles } from '../data/designations.js';
 import { roleName } from '../lib/auth.js';
 import { tenantOf, log } from '../lib/logic.js';
 
@@ -208,7 +208,7 @@ export function SignUp({ onPeek = () => {}, onDone, compact = false }) {
       {step === 5 && <>
         <h2>Your profile</h2>
         <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
-          <Field label="I am a"><Select value={f.requestedRole} onChange={(e) => { setF({ ...f, requestedRole: e.target.value, designation: fitDesignation(db, e.target.value, f.designation) }); setErr(''); }} options={SIGNUP_ROLES.map((r) => [r, r === 'PARENT' ? 'Parent / guardian' : roleName(db, r) + ' (staff)'])} /></Field>
+          <Field label="I am a"><Select value={f.requestedRole} onChange={(e) => { setF({ ...f, requestedRole: e.target.value, designation: fitDesignation(db, e.target.value, f.designation) }); setErr(''); }} options={signupRoles(db).map((r) => [r, r === 'PARENT' ? 'Parent / guardian' : roleName(db, r) + ' (staff)'])} /></Field>
           {f.requestedRole === 'PARENT' ? <Field label="Child's admission number" req><Input value={f.admissionNo} onChange={set('admissionNo')} placeholder="ADM-2025-0231" /></Field>
             : <Field label={`Designation in ${roleName(db, f.requestedRole)}`} req><Select value={f.designation} onChange={set('designation')} options={[['', 'Pick a designation'], ...designationsFor(db, f.requestedRole)]} /></Field>}
           {type === 'MOBILE' ? <Field label="Gmail for account emails (recommended)"><Input value={f.email} onChange={set('email')} placeholder="name@gmail.com" /></Field>

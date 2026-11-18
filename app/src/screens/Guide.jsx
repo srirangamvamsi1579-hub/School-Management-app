@@ -6,7 +6,7 @@ import { Page, Card, Tabs } from '../components/ui.jsx';
 import { MENU, ACCESS, PLANS, MIN_RANK, LABEL, CHANNELS, PHONE_READY, channelIn, publishedLayout, mobileTabs, webScreens } from '../data/menu.js';
 import { SCREEN_HELP, WORKFLOWS, DEMO_PEOPLE } from '../data/guide.js';
 import { tenantOf } from '../lib/logic.js';
-import { roleName } from '../lib/auth.js';
+import { roleName, rolePerms } from '../lib/auth.js';
 
 const KEY = 'school-demo-run';
 const ROLE_ORDER = ['PARENT', 'TEACHER', 'FRONT_OFFICE', 'TRANSPORT', 'PRINCIPAL', 'ACCOUNTANT', 'ADMIN', 'PLATFORM'];
@@ -70,7 +70,7 @@ export default function HelpGuide() {
   const layout = publishedLayout(t);
   const rank = PLANS.find((p) => p.code === t.plan).rank;
   const planOf = (code) => PLANS.find((p) => p.rank === (MIN_RANK[code] || 1))?.name;
-  const whoCan = (code) => ROLE_ORDER.filter((r) => (r === 'PLATFORM' ? ACCESS.PLATFORM.includes(code) : (db.perms?.[r] || ACCESS[r] || []).includes(code)));
+  const whoCan = (code) => ROLE_ORDER.filter((r) => (r === 'PLATFORM' ? ACCESS.PLATFORM.includes(code) : (rolePerms(db, r)).includes(code)));
   const body = (
     <>
       <Tabs tabs={[['demos', `Guided demos (${WORKFLOWS.length})`], ['menus', 'Every menu explained'], ['roles', 'What each role sees'], ['start', 'Getting started']]} value={tab} onChange={setTab} />
@@ -99,7 +99,7 @@ export default function HelpGuide() {
         </Card>)}
       </div>}
 
-      {tab === 'roles' && <div className="grid g2" style={{ marginTop: 12 }}>{ROLE_ORDER.map((r) => { const perms = { [r]: db.perms?.[r] || ACCESS[r] || [] };
+      {tab === 'roles' && <div className="grid g2" style={{ marginTop: 12 }}>{ROLE_ORDER.map((r) => { const perms = { [r]: rolePerms(db, r) };
         const web = webScreens(t, r, perms); const app = mobileTabs({ ...t, mobile: { enabled: true } }, r, perms);
         return <Card key={r} title={roleName(db, r)} right={HOME_USER[r] && <button className="btn sm" onClick={() => signInAs(login, db, HOME_USER[r])}>Sign in as {DEMO_PEOPLE[HOME_USER[r]].split(' (')[0]}</button>}>
           <div className="small"><b>Website ({web.length}):</b> {MENU.filter((m) => m.items.some((i) => web.includes(i[0]))).map((m) => `${m.label} (${m.items.filter((i) => web.includes(i[0])).map((i) => i[1]).join(', ')})`).join(' · ')}</div>

@@ -13,11 +13,11 @@ before(async () => { server = await serve(DIST); browser = await chromium.launch
 after(async () => { await browser?.close(); server?.close(); });
 
 // Most tests click through the side menu, so they start with every group expanded (the default is collapsed;
-// see the 'side menu starts collapsed' test). Set once per browser context; a test's own toggles are kept.
+// see the 'side menu starts collapsed' test). Set once per tab; a test's own toggles are kept.
 const { MENU: ALL_MENUS } = await import('../../src/data/menu.js');
 const EXPANDED = JSON.stringify(Object.fromEntries(ALL_MENUS.map((m) => [m.code, true])));
 async function open(ctx, hash = '#/login', { collapsed = false } = {}) {
-  if (!collapsed && !ctx._expanded) { ctx._expanded = true; await ctx.addInitScript((v) => { if (!localStorage.getItem('school-side-open')) localStorage.setItem('school-side-open', v); }, EXPANDED); }
+  if (!collapsed && !ctx._expanded) { ctx._expanded = true; await ctx.addInitScript((v) => { if (!sessionStorage.getItem('school-side-open')) sessionStorage.setItem('school-side-open', v); }, EXPANDED); }
   const page = await ctx.newPage(); page.setDefaultTimeout(8000);
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -218,7 +218,7 @@ test('an account created in the phone app appears in Users for approval', async 
   await page.getByLabel('First name').fill('Kiran'); await page.getByLabel('Last name').fill('Bus'); await page.getByRole('button', { name: 'Next' }).click();
   await page.getByLabel(/Gmail \/ email or mobile/).fill('kiran.bus@example.com'); await page.getByRole('button', { name: 'Send verification code' }).click();
   const code = (await page.locator('text=/\\b\\d{6}\\b/').first().innerText().catch(() => '')).match(/\d{6}/)?.[0]
-    || await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('school-app-demo-v7')); return d.outbox.find((m) => m.to === 'kiran.bus@example.com')?.body.match(/\d{6}/)?.[0]; });
+    || await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('school-app-demo-v8')); return d.outbox.find((m) => m.to === 'kiran.bus@example.com')?.body.match(/\d{6}/)?.[0]; });
   await page.getByLabel('Code').fill(code); await page.getByRole('button', { name: 'Verify' }).click();
   await page.getByLabel('Password', { exact: true }).fill('Strong@123'); await page.getByLabel('Confirm').fill('Strong@123'); await page.getByRole('button', { name: 'Next' }).click();
   await page.getByLabel('I am a').selectOption('TRANSPORT');
@@ -266,7 +266,7 @@ test('Roles & Permissions: User management tab (profiles, departments, designati
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
   const { page, errors } = await open(ctx, '#/s/OPS_ROLES');
   const tabs = (await page.getByRole('tab').allInnerTexts()).map((x) => x.trim());
-  assert.deepEqual(tabs, ['User management', 'Role permissions']);
+  assert.deepEqual(tabs, ['User management', 'Permissions by department']);
   const row = page.locator('tr', { hasText: 'Transport team' });
   assert.match(await row.innerText(), /Transport[\s\S]*Driver[\s\S]*Cleaner/);
   await page.getByRole('button', { name: 'Change department of Teacher' }).click();
@@ -278,7 +278,7 @@ test('Roles & Permissions: User management tab (profiles, departments, designati
   await row.getByText('Route Marshal').waitFor();
   await page.getByPlaceholder(/Librarian, Hostel Warden/).fill('Hostel Warden');
   await page.getByPlaceholder(/Hostel Warden, Assistant Warden/).fill('Hostel Warden, Assistant Warden');
-  await page.getByLabel('Department').last().fill('Hostel');
+  await page.getByLabel('Department', { exact: true }).last().fill('Hostel');
   await page.getByRole('button', { name: 'Add profile' }).click();
   const w = page.locator('tr', { hasText: 'Assistant Warden' });
   await w.waitFor(); assert.match(await w.innerText(), /Hostel Warden[\s\S]*Hostel/);
@@ -296,6 +296,11 @@ test('User management: remove any designation (blocked while someone holds it), 
   const { page, errors } = await open(ctx, '#/s/OPS_ROLES');
   const row = page.locator('tr', { hasText: 'Transport team' });
   await row.getByRole('button', { name: 'Remove Cleaner from Transport team' }).click();
+  const dlg = page.getByRole('dialog', { name: 'Remove this designation?' });
+  await dlg.getByRole('button', { name: 'Cancel' }).click();
+  assert.equal(await row.getByRole('button', { name: 'Remove Cleaner from Transport team' }).count(), 1, 'Cancel keeps it');
+  await row.getByRole('button', { name: 'Remove Cleaner from Transport team' }).click();
+  await dlg.getByRole('button', { name: 'Remove', exact: true }).click();
   await page.locator('.toast', { hasText: 'Removed “Cleaner”' }).waitFor();
   assert.equal(await row.getByRole('button', { name: 'Remove Cleaner from Transport team' }).count(), 0);
   await row.getByRole('button', { name: 'Remove Transport In-charge from Transport team' }).click();
@@ -315,31 +320,80 @@ test('User management: remove any designation (blocked while someone holds it), 
   await ctx.close();
 });
 
-test('side menu starts collapsed; groups open on click, Expand all / Collapse all, and the choice is remembered', async () => {
+test('side menu starts collapsed; groups open on click or Enter; no Expand all; stays as left after a reload', async () => {
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
   const { page, errors } = await open(ctx, '', { collapsed: true });
   await page.getByRole('heading', { name: 'Main menu' }).waitFor();
   const side = page.locator('nav.side');
-  const groups = side.locator('.mod');
-  const n = await groups.count();
+  const n = await side.locator('.mod').count();
   assert.ok(n >= 12, 'every menu group listed');
-  assert.equal(await side.locator('[aria-expanded="true"]').count(), 0, 'all collapsed on the Main menu');
+  assert.equal(await side.locator('[aria-expanded="true"]').count(), 0, 'all collapsed');
+  assert.equal(await side.getByRole('button', { name: /Expand all|Collapse all/ }).count(), 0, 'no Expand all / Collapse all');
   assert.deepEqual(await side.locator('button.item').allInnerTexts(), ['⌂ Main menu'], 'no sub-menus shown');
   await side.getByRole('button', { name: /^Fees/ }).click();
   await side.locator('button.item', { hasText: 'Collect Fee' }).waitFor();
-  assert.equal(await side.locator('[aria-expanded="true"]').count(), 1);
   await side.getByRole('button', { name: /^Fees/ }).press('Enter');
   assert.equal(await side.locator('button.item', { hasText: 'Collect Fee' }).count(), 0, 'keyboard collapses it');
   await page.locator('main').getByRole('button', { name: 'Roles & Permissions' }).click();
-  await side.locator('button.item', { hasText: 'Roles & Permissions' }).waitFor();
-  assert.equal(await side.locator('[aria-expanded="true"]').count(), 1, 'the group of the open screen opens by itself');
-  await side.getByRole('button', { name: 'Expand all' }).click();
-  assert.equal(await side.locator('[aria-expanded="true"]').count(), n);
-  await side.getByRole('button', { name: 'Collapse all' }).click();
-  assert.equal(await side.locator('[aria-expanded="true"]').count(), 0);
+  await page.locator('.crumbs', { hasText: 'Operations / Roles & Permissions' }).waitFor();
+  assert.equal(await side.locator('[aria-expanded="true"]').count(), 0, 'opening a screen does not expand the menu');
   await side.getByRole('button', { name: /^Transport/ }).click();
   await page.reload(); await page.locator('nav.side').waitFor();
-  assert.equal(await page.locator('nav.side [aria-expanded="true"]').count(), 1, 'remembered after reload');
+  assert.equal(await page.locator('nav.side [aria-expanded="true"]').count(), 1, 'kept for this visit');
+  const fresh = await ctx.newPage(); await fresh.goto(server.url); await fresh.locator('nav.side').waitFor();
+  assert.equal(await fresh.locator('nav.side [aria-expanded="true"]').count(), 0, 'a new visit starts collapsed');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('Permissions by department: every menu listed, give a whole menu or single sub-menus, expand/collapse levels; the department gets it', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 1000 } });
+  const { page, errors } = await open(ctx, '#/s/OPS_ROLES');
+  await page.getByRole('tab', { name: 'Permissions by department' }).click();
+  await page.getByRole('option', { name: /^Transport/ }).click();
+  const tree = page.getByRole('tree', { name: 'Menus for Transport' });
+  const { MENU } = await import('../../src/data/menu.js');
+  for (const m of MENU.filter((x) => x.code !== 'PLATFORM')) assert.equal(await tree.getByLabel('All of ' + m.label, { exact: true }).count(), 1, m.label + ' listed');
+  assert.equal(await tree.getByRole('checkbox', { name: 'Collect Fee', exact: true }).count(), 0, 'collapsed at first');
+  await tree.getByRole('checkbox', { name: 'All of Fees', exact: true }).check();
+  await tree.getByRole('button', { name: 'Expand Fees' }).click();
+  assert.ok(await tree.getByRole('checkbox', { name: 'Collect Fee', exact: true }).isChecked(), 'whole menu given');
+  await tree.getByRole('checkbox', { name: 'Collect Fee', exact: true }).uncheck();
+  assert.equal(await tree.getByRole('checkbox', { name: 'All of Fees', exact: true }).getAttribute('aria-checked'), 'mixed', 'some sub-menus');
+  await tree.getByRole('button', { name: 'Collapse Fees' }).click();
+  assert.equal(await tree.getByRole('checkbox', { name: 'Collect Fee', exact: true }).count(), 0);
+  await tree.getByRole('button', { name: 'Expand Exams' }).click();
+  await tree.getByRole('button', { name: /^Expand Exams / }).first().click();      // a group inside Exams
+  assert.ok(await tree.getByRole('checkbox').count() > 20);
+  await page.locator('nav.side button.item', { hasText: /^Transport team$/ }).click();
+  await page.getByRole('region', { name: 'Viewing as another profile' }).waitFor();
+  const items = await page.locator('nav.side button.item').allInnerTexts();
+  assert.ok(items.includes('Dues & Reminders') && !items.includes('Collect Fee'), items.join());
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('User management: delete a profile after confirming (blocked while people have it); add a standard profile; restore', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 1000 } });
+  const { page, errors } = await open(ctx, '#/s/OPS_ROLES');
+  await page.getByRole('button', { name: 'Delete profile Accountant' }).click();
+  await page.locator('.toast', { hasText: 'move them to another profile' }).waitFor();
+  await page.getByRole('button', { name: 'Add Hostel Staff' }).click();
+  const row = page.locator('tr', { hasText: 'Hostel Staff' });
+  assert.match(await row.innerText(), /Hostel & Boarding[\s\S]*Hostel Warden/);
+  await page.getByRole('button', { name: 'Delete profile Hostel Staff' }).click();
+  const dlg = page.getByRole('dialog', { name: 'Delete this profile?' });
+  await dlg.getByRole('button', { name: 'Delete profile' }).click();
+  assert.equal(await page.locator('tr', { hasText: 'Hostel Staff' }).count(), 0);
+  await page.getByRole('button', { name: 'Add Hostel Staff' }).waitFor();
+  await page.evaluate(() => { const k = 'school-app-demo-v8'; const d = JSON.parse(localStorage.getItem(k)); d.users = d.users.filter((u) => u.role !== 'ACCOUNTANT'); localStorage.setItem(k, JSON.stringify(d)); });
+  await page.reload();
+  await page.getByRole('button', { name: 'Delete profile Accountant' }).click();
+  await page.getByRole('dialog', { name: 'Delete this profile?' }).getByRole('button', { name: 'Delete profile' }).click();
+  await page.getByRole('button', { name: 'Restore Accountant' }).waitFor();
+  await page.goto(server.url + '#/s/OPS_USERS'); await page.getByRole('button', { name: 'Add user' }).click();
+  const roles = await page.locator('.modal').getByRole('combobox', { name: /^Role/ }).locator('option').allInnerTexts();
+  assert.ok(!roles.includes('Accountant'), roles.join());
   assert.deepEqual(errors, []);
   await ctx.close();
 });

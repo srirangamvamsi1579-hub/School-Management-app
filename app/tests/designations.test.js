@@ -73,3 +73,35 @@ test('any designation can be removed from a profile, and added back', async () =
   db.roleDesignationsRemoved = {};
   assert.ok(designationsFor(db, 'TRANSPORT').includes('Cleaner'), 'added back');
 });
+
+test('access is set per department: profiles in a department share it; a new department starts from its first profile', async () => {
+  const { rolePerms, departments, syncDeptPerms, screensFor } = await import('../src/lib/auth.js');
+  const { ACCESS } = await import('../src/data/menu.js');
+  const db = buildSeed();
+  assert.ok(db.deptPerms.Transport.includes('TRN_SHEETS'));
+  assert.deepEqual(rolePerms(db, 'ADMIN'), ACCESS.ADMIN, 'Admin always has every screen');
+  db.deptPerms.Transport = db.deptPerms.Transport.filter((c) => c !== 'TRN_SHEETS');
+  assert.ok(!rolePerms(db, 'TRANSPORT').includes('TRN_SHEETS'), 'changing the department changes the profile');
+  db.customRoles.push({ code: 'R_TM', name: 'Transport Manager', basedOn: 'FRONT_OFFICE', department: 'Transport' });
+  syncDeptPerms(db);
+  assert.deepEqual(rolePerms(db, 'R_TM'), db.deptPerms.Transport, 'joining a department gives its screens');
+  db.customRoles.push({ code: 'R_HW', name: 'Hostel Staff', basedOn: 'FRONT_OFFICE', department: 'Hostel & Boarding' });
+  syncDeptPerms(db);
+  assert.ok(departments(db).some((d) => d.name === 'Hostel & Boarding'), 'new department listed');
+  assert.ok(db.deptPerms['Hostel & Boarding'].includes('STU_GATE'), 'starts with its base profile screens');
+  const u = { role: 'R_HW', designation: 'Hostel Warden' };
+  assert.ok(screensFor(db, u, 'R_HW').includes('STU_GATE'));
+  assert.ok(!screensFor(db, u, 'R_HW').some((c) => c.startsWith('VA_')), 'never View as');
+});
+
+test('a profile can be deleted (hidden for built-in, removed for school-added) and restored', async () => {
+  const { allRoles, roleName } = await import('../src/lib/auth.js');
+  const { signupRoles } = await import('../src/data/designations.js');
+  const db = buildSeed();
+  db.removedProfiles = ['ACCOUNTANT'];
+  assert.ok(!allRoles(db).some((r) => r.code === 'ACCOUNTANT'));
+  assert.ok(!signupRoles(db).includes('ACCOUNTANT'), 'not offered at sign-up');
+  assert.equal(roleName(db, 'ACCOUNTANT'), 'Accountant', 'old records still show the name');
+  db.removedProfiles = [];
+  assert.ok(allRoles(db).some((r) => r.code === 'ACCOUNTANT'));
+});

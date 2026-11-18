@@ -1,6 +1,6 @@
 # School Management Platform — Requirements
 
-Updated 17 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos; release 7: opens on a Main menu, designations by role, account creation in the app, Admin View as Profile). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
+Updated 17 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos; release 7: opens on a Main menu, designations by role, account creation in the app, Admin View as Profile; 7.1–7.4: User management with departments, access by department, standard profiles for Indian schools). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
 
 One platform runs Indian K-12 schools of every size, from under 250 to over 1,000 students. Each school gets only the modules its plan includes, and every person sees only the menus their role allows.
 
@@ -103,10 +103,10 @@ Operations → **Users** is open to Admins, and to anyone given the screen by de
 - **Reset password:** emails a set-password link.
 - **Rules:** nobody changes their own role; only an Admin can give the Admin role.
 
-Operations → **Roles & Permissions** has two tabs (from release 7.1):
+Operations → **Roles & Permissions** has two tabs (from release 7.1; access by department from 7.4):
 
 - **User management:** every user profile (role), the **department** it belongs to, the designations it offers, how many people have it and how many screens it opens. Departments can be renamed (Parents have none). New profiles (e.g. Hostel Warden, Transport Manager) are added here with a department, starting screens and their own designations (Professional plan and above).
-- **Role permissions:** the profile × screen matrix.
+- **Permissions by department:** every menu and sub-menu of the side menu as a tree, per department. Every profile in a department opens the same screens; the Admin profile always opens everything.
 
 The Access by designation tab was removed. Rules set there before (Vice Principal and Head of Teaching Staff extras) still apply, but can't be edited in the app.
 
@@ -383,7 +383,7 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 
 **Opens straight on the Main menu.** For testing, the website skips the sign-in page and opens as the school Admin on a new **Main menu** screen. It shows every menu and sub-menu as tiles. The sign-in page is still there through **Switch user** or `#/login`. The phone app still asks people to sign in.
 
-**Side menu starts collapsed (release 7.3).** Every group in the left menu (Students, Fees, Transport…) starts collapsed. Click a group, or press Enter on it, to open it. The group holding the screen you are on opens by itself. **Expand all** and **Collapse all** sit at the top of the menu, and what each person opens is remembered in their browser.
+**Side menu starts collapsed (release 7.3, simplified in 7.4).** Every group in the left menu (Students, Fees, Transport…) starts collapsed. Click a group, or press Enter on it, to open it.
 
 **Main menu from every screen.** Every screen has a **⌂ Main menu** button in the top bar and a **Main menu** item at the top of the side menu. In the phone app, every tab except Home has a **‹** back button to Home.
 
@@ -447,9 +447,49 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 - **Remove any designation (release 7.2):** every designation under *Designations offered* has a **×**, the standard ones included. It is refused while someone in that profile holds it (change their designation in Users first), and a profile keeps at least one. A removed designation is no longer offered in Add user, Edit user or sign-up; typing it in again brings it back. A profile copied from another also drops what was removed there.
 - **Database (`014_role_departments.sql`):** `role_departments` (standard + school renames, row-level security), `roles.department` for school-added profiles, `department_of()`, `set_role_department()`; `v_user_directory` now includes the department. `015_designation_removals.sql`: `role_designation_removals`, `designations_for()` leaves removed ones out, `remove_role_designation()` (refused while held or for the last one), `add_role_designation()`.
 
+## Added 17 Nov 2026 (release 7.4)
+
+**Side menu.** Expand all / Collapse all are gone. Every group starts collapsed when the app is opened. A group stays open for that visit once the person opens it.
+
+**Confirm before removing.** Removing a designation, or deleting a profile, asks for confirmation in a pop-up first.
+
+**Delete a profile.** Every profile except Admin has **Delete**.
+- It is refused while anyone has that profile; move them to another profile in Users first.
+- A deleted profile is no longer offered in Add user, sign-up or View as Profile.
+- A built-in profile can be restored (**Restore …**). A profile the school added is removed together with its designations.
+
+**Standard profiles for Indian schools.** Researched departments, profiles and designations are listed beside Add a user profile, each with a one-click **Add**. The full list and sources are in `docs/INDIAN_SCHOOL_PROFILES.md`.
+
+| Department | Profile | Starts with the screens of |
+| --- | --- | --- |
+| Library | Librarian | Teacher |
+| Laboratories | Lab Staff | Teacher |
+| Sports & Co-curricular | Sports Staff | Teacher |
+| Student Welfare & Health | Counsellor, School Nurse | Teacher / Front Office |
+| Hostel & Boarding | Hostel Staff | Front Office |
+| IT & Systems | IT Staff | Front Office |
+| Estate, Security & Housekeeping | Estate & Support Staff | Front Office |
+| Human Resources | HR Staff | Accountant |
+
+**Permissions by department** (replaces Role permissions).
+- **Departments, not profiles.** Access is set per department, and every profile in a department opens the same screens.
+- **Updated automatically.** Adding a profile to an existing department gives it that department's screens. Adding a profile with a new department, or moving a profile to one, adds that department to the list, starting with the screens of the profile it came from.
+- **Every menu is listed.** All menus of the side menu appear, from Dashboard to Help. View as Profile is shown but locked, because it is Admin only.
+- **Whole menu or single sub-menus.** Tick a main menu to give every sub-menu under it. A part-ticked menu shows a dash, and its counter reads, for example, "5 of 8".
+- **Expand and collapse.** Main menus and the groups inside them (e.g. Exams → Papers) open and close, and all start collapsed.
+- **Reset to standard** puts a department back to its profile's standard screens.
+- The Admin profile always opens every screen. Sub-menus outside the school's plan are marked *Not in plan*.
+
+**Database (`016_department_access.sql`):**
+- `department_menu_permissions` (row-level security; View as Profile refused) holds each department's screens.
+- `sync_department_permissions()` gives new departments their starting list.
+- `set_department_menu()` gives or takes a sub-menu or a whole main menu.
+- `v_user_screens` now uses the department list (Admin keeps its full list), plus designation extras and personal grants.
+- `v_tenant_profiles`, `remove_profile()` (refused for Admin, or while anyone has the profile) and `restore_profile()` handle deleting and restoring profiles.
+
 ## Database schema summary
 
-PostgreSQL 15+, fifteen migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
+PostgreSQL 15+, sixteen migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
 
 | File | Adds | Key tables, views and functions |
 | --- | --- | --- |
@@ -468,6 +508,7 @@ PostgreSQL 15+, fifteen migration files loaded in order. Every table carries `te
 | 013_designations_view_as.sql | Designations by role, View as Profile | role_designations, designations_for(), designation_problem() with deferred constraint triggers on users and user_roles, set_user_designation(); VIEWAS / VA_* menus (Admin only, enforced on role, designation and personal grants); view_as_log, start_view_as(), end_view_as(); v_user_directory |
 | 014_role_departments.sql | Departments per user profile | role_departments, roles.department, department_of(), set_role_department(); v_user_directory with department |
 | 015_designation_removals.sql | Removing designations | role_designation_removals; designations_for() without removed ones; remove_role_designation(), add_role_designation() |
+| 016_department_access.sql | Access by department; deleting a profile | department_menu_permissions, sync_department_permissions(), set_department_menu(); v_user_screens by department; v_tenant_profiles, tenant_profile_removals, remove_profile(), restore_profile() |
 
 The test build keeps the same entities in browser memory (`app/src/data`) and runs the same rules in JavaScript (`app/src/lib/logic.js`).
 
@@ -612,9 +653,9 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 
 One-time setup: create the dev, preprod and prod environments in GitHub, add required reviewers to preprod and prod, and add the secret `AWS_DEPLOY_ROLE_ARN` (an IAM role for GitHub OIDC).
 
-**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the fifteen migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
+**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the sixteen migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
-**Automated tests (release 7.3).** See `docs/TEST_REPORT.md`: 42 app tests, 28 SQL check groups (007–015), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 14 web end-to-end tests (including every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations and the collapsed side menu) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
+**Automated tests (release 7.4).** See `docs/TEST_REPORT.md`: 44 app tests, 30 SQL check groups (007–016), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 16 web end-to-end tests (including every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations, the collapsed side menu, permissions by department and deleting a profile) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
 
 **Earlier automated tests.** `npm test` ran 21 checks on the business rules (including the approved pickup list, route sheets, the attendant-tracking switch, requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
 
@@ -646,6 +687,8 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - [ ] Anyone: Create account with a Gmail → read the code in the test inbox → set a password → try to sign in (waiting for approval)
 - [ ] Anyone: Create account with a mobile number (code shown on screen until SMS is connected)
 - [ ] Admin: Users → Review the new sign-up → pick the role → Active; the person can now sign in
+- [ ] Admin: Roles & Permissions → Permissions by department → Transport → tick Fees (whole menu) → expand it → untick Collect Fee; View as → Transport team shows Fees without Collect Fee
+- [ ] Admin: User management → Add Hostel Staff from the standard list → it appears with department Hostel & Boarding → Delete it (confirm)
 - [ ] Admin: Roles & Permissions → User management → rename Teacher's department; add a profile "Hostel Warden" (department Hostel, designations Hostel Warden, Assistant Warden); Users → Add user → Hostel Warden offers those designations
 - [ ] Front Office: Admissions & Enquiries → Application form → move it to In review, Offered, Enrolled; check the summary by grade
 - [ ] Principal: Data Analytics → Top & Bottom Performers → Grade IX, all sections, then pick S1 and W1

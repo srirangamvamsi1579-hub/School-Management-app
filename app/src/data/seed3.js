@@ -1,6 +1,6 @@
 // Demo data for coordinators, transport stops, parent requests and SMS settings (all fictional).
 import { rng } from '../lib/format.js';
-import { hashPassword } from '../lib/auth.js';
+import { hashPassword, syncDeptPerms } from '../lib/auth.js';
 import { PURPOSES } from '../lib/sms.js';
 
 const STOPS = {
@@ -10,9 +10,11 @@ const STOPS = {
 
 export function extendSeed3(db) {
   const r = rng(43);
-  db.version = 7;
+  db.version = 8;
   db.users.forEach((u) => { if (u.role === 'PARENT' || u.requestedRole === 'PARENT') u.designation = 'Parent'; });
   db.roleDesignations = {};
+  db.removedProfiles = [];
+  syncDeptPerms(db);                                       // access is set per department
   // Mobile app: on for two schools, so the console switch can be tried
   db.tenants.forEach((t) => { t.mobile = { enabled: ['T1', 'T2'].includes(t.id), appStatus: t.id === 'T1' ? 'Live in test build' : 'Not published' };
     // Web & App Screens: everyone starts on the recommended layout (version 1)

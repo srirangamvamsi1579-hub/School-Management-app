@@ -2,6 +2,7 @@
 // Production: Amazon Cognito user pool per client (school) — passwords hashed by Cognito, email codes via SES,
 // SMS codes via an Indian DLT-registered SMS gateway. The flow and statuses below are the same.
 import { ACCESS } from '../data/menu.js';
+import { departmentOf } from '../data/designations.js';
 import { queueSms } from './sms.js';
 
 // Demo-only hash (FNV-1a, 2,000 rounds with salt). Never used in production — Cognito stores passwords.
@@ -116,12 +117,44 @@ export function setPassword(db, u, password) {
 
 // ---------- Roles ----------
 export const BUILT_IN = [['ADMIN', 'Admin'], ['PRINCIPAL', 'Principal'], ['ACCOUNTANT', 'Accountant'], ['TEACHER', 'Teacher'], ['FRONT_OFFICE', 'Front Office'], ['PARENT', 'Parent'], ['TRANSPORT', 'Transport team'], ['PLATFORM', 'Platform team']];
-export const allRoles = (db) => [...BUILT_IN.map(([code, name]) => ({ code, name, builtIn: true })), ...(db.customRoles || [])];
-export const roleName = (db, code) => allRoles(db).find((r) => r.code === code)?.name || code || '—';
+const ALL_BUILT_IN = (db) => [...BUILT_IN.map(([code, name]) => ({ code, name, builtIn: true })), ...(db.customRoles || [])];
+// Profiles in use: built-in ones the school removed are left out (Admin and Platform can't be removed)
+export const allRoles = (db) => ALL_BUILT_IN(db).filter((r) => !(db.removedProfiles || []).includes(r.code));
+export const roleName = (db, code) => ALL_BUILT_IN(db).find((r) => r.code === code)?.name || code || '—';
+
+// ---------- Access by department ----------
+// Every profile in a department opens the same screens. The Admin profile always has every screen; Platform is separate.
+export const baseRoleOf = (db, role) => (db.customRoles || []).find((r) => r.code === role)?.basedOn || role;
+export const defaultScreens = (db, role) => [...(ACCESS[baseRoleOf(db, role)] || [])].filter((c) => !c.startsWith('VA_'));
+export function rolePerms(db, role) {
+  if (role === 'ADMIN' || role === 'PLATFORM') return ACCESS[role] || [];
+  const dept = departmentOf(db, role);
+  return (dept && db.deptPerms?.[dept]) || defaultScreens(db, role);
+}
+// Departments in use (from the profiles in use), in a steady order, with their profiles
+export function departments(db) {
+  const map = new Map();
+  for (const r of allRoles(db).filter((x) => x.code !== 'PLATFORM')) {
+    const d = departmentOf(db, r.code) || r.name;
+    if (!map.has(d)) map.set(d, []);
+    map.get(d).push(r);
+  }
+  return [...map.entries()].map(([name, profiles]) => ({ name, profiles }));
+}
+// Make sure every department in use has its own screen list (a new department starts with its first profile's screens)
+export function syncDeptPerms(d) {
+  d.deptPerms = d.deptPerms || {};
+  for (const { name, profiles } of departments(d)) {
+    if (d.deptPerms[name]) continue;
+    const first = profiles.find((p) => p.code !== 'ADMIN') || profiles[0];
+    d.deptPerms[name] = first.code === 'ADMIN' ? [...ACCESS.ADMIN].filter((c) => !c.startsWith('VA_')) : [...(d.perms?.[first.code] || defaultScreens(d, first.code))];
+  }
+  return d;
+}
 
 // Screens a person can open = their role's permissions + their designation's extras + screens given to them by name
 export function screensFor(db, user, role) {
-  const base = db.perms?.[role] || ACCESS[role] || [];
+  const base = rolePerms(db, role);
   const extra = [...(user && db.designationAccess?.[user.designation] || []), ...(user?.extra || [])];
   // Teachers see their own performance only when the Principal / Head of Teaching Staff has shared it
   if (role === 'TEACHER' && db.settings?.teacherPerfShared) extra.push('SELF_MYPERF');

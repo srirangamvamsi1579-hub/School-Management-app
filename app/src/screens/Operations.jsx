@@ -1,5 +1,5 @@
 import { WEBSITE_LINKS, linkFor, buttonSnippet, iframeSnippet } from '../lib/links.js';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../data/store.js';
 import { Page, Card, Field, Input, Select, Status, Modal, Html, Tabs, Switch } from '../components/ui.jsx';
 import { dmon } from '../lib/format.js';
@@ -7,8 +7,8 @@ import { log, resolveTemplate, renderFor, categoryName, tenantOf } from '../lib/
 import { CATEGORIES, FIELDS, SAMPLE, renderTemplate, sanitize } from '../data/templates.js';
 import { MENU, ROLES, ACCESS, LABEL, PLANS, canSee, FUNCTIONS, funcOn, mobileTabs } from '../data/menu.js';
 import { PRESETS, TEMPLATES, contrast, accessible } from '../lib/theme.js';
-import { allRoles, roleName, canManageUsers, accountEmail, createAccount, idType, isGmail, findUser } from '../lib/auth.js';
-import { designationsFor, fitDesignation, designationProblem, departmentOf } from '../data/designations.js';
+import { allRoles, roleName, rolePerms, departments, syncDeptPerms, defaultScreens, baseRoleOf, canManageUsers, accountEmail, createAccount, idType, isGmail, findUser } from '../lib/auth.js';
+import { designationsFor, fitDesignation, designationProblem, departmentOf, STANDARD_PROFILES } from '../data/designations.js';
 import { AccountRequests, deleteAccount } from './Account.jsx';
 
 export function Users() {
@@ -116,22 +116,77 @@ export function Users() {
 }
 
 export function Roles() {
-  const { db, mutate, notify } = useStore();
   const [tab, setTab] = useState('users');
-  const perms = { ...ACCESS, ...(db.perms || {}) };
-  const roles = allRoles(db).filter((r) => r.code !== 'PLATFORM' && r.code !== 'ADMIN');
+  return <Page title="Roles & permissions" sub="User management: each user profile, the department it belongs to and its designations. Permissions: which menus each department can open — every profile in a department gets the same screens.">
+    <Tabs tabs={[['users', 'User management'], ['matrix', 'Permissions by department']]} value={tab} onChange={setTab} />
+    {tab === 'users' && <UserProfiles goMatrix={() => setTab('matrix')} />}
+    {tab === 'matrix' && <DeptPermissions />}
+  </Page>;
+}
+
+// A checkbox that can show "some ticked" (indeterminate)
+function TriBox({ state, onChange, label, disabled }) {
+  const ref = useRef(null);
+  useEffect(() => { if (ref.current) ref.current.indeterminate = state === 'some'; }, [state]);
+  return <input ref={ref} type="checkbox" aria-label={label} checked={state === 'all'} aria-checked={state === 'some' ? 'mixed' : state === 'all'} disabled={disabled} onChange={onChange} />;
+}
+
+// Roles & Permissions → Permissions by department: pick a department, then tick whole menus or single sub-menus.
+// Every menu and sub-menu of the side menu is listed; menus and their groups expand and collapse (all collapsed at first).
+function DeptPermissions() {
+  const { db, run, notify, session } = useStore();
+  const depts = departments(db);
+  const [sel, setSel] = useState(() => (depts.find((d) => !d.profiles.some((p) => p.code === 'ADMIN')) || depts[0]).name);
+  const [open, setOpen] = useState({});
   const t = tenantOf(db);
   const rank = PLANS.find((p) => p.code === t.plan).rank;
-  const toggle = (role, code) => mutate((d) => { const p = { ...ACCESS, ...(d.perms || {}) }; p[role] = p[role].includes(code) ? p[role].filter((x) => x !== code) : [...p[role], code]; d.perms = p; });
-  return <Page title="Roles & permissions" sub="User management: each user profile, the department it belongs to and its designations. Role permissions: which screens each profile can open. A screen also has to be in the school's plan — greyed rows are not."
-    actions={tab === 'matrix' && <button className="btn" onClick={() => { mutate((d) => { d.perms = Object.fromEntries((d.customRoles || []).map((r) => [r.code, [...ACCESS[r.basedOn]]])); }); notify('Back to defaults'); }}>Reset to defaults</button>}>
-    <Tabs tabs={[['users', 'User management'], ['matrix', 'Role permissions']]} value={tab} onChange={setTab} />
-    {tab === 'users' && <UserProfiles goMatrix={() => setTab('matrix')} />}
-    {tab === 'matrix' && <div className="tw"><table className="t"><thead><tr><th>Menu</th>{roles.map((r) => <th key={r.code} style={{ textAlign: 'center' }}>{r.name}</th>)}</tr></thead>
-      <tbody>{MENU.filter((m) => !['PLATFORM', 'VIEWAS'].includes(m.code)).map((m) => [<tr key={m.code}><td colSpan={roles.length + 1} className="b" style={{ background: 'var(--bg)' }}>{m.label}</td></tr>,
-        ...m.items.filter((i) => i[0][0] !== '#').map((i) => { const inPlan = canSee(i[0], 'ADMIN', rank, t.overrides, null) || ['SELF_CHILD', 'SELF_FEES'].includes(i[0]); return <tr key={i[0]} style={{ opacity: inPlan ? 1 : .45 }}><td style={{ paddingLeft: 22 }}>{i[1]}</td>
-          {roles.map((r) => <td key={r.code} style={{ textAlign: 'center' }}><input type="checkbox" aria-label={r.name + ' ' + i[1]} checked={(perms[r.code] || []).includes(i[0])} onChange={() => toggle(r.code, i[0])} /></td>)}</tr>; })])}</tbody></table></div>}
-  </Page>;
+  const dept = depts.find((d) => d.name === sel) || depts[0];
+  const screens = new Set(db.deptPerms?.[dept.name] || rolePerms(db, dept.profiles[0].code));
+  const hasAdmin = dept.profiles.some((p) => p.code === 'ADMIN');
+  const others = dept.profiles.filter((p) => p.code !== 'ADMIN');
+  const who = session.name || session.role;
+  const mods = MENU.filter((m) => m.code !== 'PLATFORM');
+  // Split a menu into groups: items before the first heading, then one group per heading
+  const groupsOf = (m) => { const out = []; let cur = { key: m.code + ':_', title: null, items: [] };
+    for (const i of m.items) { if (i[0][0] === '#') { if (cur.items.length || cur.title) out.push(cur); cur = { key: m.code + ':' + i[0], title: i[1], items: [] }; } else cur.items.push(i); }
+    out.push(cur); return out.filter((g) => g.items.length); };
+  const stateOf = (codes) => { const n = codes.filter((c) => screens.has(c)).length; return n === 0 ? 'none' : n === codes.length ? 'all' : 'some'; };
+  const locked = (code) => code.startsWith('VA_');           // View as Profile: Admin only
+  const set = (codes, on) => {
+    const list = codes.filter((c) => !locked(c));
+    run((d) => { syncDeptPerms(d); const cur = new Set(d.deptPerms[dept.name]); list.forEach((c) => (on ? cur.add(c) : cur.delete(c))); d.deptPerms = { ...d.deptPerms, [dept.name]: [...cur] };
+      log(d, who, 'Department access changed', `${dept.name}: ${on ? 'gave' : 'removed'} ${list.length === 1 ? LABEL[list[0]] : list.length + ' screens'}`); });
+  };
+  const reset = () => { const from = others[0]?.code; if (!from) return; run((d) => { syncDeptPerms(d); d.deptPerms = { ...d.deptPerms, [dept.name]: defaultScreens(d, from) }; log(d, who, 'Department access reset', dept.name); }); notify(`${dept.name}: back to the standard screens for ${roleName(db, baseRoleOf(db, from))}`); };
+  const toggle = (k) => setOpen({ ...open, [k]: !open[k] });
+  const Chevron = ({ k, label }) => <button className="tree-tg" aria-expanded={!!open[k]} aria-label={(open[k] ? 'Collapse ' : 'Expand ') + label} onClick={() => toggle(k)}>{open[k] ? '▾' : '▸'}</button>;
+  return <div className="grid dept-grid" style={{ marginTop: 12, alignItems: 'start' }}>
+    <Card title="Departments">
+      <p className="small muted">Departments come from User management — add a profile with a new department and it appears here.</p>
+      <div className="dept-list" role="listbox" aria-label="Departments">{depts.map((d) => { const n = d.profiles.some((p) => p.code === 'ADMIN') && d.profiles.length === 1 ? 'All' : (db.deptPerms?.[d.name] || rolePerms(db, d.profiles[0].code)).filter((c) => LABEL[c]).length;
+        return <button key={d.name} role="option" aria-selected={d.name === dept.name} className={'dept-item' + (d.name === dept.name ? ' on' : '')} onClick={() => setSel(d.name)}>
+          <b>{d.name}</b><span className="small muted">{d.profiles.map((p) => p.name).join(', ')} · {n} screens</span></button>; })}</div>
+    </Card>
+    <Card title={`What ${dept.name} can open`} right={others.length > 0 && <button className="btn sm" onClick={reset}>Reset to standard</button>}>
+      <p className="small">Profiles in this department: <b>{dept.profiles.map((p) => p.name).join(', ')}</b>. Tick a main menu to give every sub-menu under it, or open it and tick only the sub-menus needed.</p>
+      {hasAdmin && <p className="small pill info" style={{ display: 'block' }}>The Admin profile always opens every screen.{others.length ? ' These ticks apply to the other profiles in this department.' : ' Ticks here apply to any profile added to this department later.'}</p>}
+      <div className="tree" role="tree" aria-label={`Menus for ${dept.name}`}>{mods.map((m) => { const codes = m.items.filter((i) => i[0][0] !== '#').map((i) => i[0]); const st = stateOf(codes); const isVa = m.code === 'VIEWAS';
+        return <div key={m.code} role="treeitem" aria-expanded={!!open[m.code]} className="tree-mod">
+          <div className="tree-row mod-row"><Chevron k={m.code} label={m.label} />
+            <label className="row"><TriBox state={isVa ? (hasAdmin ? 'all' : 'none') : st} disabled={isVa} label={'All of ' + m.label} onChange={() => set(codes, st !== 'all')} /><b>{m.label}</b></label>
+            <span className="small muted">{isVa ? 'Admin only' : `${codes.filter((c) => screens.has(c)).length} of ${codes.length}`}</span></div>
+          {open[m.code] && <div role="group">{groupsOf(m).map((g) => { const gc = g.items.map((i) => i[0]); const gs = stateOf(gc);
+            const rows = g.items.map((i) => { const inPlan = canSee(i[0], 'ADMIN', rank, t.overrides, null) || ['SELF_CHILD', 'SELF_FEES', 'SELF_MYPERF'].includes(i[0]) || i[0].startsWith('VA_');
+              return <div key={i[0]} role="treeitem" className={'tree-row leaf' + (g.title ? ' deep' : '')}><label className="row">
+                <input type="checkbox" aria-label={i[1]} checked={isVa ? hasAdmin : screens.has(i[0])} disabled={isVa} onChange={() => set([i[0]], !screens.has(i[0]))} />{i[1]}</label>
+                {!inPlan && <span className="pill">Not in plan</span>}</div>; });
+            return g.title ? <div key={g.key} role="treeitem" aria-expanded={!!open[g.key]}>
+              <div className="tree-row grp-row"><Chevron k={g.key} label={m.label + ' ' + g.title} /><label className="row"><TriBox state={isVa ? 'none' : gs} disabled={isVa} label={'All of ' + g.title} onChange={() => set(gc, gs !== 'all')} />{g.title}</label>
+                <span className="small muted">{gc.filter((c) => screens.has(c)).length} of {gc.length}</span></div>
+              {open[g.key] && <div role="group">{rows}</div>}</div> : <div key={g.key}>{rows}</div>; })}</div>}
+        </div>; })}</div>
+    </Card>
+  </div>;
 }
 
 export function Templates() {
@@ -347,13 +402,15 @@ function WebsiteDeepLinks() {
 function UserProfiles({ goMatrix }) {
   const { db, run, notify, session } = useStore();
   const [add, setAdd] = useState({});
-  const [dept, setDept] = useState(null);                      // { role, name } while renaming a department
+  const [dept, setDept] = useState(null);                      // { role, name } while changing a department
+  const [confirm, setConfirm] = useState(null);                // { kind: 'designation' | 'profile', role, name }
   const [nr, setNr] = useState({ name: '', department: '', from: 'TEACHER', designations: '' });
   const t = tenantOf(db);
-  const perms = { ...ACCESS, ...(db.perms || {}) };
   const who = session.name || session.role;
   const profiles = allRoles(db).filter((r) => r.code !== 'PLATFORM');
-  const count = (code) => db.users.filter((u) => u.role === code && u.status !== 'DELETED').length;
+  const deptNames = departments(db).map((d) => d.name);
+  const count = (code) => db.users.filter((u) => (u.role === code || (!u.role && u.requestedRole === code)) && u.status !== 'DELETED').length;
+  const holders = (role, name) => db.users.filter((u) => u.role === role && u.designation === name && u.status !== 'DELETED').length;
   const save = (role) => {
     const name = (add[role] || '').trim();
     if (name.length < 2) return;
@@ -366,11 +423,14 @@ function UserProfiles({ goMatrix }) {
     });
     setAdd({ ...add, [role]: '' }); notify('Added');
   };
-  const holders = (role, name) => db.users.filter((u) => u.role === role && u.designation === name && u.status !== 'DELETED').length;
-  const remove = (role, name) => {
+  // Removing asks first; it is refused while someone holds the designation or if it is the last one
+  const askRemove = (role, name) => {
     const n = holders(role, name);
     if (n) { notify(`${n} ${n === 1 ? 'person has' : 'people have'} “${name}” — change their designation in Users first`); return; }
     if (designationsFor(db, role).length <= 1) { notify('A profile needs at least one designation — add another first'); return; }
+    setConfirm({ kind: 'designation', role, name });
+  };
+  const doRemoveDesignation = ({ role, name }) => {
     run((d) => {
       d.roleDesignations = { ...(d.roleDesignations || {}), [role]: (d.roleDesignations?.[role] || []).filter((x) => x !== name) };
       if (designationsFor(d, role).includes(name)) d.roleDesignationsRemoved = { ...(d.roleDesignationsRemoved || {}), [role]: [...(d.roleDesignationsRemoved?.[role] || []), name] };
@@ -378,49 +438,92 @@ function UserProfiles({ goMatrix }) {
     });
     notify(`Removed “${name}” — it is no longer offered for ${roleName(db, role)}`);
   };
+  const askDeleteProfile = (r) => {
+    const n = count(r.code);
+    if (n) { notify(`${n} ${n === 1 ? 'person has' : 'people have'} the ${r.name} profile — move them to another profile in Users first`); return; }
+    setConfirm({ kind: 'profile', role: r.code, name: r.name });
+  };
+  const doDeleteProfile = ({ role, name }) => {
+    run((d) => {
+      if ((d.customRoles || []).some((x) => x.code === role)) d.customRoles = d.customRoles.filter((x) => x.code !== role);
+      else d.removedProfiles = [...new Set([...(d.removedProfiles || []), role])];
+      log(d, who, 'Profile deleted', name);
+    });
+    notify(`Deleted the ${name} profile`);
+  };
+  const restore = (code) => { run((d) => { d.removedProfiles = (d.removedProfiles || []).filter((x) => x !== code); syncDeptPerms(d); log(d, who, 'Profile restored', roleName(d, code)); }); notify(`${roleName(db, code)} restored`); };
   const saveDept = () => {
     const name = dept.name.trim(); if (name.length < 2) { notify('Enter a department name'); return; }
-    run((d) => { d.roleDepartments = { ...(d.roleDepartments || {}), [dept.role]: name }; log(d, who, 'Department changed', `${roleName(d, dept.role)} → ${name}`); });
-    setDept(null); notify('Department saved');
-  };
-  const addProfile = () => {
-    const code = 'R_' + nr.name.toUpperCase().replace(/[^A-Z0-9]+/g, '_').slice(0, 20);
-    if (allRoles(db).some((r) => r.code === code || r.name.toLowerCase() === nr.name.trim().toLowerCase())) { notify('A profile with that name exists'); return; }
-    const extra = nr.designations.split(',').map((x) => x.trim()).filter((x) => x.length > 1);
+    const joins = deptNames.includes(name) && name !== departmentOf(db, dept.role);
     run((d) => {
-      d.customRoles.push({ code, name: nr.name.trim(), basedOn: nr.from, department: nr.department.trim() || departmentOf(d, nr.from) });
-      d.perms = { ...ACCESS, ...(d.perms || {}), [code]: [...({ ...ACCESS, ...(d.perms || {}) })[nr.from]] };
-      if (extra.length) d.roleDesignations = { ...(d.roleDesignations || {}), [code]: extra };
-      log(d, who, 'Profile added', `${nr.name.trim()} · ${nr.department.trim() || departmentOf(d, nr.from)} (screens copied from ${roleName(d, nr.from)})`);
+      const before = rolePerms(d, dept.role);
+      if (!d.deptPerms?.[name]) d.deptPerms = { ...(d.deptPerms || {}), [name]: [...before] };   // a new department keeps this profile's screens
+      const custom = (d.customRoles || []).find((x) => x.code === dept.role);
+      if (custom) custom.department = name; else d.roleDepartments = { ...(d.roleDepartments || {}), [dept.role]: name };
+      syncDeptPerms(d);
+      log(d, who, 'Department changed', `${roleName(d, dept.role)} → ${name}`);
     });
-    notify('Profile added — adjust its screens in Role permissions'); setNr({ name: '', department: '', from: 'TEACHER', designations: '' });
+    setDept(null); notify(joins ? `${roleName(db, dept.role)} joined ${name} and now opens that department's screens` : 'Department saved');
   };
+  const addProfile = (spec) => {
+    const p = spec || { name: nr.name.trim(), department: nr.department.trim(), from: nr.from, designations: nr.designations.split(',').map((x) => x.trim()).filter((x) => x.length > 1) };
+    const code = 'R_' + p.name.toUpperCase().replace(/[^A-Z0-9]+/g, '_').slice(0, 20);
+    if (allRoles(db).some((r) => r.code === code || r.name.toLowerCase() === p.name.toLowerCase())) { notify('A profile with that name exists'); return; }
+    const department = p.department || departmentOf(db, p.from);
+    run((d) => {
+      d.customRoles.push({ code, name: p.name, basedOn: p.from, department });
+      if (p.designations.length) d.roleDesignations = { ...(d.roleDesignations || {}), [code]: p.designations };
+      if (!d.deptPerms?.[department]) d.deptPerms = { ...(d.deptPerms || {}), [department]: defaultScreens(d, p.from) };
+      syncDeptPerms(d);
+      log(d, who, 'Profile added', `${p.name} · ${department}`);
+    });
+    notify(deptNames.includes(department) ? `${p.name} added to ${department} — it opens that department's screens` : `${p.name} added with a new department, ${department}`);
+    if (!spec) setNr({ name: '', department: '', from: 'TEACHER', designations: '' });
+  };
+  const removedBuiltIns = (db.removedProfiles || []);
+  const suggestions = STANDARD_PROFILES.filter((sp) => !allRoles(db).some((r) => r.name.toLowerCase() === sp.name.toLowerCase()));
   return <>
-    <div className="tw" style={{ marginTop: 12, maxHeight: "none" }}><table className="t"><thead><tr><th>User profile</th><th>Department</th><th>Designations offered</th><th>People</th><th>Screens</th><th /></tr></thead>
+    <div className="tw" style={{ marginTop: 12, maxHeight: 'none' }}><table className="t"><thead><tr><th>User profile</th><th>Department</th><th>Designations offered</th><th>People</th><th>Screens</th><th /></tr></thead>
       <tbody>{profiles.map((r) => { const list = designationsFor(db, r.code);
         return <tr key={r.code}>
           <td><b>{r.name}</b>{!r.builtIn && <div className="small muted">Added by the school · from {roleName(db, r.basedOn)}</div>}</td>
-          <td style={{ minWidth: 190 }}>{dept?.role === r.code
-            ? <div className="row"><Input value={dept.name} onChange={(e) => setDept({ ...dept, name: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && saveDept()} aria-label={'Department for ' + r.name} autoFocus /><button className="btn sm pri" onClick={saveDept}>Save</button><button className="btn sm" onClick={() => setDept(null)}>Cancel</button></div>
+          <td style={{ minWidth: 200 }}>{dept?.role === r.code
+            ? <div className="row"><Input list="dept-names" value={dept.name} onChange={(e) => setDept({ ...dept, name: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && saveDept()} aria-label={'Department for ' + r.name} autoFocus /><button className="btn sm pri" onClick={saveDept}>Save</button><button className="btn sm" onClick={() => setDept(null)}>Cancel</button></div>
             : <div className="row">{departmentOf(db, r.code) || <span className="muted">—</span>}{r.code !== 'PARENT' && <button className="btn sm" aria-label={'Change department of ' + r.name} onClick={() => setDept({ role: r.code, name: departmentOf(db, r.code) })}>Change</button>}</div>}</td>
           <td style={{ maxWidth: 520 }}>{r.code === 'PARENT' ? <span className="small">No designation — every parent is marked <b>Parent</b></span> : <>
-            <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>{list.map((dname) => <span key={dname} className="pill">{dname}<button className="btn sm" style={{ marginLeft: 6, minHeight: 0, padding: '0 6px' }} aria-label={`Remove ${dname} from ${r.name}`} title={holders(r.code, dname) ? `${holders(r.code, dname)} with this designation — change theirs first` : 'Remove'} onClick={() => remove(r.code, dname)}>×</button></span>)}</div>
+            <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>{list.map((dname) => <span key={dname} className="pill">{dname}<button className="btn sm" style={{ marginLeft: 6, minHeight: 0, padding: '0 6px' }} aria-label={`Remove ${dname} from ${r.name}`} title={holders(r.code, dname) ? `${holders(r.code, dname)} with this designation — change theirs first` : 'Remove'} onClick={() => askRemove(r.code, dname)}>×</button></span>)}</div>
             <div className="row" style={{ marginTop: 6 }}><Input placeholder="Add a designation" value={add[r.code] || ''} onChange={(e) => setAdd({ ...add, [r.code]: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && save(r.code)} aria-label={'New designation for ' + r.name} /><button className="btn sm" onClick={() => save(r.code)}>Add</button></div></>}</td>
           <td>{count(r.code)}</td>
-          <td>{r.code === 'ADMIN' ? 'All' : <button className="btn sm" onClick={goMatrix}>{(perms[r.code] || []).length}</button>}</td>
-          <td>{!r.builtIn && <button className="btn sm danger" disabled={count(r.code) > 0} title={count(r.code) ? 'Move its people to another profile first' : ''} onClick={() => run((d) => { d.customRoles = d.customRoles.filter((x) => x.code !== r.code); log(d, who, 'Profile removed', r.name); })}>Remove</button>}</td>
+          <td>{r.code === 'ADMIN' ? 'All' : <button className="btn sm" title="Set in Permissions by department" onClick={goMatrix}>{rolePerms(db, r.code).filter((c) => LABEL[c]).length}</button>}</td>
+          <td>{r.code !== 'ADMIN' && <button className="btn sm danger" aria-label={'Delete profile ' + r.name} title={count(r.code) ? 'Move its people to another profile first' : 'Delete this profile'} onClick={() => askDeleteProfile(r)}>Delete</button>}</td>
         </tr>; })}</tbody></table></div>
+    <datalist id="dept-names">{deptNames.map((n) => <option key={n} value={n} />)}{STANDARD_PROFILES.map((sp) => sp.department).filter((n, i, a) => a.indexOf(n) === i && !deptNames.includes(n)).map((n) => <option key={n} value={n} />)}</datalist>
+    {removedBuiltIns.length > 0 && <p className="small" style={{ marginTop: 8 }}>Deleted profiles: {removedBuiltIns.map((c) => <button key={c} className="btn sm" style={{ marginRight: 6 }} onClick={() => restore(c)}>Restore {roleName(db, c)}</button>)}</p>}
     <div style={{ height: 16 }} />
-    <Card title="Add a user profile">
-      {!funcOn(t, 'FN_CUSTOM_ROLES') ? <p className="small">New profiles are part of the Professional plan and above (or as an add-on). The built-in profiles above work on every plan, and you can add designations to them.</p> : <>
-        <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
-          <Field label="Profile name" req><Input value={nr.name} onChange={(e) => setNr({ ...nr, name: e.target.value })} placeholder="e.g. Librarian, Hostel Warden, Transport Manager" /></Field>
-          <Field label="Department"><Input value={nr.department} onChange={(e) => setNr({ ...nr, department: e.target.value })} placeholder={departmentOf(db, nr.from)} /></Field>
-          <Field label="Start with the screens of"><Select value={nr.from} onChange={(e) => setNr({ ...nr, from: e.target.value })} options={allRoles(db).filter((r) => !['PLATFORM', 'ADMIN', 'PARENT'].includes(r.code) && r.builtIn).map((r) => [r.code, r.name])} /></Field>
-          <Field label="Designations (comma separated)"><Input value={nr.designations} onChange={(e) => setNr({ ...nr, designations: e.target.value })} placeholder="e.g. Hostel Warden, Assistant Warden" /></Field>
-        </div>
-        <p className="small muted">The profile also offers the designations of the profile it starts from. Its screens can be changed in Role permissions.</p>
-        <div className="row end"><button className="btn pri" disabled={nr.name.trim().length < 3} onClick={addProfile}>Add profile</button></div></>}
-    </Card>
+    <div className="grid g2" style={{ alignItems: 'start' }}>
+      <Card title="Add a user profile">
+        {!funcOn(t, 'FN_CUSTOM_ROLES') ? <p className="small">New profiles are part of the Professional plan and above (or as an add-on). The built-in profiles above work on every plan, and you can add designations to them.</p> : <>
+          <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
+            <Field label="Profile name" req><Input value={nr.name} onChange={(e) => setNr({ ...nr, name: e.target.value })} placeholder="e.g. Librarian, Hostel Warden, Transport Manager" /></Field>
+            <Field label="Department"><Input list="dept-names" value={nr.department} onChange={(e) => setNr({ ...nr, department: e.target.value })} placeholder={departmentOf(db, nr.from)} /></Field>
+            <Field label="If the department is new, start with the screens of"><Select value={nr.from} onChange={(e) => setNr({ ...nr, from: e.target.value })} options={allRoles(db).filter((r) => !['PLATFORM', 'ADMIN', 'PARENT'].includes(r.code) && r.builtIn).map((r) => [r.code, r.name])} /></Field>
+            <Field label="Designations (comma separated)"><Input value={nr.designations} onChange={(e) => setNr({ ...nr, designations: e.target.value })} placeholder="e.g. Hostel Warden, Assistant Warden" /></Field>
+          </div>
+          <p className="small muted">An existing department: the profile opens that department's screens. A new department: it appears in Permissions by department, starting with the screens above.</p>
+          <div className="row end"><button className="btn pri" disabled={nr.name.trim().length < 3} onClick={() => addProfile()}>Add profile</button></div></>}
+      </Card>
+      <Card title="Standard profiles for Indian schools" right={<span className="small muted">{suggestions.length} not added yet</span>}>
+        <p className="small muted">Departments and designations common in CBSE, ICSE and state-board schools. Add one with a click, then adjust it above.</p>
+        {suggestions.length === 0 ? <p className="small">All added.</p> : suggestions.map((sp) => <div key={sp.name} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--line)' }}>
+          <div><b>{sp.name}</b> <span className="small muted">· {sp.department}</span><div className="small muted">{sp.designations.join(', ')}</div></div>
+          <button className="btn sm" disabled={!funcOn(t, 'FN_CUSTOM_ROLES')} aria-label={'Add ' + sp.name} onClick={() => addProfile(sp)}>Add</button></div>)}
+      </Card>
+    </div>
+    {confirm && <Modal title={confirm.kind === 'designation' ? 'Remove this designation?' : 'Delete this profile?'} onClose={() => setConfirm(null)}
+      actions={<><button className="btn" onClick={() => setConfirm(null)}>Cancel</button><button className="btn danger" onClick={() => { const c = confirm; setConfirm(null); (c.kind === 'designation' ? doRemoveDesignation : doDeleteProfile)(c); }}>{confirm.kind === 'designation' ? 'Remove' : 'Delete profile'}</button></>}>
+      {confirm.kind === 'designation'
+        ? <p>“<b>{confirm.name}</b>” will no longer be offered for <b>{roleName(db, confirm.role)}</b> in Add user, Edit user or sign-up. Nobody has it now. You can add it back later by typing it in again.</p>
+        : <p>The <b>{confirm.name}</b> profile and its row will be removed. It will no longer be offered in Add user, sign-up or View as Profile. Nobody has it now.{(db.customRoles || []).some((x) => x.code === confirm.role) ? ' Its designations go with it.' : ' A built-in profile can be restored later.'}</p>}
+    </Modal>}
   </>;
 }

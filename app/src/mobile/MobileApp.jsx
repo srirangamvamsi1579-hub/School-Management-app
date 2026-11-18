@@ -41,7 +41,7 @@ export default function MobileApp({ preview = false, school: fixedSchool = null 
   const tenant = tenantOf(db);
   const me = db.users.find((u) => u.id === session?.userId) || null;
   const role = session?.role;
-  const perms = useMemo(() => (role ? { [role]: screensFor(db, me, role) } : null), [db.perms, db.designationAccess, me, role, db.settings]);
+  const perms = useMemo(() => (role ? { [role]: screensFor(db, me, role) } : null), [db.perms, db.deptPerms, db.roleDepartments, db.customRoles, db.removedProfiles, db.designationAccess, me, role, db.settings]);
   const tabs = role ? mobileTabs(tenant, role, perms) : [];
   useEffect(() => { if (role && !tabs.some((t) => t[0] === tab)) setTab('M_HOME'); }, [tabs.map((t) => t[0]).join(), tab, role]);
 

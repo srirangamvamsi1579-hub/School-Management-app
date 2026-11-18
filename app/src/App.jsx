@@ -17,9 +17,9 @@ export default function App() {
   const link = parseHash(hash);
   const [screen, setScreen] = useState(() => (link?.kind === 's' ? link.code : null));
   const [navOpen, setNavOpen] = useState(false);
-  // Side menu groups start collapsed; what a person opens is remembered in this browser
-  const [openMods, setOpenModsRaw] = useState(() => { try { return JSON.parse(localStorage.getItem('school-side-open') || '{}') || {}; } catch (e) { return {}; } });
-  const setOpenMods = (v) => { setOpenModsRaw(v); try { localStorage.setItem('school-side-open', JSON.stringify(v)); } catch (e) { /* storage off */ } };
+  // Side menu groups are collapsed when the app opens; a group stays open for this visit once the person opens it
+  const [openMods, setOpenModsRaw] = useState(() => { try { return JSON.parse(sessionStorage.getItem('school-side-open') || '{}') || {}; } catch (e) { return {}; } });
+  const setOpenMods = (v) => { setOpenModsRaw(v); try { sessionStorage.setItem('school-side-open', JSON.stringify(v)); } catch (e) { /* storage off */ } };
   const [armed, setArmed] = useState(false);
   useEffect(() => { applyTheme(db.theme); }, [db.theme]);
 
@@ -27,7 +27,7 @@ export default function App() {
   const rank = PLANS.find((p) => p.code === tenant.plan).rank;
   const role = session?.role;
   const me = db.users?.find((u) => u.id === session?.userId) || null;
-  const perms = useMemo(() => (role ? { [role]: screensFor(db, me, role) } : null), [db.perms, db.designationAccess, me, role]);
+  const perms = useMemo(() => (role ? { [role]: screensFor(db, me, role) } : null), [db.perms, db.deptPerms, db.roleDepartments, db.customRoles, db.removedProfiles, db.designationAccess, me, role]);
   const visible = useMemo(() => (role ? MENU.map((m) => ({ ...m, items: m.items.filter((i, k, arr) => {
     // Website menu: allowed for the role (plan, add-ons, role, designation, grants) and not set to "app only"
     const show = (c) => canSee(c, role, rank, tenant.overrides, perms) && onWeb(tenant, role, c);
@@ -104,14 +104,9 @@ export default function App() {
       <div className="school"><div className="logo">{tenant.name[0]}</div><div><div className="b" style={{ fontSize: 13 }}>{tenant.name}</div><div className="small" style={{ opacity: .7 }}>{PLANS.find((p) => p.rank === rank).name} plan</div></div></div>
       <button className={'item' + (screen === 'HOME' ? ' on' : '')} onClick={() => go('HOME')} aria-current={screen === 'HOME' ? 'page' : undefined}>⌂ Main menu</button>
       {links.filter((l) => l.under === 'TOP').map((l) => <a key={l.id} className="item" href={l.url} target="_blank" rel="noreferrer">{l.label}<span className="ext">↗</span></a>)}
-      <div className="side-tools">
-        <button className="linkbtn" onClick={() => setOpenMods(Object.fromEntries(visible.map((m) => [m.code, true])))}>Expand all</button>
-        <button className="linkbtn" onClick={() => setOpenMods(Object.fromEntries(visible.map((m) => [m.code, false])))}>Collapse all</button>
-      </div>
       {visible.map((m) => {
-        // Collapsed unless the person opened it, or it holds the screen they are on (and they haven't closed it)
-        const here = m.items.some((i) => i[0] === screen);
-        const closed = openMods[m.code] === undefined ? !here : !openMods[m.code];
+        // Collapsed unless the person opened it
+        const closed = !openMods[m.code];
         const toggle = () => setOpenMods({ ...openMods, [m.code]: closed });
         return (
           <div key={m.code}>

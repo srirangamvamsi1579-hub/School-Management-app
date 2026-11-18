@@ -5,7 +5,7 @@ import { useStore } from '../data/store.js';
 import { Page, Card, Tabs, Modal, Field, Input } from '../components/ui.jsx';
 import { MENU, PLANS, PHONE_READY, CHANNELS, LOCKED_BOTH, RECOMMENDED, ACCESS, canSee, channelIn, mobileTabs, webScreens } from '../data/menu.js';
 import { tenantOf } from '../lib/logic.js';
-import { roleName } from '../lib/auth.js';
+import { roleName, rolePerms } from '../lib/auth.js';
 import { CAN_EDIT, CAN_APPROVE, LAYOUT_ROLES, diffLayouts, setChannel, resetDraft, discardDraft, submitDraft, withdraw, approve, sendBack, restoreVersion } from '../lib/channels.js';
 import { Icon } from '../mobile/MobileApp.jsx';
 
@@ -25,7 +25,7 @@ export default function ChannelScreens() {
   const layout = view === 'draft' && c.draft ? c.draft : c.published;
   const editable = editor && c.status !== 'PENDING';
   const rank = PLANS.find((p) => p.code === t.plan).rank;
-  const perms = { [role]: db.perms?.[role] || ACCESS[role] || [] };
+  const perms = { [role]: rolePerms(db, role) };
   const changes = c.draft ? diffLayouts(c.published, c.draft) : [];
   const me = session.name || roleName(db, session.role);
   const act = (fn, msg) => { try { const r = run(fn); if (msg) notify(typeof msg === 'function' ? msg(r) : msg); return true; } catch (e) { notify(e.message); return false; } };
@@ -114,7 +114,7 @@ export default function ChannelScreens() {
 
       {tab === 'matrix' && <div className="tw" style={{ marginTop: 10 }}><table className="t"><thead><tr><th>Phone-ready screen</th>{LAYOUT_ROLES.map((r) => <th key={r}>{roleName(db, r)}</th>)}</tr></thead>
         <tbody>{Object.keys(PHONE_READY).map((code) => <tr key={code}><td className="b">{MENU.flatMap((m) => m.items).find((i) => i[0] === code)[1]}</td>
-          {LAYOUT_ROLES.map((r) => { const has = canSee(code, r, rank, t.overrides, { [r]: db.perms?.[r] || ACCESS[r] || [] }); const ch = channelIn(layout, r, code);
+          {LAYOUT_ROLES.map((r) => { const has = canSee(code, r, rank, t.overrides, { [r]: rolePerms(db, r) }); const ch = channelIn(layout, r, code);
             return <td key={r} className="small">{has ? <span className={'pill ' + (ch === 'BOTH' ? 'ok' : ch === 'APP' ? 'info' : '')}>{CHANNELS[ch]}</span> : <span className="muted">no access</span>}</td>; })}</tr>)}</tbody></table>
         <p className="small muted">Screens not listed are not built for phones and always show on the website for the roles that can open them.</p></div>}
 

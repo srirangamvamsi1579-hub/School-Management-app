@@ -3,13 +3,13 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, createElement } from 'react';
 import { buildSeed } from './seed.js';
 
-const KEY = 'school-app-demo-v7';
+const KEY = 'school-app-demo-v8';
 const Ctx = createContext(null);
 
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) { const d = JSON.parse(raw); if (d.version === 7) return d; }
+    if (raw) { const d = JSON.parse(raw); if (d.version === 8) return d; }
   } catch (e) { /* storage blocked — run from memory only */ }
   return buildSeed();
 }
@@ -19,7 +19,7 @@ function save(db) {
 // Several tabs (or a tester with the app open twice) share one copy. Every save bumps a revision;
 // before changing anything we start from the newest saved copy, so one tab never overwrites another's work.
 function latest(cur) {
-  try { const raw = localStorage.getItem(KEY); if (raw) { const d = JSON.parse(raw); if (d.version === 7 && (d.rev || 0) > (cur.rev || 0)) return d; } } catch (e) { /* ignore */ }
+  try { const raw = localStorage.getItem(KEY); if (raw) { const d = JSON.parse(raw); if (d.version === 8 && (d.rev || 0) > (cur.rev || 0)) return d; } } catch (e) { /* ignore */ }
   return cur;
 }
 
@@ -75,7 +75,7 @@ export function StoreProvider({ children }) {
   const notify = (msg, kind = 'ok') => { setToast({ msg, kind, id: Date.now() }); setTimeout(() => setToast(null), 3200); };
 
   // Another tab saved: show its changes here straight away
-  useEffect(() => { const h = (e) => { if (e.key === KEY && e.newValue) { try { const d = JSON.parse(e.newValue); setDb((cur) => (d.version === 7 && (d.rev || 0) > (cur.rev || 0) ? d : cur)); } catch (x) { /* ignore */ } } };
+  useEffect(() => { const h = (e) => { if (e.key === KEY && e.newValue) { try { const d = JSON.parse(e.newValue); setDb((cur) => (d.version === 8 && (d.rev || 0) > (cur.rev || 0) ? d : cur)); } catch (x) { /* ignore */ } } };
     window.addEventListener('storage', h); return () => window.removeEventListener('storage', h); }, []);
   useEffect(() => { const h = (e) => notify(e.detail); document.addEventListener('app-toast', h); return () => document.removeEventListener('app-toast', h); }, []);
   readOnlyRef.current = readOnly;
