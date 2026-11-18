@@ -399,7 +399,7 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 
 - Changing the role clears a designation that does not fit.
 - Save is refused until a matching designation is picked.
-- A school can add its own designations per role in **Roles & Permissions → Designations by role**. A designation that is in use can't be removed.
+- A school can add its own designations per role in **Roles & Permissions → User management** (release 7.1). A designation that is in use can't be removed.
 - A custom role uses the list of the role it was based on.
 - Adding a Parent asks for the child's admission number.
 
