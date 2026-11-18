@@ -1,6 +1,6 @@
 # School Management Platform — Requirements
 
-Updated 17 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos; release 7: opens on a Main menu, designations by role, account creation in the app, Admin View as Profile; 7.1–7.5: User management with departments, access by department with read only / full access, access summary, standard profiles for Indian schools; release 8: question papers driven by topic selection, up to 10 sets, approval per set, question bank with topics, blueprints; release 9: Users filters, department and student columns, last change, refresh, parents checked against the student record with no approval, archive of deleted accounts and rejoin). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
+Updated 18 Nov 2026 (release 2: sign-in, user management, admissions, Data Analytics; release 3: pickup/drop/early-leave requests, class coordinators, transport manifests, SMS framework, account self-service, teacher-performance visibility; release 4: no cut-offs, driver route sheets with stop timings, optional attendant tracking, approved pickup list; release 5: leave, late arrival, teacher meetings and office requests, website links, mobile store app, concurrency fixes and full regression; release 6: Web & App Screens per role with approval workflow, recommended phone defaults, in-app user guide with guided demos; release 7: opens on a Main menu, designations by role, account creation in the app, Admin View as Profile; 7.1–7.5: User management with departments, access by department with read only / full access, access summary, standard profiles for Indian schools; release 8: question papers driven by topic selection, up to 10 sets, approval per set, question bank with topics, blueprints; release 9: Users filters, department and student columns, last change, refresh, parents checked against the student record with no approval, archive of deleted accounts and rejoin). Live, editable copy: https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy
 
 One platform runs Indian K-12 schools of every size, from under 250 to over 1,000 students. Each school gets only the modules its plan includes, and every person sees only the menus their role allows.
 
@@ -796,7 +796,7 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - [ ] Head of Teaching Staff (murali.hots@example.com): Teacher Performance → Share with teachers; then the teacher sees My Teaching Performance
 - [ ] Parent: My Account → change mobile, change password, ask to close the account; Admin handles it in Users
 - [ ] Admin: Operations → SMS Gateway → choose MSG91 or Amazon SNS → fill DLT IDs → Dry run
-- [ ] Anyone: Create account with a Gmail → read the code in the test inbox → set a password → try to sign in (waiting for approval)
+- [ ] Staff: Create account with a Gmail → read the code in the test inbox → set a password → try to sign in (waiting for approval)
 - [ ] Anyone: Create account with a mobile number (code shown on screen until SMS is connected)
 - [ ] Admin: Users → Review the new sign-up → pick the role → Active; the person can now sign in
 - [ ] Admin: Roles & Permissions → Permissions by department → Transport → tick Fees (whole menu) → expand it → untick Collect Fee; View as → Transport team shows Fees without Collect Fee
@@ -821,7 +821,8 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - SMS provider and DLT sender ID: one for the platform, or per school?
 - Which state boards come after Maharashtra, Karnataka, Tamil Nadu, Telangana and Andhra Pradesh, and who loads their chapters and topics?
 - Question bank content: written by schools, licensed from a publisher, or AI-drafted then reviewed?
-- Data retention for students who leave (and for rolled-back imports).
+- Data retention for students who leave (and for rolled-back imports), and how long the archive of deleted accounts is kept.
+- Should parent sign-up also ask for the student's date of birth? Classmates may know a child's name, grade and admission number.
 - Plan prices per tier and add-on, to fill `plan_prices`.
 - SMS OTP provider (MSG91, Gupshup or Amazon SNS) and the DLT-approved OTP template.
 - Can parents sign up themselves, or only accounts the school creates? (Both are built; self sign-up is a plan function.)
