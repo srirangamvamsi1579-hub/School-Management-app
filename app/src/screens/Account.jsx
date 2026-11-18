@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { deleteAccount } from '../lib/users.js';
 import { useStore } from '../data/store.js';
 import { Page, Card, Field, Input, Select, Switch, Modal, Status } from '../components/ui.jsx';
 import { dmon } from '../lib/format.js';
@@ -51,7 +52,7 @@ export function MyAccount() {
     if (me.pw !== hashPassword(delPw, me.salt)) { setErr('Password is not correct'); return; }
     run((d) => { const school = tenantOf(d).name; const email = me.email;
       if (email) d.outbox.unshift({ id: 'M' + (d.outbox.length + 1), to: email, kind: 'Account deleted', status: 'SENT', at: new Date().toISOString(), subject: `${school}: your account has been deleted`, body: '<p>Your account and contact details have been deleted as you asked. Records the school must keep by law stay with the school.</p>' });
-      deleteAccount(d, me.id, me.name + ' (self)'); log(d, 'Account holder', 'Account deleted by its owner', me.id); });
+      deleteAccount(d, me.id, me.name + ' (self)', { self: true }); log(d, 'Account holder', 'Account deleted by its owner', me.id); });
     setDel(false); logout(); notify('Your account has been deleted');
   };
   const request = (type, detail) => { run((d) => { d.accountRequests = d.accountRequests || []; d.accountRequests.unshift({ id: 'AR' + (d.accountRequests.length + 1), userId: me.id, type, detail, status: 'Pending', at: new Date().toISOString() }); log(d, me.name, 'Account request', `${type} ${detail}`); }); notify('Sent to the school office'); };
@@ -179,7 +180,7 @@ export function AccountRequests() {
     const x = d.accountRequests.find((y) => y.id === r.id); x.status = ok ? 'Done' : 'Rejected'; x.by = session.name || session.role;
     const u = d.users.find((y) => y.id === r.userId);
     if (ok && r.type === 'LINK_CHILD') u.children = [...new Set([...(u.children || []), r.detail])];
-    if (ok && r.type === 'DELETE') deleteAccount(d, u.id, session.name || session.role);
+    if (ok && r.type === 'DELETE') deleteAccount(d, u.id, session.name || session.role, { self: true, reason: 'Asked to close the account' });
     log(d, session.name || session.role, 'Account request ' + x.status.toLowerCase(), `${r.type} · ${u?.login || r.userId}`);
   });
   if (!list.length) return null;
@@ -189,10 +190,6 @@ export function AccountRequests() {
       <td><div className="row"><button className="btn sm pri" disabled={r.type === 'LINK_CHILD' && !kid} onClick={() => { done(r, true); notify('Done'); }}>{r.type === 'DELETE' ? 'Close account' : 'Link'}</button><button className="btn sm" onClick={() => { done(r, false); notify('Rejected'); }}>Reject</button></div></td></tr>; })}</tbody></table></Card>;
 }
 
-// Close an account: sign-in removed and personal contact details erased; records the school must keep stay
-export function deleteAccount(db, userId, by) {
-  const u = db.users.find((x) => x.id === userId);
-  Object.assign(u, { status: 'DELETED', name: 'Closed account', login: 'deleted-' + u.id, email: '', mobile: '', pw: '', children: [], extra: [], deletedAt: new Date().toISOString(), deletedBy: by });
-  return u;
-}
+// Closing an account archives it first, then removes the sign-in (lib/users.js)
+export { deleteAccount };
 export { Status };

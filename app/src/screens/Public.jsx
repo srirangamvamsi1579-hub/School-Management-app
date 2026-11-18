@@ -34,7 +34,7 @@ export function DeleteAccountRequest() {
   const send = () => { const u = findUser(db, id.trim()); if (!u || u.status === 'DELETED') { setMsg('No account with that email or mobile.'); return; }
     const r = run((d) => sendOtp(d, { to: normId(id.trim()), channel: idType(id.trim()) === 'MOBILE' ? 'SMS' : 'EMAIL', purpose: 'DELETE', schoolName: t.name })); setSent(r); setMsg(''); };
   const confirm = () => { const err = run((d) => { const e = checkOtp(d, { to: sent.to, purpose: 'DELETE', code }); if (e) return e; const u = findUser(d, id.trim());
-      if (u.role === 'PARENT') deleteAccount(d, u.id, 'Owner (web)'); else { d.accountRequests = d.accountRequests || []; d.accountRequests.unshift({ id: 'AR' + (d.accountRequests.length + 1), userId: u.id, type: 'DELETE', detail: 'web', status: 'Pending', at: new Date().toISOString() }); } return null; });
+      if (u.role === 'PARENT') deleteAccount(d, u.id, 'Owner (web)', { self: true }); else { d.accountRequests = d.accountRequests || []; d.accountRequests.unshift({ id: 'AR' + (d.accountRequests.length + 1), userId: u.id, type: 'DELETE', detail: 'web', status: 'Pending', at: new Date().toISOString() }); } return null; });
     if (err) setMsg(err); else setDone(true); };
   return <Frame><h1>Delete your account</h1>
     {done ? <p role="status">Done. A parent account is deleted straight away; a staff account is closed by the school office within 7 days. Records the school must keep by law stay with the school without your contact details.</p> : <>

@@ -78,15 +78,18 @@ export function StoreProvider({ children }) {
 
   const login = (s) => { setViewAs(null); setSession(s); try { sessionStorage.setItem(KEY + '-s', JSON.stringify(s)); } catch (e) { /* ignore */ } };
   const logout = () => { setViewAs(null); setSession(null); try { sessionStorage.setItem(KEY + '-s', JSON.stringify({ signedOut: true })); } catch (e) { /* ignore */ } };
+  // Re-read the saved copy (changes made in Roles & Permissions or another tab); returns true if anything was newer
+  const refresh = () => { const d = latest(db); if (d !== db) setDb(d); return d !== db; };
   const reset = () => { const d = buildSeed(); save(d); setDb(d); notify('Demo data reset'); };
-  const notify = (msg, kind = 'ok') => { setToast({ msg, kind, id: Date.now() }); setTimeout(() => setToast(null), 3200); };
+  // Each toast clears only itself, so an older toast's timer can't hide a newer one
+  const notify = (msg, kind = 'ok') => { const id = Date.now() + Math.random(); setToast({ msg, kind, id }); setTimeout(() => setToast((t) => (t && t.id === id ? null : t)), 3200); };
 
   // Another tab saved: show its changes here straight away
   useEffect(() => { const h = (e) => { if (e.key === KEY && e.newValue) { try { const d = JSON.parse(e.newValue); setDb((cur) => (d.version === 9 && (d.rev || 0) > (cur.rev || 0) ? d : cur)); } catch (x) { /* ignore */ } } };
     window.addEventListener('storage', h); return () => window.removeEventListener('storage', h); }, []);
   useEffect(() => { const h = (e) => notify(e.detail); document.addEventListener('app-toast', h); return () => document.removeEventListener('app-toast', h); }, []);
   readOnlyRef.current = readOnly;
-  return createElement(Ctx.Provider, { value: { db, mutate, run, session: effective, realSession: session, viewAs: viewed ? viewAs : null, setViewAs, readOnly, screenLock, setScreenLock, login, logout, reset, toast, notify } }, children);
+  return createElement(Ctx.Provider, { value: { db, mutate, run, session: effective, realSession: session, viewAs: viewed ? viewAs : null, setViewAs, readOnly, screenLock, setScreenLock, login, logout, reset, refresh, toast, notify } }, children);
 }
 
 export const useStore = () => useContext(Ctx);

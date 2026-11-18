@@ -196,14 +196,16 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 2. **Sonia Mehta (Teacher, class coordinator 8-A) → My Payslips:** Open the payslip.  
    *You should see:* Shows basic, allowances, PF, TDS and net.
 
-### 4.10 New account from the app → approval in Users
+### 4.10 New account from the app: parents checked automatically, staff approved in Users
 
-*Parent or staff (new), Admin · about 3 min*
+*Parent or staff (new), Admin · about 4 min*
 
-1. **Without signing in → #/p/mobile:** Phone app → school code GVS → Create an account. Pick Parent (give the child’s admission number) or a staff role — e.g. Transport team → designation Driver. Verify the code (shown on screen), set a password.  
+1. **Without signing in → #/p/mobile:** Phone app → school code GVS → Create an account as a Parent. Give the student’s admission number ADM-2025-0231, name Aarav Sharma and grade Grade VIII. Verify the code (shown on screen), set a password.  
+   *You should see:* The details match the student record, so the account is ready at once — no approval. A wrong grade or name is refused (5 tries).
+2. **Without signing in → #/p/mobile:** Create another account, this time as staff: Transport team → designation Driver.  
    *You should see:* Account created, waiting for approval; details emailed (never the password).
-2. **Admin user (Admin) → Users:** The new account is at the top as “Waiting for approval”. Review → the role asked for is filled in and the designation list shows only that role’s designations → status Active → Save.  
-   *You should see:* The person can now sign in.
+3. **Admin user (Admin) → Users:** The parent is Active with Aarav Sharma · Grade VIII shown. The driver is at the top as “Waiting for approval”: Review → the designation list shows only that role’s designations → status Active → Save.  
+   *You should see:* Both can now sign in.
 
 ### 4.11 Add a user: designations follow the role
 
@@ -376,7 +378,7 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |
-| **Users** | Accounts: approve sign-ups, add users, change roles, designation, status, reset passwords, delete. | Add user or Review a sign-up → pick the role (the designation list then shows only that role’s designations; parents are simply Parent) → Active. | Admin | Website |
+| **Users** | Accounts: filter by role, department and status; see each parent’s student (admission no., name, grade), the last sign-in and the last change; approve staff sign-ups, add users, change roles, designation, status, reset passwords; delete (the account is archived); rejoin from the archive. | Add user or Review a staff sign-up → pick the role (the designation list then shows only that role’s designations; parents are simply Parent) → Active. Parents whose student details match the record get access without approval. ↻ Refresh brings in changes made in Roles & Permissions. Archived: search and filter deleted accounts, View, or Rejoin with the details brought up to date. | Admin | Website |
 | **Roles & Permissions** | User management: profiles, departments and designations; add from the standard list for Indian schools or delete profiles. Permissions by department: No access, Read only or Full access for each main menu and sub-menu. Access summary: each person, their profile, department, designation and what they can open. | Permissions by department → pick a department → set a main menu (all its sub-menus) or expand it and set single sub-menus. Read only opens the screen but blocks saving. Access summary → filter by department or profile → Show access. | Admin | Website |
 | **Templates** | Invoices, receipts, emails, payslips and letters in the school’s own format. | Use standard, Copy & edit, or Upload; set the default. | Teacher, Front Office, Principal, Accountant, Admin | Website |
 | **Data Import** | Bring in data from Excel, CSV or photos. | Upload → map columns → map values → check → Import (can be rolled back). | Admin | Website |
