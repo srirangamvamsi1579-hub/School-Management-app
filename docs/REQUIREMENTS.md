@@ -24,7 +24,7 @@ One platform runs Indian K-12 schools of every size, from under 250 to over 1,00
 10. **Website.** The app links to the school's existing website, or hosts a simple new one. Website pages can be added as menu items.
 11. **Mobile.** Parents and staff use one store app (Google Play and App Store, built with Capacitor from the same code) with a small set of screens that each school switches on, under the same access rules as the website. The web app also installs as a PWA.
 12. **Own sign-in page per school.** Each client gets its own sign-in page and accounts. People create an account Gmail-style with a Gmail/email or mobile number, verify it with a one-time code and set a password. Accounts open at once when the details match the school's records: parents against the student record, staff against the staff record. Account details go to their Gmail. OTP by SMS is built as a workflow and switches on when an SMS gateway is connected.
-13. **User management.** An Admin, or anyone given the Users screen by designation or personally, approves sign-ups and changes roles, designations and status. Schools can add their own roles.
+13. **User management.** Accounts open when registration details match the school's records. An Admin, or anyone given the Users screen by designation or personally, changes roles, designations and status. Schools can add their own roles.
 14. **Admissions.** Enquiries and application forms move through Enquiry → Submitted → In review → Offered → Enrolled, or Opted out, with a summary by grade.
 15. **Data Analytics.** A separate menu of Power BI reports: top 6 and bottom 6 per grade (sections together or picked), transport, teacher performance and the admissions funnel.
 
@@ -59,7 +59,7 @@ Seven roles see different menus. Four plans decide which modules a school has. A
 
 | Module | Screens | Key fields and actions |
 | --- | --- | --- |
-| Dashboard | Dashboard | Students vs plan limit, staff, fees collected, overdue, needs-attention list, recent activity |
+| Dashboard | Dashboard | Sections for students, staff, transport, fees and enrolment, each against last year (▲ / ▼); boys and girls; grade limits; needs-attention list and recent activity |
 | Students | Insights, All Students, Admissions & Enquiries, New Admission, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Gate Desk, Promote / Transfer, Documents & ID Cards | Admission no. (generated), name, gender, DOB, class-section, house, guardian name/relation/mobile/email, transport band |
 | Staff | Insights, All Staff, Add Staff, Staff Attendance, Leave Requests | Employee code, short code (timetable), department, designation, mobile, email, basic pay |
 | Academics | Classes & Sections, Boards Syllabus & Textbooks, Timetable | Board, chapters, topics; timetable cells "SUBJECT TEACHER", grade-wide blocks, teacher clash check |
@@ -90,7 +90,7 @@ Each school (client) has its own sign-in page at `<school>.yourapp.com`, branded
 
 **Passwords are never emailed.** The account email confirms the sign-in ID and gives a link to change the password; staff created by an Admin get a set-password link instead of a temporary password. In production Amazon Cognito (one user pool per client) stores passwords, SES sends emails, and a DLT-registered SMS gateway sends OTPs.
 
-**Sign-in rules.** 5 wrong passwords lock the account (unlock with a code or by the school). Codes are 6 digits, expire in 10 minutes, allow 5 tries and can be used once; at most 5 codes per address per hour. Pending accounts cannot sign in.
+**Sign-in rules.** 5 wrong passwords lock the account (unlock with a code or by the school). Codes are 6 digits, expire in 10 minutes, allow 5 tries and can be used once; at most 5 codes per address per hour. Locked and deleted accounts cannot sign in.
 
 ## User and role management
 
@@ -570,7 +570,7 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 - All three must match an enrolled student. Case, spacing and word order don't matter, and the first name must be included.
 - On a match, the account is created **Active**, linked to the child, and the parent can sign in at once.
 - A mismatch creates no account. The message is the same whichever detail was wrong, and it says how many tries are left. After 5 wrong tries, that email or mobile must go through the school office.
-- Staff sign-ups still wait for approval, because the school sets their role and designation.
+- Staff sign-ups still waited for approval in release 9; from release 10 they are checked against the staff record instead.
 - **Add user** for a parent asks for the same three details and checks them the same way.
 - Parent accounts that were waiting from before became Active if their child is on the record, or Locked if not. The database refuses any parent account left waiting for approval.
 
@@ -606,7 +606,7 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 ## Added 18 Nov 2026 (release 9.3)
 
 **Accounts come from registration.**
-- **The normal way in:** parents and staff create their own accounts by registering on the school website or in the app. Parents are checked against the student record and are Active at once; staff wait for approval.
+- **The normal way in:** parents and staff create their own accounts by registering on the school website or in the app. Parents are checked against the student record and are Active at once; staff waited for approval until release 10, which checks them against the staff record.
 - **Add user is for exceptions.**
   - Only the **Admin** role sees it. People who can open Users by designation or personal grant (for example the Vice Principal) can't add anyone.
   - The Admin must give a reason: has no email or mobile of their own, needs help to register, coming back (details from the archive), or other (typed).
