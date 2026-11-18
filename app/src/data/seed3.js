@@ -1,6 +1,7 @@
 // Demo data for coordinators, transport stops, parent requests and SMS settings (all fictional).
 import { rng } from '../lib/format.js';
 import { hashPassword, syncDeptPerms } from '../lib/auth.js';
+import { seedPapers } from './seedPapers.js';
 import { PURPOSES } from '../lib/sms.js';
 
 const STOPS = {
@@ -10,7 +11,7 @@ const STOPS = {
 
 export function extendSeed3(db) {
   const r = rng(43);
-  db.version = 8;
+  db.version = 9;
   db.users.forEach((u) => { if (u.role === 'PARENT' || u.requestedRole === 'PARENT') u.designation = 'Parent'; });
   db.roleDesignations = {};
   db.removedProfiles = [];
@@ -96,5 +97,6 @@ export function extendSeed3(db) {
 
   const ab = riders[20];
   db.attendance[ab.sectionId + ':' + today] = { [ab.id]: 'A' };
+  seedPapers(db);
   return db;
 }

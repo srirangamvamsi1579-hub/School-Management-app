@@ -16,7 +16,7 @@ One platform runs Indian K-12 schools of every size, from under 250 to over 1,00
    - Automatic payment matching, receipts, ledger posting and a confirmation email.
 6. **Exams.**
    - Board-linked syllabus (CBSE, CISCE, IB, state boards) and a question bank tagged Easy / Intermediate / Tough.
-   - Question papers generated in Indian board formats, with approval before printing.
+   - Question papers generated in Indian board formats from the topics chosen for each paper, in up to 10 sets, each approved before printing.
    - Co-scholastic grades and narrative assessment profiles.
 7. **School's own formats.** Every printed or sent document uses a template. A school can use the standard one, edit a copy or upload its own, and choose a default per school, role or user.
 8. **Easy onboarding.** Existing data comes in from Excel, CSV or photos of registers. Columns are mapped to app fields once and the mapping is saved.
@@ -63,7 +63,7 @@ Seven roles see different menus. Four plans decide which modules a school has. A
 | Students | Insights, All Students, Admissions & Enquiries, New Admission, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Gate Desk, Promote / Transfer, Documents & ID Cards | Admission no. (generated), name, gender, DOB, class-section, house, guardian name/relation/mobile/email, transport band |
 | Staff | Insights, All Staff, Add Staff, Staff Attendance, Leave Requests | Employee code, short code (timetable), department, designation, mobile, email, basic pay |
 | Academics | Classes & Sections, Boards Syllabus & Textbooks, Timetable | Board, chapters, topics; timetable cells "SUBJECT TEACHER", grade-wide blocks, teacher clash check |
-| Exams | Question Papers, Approved Papers, Question Bank, Paper Formats, Co-Scholastic Grades, Assessment Profiles | Format, chapters, difficulty mix, Sets A/B/C; approve and lock; print; A/B/C grades; subject comments and appreciation card |
+| Exams | Question Papers, Approved Papers, Question Bank, Blueprints, Co-Scholastic Grades, Assessment Profiles | Papers per exam timetable; topics chosen per paper drive the questions; up to 10 sets, each approved separately; the set for the exam chosen until the start time; print, answer key, teacher's copy; A/B/C grades; subject comments and appreciation card |
 | Fees | Insights, Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions | Grades, instalment, due date; source, UTR, narration, amount, match status; invoice and receipt in the school's template |
 | Transport | Daily Bus Manifest, Pickup & Drop Changes, Routes & Riders | Date, morning/afternoon trip, route; riders by stop with Will board / Not boarding / Absent / Check and the reason |
 | Data Analytics | Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel | Grade, sections, term, subject filters; Power BI pages |
@@ -506,6 +506,53 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
   - `can_edit_screen()` is checked by the API before any save.
   - `v_access_summary` lists each person's screens with their levels.
 
+## Added 17 Nov 2026 (release 8)
+
+**Question papers, built around topics.** Exams → Papers now has four screens, modelled on the question-paper workflow schools already use: **Question Papers**, **Approved Papers**, **Question Bank** and **Blueprints**. The design is our own.
+
+**Question Papers (the list).**
+- Choose the exam (Periodic Test I, Half-yearly, Unit Test 2, Unit Test 3, Annual). The upcoming exam is chosen first.
+- One row per class and subject on that exam's timetable: date, marks filled out of the total, and status. Status reads, for example, "Not started", "Draft · 0 / 2 approved" or "Approved · 1 / 3 approved · Set 2 chosen".
+- **Start** makes the paper from the blueprint for that exam and class, picks the topics and builds Set 1. **Open** continues an existing paper. A subject with no questions in the bank shows "No question bank yet".
+
+**The paper is driven by the topics chosen.**
+- **1. Topics for this paper.** Every chapter of the class and subject is listed, with its term and the number of questions in each topic. The first selection comes from the blueprint's chapter rule (for example "Term 1, first third" for Periodic Test I, "Term 1, all" for Half-yearly, or the whole syllabus for the Annual exam). Another starting rule can be chosen per paper.
+- Tick or untick a whole chapter, or open it and tick single topics. A chapter that is partly chosen is marked as such.
+- With **Update the paper automatically when topics change** on (the default), every draft set is rebuilt at once from the chosen topics only. Questions the teacher locked stay, as long as their topic is still chosen. With it off, the topics change and the teacher regenerates when ready.
+- **Difficulty mix** (Easy / Medium / Hard) is set per paper, and each section's questions follow it.
+- **What the chosen topics hold.** A table shows, for each blueprint section, how many questions are needed, how many the chosen topics have (by difficulty), and how many are short. A shortfall is shown before generating, so the teacher can add topics or questions.
+
+**Sets.**
+- Up to 10 sets per paper (**Add a set**, **Make 10 sets**, **Remove set**). Each set shows how much it overlaps the others ("Set 2 · 0% overlap"). New sets avoid the questions on the other sets while the chosen topics have enough.
+- For each set: marks and time against the blueprint, with a message if anything doesn't match. Tools: Generate / Regenerate, Fill empty slots, Shuffle the paper (within sections), Undo, Version history (the last 25 changes, each restorable).
+- Each question: Move up / down, Replace (another question of the same kind from the chosen topics), Replace from the bank, Add OR (an internal choice from a different topic), Edit for this paper only (the bank keeps the original), Lock, Remove. Each section: Add from the bank, Write a new question (saved to the bank as a draft for review).
+- **Bank picker:** filter by chapter, type, difficulty and marks, and search. Questions already used this year are tagged.
+
+**Approval per set.**
+- Draft → **Send for approval** → **Approve** or **Send back** (with a note). The sender can **Take back** a set before it is decided. An approver can **Reopen as draft** until the exam starts.
+- Who approves: the Principal, the Admin, or a senior teacher (Vice Principal, Head of Teaching Staff, Head of Department, Academic Director, Coordinator). The approver must be someone other than the sender (the Admin excepted).
+- A set waiting for approval, or approved, can't be changed. Each action asks for confirmation first.
+- **Choose the set for the exam** from the approved sets. It can be changed until the paper's start time; after that it is fixed. The other sets are sealed.
+- **Print** the paper, the **Answer key**, or the **Teacher's copy** (questions with answers and marks). **Viewed by** lists who opened the paper and when.
+
+**Approved Papers.** By exam: each paper with "n of m sets approved", the chosen set, and Print / Answer key / Teacher's copy.
+
+**Question Bank.** Pick a class and subject to see its chapters (with term and question counts), add or rename a chapter and its topics, and filter questions by chapter, type, difficulty and term. Questions can be added, edited, duplicated, approved and archived. Only approved questions go into papers. Question types: MCQ, True / False, Fill in the blank, One word, Assertion–Reason, Very short, Short, Long and Case-based.
+
+**Blueprints** (replaces Paper Formats). Name, exam, total marks, time, classes, subjects, board, chapter rule and general instructions, plus sections: title, question types allowed, number of questions, marks each, and how many get an OR. The marks total is shown as sections change. Blueprints can be copied and archived. The demo has unit-test (25 marks) and term-exam (80 marks) blueprints for classes 6–8 and 9–10.
+
+**Demo data.** NCERT chapter names for Class 6, 9 and 10 Mathematics and Class 8 and 10 Science, with a question bank of about 3,000 questions across topics, types and difficulties. Unit Test 2 has a Class 10 Mathematics paper with three sets (Set 2 approved and chosen) and a Class 6 Mathematics draft. The guided demo "Exams" walks through it: a teacher unticks a topic, adds a set and sends it; the Principal approves and chooses the set; the paper is printed from Approved Papers.
+
+- **Database (`018_question_paper_workflow.sql`):**
+  - `exams` and `exam_schedule` (each class × subject paper with date and start time); one paper per timetable entry.
+  - Blueprints: `paper_formats.exam_kind`, `chapter_rule`, `archived`; `paper_format_sections.allowed_qtypes`; `chapters.term`.
+  - `question_papers.exam_id`, `schedule_id`, `chosen_set_id`, `auto_update`; `paper_sets.set_no`, `status`, `submitted_by`, `decided_by`, `note`; `paper_questions.locked`, `edited_stem`, `edited_marks`.
+  - `paper_versions` (snapshots for undo and history) and `paper_views`.
+  - `generate_topic_set()` fills a set only from the chosen topics, follows the difficulty mix, spreads across topics, avoids other sets' questions, keeps locked questions and adds OR questions.
+  - `set_paper_topics()` changes the topics and rebuilds the draft sets when automatic update is on.
+  - `v_paper_topic_availability` shows what the chosen topics hold per section.
+  - `decide_paper_set()` (submit, approve, send back, take back, reopen) and `choose_exam_set()` enforce the approval rules; a trigger blocks changes to submitted and approved sets.
+
 ## Database schema summary
 
 PostgreSQL 15+, seventeen migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
@@ -529,6 +576,7 @@ PostgreSQL 15+, seventeen migration files loaded in order. Every table carries `
 | 015_designation_removals.sql | Removing designations | role_designation_removals; designations_for() without removed ones; remove_role_designation(), add_role_designation() |
 | 016_department_access.sql | Access by department; deleting a profile | department_menu_permissions, sync_department_permissions(), set_department_menu(); v_user_screens by department; v_tenant_profiles, tenant_profile_removals, remove_profile(), restore_profile() |
 | 017_access_levels.sql | Read only or full access | department_menu_permissions.access_level, set_department_access(), v_user_screens.access_level, can_edit_screen(), v_access_summary |
+| 018_question_paper_workflow.sql | Question papers by topic | exams, exam_schedule, blueprint chapter rules, set status and approval, locked questions, paper_versions, paper_views; generate_topic_set(), set_paper_topics(), v_paper_topic_availability, decide_paper_set(), choose_exam_set() |
 
 The test build keeps the same entities in browser memory (`app/src/data`) and runs the same rules in JavaScript (`app/src/lib/logic.js`).
 
@@ -555,8 +603,10 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 **Exams**
 
 1. Only Approved questions go into papers. Teacher-added questions go to review first.
-2. Sets A, B and C share no question. The difficulty mix and marks per section follow the chosen board format.
-3. A paper is Draft → Pending approval → Approved (locked) → Printed. Approved papers can't be edited; a new version is made instead.
+2. Questions come only from the topics chosen for the paper. Changing the topics rebuilds the draft sets (when automatic update is on); locked questions stay if their topic is still chosen.
+3. Sets share no question while the chosen topics have enough. The difficulty mix and marks per section follow the blueprint; a set can't be sent for approval unless its marks match the blueprint.
+4. Each set is Draft → Submitted → Approved or Sent back. Submitted and approved sets can't be edited. The approver is the Principal, Admin or a senior teacher, and not the person who sent it.
+5. Only an approved set can be chosen for the exam, and the choice is fixed once the paper's start time passes.
 
 **Timetable**
 
@@ -675,12 +725,13 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 
 **Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the seventeen migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
-**Automated tests (release 7.5).** See `docs/TEST_REPORT.md`: 45 app tests, 31 SQL check groups (007–017), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 18 web end-to-end tests (including every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations, the collapsed side menu, permissions by department with access levels, read-only screens, the access summary and deleting a profile) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
+**Automated tests (release 8).** See `docs/TEST_REPORT.md`: 52 app tests, 32 SQL check groups (007–018), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 20 web end-to-end tests (including the question-paper flow from topics to approval and print, the question bank and blueprints, every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations, the collapsed side menu, permissions by department with access levels, read-only screens, the access summary and deleting a profile) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
 
 **Earlier automated tests.** `npm test` ran 21 checks on the business rules (including the approved pickup list, route sheets, the attendant-tracking switch, requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
 
 **User-testing script.** Easiest: open the guide (`#/p/guide`) and run the guided demos. Or step by step:
 
+- [ ] Teacher: Exams → Question Papers → Unit Test 2 → Start Class 9 Mathematics → untick a chapter: the paper is rebuilt without it → Add a set → Send for approval; Principal: Approve → choose the set → Approved Papers → Print
 - [ ] Admin: Main menu → View as Profile → Parent → switch to Phone app → try to send a request (blocked: preview only) → Back to Admin
 - [ ] Admin: Users → Add user → Role Transport team: only Transport designations; Role Parent: marked Parent
 - [ ] Phone app (`#/p/mobile`, school GVS) → Create an account as Transport team / Driver → Admin sees it in Users, waiting for approval

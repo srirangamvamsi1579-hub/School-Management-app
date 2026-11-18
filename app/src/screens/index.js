@@ -6,7 +6,8 @@ import { Dashboard, Insights } from './Dashboard.jsx';
 import { StudentList, StudentProfile, Admission, Attendance, Documents, Promote } from './Students.jsx';
 import { StaffList, AddStaff, StaffAttendance, Leave, Classes, Syllabus } from './Staff.jsx';
 import { Timetable } from './Timetable.jsx';
-import { QuestionPapers, ApprovedPapers, QuestionBank, PaperFormats, CoScholastic, AssessmentProfiles } from './Exams.jsx';
+import { CoScholastic, AssessmentProfiles } from './Exams.jsx';
+import { QuestionPapers, ApprovedPapers, QuestionBank, Blueprints } from './Papers.jsx';
 import { CollectFee, FeeRequests, PaymentMatching, Dues, Receipts, FeeStructure, Concessions, ParentFees } from './Fees.jsx';
 import { RunPayroll, Payslips, BankDetails, AccountStatement, Expenses } from './Accounts.jsx';
 import { DataImport } from './Import.jsx';
@@ -40,7 +41,7 @@ export const SCREENS = {
   ANL_HOME: ReportCatalogue, ANL_RANK: TopBottom, ANL_TRANSPORT: TransportReports, ANL_TEACHER: TeacherPerformance, ANL_ADMISSIONS: AdmissionsFunnel, STU_ADMIT: Admission, STU_ATT: Attendance, STU_PROMOTE: Promote, STU_DOCS: Documents,
   STF_LIST: StaffList, STF_ADD: AddStaff, STF_ATT: StaffAttendance, STF_LEAVE: Leave,
   ACA_CLASS: Classes, ACA_SYLLABUS: Syllabus, ACA_TIMETABLE: Timetable,
-  EXM_QP: QuestionPapers, EXM_APPROVED: ApprovedPapers, EXM_QB: QuestionBank, EXM_FORMATS: PaperFormats, EXM_COSCH: CoScholastic, EXM_PROFILE: AssessmentProfiles,
+  EXM_QP: QuestionPapers, EXM_APPROVED: ApprovedPapers, EXM_QB: QuestionBank, EXM_FORMATS: Blueprints, EXM_COSCH: CoScholastic, EXM_PROFILE: AssessmentProfiles,
   FEE_COLLECT: CollectFee, FEE_REQUESTS: FeeRequests, FEE_MATCHING: PaymentMatching, FEE_DUES: Dues, FEE_RECEIPTS: Receipts, FEE_STRUCT: FeeStructure, FEE_CONC: Concessions,
   PAY_RUN: RunPayroll, PAY_SLIPS: Payslips, ACC_BANK: BankDetails, ACC_STMT: AccountStatement, ACC_EXP: Expenses,
   OPS_USERS: Users, OPS_ROLES: Roles, OPS_TEMPLATES: Templates, OPS_IMPORT: DataImport, OPS_APPEARANCE: Appearance, OPS_WEBSITE: WebsiteLinks, OPS_OUTBOX: Outbox,

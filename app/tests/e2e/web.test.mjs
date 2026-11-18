@@ -218,7 +218,7 @@ test('an account created in the phone app appears in Users for approval', async 
   await page.getByLabel('First name').fill('Kiran'); await page.getByLabel('Last name').fill('Bus'); await page.getByRole('button', { name: 'Next' }).click();
   await page.getByLabel(/Gmail \/ email or mobile/).fill('kiran.bus@example.com'); await page.getByRole('button', { name: 'Send verification code' }).click();
   const code = (await page.locator('text=/\\b\\d{6}\\b/').first().innerText().catch(() => '')).match(/\d{6}/)?.[0]
-    || await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('school-app-demo-v8')); return d.outbox.find((m) => m.to === 'kiran.bus@example.com')?.body.match(/\d{6}/)?.[0]; });
+    || await page.evaluate(() => { const d = JSON.parse(localStorage.getItem('school-app-demo-v9')); return d.outbox.find((m) => m.to === 'kiran.bus@example.com')?.body.match(/\d{6}/)?.[0]; });
   await page.getByLabel('Code').fill(code); await page.getByRole('button', { name: 'Verify' }).click();
   await page.getByLabel('Password', { exact: true }).fill('Strong@123'); await page.getByLabel('Confirm').fill('Strong@123'); await page.getByRole('button', { name: 'Next' }).click();
   await page.getByLabel('I am a').selectOption('TRANSPORT');
@@ -434,7 +434,7 @@ test('User management: delete a profile after confirming (blocked while people h
   await dlg.getByRole('button', { name: 'Delete profile' }).click();
   assert.equal(await page.locator('tr', { hasText: 'Hostel Staff' }).count(), 0);
   await page.getByRole('button', { name: 'Add Hostel Staff' }).waitFor();
-  await page.evaluate(() => { const k = 'school-app-demo-v8'; const d = JSON.parse(localStorage.getItem(k)); d.users = d.users.filter((u) => u.role !== 'ACCOUNTANT'); localStorage.setItem(k, JSON.stringify(d)); });
+  await page.evaluate(() => { const k = 'school-app-demo-v9'; const d = JSON.parse(localStorage.getItem(k)); d.users = d.users.filter((u) => u.role !== 'ACCOUNTANT'); localStorage.setItem(k, JSON.stringify(d)); });
   await page.reload();
   await page.getByRole('button', { name: 'Delete profile Accountant' }).click();
   await page.getByRole('dialog', { name: 'Delete this profile?' }).getByRole('button', { name: 'Delete profile' }).click();
@@ -442,6 +442,85 @@ test('User management: delete a profile after confirming (blocked while people h
   await page.goto(server.url + '#/s/OPS_USERS'); await page.getByRole('button', { name: 'Add user' }).click();
   const roles = await page.locator('.modal').getByRole('combobox', { name: /^Role/ }).locator('option').allInnerTexts();
   assert.ok(!roles.includes('Accountant'), roles.join());
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('Question paper: start, rebuild from the chosen topics, sets, approval, choose the set, print', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const { page, errors } = await open(ctx, '#/s/EXM_QP');
+  await page.getByRole('heading', { name: 'Question papers' }).waitFor();
+  await page.getByRole('button', { name: 'Start Class 9 Mathematics' }).click();
+  await page.getByRole('heading', { name: 'Unit Test 2 — Mathematics' }).waitFor();
+  await page.getByText('The paper matches its blueprint.').waitFor();
+  assert.match(await page.locator('.stat', { hasText: 'Marks' }).innerText(), /25 \/ 25/);
+  // the paper follows the topics: untick a chapter, every question then comes from the other chapters
+  const tags = async () => (await page.locator('.slot .small.muted').allInnerTexts()).map((t) => Number((t.match(/ch\. (\d+)/) || [])[1])).filter(Boolean);
+  const chs = [...new Set(await tags())];
+  const drop = chs[0];
+  const chip = page.getByRole('tree', { name: 'Chapters and topics' }).locator('button.chip', { hasText: new RegExp(`^${drop}\\. `) });
+  await chip.click();
+  await page.locator('.toast', { hasText: 'Paper rebuilt from the chosen topics' }).waitFor();
+  assert.ok(!(await tags()).includes(drop), `chapter ${drop} gone after unticking it`);
+  assert.equal(await page.getByRole('table', { name: 'Questions available for each section' }).locator('tbody tr').count(), 4);
+  // undo brings the chapter back
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await page.waitForFunction((d) => [...document.querySelectorAll('.slot .small.muted')].some((e) => e.textContent.includes('ch. ' + d + ' ')), drop);
+  // sets
+  await page.getByRole('button', { name: 'Add a set' }).click();
+  await page.getByRole('tab', { name: /Set 2/ }).waitFor();
+  assert.equal(await page.locator('.pill', { hasText: /Set \d · \d+% overlap/ }).count(), 2);
+  // pick a question from the bank: it is locked so regenerating keeps it
+  await page.getByRole('tab', { name: /^Set 1/ }).click();
+  await page.getByRole('button', { name: 'Replace question 1 from the bank' }).click();
+  const dlg = page.getByRole('dialog', { name: 'Add a question from the bank' });
+  const first = dlg.getByRole('button', { name: /^Add / }).first();
+  const chosen = (await first.getAttribute('aria-label')).slice(4);
+  await first.click();
+  await page.getByRole('button', { name: 'Regenerate' }).click();
+  assert.ok((await page.locator('.slot').first().innerText()).includes(chosen), 'locked question kept');
+  // approval and the set for the exam
+  await page.getByRole('button', { name: 'Send for approval' }).click();
+  await page.getByRole('dialog', { name: 'Send for approval?' }).getByRole('button', { name: 'Confirm' }).click();
+  await page.getByText('Sent for approval — locked until it is approved or sent back.').waitFor();
+  assert.ok(await page.getByRole('button', { name: 'Regenerate' }).isDisabled(), 'locked while waiting');
+  await page.locator('main').getByRole('button', { name: 'Approve', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Approve this set?' }).getByRole('button', { name: 'Confirm' }).click();
+  await page.getByRole('radiogroup', { name: 'Set for the exam' }).getByLabel(/Set 1/).check();
+  await page.getByText('Set 1 is the set for the exam. The other sets are sealed.').waitFor();
+  await page.getByRole('button', { name: 'Answer key' }).click();
+  await page.getByRole('heading', { name: 'Answer key — Set 1' }).waitFor();
+  await page.getByRole('button', { name: '← Back' }).click();
+  await page.getByRole('button', { name: '← Question papers' }).click();
+  assert.match(await page.locator('tr', { hasText: 'Class 9' }).filter({ hasText: 'Mathematics' }).innerText(), /Approved[\s\S]*1 \/ 2 approved · Set 1 chosen/);
+  // Approved papers
+  await page.locator('nav.side button.item', { hasText: 'Approved Papers' }).click();
+  await page.getByRole('button', { name: 'Print set 1 of Class 9 Mathematics' }).click();
+  await page.getByRole('heading', { name: 'Question paper — Set 1' }).waitFor();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('Question bank and Blueprints: chapters with topics, filters, add a question; edit a blueprint', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const { page, errors } = await open(ctx, '#/s/EXM_QB');
+  await page.getByLabel('Class and subject').selectOption('9|Mathematics');
+  await page.getByRole('button', { name: /^7\. Triangles/ }).click();
+  await page.getByLabel('Difficulty filter').selectOption('TOUGH');
+  const rows = await page.locator('tbody tr').allInnerTexts();
+  assert.ok(rows.length > 0 && rows.every((r) => /^7\t/.test(r) && /Hard/.test(r)), 'filtered to chapter 7, hard');
+  await page.getByRole('button', { name: 'Add a question' }).click();
+  const m = page.getByRole('dialog', { name: 'Add a question' });
+  await m.getByLabel('Question', { exact: true }).fill('Prove that the angles opposite equal sides of a triangle are equal.');
+  await m.getByRole('button', { name: 'Save' }).click();
+  await page.locator('.toast', { hasText: 'Question added' }).waitFor();
+  await page.locator('nav.side button.item', { hasText: 'Blueprints' }).click();
+  await page.getByRole('button', { name: 'Edit Unit Test 2 (classes 6–10)' }).click();
+  const bp = page.getByRole('dialog', { name: /Edit Unit Test 2/ });
+  await bp.getByText('Sections (25 marks)').waitFor();
+  await bp.getByRole('button', { name: 'Add a section' }).click();
+  await bp.getByText('Sections (31 marks)').waitFor();
+  await bp.getByRole('button', { name: 'Close' }).click();
   assert.deepEqual(errors, []);
   await ctx.close();
 });
