@@ -723,7 +723,7 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 
 One-time setup: create the dev, preprod and prod environments in GitHub, add required reviewers to preprod and prod, and add the secret `AWS_DEPLOY_ROLE_ARN` (an IAM role for GitHub OIDC).
 
-**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the seventeen migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
+**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the eighteen migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
 **Automated tests (release 8).** See `docs/TEST_REPORT.md`: 52 app tests, 32 SQL check groups (007–018), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 20 web end-to-end tests (including the question-paper flow from topics to approval and print, the question bank and blueprints, every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as, the User management tab, removing designations, the collapsed side menu, permissions by department with access levels, read-only screens, the access summary and deleting a profile) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
 
@@ -769,7 +769,7 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - [ ] Admin: Data Import → "Use a sample old-ERP export" → check the row messages → import → roll back from history
 - [ ] Accountant: Fee Request Emails → Grade VIII → Preview → Send; then Payment Matching → simulate each kind; check remarks, receipts and the outbox
 - [ ] Parent: Fee Dues & Pay → pay online; and pay by bank transfer with a UTR
-- [ ] Teacher: Question Papers → generate 3 sets → send for approval; Principal approves
+- [ ] Teacher: Question Papers → open Class 6 Mathematics → Make 10 sets → check the overlap pills → Shuffle a set → Version history → restore the version before the shuffle
 - [ ] Admin: Templates → Copy & edit the invoice → make it the school default → open an invoice in Dues
 - [ ] Admin: Appearance → change template and colour → Publish
 - [ ] Platform team: switch Payroll off for a school, then sign in as Accountant there
