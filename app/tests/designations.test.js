@@ -49,3 +49,15 @@ test('View as Profile is for the Admin role only, even if granted by designation
   assert.ok(!screensFor(db, vp, 'TEACHER').some((c) => c.startsWith('VA_')));
   for (const code of Object.keys(VIEW_AS)) assert.ok(viewAsUser(db, code), 'a demo account for ' + code);
 });
+
+test('each user profile belongs to a department; schools can rename it; new profiles keep theirs', async () => {
+  const { departmentOf } = await import('../src/data/designations.js');
+  const db = buildSeed();
+  assert.equal(departmentOf(db, 'TRANSPORT'), 'Transport');
+  assert.equal(departmentOf(db, 'TEACHER'), 'Academics');
+  db.roleDepartments = { TEACHER: 'Teaching Staff' };
+  assert.equal(departmentOf(db, 'TEACHER'), 'Teaching Staff');
+  db.customRoles.push({ code: 'R_WARDEN', name: 'Hostel Warden', basedOn: 'FRONT_OFFICE', department: 'Hostel' }, { code: 'R_TM', name: 'Transport Manager', basedOn: 'TRANSPORT' });
+  assert.equal(departmentOf(db, 'R_WARDEN'), 'Hostel');
+  assert.equal(departmentOf(db, 'R_TM'), 'Transport');
+});

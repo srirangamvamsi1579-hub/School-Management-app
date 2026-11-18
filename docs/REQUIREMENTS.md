@@ -103,9 +103,14 @@ Operations → **Users** is open to Admins, and to anyone given the screen by de
 - **Reset password:** emails a set-password link.
 - **Rules:** nobody changes their own role; only an Admin can give the Admin role.
 
-Operations → **Roles & Permissions** has three tabs: the role × screen matrix, **access by designation** (screens a designation opens without changing the role), and **custom roles** (e.g. Transport Manager, copied from an existing role, Professional plan and above).
+Operations → **Roles & Permissions** has two tabs (from release 7.1):
 
-What a person can open = role permissions + designation extras + personal grants, limited to what the school's plan switches on.
+- **User management:** every user profile (role), the **department** it belongs to, the designations it offers, how many people have it and how many screens it opens. Departments can be renamed (Parents have none). New profiles (e.g. Hostel Warden, Transport Manager) are added here with a department, starting screens and their own designations (Professional plan and above).
+- **Role permissions:** the profile × screen matrix.
+
+The Access by designation tab was removed. Rules set there before (Vice Principal and Head of Teaching Staff extras) still apply, but can't be edited in the app.
+
+What a person can open = role permissions + personal grants (+ the existing designation extras), limited to what the school's plan switches on.
 
 ## Admissions pipeline
 
@@ -419,9 +424,29 @@ Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, At
 - `start_view_as()` / `end_view_as()` and `view_as_log` record each view.
 - `v_user_directory` lists every account, pending sign-ups included.
 
+## Added 17 Nov 2026 (release 7.1)
+
+**User management tab.** Roles & Permissions now has two tabs, **User management** and **Role permissions**. The Access by designation tab is gone, and the separate Designations by role and Custom roles tabs are folded into User management.
+
+| Profile | Department (default) |
+| --- | --- |
+| Admin | Administration |
+| Principal | School Leadership |
+| Accountant | Accounts & Finance |
+| Teacher | Academics |
+| Front Office | Front Office & Admissions |
+| Transport team | Transport |
+| Parent | Parents & Guardians (not a school department) |
+
+- Each row shows the profile, its department (**Change** to rename it), the designations it offers (add or remove), how many people have it, and how many screens it opens (click to go to Role permissions).
+- **Add a user profile:** name, department, the profile whose screens it starts with, and its designations. A school-added profile can be removed once nobody has it.
+- Operations → Users shows each person's department under their role, and Add user shows the department next to the role.
+- Existing designation extras (Vice Principal, Head of Teaching Staff) still work; they are no longer edited in the app.
+- **Database (`014_role_departments.sql`):** `role_departments` (standard + school renames, row-level security), `roles.department` for school-added profiles, `department_of()`, `set_role_department()`; `v_user_directory` now includes the department.
+
 ## Database schema summary
 
-PostgreSQL 15+, thirteen migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
+PostgreSQL 15+, fourteen migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
 
 | File | Adds | Key tables, views and functions |
 | --- | --- | --- |
@@ -438,6 +463,7 @@ PostgreSQL 15+, thirteen migration files loaded in order. Every table carries `t
 | 011_requests_website_mobile.sql | Leave, late arrival, meetings, office requests; mobile app | parent_requests new kinds and fields, request_decider(), decide_parent_request() by coordinator / teacher / office, mark_late_arrival(), trip_manifest() with leave and late drop-ins; STU_MEETINGS, STU_OFFICE menus; mobile_screen_catalog, tenant_mobile_app, tenant_mobile_screens, v_user_mobile_screens, push_devices |
 | 012_web_app_screens.sql | Web & App Screens | role_channel_defaults, channel_layouts (DRAFT → PENDING → PUBLISHED, versions, two-person rule), channel_layout_entries; start/submit/approve/send_back_channel_layout(), screen_channel(); v_user_web_screens, v_user_mobile_screens (replaces the 011 per-school switches) |
 | 013_designations_view_as.sql | Designations by role, View as Profile | role_designations, designations_for(), designation_problem() with deferred constraint triggers on users and user_roles, set_user_designation(); VIEWAS / VA_* menus (Admin only, enforced on role, designation and personal grants); view_as_log, start_view_as(), end_view_as(); v_user_directory |
+| 014_role_departments.sql | Departments per user profile | role_departments, roles.department, department_of(), set_role_department(); v_user_directory with department |
 
 The test build keeps the same entities in browser memory (`app/src/data`) and runs the same rules in JavaScript (`app/src/lib/logic.js`).
 
@@ -582,9 +608,9 @@ The test build keeps the same entities in browser memory (`app/src/data`) and ru
 
 One-time setup: create the dev, preprod and prod environments in GitHub, add required reviewers to preprod and prod, and add the secret `AWS_DEPLOY_ROLE_ARN` (an IAM role for GitHub OIDC).
 
-**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the thirteen migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
+**Production back end (next phase).** Cognito sign-in with OTP, API on ECS Fargate, Aurora PostgreSQL with the fourteen migrations (behind RDS Proxy, with a read replica for manifests and reports), SES email, an SMS gateway with DLT templates, Razorpay/Cashfree webhooks, Textract for photos, Power BI Embedded for Insights. All run in ap-south-1 (Mumbai).
 
-**Automated tests (release 7).** See `docs/TEST_REPORT.md`: 40 app tests, 29 SQL checks (007–013), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 11 web end-to-end tests (including every step of all 16 guided demos, Main menu, designations by role, app sign-up and View as) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
+**Automated tests (release 7.1).** See `docs/TEST_REPORT.md`: 41 app tests, 27 SQL check groups (007–014), 10 concurrency and load tests (`database/tests/concurrency/run.sh`), 12 web end-to-end tests (including every step of all 16 guided demos, Main menu, designations by role, app sign-up, View as and the User management tab) (`npm run test:e2e`) and 12 mobile store-readiness tests (`npm run test:store`), all run by `.github/workflows/tests.yml` and `mobile.yml`.
 
 **Earlier automated tests.** `npm test` ran 21 checks on the business rules (including the approved pickup list, route sheets, the attendant-tracking switch, requests, gate codes, manifests, the SMS framework, performance visibility, sign-in and OTP, designation access, analytics and admissions), and `database/tests/007_checks.sql`, `008_checks.sql` and `009_checks.sql` test the SQL. The earlier checks cover amount in words, payment posting, fee requests and SMS fallback, auto-matching (link, narration, duplicate, unmatched), parent UTR then bank line, import mapping and rollback, paper sets without repeats, templates and sanitising. All pass. A browser run opened every screen for all ten demo sign-ins (eight roles plus two designations) with no errors.
 
@@ -616,7 +642,7 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - [ ] Anyone: Create account with a Gmail → read the code in the test inbox → set a password → try to sign in (waiting for approval)
 - [ ] Anyone: Create account with a mobile number (code shown on screen until SMS is connected)
 - [ ] Admin: Users → Review the new sign-up → pick the role → Active; the person can now sign in
-- [ ] Admin: Roles & Permissions → Access by designation; then sign in as "Teacher + Vice Principal" and open Users
+- [ ] Admin: Roles & Permissions → User management → rename Teacher's department; add a profile "Hostel Warden" (department Hostel, designations Hostel Warden, Assistant Warden); Users → Add user → Hostel Warden offers those designations
 - [ ] Front Office: Admissions & Enquiries → Application form → move it to In review, Offered, Enrolled; check the summary by grade
 - [ ] Principal: Data Analytics → Top & Bottom Performers → Grade IX, all sections, then pick S1 and W1
 - [ ] Principal: Teacher Performance and Transport Reports with a grade filter

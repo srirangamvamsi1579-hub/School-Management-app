@@ -209,7 +209,7 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 
 1. **Admin user (Admin) → Users:** Add user → Role Transport team: the designations are Transport In-charge, Transport Supervisor, Driver, Cleaner, Bus Helper / Attendant. Change the role to Parent: the designation is simply Parent.  
    *You should see:* Each role offers only its own designations.
-2. **Admin user (Admin) → Roles & Permissions:** Designations by role → Transport team → add “Route Marshal”.  
+2. **Admin user (Admin) → Roles & Permissions:** User management → Transport team (department Transport) → add the designation “Route Marshal”.  
    *You should see:* It is offered next time a Transport user is added.
 
 ### 4.12 See the app as each profile (Admin)
@@ -375,7 +375,7 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |
 | **Users** | Accounts: approve sign-ups, add users, change roles, designation, status, reset passwords, delete. | Add user or Review a sign-up → pick the role (the designation list then shows only that role’s designations; parents are simply Parent) → Active. | Admin | Website |
-| **Roles & Permissions** | Which screens each role can open; access by designation; the designations offered for each role; custom roles. | Tick screens per role; add designation extras; add designations to a role (e.g. Transport → Driver, Cleaner, Bus Helper). | Admin | Website |
+| **Roles & Permissions** | User management: each user profile (role), the department it belongs to, the designations it offers and new profiles. Role permissions: which screens each profile can open. | User management → change a department, add designations to a profile (e.g. Transport → Route Marshal), or Add a user profile. Role permissions → tick screens per profile. | Admin | Website |
 | **Templates** | Invoices, receipts, emails, payslips and letters in the school’s own format. | Use standard, Copy & edit, or Upload; set the default. | Teacher, Front Office, Principal, Accountant, Admin | Website |
 | **Data Import** | Bring in data from Excel, CSV or photos. | Upload → map columns → map values → check → Import (can be rolled back). | Admin | Website |
 | **Web & App Screens** | Which screens each role sees on the website, in the mobile app, or both. | Pick a role → choose Website + app / Website only / App only → Send for approval → the Principal approves → published. | Principal, Admin, Platform team | Website |

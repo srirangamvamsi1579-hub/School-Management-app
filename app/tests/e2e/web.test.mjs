@@ -256,3 +256,32 @@ test('Admin views the app as a parent: menus change, preview is read-only, phone
   assert.deepEqual(errors.filter((e) => !/Preview only/.test(e)), []);
   await ctx.close();
 });
+
+test('Roles & Permissions: User management tab (profiles, departments, designations); no Access by designation tab', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+  const { page, errors } = await open(ctx, '#/s/OPS_ROLES');
+  const tabs = (await page.getByRole('tab').allInnerTexts()).map((x) => x.trim());
+  assert.deepEqual(tabs, ['User management', 'Role permissions']);
+  const row = page.locator('tr', { hasText: 'Transport team' });
+  assert.match(await row.innerText(), /Transport[\s\S]*Driver[\s\S]*Cleaner/);
+  await page.getByRole('button', { name: 'Change department of Teacher' }).click();
+  await page.getByLabel('Department for Teacher').fill('Teaching Staff');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.locator('tr', { hasText: 'Teaching Staff' }).first().waitFor();
+  await page.getByLabel('New designation for Transport team').fill('Route Marshal');
+  await page.getByLabel('New designation for Transport team').press('Enter');
+  await row.getByText('Route Marshal').waitFor();
+  await page.getByPlaceholder(/Librarian, Hostel Warden/).fill('Hostel Warden');
+  await page.getByPlaceholder(/Hostel Warden, Assistant Warden/).fill('Hostel Warden, Assistant Warden');
+  await page.getByLabel('Department').last().fill('Hostel');
+  await page.getByRole('button', { name: 'Add profile' }).click();
+  const w = page.locator('tr', { hasText: 'Assistant Warden' });
+  await w.waitFor(); assert.match(await w.innerText(), /Hostel Warden[\s\S]*Hostel/);
+  await page.goto(server.url + '#/s/OPS_USERS'); await page.reload();
+  await page.getByRole('button', { name: 'Add user' }).click();
+  await page.locator('.modal').getByRole('combobox', { name: /^Role/ }).selectOption({ label: 'Hostel Warden' });
+  const opts = await page.locator('.modal').getByRole('combobox', { name: /Designation/ }).locator('option').allInnerTexts();
+  assert.ok(opts.includes('Assistant Warden'), opts.join());
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

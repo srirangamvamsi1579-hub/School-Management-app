@@ -34,3 +34,15 @@ export function designationProblem(db, role, designation) {
   return designationsFor(db, role).includes(designation) ? '' : `${designation} is not a ${role.toLowerCase().replace('_', ' ')} designation`;
 }
 export const allDesignations = (db) => [...new Set(Object.keys(ROLE_DESIGNATIONS).filter((r) => r !== 'PARENT').flatMap((r) => designationsFor(db, r)))];
+
+// Department each user profile (role) belongs to. Schools can rename it in Roles & Permissions → User management.
+export const ROLE_DEPARTMENTS = {
+  ADMIN: 'Administration', PRINCIPAL: 'School Leadership', ACCOUNTANT: 'Accounts & Finance', TEACHER: 'Academics',
+  FRONT_OFFICE: 'Front Office & Admissions', TRANSPORT: 'Transport', PARENT: 'Parents & Guardians', PLATFORM: 'Platform team' };
+export function departmentOf(db, role) {
+  if (!role) return '';
+  if (db.roleDepartments?.[role]) return db.roleDepartments[role];
+  const custom = (db.customRoles || []).find((r) => r.code === role);
+  if (custom) return custom.department || ROLE_DEPARTMENTS[custom.basedOn] || '';
+  return ROLE_DEPARTMENTS[role] || '';
+}
