@@ -62,7 +62,7 @@ export function normalizeUsers(db) {
   (db.users || []).forEach((u) => {
     const parent = (u.role || u.requestedRole) === 'PARENT';
     if (u.status === 'DISABLED') u.status = 'LOCKED';
-    if (!u.source) u.source = ['ADMIN', 'PLATFORM'].includes(u.role) ? 'SEED' : 'WEBSITE';
+    if (!u.source) u.source = ['ADMIN', 'PLATFORM', 'SALES'].includes(u.role) ? 'SEED' : 'WEBSITE';
     if (!parent && u.status === 'PENDING') {
       // staff: verified against the staff record, or locked until the school office sorts it out
       const st = (db.staff || []).find((x) => x.status === 'Active' && [String(x.email || '').toLowerCase(), x.mobile && normMobile(x.mobile)].includes(u.login));

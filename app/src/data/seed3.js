@@ -1,5 +1,6 @@
 // Demo data for coordinators, transport stops, parent requests and SMS settings (all fictional).
 import { seedRelease12 } from './seedRelease12.js';
+import { seedRelease13 } from './seedRelease13.js';
 import { rng } from '../lib/format.js';
 import { hashPassword, syncDeptPerms } from '../lib/auth.js';
 import { seedPapers } from './seedPapers.js';
@@ -103,6 +104,7 @@ export function extendSeed3(db) {
   seedPapers(db);
   seedDashboard(db);
   seedRelease12(db);
+  seedRelease13(db);
   normalizeUsers(db);
   return db;
 }

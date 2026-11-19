@@ -5,7 +5,7 @@
 export const DEMO_PEOPLE = {
   U1: 'Admin user (Admin)', U2: 'Dr. Kavita Menon (Principal)', U3: 'Sana Khan (Accountant)', U4: 'Sonia Mehta (Teacher, class coordinator 8-A)',
   U5: 'Anita Rao (Front Office)', U6: 'Rohit Sharma (Parent of Aarav, 8-A)', U7: 'Meera Iyer (Teacher + Vice Principal)', U8: 'Platform support (our company)',
-  U20: 'Manjunath Gowda (Transport In-charge)', U21: 'Murali Krishnan (Teacher + Head of Teaching Staff)'
+  U20: 'Manjunath Gowda (Transport In-charge)', U21: 'Murali Krishnan (Teacher + Head of Teaching Staff)', 'U-SALES': 'Sales team (our company)'
 };
 
 // [what it is for, how to use it]
@@ -76,6 +76,17 @@ export const SCREEN_HELP = {
   SELF_MYPERF: ['Your own teaching results (only when shared).', 'Read-only.'],
   SELF_PROFILE: ['Your account: name, email or mobile, password, notifications, linked children; delete your account.', 'Change details (a code confirms new email or mobile).'],
   SELF_PREFS: ['Your display preferences.', 'Pick layout density and theme.'],
+  CMP_EVENTS: ['The school calendar: events, exams, parent meetings, circulars and holidays.', 'Add event → title, type, dates, who it is for → Save. Then “Send to …” puts it in the app for parents and/or staff. Tick Show past for earlier events.'],
+  CMP_HOMEWORK: ['Homework for each class, and who has done it. Parents see their child’s homework and status.', 'Set homework → class, subject, what to do, due date → Save. Open Mark to tick Done, Late or Missing for each student.'],
+  CMP_CLASSES: ['Live online classes with a Google Meet, Zoom or Teams link, and who attended.', 'Schedule a class → class, subject, date, time, minutes, meeting link. Students and parents join from Coming up. After the class, Held → Attendance.'],
+  CMP_LIBRARY: ['Library catalogue, issue and return, overdue books and fines.', 'Issue & return → find the student, pick a book → Issue. Return shows any fine. Catalogue → Add book. Overdue → Remind parent.'],
+  CMP_INVENTORY: ['Uniforms, books and stationery: stock, sales to students, re-ordering.', 'Receive stock when a delivery arrives; Sell to a student → find the student, item, quantity → Save shows the amount to collect. Items at or below the re-order level are flagged.'],
+  CMP_HOSTEL: ['Hostel blocks, rooms and beds, residents and monthly hostel fees.', 'Give a bed → find the student → pick a room with a free bed in the right block → mess yes or no → Save. Vacate frees the bed.'],
+  SP_RATES: ['Your company’s price list: tiers, add-ons (and which tier includes each), hosting and discount rules.', 'Platform team: change a price and Save price list; new proposals use it at once. Sales can see it but not change it.'],
+  SP_PROPOSAL: ['Priced proposals for schools: tier, messaging, transport, add-ons, hosting and billing, with the price worked out from the price list.', 'New proposal → fill in steps 1 to 5 and watch the price on the right → Save → Preview to print or save as PDF → set the status to Sent, Won or Lost. Build demo opens the Demo builder.'],
+  SP_DEMO: ['Builds a working demo school for a client visit from a proposal or a quick tier choice.', 'Pick the proposal → check what the demo shows (switch extras on or off) → name it → Create → Open as Principal, Teacher or Parent and follow the demo script. End demo at the top brings you back.'],
+  SP_COMPARE: ['Our features and price against Indian and global school software, with our edge and our gaps.', 'Enter the school’s student count to see each provider’s estimated yearly price at the top; filter Indian, global or all, and by feature group. Sources are listed at the bottom.'],
+  SP_MARKET: ['Indian and global market review (with each provider’s country) and the future enhancements we plan.', 'Read the Indian and Global tabs; Future enhancements lists each idea with where it comes from — set its priority and status as plans change.'],
   PLT_SCHOOLS: ['Platform Console: schools, plans, modules, functions and the mobile app switch.', 'Pick a school → plan → switch modules / sub-menus / functions → Mobile app on or off.'],
   VA_PARENT: ['Admin only: see the website and phone app exactly as a parent sees them.', 'Click it; a bar shows who you are viewing as. Switch Website / Phone app; Back to Admin returns. Preview only unless you tick “Act as this person”.'],
   VA_TEACHER: ['Admin only: see the app as a teacher who is a class coordinator.', 'As above.'],
@@ -173,5 +184,15 @@ export const WORKFLOWS = [
   { id: 'analytics', title: 'Results and teacher performance', time: '2 min', roles: 'Principal, Head of Teaching Staff, Teacher', steps: [
     { as: 'U2', screen: 'ANL_RANK', do: 'Grade IX, all sections; then pick two sections.', check: 'Top 6 and bottom 6 change.' },
     { as: 'U21', screen: 'ANL_TEACHER', do: 'Switch "Share with teachers" on.', check: 'Teachers get My Teaching Performance (view only).' },
-    { as: 'U4', screen: 'SELF_MYPERF', do: 'As a teacher.', check: 'Only her own subjects and sections.', needs: 'Opens only after step 2 (Share with teachers) is switched on; otherwise you land on the dashboard.' }] }
+    { as: 'U4', screen: 'SELF_MYPERF', do: 'As a teacher.', check: 'Only her own subjects and sections.', needs: 'Opens only after step 2 (Share with teachers) is switched on; otherwise you land on the dashboard.' }] },
+  { id: 'sales', title: 'Proposal → demo school → client visit (our sales team)', time: '4 min', roles: 'Sales & marketing', steps: [
+    { as: 'U-SALES', screen: 'SP_PROPOSAL', do: 'New proposal: “Hillview School”, 650 students. Tier changes to Professional. Messaging SMS; Transport Plus with 8 buses; add Data Analytics. Save and preview.', check: 'Price on the right: ₹11,125 a month (plan ₹5,850 + SMS ₹975 + 8 buses ₹2,800 + analytics minimum ₹1,500); the preview prints as a proposal.' },
+    { as: 'U-SALES', screen: 'SP_DEMO', do: 'Start from the Hillview proposal → Next → check the menus → Next → Next → Create demo school.', check: 'Step 5 lists the demo script for Professional with route planning and analytics.' },
+    { as: 'U-SALES', screen: 'SP_DEMO', do: 'Open as Principal, show two screens from the script, then End demo at the top.', check: 'The demo school name shows at the top left; End demo brings you back to the Demo builder.' },
+    { as: 'U-SALES', screen: 'SP_COMPARE', do: 'Enter 650 students and look at the price row and Our edge.', check: 'Our price sits among the Indian providers; route planning and the free app show as our edge.' }] },
+  { id: 'campus', title: 'Homework and the school calendar reach parents', time: '3 min', roles: 'Teacher, Front Office, Parent', steps: [
+    { as: 'U4', screen: 'CMP_HOMEWORK', do: 'Set homework for 8-A, Mathematics, due tomorrow.', check: 'It appears in the list with 0 of the class done.' },
+    { as: 'U5', screen: 'CMP_EVENTS', do: 'Add event “Annual Day rehearsal”, for parents, next Friday → Save → Send to parents.', check: 'It says Sent; parents get it in the app bell.' },
+    { as: 'U5', screen: 'CMP_LIBRARY', do: 'Issue & return → find Aarav → pick a book → Issue.', check: 'Due back in 14 days; the book shows one fewer on the shelf.' },
+    { as: 'U6', screen: 'CMP_HOMEWORK', do: 'As the parent, open Homework.', check: 'Aarav’s 8-A homework shows with its due date.' }] }
 ];

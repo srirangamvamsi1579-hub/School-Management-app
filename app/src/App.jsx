@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { DemoEndBar } from './screens/Provider.jsx';
 import { useStore } from './data/store.js';
 import { MENU, PLANS, ROLES, LABEL, MODULE_OF, canSee, onWeb, viewAsUser } from './data/menu.js';
 import { applyTheme } from './lib/theme.js';
@@ -154,6 +155,7 @@ export default function App() {
           {!viewAs && <button className="btn sm" onClick={logout}>Switch user</button>}
         </header>
         {viewBar}
+        <DemoEndBar tenant={tenant} />
         {locked && <div className="ro-bar" role="status">Read only — you can view this screen but not change anything. Your school sets this in Roles &amp; Permissions.</div>}
         <main className={'content' + (locked ? ' ro' : '')}><Screen go={go} code={screen} menus={visible} /></main>
         <DemoBar />

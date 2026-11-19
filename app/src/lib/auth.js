@@ -1,7 +1,7 @@
 // Accounts, sign-up, OTP and sign-in rules for the test build.
 // Production: Amazon Cognito user pool per client (school) — passwords hashed by Cognito, email codes via SES,
 // SMS codes via an Indian DLT-registered SMS gateway. The flow and statuses below are the same.
-import { ACCESS } from '../data/menu.js';
+import { isProvider, ACCESS } from '../data/menu.js';
 import { departmentOf } from '../data/designations.js';
 import { queueSms } from './sms.js';
 
@@ -115,7 +115,7 @@ export function setPassword(db, u, password) {
 }
 
 // ---------- Roles ----------
-export const BUILT_IN = [['ADMIN', 'Admin'], ['PRINCIPAL', 'Principal'], ['ACCOUNTANT', 'Accountant'], ['TEACHER', 'Teacher'], ['FRONT_OFFICE', 'Front Office'], ['PARENT', 'Parent'], ['TRANSPORT', 'Transport team'], ['PLATFORM', 'Platform team']];
+export const BUILT_IN = [['ADMIN', 'Admin'], ['PRINCIPAL', 'Principal'], ['ACCOUNTANT', 'Accountant'], ['TEACHER', 'Teacher'], ['FRONT_OFFICE', 'Front Office'], ['PARENT', 'Parent'], ['TRANSPORT', 'Transport team'], ['PLATFORM', 'Platform team'], ['SALES', 'Sales & marketing']];
 const ALL_BUILT_IN = (db) => [...BUILT_IN.map(([code, name]) => ({ code, name, builtIn: true })), ...(db.customRoles || [])];
 // Profiles in use: built-in ones the school removed are left out (Admin and Platform can't be removed)
 export const allRoles = (db) => ALL_BUILT_IN(db).filter((r) => !(db.removedProfiles || []).includes(r.code));
@@ -126,14 +126,14 @@ export const roleName = (db, code) => ALL_BUILT_IN(db).find((r) => r.code === co
 export const baseRoleOf = (db, role) => (db.customRoles || []).find((r) => r.code === role)?.basedOn || role;
 export const defaultScreens = (db, role) => [...(ACCESS[baseRoleOf(db, role)] || [])].filter((c) => !c.startsWith('VA_'));
 export function rolePerms(db, role) {
-  if (role === 'ADMIN' || role === 'PLATFORM') return ACCESS[role] || [];
+  if (role === 'ADMIN' || isProvider(role)) return ACCESS[role] || [];
   const dept = departmentOf(db, role);
   return (dept && db.deptPerms?.[dept]) || defaultScreens(db, role);
 }
 // Departments in use (from the profiles in use), in a steady order, with their profiles
 export function departments(db) {
   const map = new Map();
-  for (const r of allRoles(db).filter((x) => x.code !== 'PLATFORM')) {
+  for (const r of allRoles(db).filter((x) => !isProvider(x.code))) {
     const d = departmentOf(db, r.code) || r.name;
     if (!map.has(d)) map.set(d, []);
     map.get(d).push(r);
@@ -164,7 +164,7 @@ export function screensFor(db, user, role) {
 // The department sets the level; screens given by designation or personally are full access.
 export function accessLevel(db, user, role, code) {
   if (!role) return null;
-  if (role === 'ADMIN' || role === 'PLATFORM') return (ACCESS[role] || []).includes(code) || code === 'HOME' ? 'FULL' : null;
+  if (role === 'ADMIN' || isProvider(role)) return (ACCESS[role] || []).includes(code) || code === 'HOME' ? 'FULL' : null;
   if (code === 'HOME') return 'FULL';
   const extra = [...(user && db.designationAccess?.[user.designation] || []), ...(user?.extra || [])];
   if (extra.includes(code)) return 'FULL';

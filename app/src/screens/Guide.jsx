@@ -11,8 +11,8 @@ import { tenantOf } from '../lib/logic.js';
 import { roleName, rolePerms, screensFor } from '../lib/auth.js';
 
 const KEY = 'school-demo-run';
-const ROLE_ORDER = ['PARENT', 'TEACHER', 'FRONT_OFFICE', 'TRANSPORT', 'PRINCIPAL', 'ACCOUNTANT', 'ADMIN', 'PLATFORM'];
-const HOME_USER = { ADMIN: 'U1', PRINCIPAL: 'U2', ACCOUNTANT: 'U3', TEACHER: 'U4', FRONT_OFFICE: 'U5', PARENT: 'U6', PLATFORM: 'U8', TRANSPORT: 'U20' };
+const ROLE_ORDER = ['PARENT', 'TEACHER', 'FRONT_OFFICE', 'TRANSPORT', 'PRINCIPAL', 'ACCOUNTANT', 'ADMIN', 'PLATFORM', 'SALES'];
+const HOME_USER = { ADMIN: 'U1', PRINCIPAL: 'U2', ACCOUNTANT: 'U3', TEACHER: 'U4', FRONT_OFFICE: 'U5', PARENT: 'U6', PLATFORM: 'U8', TRANSPORT: 'U20', SALES: 'U-SALES' };
 export const readRun = () => { try { return JSON.parse(sessionStorage.getItem(KEY)); } catch (e) { return null; } };
 const saveRun = (r) => { try { r ? sessionStorage.setItem(KEY, JSON.stringify(r)) : sessionStorage.removeItem(KEY); } catch (e) { /* ignore */ } window.dispatchEvent(new Event('demo-run')); };
 
@@ -72,9 +72,9 @@ export default function HelpGuide() {
   const layout = publishedLayout(t);
   const rank = PLANS.find((p) => p.code === t.plan).rank;
   const planOf = (code) => PLANS.find((p) => p.rank === (MIN_RANK[code] || 1))?.name;
-  const whoCan = (code) => ROLE_ORDER.filter((r) => (r === 'PLATFORM' ? ACCESS.PLATFORM.includes(code) : (rolePerms(db, r)).includes(code)));
+  const whoCan = (code) => ROLE_ORDER.filter((r) => (['PLATFORM', 'SALES'].includes(r) ? ACCESS[r].includes(code) : (rolePerms(db, r)).includes(code)));
   // What the guide covers: the menus this person can open, everything in the school's plan, or everything the platform offers
-  const [scope, setScope] = useState(session && session.role !== 'PLATFORM' ? 'MINE' : 'SCHOOL');
+  const [scope, setScope] = useState(session && !['PLATFORM', 'SALES'].includes(session.role) ? 'MINE' : 'SCHOOL');
   const me = session ? db.users.find((u) => u.id === session.userId) : null;
   const inPlan = (code) => { const mod = MENU.find((m) => m.items.some((i) => i[0] === code)); if (!mod) return true; const ov = t.overrides || {};
     const modOn = ALWAYS_ON.includes(mod.code) || (ov[mod.code] !== undefined ? ov[mod.code] : rank >= mod.min); return modOn && (ov[code] !== undefined ? ov[code] : rank >= (MIN_RANK[code] || 1)); };
@@ -84,7 +84,7 @@ export default function HelpGuide() {
   const demoOk = (w) => w.steps.every((st) => !st.screen || inPlan(st.screen));
   const flows = WORKFLOWS.filter((w) => scope === 'ALL' || demoOk(w));
   const scopeBar = <div className="row small" style={{ margin: '10px 0', flexWrap: 'wrap' }} role="group" aria-label="What the guide covers"><b>Showing:</b>
-    {[...(session && session.role !== 'PLATFORM' ? [['MINE', 'Menus I can open']] : []), ['SCHOOL', `Everything in our plan (${PLANS.find((p) => p.rank === rank).name})`], ['ALL', 'Everything the platform offers']].map(([k, l]) =>
+    {[...(session && !['PLATFORM', 'SALES'].includes(session.role) ? [['MINE', 'Menus I can open']] : []), ['SCHOOL', `Everything in our plan (${PLANS.find((p) => p.rank === rank).name})`], ['ALL', 'Everything the platform offers']].map(([k, l]) =>
       <button key={k} className={'btn sm' + (scope === k ? ' pri' : '')} aria-pressed={scope === k} onClick={() => setScope(k)}>{l}</button>)}
     <span className="muted">{menus.reduce((a, m) => a + m.items.length, 0)} screens</span></div>;
   const body = (
@@ -123,7 +123,7 @@ export default function HelpGuide() {
         {menus.map((m) => <Card key={m.code} title={`${m.label}${m.min > 1 ? ` · from ${PLANS[m.min - 1].name}` : ''}`}>
           <div className="tw"><table className="t"><thead><tr><th>Sub-menu</th><th>What it is for</th><th>How to use it</th><th>Who can open it</th><th>Where</th><th /></tr></thead>
             <tbody>{m.items.map(([code, label]) => { const [what, how] = SCREEN_HELP[code] || ['', '']; const who = whoCan(code);
-              const app = who.filter((r) => r !== 'PLATFORM' && PHONE_READY[code] && channelIn(layout, r, code) !== 'WEB');
+              const app = who.filter((r) => !['PLATFORM', 'SALES'].includes(r) && PHONE_READY[code] && channelIn(layout, r, code) !== 'WEB');
               const try1 = who.find((r) => HOME_USER[r]);
               return <tr key={code}><td className="b">{label}<div className="small muted">from {planOf(code)}</div></td><td className="small">{what}</td><td className="small">{how}</td>
                 <td className="small">{who.map((r) => roleName(db, r)).join(', ') || '—'}</td>
@@ -136,7 +136,7 @@ export default function HelpGuide() {
         const web = webScreens(t, r, perms); const app = mobileTabs({ ...t, mobile: { enabled: true } }, r, perms);
         return <Card key={r} title={roleName(db, r)} right={HOME_USER[r] && <button className="btn sm" onClick={() => signInAs(login, db, HOME_USER[r])}>Sign in as {DEMO_PEOPLE[HOME_USER[r]].split(' (')[0]}</button>}>
           <div className="small"><b>Website ({web.length}):</b> {MENU.filter((m) => m.items.some((i) => web.includes(i[0]))).map((m) => `${m.label} (${m.items.filter((i) => web.includes(i[0])).map((i) => i[1]).join(', ')})`).join(' · ')}</div>
-          <div className="small" style={{ marginTop: 6 }}><b>Phone app:</b> {r === 'PLATFORM' ? 'Website only' : app.map((x) => x[1]).join(', ')}</div>
+          <div className="small" style={{ marginTop: 6 }}><b>Phone app:</b> {['PLATFORM', 'SALES'].includes(r) ? 'Website only' : app.map((x) => x[1]).join(', ')}</div>
         </Card>; })}</div>}
 
       {tab === 'start' && <div className="grid g2" style={{ marginTop: 12 }}>

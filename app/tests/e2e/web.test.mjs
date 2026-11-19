@@ -358,7 +358,7 @@ test('Permissions by department: every menu listed; No access / Read only / Full
   await page.getByRole('option', { name: /^Transport/ }).click();
   const tree = page.getByRole('tree', { name: 'Menus for Transport' });
   const { MENU } = await import('../../src/data/menu.js');
-  for (const m of MENU.filter((x) => x.code !== 'PLATFORM')) assert.equal(await tree.getByLabel('Access to all of ' + m.label, { exact: true }).count(), 1, m.label + ' listed');
+  for (const m of MENU.filter((x) => !['PLATFORM', 'SERVICE_PROVIDER'].includes(x.code))) assert.equal(await tree.getByLabel('Access to all of ' + m.label, { exact: true }).count(), 1, m.label + ' listed');
   assert.equal(await tree.getByLabel('Access to Collect Fee', { exact: true }).count(), 0, 'collapsed at first');
   await tree.getByLabel('Access to all of Fees', { exact: true }).selectOption('READ');
   await tree.getByRole('button', { name: 'Expand Fees' }).click();

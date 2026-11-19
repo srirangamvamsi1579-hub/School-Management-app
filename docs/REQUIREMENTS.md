@@ -726,6 +726,43 @@ Operations → Data Import → **Templates**: 20 predefined templates, one per m
 
 New menus and permissions; full / part time on staff; school holidays; leave types, allowances, approvers, `apply_staff_leave()` and `decide_staff_leave()` with notifications and the staff register; in-app notifications; report cards and CBSE grades with a rank view; buses, breakdowns, route plans and map positions; staff by employment type; help documents and school FAQs; the 20 conversion templates and their columns.
 
+## Added 18 Nov 2026 (release 13)
+
+Release 13 closes the feature gaps found against other school software, and gives our own sales and marketing team its menus. Every new feature is in a new main menu; nothing was moved inside the existing ones.
+
+### 1. Campus Services (new main menu, for schools)
+
+Six screens that Fedena, Devryon, Teachmint and Classter list and we didn't have:
+
+| Screen | What it does | Who | From plan |
+|---|---|---|---|
+| Events & Calendar | Events, exams, parent meetings, circulars and holidays in one calendar; **Send to parents / staff** puts it in the app bell | Admin, Principal, Front Office add; everyone views (parents see everyone and parent events; staff see staff events) | Every plan |
+| Homework | Set homework per class (subject, what to do, due date); mark Done, Late or Missing per student; parents see their child's homework and status | Teachers, Principal, Admin; parents view | Every plan |
+| Online Classes | Schedule a live class with a Meet / Zoom / Teams link (must be https, 10–180 minutes, no two at the same time for a class); Join; attendance afterwards | Teachers, Principal, Admin; parents view | Growth+ or add-on |
+| Library | Catalogue, issue and return; 14-day loans, ₹2 a day fine, 2 books a student, no new book while one is overdue; Overdue → remind the parent | Front Office, Teachers, Principal, Admin | Growth+ or add-on |
+| Inventory & Store | Uniform, books and stationery: stock, receive deliveries, sell to a student (amount to collect), re-order flags; can't sell more than is in stock | Front Office, Accountant, Principal, Admin | Professional+ or add-on |
+| Hostel | Blocks (boys / girls), rooms and beds, give a bed only in the right block and only if a bed is free, one bed per student, vacate, monthly room + mess fee | Front Office, Accountant, Principal, Admin | Enterprise or add-on |
+
+Transport now has **Transport Plus** as a function (`FN_ROUTE_PLANNING`, Professional+ or add-on): without it Routes, Stops & Timings shows stops and timings only; with it, the route planner, pickup suggestions and route map.
+
+### 2. Service Provider (new main menu, for our company only)
+
+A new **Sales & marketing** role (demo user "Sales team") sees only this menu and Help; the Platform team sees it too. School roles never see it — not the Admin, not by department or designation (the database refuses it).
+
+- **Sales → Price List & Tiers.** Tiers (Free, Starter flat ₹1,800, Growth ₹10, Professional ₹9, Enterprise ₹8 per student a month, with minimums and onboarding), add-ons with their rate, minimum, one-time charge and **the tier from which each is included**, hosting options, and rules (11 months for an annual plan; sales discount up to 10%, highest 20%). The Platform team edits; Sales views.
+- **Sales → Proposal Builder.** Five steps: client; students and tier (suggests the tier that fits); messaging (app only / email / SMS) and transport (none / Basic / Plus with buses); add-ons (included ones shown as included); hosting and billing (annual or monthly, discount, inter-state GST). The price updates live: every line a month, one-time lines, the year, per student, and the first invoice with CGST/SGST or IGST. Save, **Preview** (a printable proposal: what the school gets menu by menu, price tables, terms), status Draft / Sent / Won / Lost, open and won value, win rate.
+- **Sales → Demo Builder.** A workflow: 1 pick the proposal (or a quick tier choice) → 2 what the demo shows (the tier and add-ons decide every menu, sub-menu and function; switch any on or off for this demo) → 3 name it → 4 create a demo school → 5 present: **Open as Principal / Admin / Teacher / Parent / Accountant / Front office / Transport**, with a demo script for the chosen options. A bar on every screen says it is a sales demo; **End demo** brings the salesperson back. Demo schools appear in the Platform Console and can be removed.
+- **Market → Competition Comparison.** Our features against 15 providers (8 Indian; USA, United Kingdom, Greece and an India-founded global LMS), with the estimated yearly price for the student count you enter at the top, the pricing basis, ✓ / Add-on / ✗ / ? per feature, **Our edge**, **Gaps to close** and **Price position**, and sources. Prices as of 18 Nov 2026; foreign prices at about ₹88/$, ₹112/£, ₹100/€.
+- **Market → Market Review & Roadmap.** Indian market; global market by country (UK, USA, Greece/Europe, India → global); what it means for us; **Future enhancements**: 14 ideas (GPS tracking, WhatsApp, flat school pack, QR attendance, AI timetable, AI report remarks, parent–teacher chat, online tests, UDISE+/APAAR exports, AI absence assistant, LMS, international curricula, alumni, health records), each with where it was seen, the country, effort, and a priority and status the team can change.
+
+### 3. Pricing plan correction
+
+The pricing plan said the Question Bank was not built. It is (Exams → Question Bank and Question Papers). It is included from Professional and sold as an add-on (₹1 per student a month) below that.
+
+### 4. Database (027_release13.sql)
+
+Menus, plan features and permissions for both new menus; roles SALES and PLATFORM; a trigger that refuses company menus for any school role, department or designation. Library (`library_rules`, `library_books`, `library_loans`, `library_issue()`, `library_return()`, `v_library_overdue`), hostel (`hostel_blocks`, `hostel_rooms`, `hostel_residents` with one bed per student and a capacity and block check that locks the room, `v_hostel_occupancy`), `homework`, `homework_status`, `online_classes` (https link, no clash), `online_class_attendance`, inventory (`inventory_items`, `inventory_moves` with a stock check that locks the item, `v_inventory_stock`), `school_events`; row-level security on all of them. Company tables without a school: `price_lists` (one current), `sales_proposals` (a discount above 10% needs an approver), `tenants.is_demo` and `demo_proposal_id`, `competitors`, `competitor_features`, `roadmap_items`.
+
 ## Database schema summary
 
 PostgreSQL 15+, twenty-six migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.

@@ -9,7 +9,7 @@ export const ROLE_DESIGNATIONS = {
   FRONT_OFFICE: ['Receptionist', 'Front Office Executive', 'Admissions Officer', 'Admission Counsellor', 'Office Superintendent', 'Senior Secretariat Assistant (UDC)', 'Junior Secretariat Assistant (LDC)', 'Office Assistant', 'Data Entry Operator', 'Gate / Security Staff'],
   TRANSPORT: ['Transport In-charge', 'Transport Supervisor', 'Driver', 'Cleaner', 'Bus Helper / Attendant'],
   PARENT: ['Parent'],
-  PLATFORM: ['Platform Support', 'Implementation Manager'] };
+  PLATFORM: ['Platform Support', 'Implementation Manager'], SALES: ['Sales Executive', 'Marketing Manager', 'Pre-sales Consultant'] };
 // Roles a person can ask for when creating their own account (Admin and Platform accounts are created by the school / us)
 export const SIGNUP_ROLES = ['PARENT', 'TEACHER', 'FRONT_OFFICE', 'TRANSPORT', 'ACCOUNTANT', 'PRINCIPAL'];
 // Sign-up choices: the built-in ones still in use, plus profiles the school added
@@ -42,7 +42,7 @@ export const allDesignations = (db) => [...new Set(Object.keys(ROLE_DESIGNATIONS
 // Department each user profile (role) belongs to. Schools can rename it in Roles & Permissions → User management.
 export const ROLE_DEPARTMENTS = {
   ADMIN: 'Administration', PRINCIPAL: 'School Leadership', ACCOUNTANT: 'Accounts & Finance', TEACHER: 'Academics',
-  FRONT_OFFICE: 'Front Office & Admissions', TRANSPORT: 'Transport', PARENT: 'Parents & Guardians', PLATFORM: 'Platform team' };
+  FRONT_OFFICE: 'Front Office & Admissions', TRANSPORT: 'Transport', PARENT: 'Parents & Guardians', PLATFORM: 'Platform team', SALES: 'Sales & Marketing' };
 export function departmentOf(db, role) {
   if (!role) return '';
   if (db.roleDepartments?.[role]) return db.roleDepartments[role];

@@ -69,6 +69,7 @@ export function RoutesRiders({ go }) {
   const [mode, setMode] = useState(null);          // map: 'add' | { move: stopName }
   const [newStop, setNewStop] = useState(null);    // { x, y, name, riders }
   const can = ['ADMIN', 'TRANSPORT', 'PRINCIPAL'].includes(session.role);
+  const planning = funcOn(tenantOf(db), 'FN_ROUTE_PLANNING');   // Transport Plus
   const r = db.routes.find((x) => x.id === rid);
   const kids = db.students.filter((s) => s.status === 'Active' && s.routeId === r.id);
   const opts = routeOptions(db, r.id);
@@ -102,13 +103,14 @@ export function RoutesRiders({ go }) {
         <Stat label="Best option" value={opts[0].key === 'CURRENT' || opts[0].saveMin <= 0 ? 'Already shortest' : `${opts[0].saveMin} min shorter`} sub={opts[0].key === 'CURRENT' || opts[0].saveMin <= 0 ? 'No change suggested' : opts[0].name} />
         <Stat label="Pickup suggestions" value={mineSug.moves.length + mineSug.newStops.length} sub={`${mineSug.moves.length} nearer stop · ${mineSug.newStops.length} new stop`} />
       </div>
-      <Tabs tabs={[['stops', 'Stops & timings'], ['plan', 'Plan the route'], ['suggest', `Pickup suggestions (${mineSug.moves.length + mineSug.newStops.length})`], ['map', 'Route map']]} value={tab} onChange={setTab} />
+      <Tabs tabs={[['stops', 'Stops & timings'], ...(planning ? [['plan', 'Plan the route'], ['suggest', `Pickup suggestions (${mineSug.moves.length + mineSug.newStops.length})`], ['map', 'Route map']] : [])]} value={tab} onChange={setTab} />
+      {!planning && <p className="small muted">Route planning, the route map and pickup suggestions come with Transport Plus. Ask your platform team to switch it on.</p>}
       <div style={{ marginTop: 12 }}>
-      {tab === 'stops' && <Card title={`${r.id} · ${r.name}`} right={can && <div className="row"><button className="btn sm" onClick={() => setEdit(structuredClone(r))}>Edit timings</button><button className="btn sm" onClick={() => { setTab('map'); setMode('add'); }}>Add a stop</button></div>}>
+      {tab === 'stops' && <Card title={`${r.id} · ${r.name}`} right={can && <div className="row"><button className="btn sm" onClick={() => setEdit(structuredClone(r))}>Edit timings</button>{planning && <button className="btn sm" onClick={() => { setTab('map'); setMode('add'); }}>Add a stop</button>}</div>}>
         <p className="small">Bus {r.bus} · Driver {r.driver} ({r.driverMobile}) · Attendant {r.attendant}</p>
         <table className="t" aria-label={`Stops on ${r.id}`}><thead><tr><th>#</th><th>Stop</th><th className="num">Morning pickup</th><th className="num">Afternoon drop</th><th className="num">Riders</th><th className="num">From school</th>{can && <th />}</tr></thead>
           <tbody>{r.stops.map((st) => <tr key={st.name}><td>{st.order}</td><td>{st.name}</td><td className="num">{st.am}</td><td className="num">{st.pm}</td><td className="num">{kids.filter((k) => k.stop === st.name).length}</td><td className="num">{st.x != null ? km(st, SCHOOL).toFixed(1) + ' km' : '—'}</td>
-            {can && <td><div className="row"><button className="btn sm" onClick={() => { setTab('map'); setMode({ move: st.name }); }}>Move on map</button><button className="btn sm" onClick={() => tryRun((d) => removeStop(d, r.id, st.name), `${st.name} removed`)}>Remove</button></div></td>}</tr>)}
+            {can && <td><div className="row">{planning && <button className="btn sm" onClick={() => { setTab('map'); setMode({ move: st.name }); }}>Move on map</button>}<button className="btn sm" onClick={() => tryRun((d) => removeStop(d, r.id, st.name), `${st.name} removed`)}>Remove</button></div></td>}</tr>)}
             <tr><td /><td className="b">School</td><td className="num b">arrive {r.schoolArrive}</td><td className="num b">leave {r.schoolLeave}</td><td /><td />{can && <td />}</tr></tbody></table>
         <div className="row end" style={{ marginTop: 10 }}><button className="btn" onClick={() => go && go('TRN_SHEETS')}>Open driver route sheets</button></div>
       </Card>}

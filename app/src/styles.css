@@ -346,3 +346,8 @@ nav.side .mod:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
 .mobile .reg button.m { width: 44px; height: 44px; font-size: 14px; }
 .mobile .reg th { min-width: 46px; }
 .mobile .reg th.name, .mobile .reg td.name { min-width: 130px; }
+
+/* Release 13: competition table — our column stands out */
+.t.compare th.us, .t.compare td.us { background: var(--accent-soft, rgba(37, 99, 235, .08)); }
+.t.compare th { vertical-align: bottom; }
+.doc ul { padding-left: 18px; }

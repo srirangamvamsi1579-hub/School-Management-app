@@ -96,7 +96,7 @@ test('coming back: Add user copies details from the archive and checks them agai
 test('accounts come from registration; only the Admin adds someone, with a reason', () => {
   const db = buildSeed();
   assert.ok(canAddUsers('ADMIN')); assert.ok(!canAddUsers('PRINCIPAL')); assert.ok(!canAddUsers('TEACHER'));
-  assert.ok(db.users.filter((u) => !['ADMIN', 'PLATFORM'].includes(u.role)).every((u) => ['WEBSITE', 'APP'].includes(u.source)), 'demo accounts registered themselves');
+  assert.ok(db.users.filter((u) => !['ADMIN', 'PLATFORM', 'SALES'].includes(u.role)).every((u) => ['WEBSITE', 'APP'].includes(u.source)), 'demo accounts registered themselves');
   assert.equal(sourceLabel({ source: 'APP' }), 'Registered in the app');
   assert.equal(sourceLabel({ source: 'ADMIN', addReason: 'Needs help to register' }), 'Added by the Admin — Needs help to register');
 });

@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef, cr
 import { buildSeed } from './seed.js';
 import { normalizeUsers } from '../lib/users.js';
 import { seedRelease12 } from './seedRelease12.js';
+import { seedRelease13 } from './seedRelease13.js';
 
 const KEY = 'school-app-demo-v9';
 const Ctx = createContext(null);
@@ -11,7 +12,7 @@ const Ctx = createContext(null);
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) { const d = JSON.parse(raw); if (d.version === 9) { return normalizeUsers(seedRelease12(d)); } }
+    if (raw) { const d = JSON.parse(raw); if (d.version === 9) { return normalizeUsers(seedRelease13(seedRelease12(d))); } }
   } catch (e) { /* storage blocked — run from memory only */ }
   return buildSeed();
 }

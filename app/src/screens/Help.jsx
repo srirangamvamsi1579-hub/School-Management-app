@@ -8,7 +8,7 @@ import { allRoles, roleName } from '../lib/auth.js';
 import { log } from '../lib/logic.js';
 import { dmon } from '../lib/format.js';
 
-const forRole = (roles, role) => roles.includes('ALL') || roles.includes(role) || role === 'ADMIN';
+const forRole = (roles, role) => roles.includes('ALL') || roles.includes(role) || (role === 'ADMIN' && !roles.every((r) => ['SALES', 'PLATFORM'].includes(r)));
 export const docsFor = (db, role) => (db.helpDocs || []).filter((d) => forRole(d.roles, role));
 
 export function Faqs() {
@@ -42,7 +42,7 @@ export function HelpDocs() {
   const [tab, setTab] = useState('docs');
   const [doc, setDoc] = useState(null);
   const [faq, setFaq] = useState(null);
-  const roles = [['ALL', 'Everyone'], ...allRoles(db).filter((r) => r.code !== 'PLATFORM').map((r) => [r.code, r.name])];
+  const roles = [['ALL', 'Everyone'], ...allRoles(db).filter((r) => !['PLATFORM', 'SALES'].includes(r.code)).map((r) => [r.code, r.name])];
   const menus = [['', 'General (no menu)'], ...MENU.flatMap((m) => m.items.filter((i) => i[0][0] !== '#' && !i[0].startsWith('VA_')).map((i) => [i[0], `${m.label} → ${i[1]}`]))];
   const who = (rs) => (rs.includes('ALL') ? 'Everyone' : rs.map((r) => roleName(db, r)).join(', '));
   const pickRoles = (cur, set) => <div className="row small" style={{ flexWrap: 'wrap' }}>{roles.map(([k, n]) => <label key={k} className="row"><input type="checkbox" checked={cur.includes(k)}

@@ -16,7 +16,8 @@ const WHAT = {
   FRONT_OFFICE: 'Admissions & enquiries, documents, fee counter',
   PARENT: 'Child profile, pickup / early-leave requests, fee dues and pay, my account',
   TRANSPORT: 'Daily bus manifests, pickup & drop changes, routes',
-  PLATFORM: 'Your company: schools, plans, add-ons, switching modules on/off'
+  PLATFORM: 'Your company: schools, plans, add-ons, switching modules on/off',
+  SALES: 'Your company: price list, proposals, client demos, competitors and roadmap'
 };
 
 export default function Login({ next = null }) {

@@ -5,7 +5,7 @@ import { Page, Card, Field, Input, Select, Status, Modal, Html, Tabs, Switch } f
 import { dmon } from '../lib/format.js';
 import { log, resolveTemplate, renderFor, categoryName, tenantOf } from '../lib/logic.js';
 import { CATEGORIES, FIELDS, SAMPLE, renderTemplate, sanitize } from '../data/templates.js';
-import { MENU, ROLES, ACCESS, LABEL, PLANS, canSee, FUNCTIONS, funcOn, mobileTabs, ALWAYS_ON } from '../data/menu.js';
+import { isProvider, PROVIDER_MODULES, MENU, ROLES, ACCESS, LABEL, PLANS, canSee, FUNCTIONS, funcOn, mobileTabs, ALWAYS_ON } from '../data/menu.js';
 import { PRESETS, TEMPLATES, contrast, accessible } from '../lib/theme.js';
 import { allRoles, roleName, rolePerms, accessLevel, accessSource, screensFor, departments, syncDeptPerms, defaultScreens, baseRoleOf, canManageUsers, accountEmail, createAccount, idType, isGmail, findUser } from '../lib/auth.js';
 import { designationsFor, fitDesignation, designationProblem, departmentOf, STANDARD_PROFILES } from '../data/designations.js';
@@ -43,7 +43,7 @@ export function Users() {
   const [stamp, setStamp] = useState(() => new Date());
   const allowed = canManageUsers(db, me, session.role);
   const canReset = canResetPasswords(me, session.role);
-  const roles = allRoles(db).filter((r) => r.code !== 'PLATFORM' || session.role === 'PLATFORM');
+  const roles = allRoles(db).filter((r) => !isProvider(r.code) || isProvider(session.role));
   const roleOf = (u) => u.role || u.requestedRole;
   const filter = (fn) => (e) => { fn(e.target.value); setPage(0); };
   const depts = [...new Set(db.users.filter((u) => u.status !== 'DELETED').map((u) => departmentOf(db, roleOf(u))).filter(Boolean))].sort();
@@ -174,14 +174,14 @@ export function Users() {
         <Input placeholder="Search the archive by name, email, mobile or student" aria-label="Search the archive to copy" value={invite.archQ || ''} onChange={(e) => setInvite({ ...invite, archQ: e.target.value })} />
         {archiveMatches(db, invite.archQ).map((a) => <div key={a.id} className="row small" style={{ justifyContent: 'space-between', marginTop: 6 }}>
           <span><b>{a.name}</b> · {a.roleName}{a.designation && a.role !== 'PARENT' ? ' · ' + a.designation : ''} · deleted {dmon(a.deletedAt)}</span>
-          <button className="btn sm" aria-label={'Copy details of ' + a.name} onClick={() => { const r = fromArchive(db, a, { roles: roles.filter((x) => x.code !== 'PLATFORM'), fit: (ro, de) => fitDesignation(db, ro, de) }); setInvite({ ...invite, ...r.fields, archQ: '', copyNotes: r.notes, copiedName: a.name, reason: 'Coming back (details from the archive)' }); }}>Copy details</button></div>)}
+          <button className="btn sm" aria-label={'Copy details of ' + a.name} onClick={() => { const r = fromArchive(db, a, { roles: roles.filter((x) => !isProvider(x.code)), fit: (ro, de) => fitDesignation(db, ro, de) }); setInvite({ ...invite, ...r.fields, archQ: '', copyNotes: r.notes, copiedName: a.name, reason: 'Coming back (details from the archive)' }); }}>Copy details</button></div>)}
         {invite.copiedName && <div className={'note small ' + (invite.copyNotes?.length ? 'warn' : 'ok')} style={{ marginTop: 8 }}>Details copied from {invite.copiedName}'s archived account{invite.copyNotes?.length ? ':' : ' — everything still fits.'}{(invite.copyNotes || []).map((n) => <div key={n}>{n}</div>)}</div>}
       </div>}
       <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
         <Field label="Full name" req><Input value={invite.name} onChange={(e) => setInvite({ ...invite, name: e.target.value })} /></Field>
         <Field label="Sign-in ID (Gmail / email or mobile)" req><Input value={invite.identifier} onChange={(e) => setInvite({ ...invite, identifier: e.target.value })} /></Field>
         {idType(invite.identifier) === 'MOBILE' && <Field label="Gmail for account emails"><Input value={invite.email} onChange={(e) => setInvite({ ...invite, email: e.target.value })} /></Field>}
-        <Field label={'Role' + (departmentOf(db, invite.role) ? ' · ' + departmentOf(db, invite.role) : '')}><Select value={invite.role} onChange={(e) => setInvite({ ...invite, role: e.target.value, designation: fitDesignation(db, e.target.value, invite.designation) })} options={roles.filter((r) => r.code !== 'PLATFORM').map((r) => [r.code, r.name])} /></Field>
+        <Field label={'Role' + (departmentOf(db, invite.role) ? ' · ' + departmentOf(db, invite.role) : '')}><Select value={invite.role} onChange={(e) => setInvite({ ...invite, role: e.target.value, designation: fitDesignation(db, e.target.value, invite.designation) })} options={roles.filter((r) => !isProvider(r.code)).map((r) => [r.code, r.name])} /></Field>
         {invite.role === 'PARENT' ? <Field label="Designation"><Input value="N/A" disabled aria-label="Designation: N/A" /></Field>
           : <Field label="Designation (for this role)"><Select value={invite.designation} onChange={(e) => setInvite({ ...invite, designation: e.target.value })} options={[['', 'Pick a designation'], ...designationsFor(db, invite.role)]} /></Field>}
         {invite.role === 'PARENT' && <>
@@ -268,7 +268,7 @@ function DeptPermissions() {
   const hasAdmin = dept.profiles.some((p) => p.code === 'ADMIN');
   const others = dept.profiles.filter((p) => p.code !== 'ADMIN');
   const who = session.name || session.role;
-  const mods = MENU.filter((m) => m.code !== 'PLATFORM');
+  const mods = MENU.filter((m) => !PROVIDER_MODULES.includes(m.code));
   const groupsOf = (m) => { const out = []; let cur = { key: m.code + ':_', title: null, items: [] };
     for (const i of m.items) { if (i[0][0] === '#') { if (cur.items.length || cur.title) out.push(cur); cur = { key: m.code + ':' + i[0], title: i[1], items: [] }; } else cur.items.push(i); }
     out.push(cur); return out.filter((g) => g.items.length); };
@@ -327,7 +327,7 @@ function AccessSummary() {
   const [dep, setDep] = useState('');
   const [prof, setProf] = useState('');
   const [openRow, setOpenRow] = useState(null);
-  const people = db.users.filter((u) => u.role && u.role !== 'PLATFORM' && u.status !== 'DELETED' && allRoles(db).some((r) => r.code === u.role));
+  const people = db.users.filter((u) => u.role && !isProvider(u.role) && u.status !== 'DELETED' && allRoles(db).some((r) => r.code === u.role));
   const deptNames = departments(db).map((d) => d.name);
   const rows = people.map((u) => {
     const codes = u.role === 'ADMIN' ? MENU.flatMap((m) => m.items.map((i) => i[0])).filter((c) => c[0] !== '#' && !c.startsWith('PLT_') && (ACCESS.ADMIN.includes(c))) : screensFor(db, u, u.role).filter((c) => LABEL[c]);
@@ -339,7 +339,7 @@ function AccessSummary() {
     <div className="row" style={{ marginTop: 12, gap: 8, flexWrap: 'wrap' }}>
       <Input placeholder="Search name or designation" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search people" style={{ maxWidth: 280 }} />
       <Select aria-label="Department" value={dep} onChange={(e) => setDep(e.target.value)} options={[['', 'All departments'], ...deptNames.map((n) => [n, n])]} />
-      <Select aria-label="Profile" value={prof} onChange={(e) => setProf(e.target.value)} options={[['', 'All profiles'], ...allRoles(db).filter((r) => r.code !== 'PLATFORM').map((r) => [r.code, r.name])]} />
+      <Select aria-label="Profile" value={prof} onChange={(e) => setProf(e.target.value)} options={[['', 'All profiles'], ...allRoles(db).filter((r) => !isProvider(r.code)).map((r) => [r.code, r.name])]} />
       <span className="small muted">{rows.length} people</span>
     </div>
     <div className="tw" style={{ marginTop: 10, maxHeight: 'none' }}><table className="t"><thead><tr><th>Name</th><th>Profile</th><th>Department</th><th>Designation</th><th>Full access</th><th>Read only</th><th /></tr></thead>
@@ -350,7 +350,7 @@ function AccessSummary() {
         <td>{r.read ? <span className="pill badge-read">{r.read}</span> : <span className="muted">—</span>}</td>
         <td><button className="btn sm" aria-expanded={openRow === r.u.id} aria-label={(openRow === r.u.id ? 'Hide' : 'Show') + ' access of ' + r.u.name} onClick={() => setOpenRow(openRow === r.u.id ? null : r.u.id)}>{openRow === r.u.id ? 'Hide' : 'Show'} access</button></td></tr>,
         openRow === r.u.id && <tr key={r.u.id + '-d'}><td colSpan={7} style={{ background: 'var(--bg)' }}>
-          <div className="grid g3" style={{ gap: 10 }}>{MENU.filter((m) => m.code !== 'PLATFORM').map((m) => { const items = m.items.filter((i) => i[0][0] !== '#').map((i) => [i, r.lv.find(([c]) => c === i[0])?.[1]]).filter(([, l]) => l);
+          <div className="grid g3" style={{ gap: 10 }}>{MENU.filter((m) => !PROVIDER_MODULES.includes(m.code)).map((m) => { const items = m.items.filter((i) => i[0][0] !== '#').map((i) => [i, r.lv.find(([c]) => c === i[0])?.[1]]).filter(([, l]) => l);
             return items.length ? <div key={m.code} className="card" style={{ padding: 10 }}><b>{m.label}</b>
               {items.map(([i, l]) => <div key={i[0]} className="row small" style={{ justifyContent: 'space-between', padding: '3px 0' }} title={accessSource(db, r.u, r.u.role, i[0])}>
                 <span>{i[1]}</span><span className={'pill ' + (l === 'FULL' ? 'badge-full' : 'badge-read')}>{l === 'FULL' ? 'Full' : 'Read only'}</span></div>)}</div> : null; })}</div>
@@ -474,8 +474,8 @@ export function WebsiteLinks() {
         <div className="grid" style={{ gap: 8 }}>
           <Field label="Label"><Input value={f.label} onChange={(e) => setF({ ...f, label: e.target.value })} /></Field>
           <Field label="Web address (https only)"><Input value={f.url} onChange={(e) => setF({ ...f, url: e.target.value })} /></Field>
-          <Field label="Show under"><Select value={f.under} onChange={(e) => setF({ ...f, under: e.target.value })} options={[['TOP', 'Top of the menu'], ...MENU.filter((m) => m.code !== 'PLATFORM').map((m) => [m.code, m.label])]} /></Field>
-          <div className="row small">{ROLES.filter((r) => r.code !== 'PLATFORM').map((r) => <label key={r.code} className="row"><input type="checkbox" checked={f.roles.includes(r.code)} onChange={() => setF({ ...f, roles: f.roles.includes(r.code) ? f.roles.filter((x) => x !== r.code) : [...f.roles, r.code] })} />{r.name}</label>)}</div>
+          <Field label="Show under"><Select value={f.under} onChange={(e) => setF({ ...f, under: e.target.value })} options={[['TOP', 'Top of the menu'], ...MENU.filter((m) => !PROVIDER_MODULES.includes(m.code)).map((m) => [m.code, m.label])]} /></Field>
+          <div className="row small">{ROLES.filter((r) => !isProvider(r.code)).map((r) => <label key={r.code} className="row"><input type="checkbox" checked={f.roles.includes(r.code)} onChange={() => setF({ ...f, roles: f.roles.includes(r.code) ? f.roles.filter((x) => x !== r.code) : [...f.roles, r.code] })} />{r.name}</label>)}</div>
           <button className="btn pri" disabled={!ok} onClick={() => { run((d) => { d.links.push({ ...f, id: 'L' + Date.now(), open: 'NEW_TAB' }); log(d, session.role, 'Menu link added', f.label); }); setF({ ...f, label: '', url: 'https://' }); notify('Link added to the menu'); }}>Add link</button>
         </div>
       </Card>
@@ -510,7 +510,7 @@ export function Platform() {
       <div>
         <Card title={t.name} right={<Select value={t.plan} onChange={(e) => { mutate((d) => { d.tenants.find((y) => y.id === sel).plan = e.target.value; }); notify('Plan changed — menus update straight away'); }} options={PLANS.map((p) => [p.code, `${p.name} (${p.range})`])} />}>
           <p className="small muted">Renews {t.renews}. Changes are written to the config audit log. Sign in to this school as any role to see the result.</p>
-          {MENU.filter((m) => !['PLATFORM', 'SELF'].includes(m.code)).map((m) => <div key={m.code} style={{ borderTop: '1px solid var(--line)', padding: '8px 0' }}>
+          {MENU.filter((m) => ![...PROVIDER_MODULES, 'SELF'].includes(m.code)).map((m) => <div key={m.code} style={{ borderTop: '1px solid var(--line)', padding: '8px 0' }}>
             <div className="row">{ALWAYS_ON.includes(m.code) ? <span className="pill">Always on</span> : <Switch on={isOn(m.code, m.min)} label={m.label} onClick={() => toggle(m.code, m.min)} />}<b>{m.label}</b>{t.overrides[m.code] !== undefined && <span className="pill info">{t.overrides[m.code] ? 'Add-on' : 'Switched off'}</span>}</div>
             {(ALWAYS_ON.includes(m.code) || isOn(m.code, m.min)) && <div className="row" style={{ paddingLeft: 44, marginTop: 6 }}>{m.items.filter((i) => i[0][0] !== '#').map((i) => <label key={i[0]} className="row small" style={{ marginRight: 10 }}>
               <input type="checkbox" checked={isOn(i[0], i[2])} onChange={() => toggle(i[0], i[2])} />{i[1]}{t.overrides[i[0]] && rank < i[2] ? ' (add-on)' : ''}{!isOn(i[0], i[2]) && rank < i[2] ? <span className="muted"> · {PLANS[i[2] - 1].name}+</span> : ''}</label>)}</div>}
@@ -577,7 +577,7 @@ function UserProfiles({ goMatrix }) {
   const [nr, setNr] = useState({ name: '', department: '', from: 'TEACHER', designations: '' });
   const t = tenantOf(db);
   const who = session.name || session.role;
-  const profiles = allRoles(db).filter((r) => r.code !== 'PLATFORM');
+  const profiles = allRoles(db).filter((r) => !isProvider(r.code));
   const deptNames = departments(db).map((d) => d.name);
   const count = (code) => db.users.filter((u) => (u.role === code || (!u.role && u.requestedRole === code)) && u.status !== 'DELETED').length;
   const holders = (role, name) => db.users.filter((u) => u.role === role && u.designation === name && u.status !== 'DELETED').length;
@@ -676,7 +676,7 @@ function UserProfiles({ goMatrix }) {
           <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
             <Field label="Profile name" req><Input value={nr.name} onChange={(e) => setNr({ ...nr, name: e.target.value })} placeholder="e.g. Librarian, Hostel Warden, Transport Manager" /></Field>
             <Field label="Department"><Input list="dept-names" value={nr.department} onChange={(e) => setNr({ ...nr, department: e.target.value })} placeholder={departmentOf(db, nr.from)} /></Field>
-            <Field label="If the department is new, start with the screens of"><Select value={nr.from} onChange={(e) => setNr({ ...nr, from: e.target.value })} options={allRoles(db).filter((r) => !['PLATFORM', 'ADMIN', 'PARENT'].includes(r.code) && r.builtIn).map((r) => [r.code, r.name])} /></Field>
+            <Field label="If the department is new, start with the screens of"><Select value={nr.from} onChange={(e) => setNr({ ...nr, from: e.target.value })} options={allRoles(db).filter((r) => !['PLATFORM', 'SALES', 'ADMIN', 'PARENT'].includes(r.code) && r.builtIn).map((r) => [r.code, r.name])} /></Field>
             <Field label="Designations (comma separated)"><Input value={nr.designations} onChange={(e) => setNr({ ...nr, designations: e.target.value })} placeholder="e.g. Hostel Warden, Assistant Warden" /></Field>
           </div>
           <p className="small muted">An existing department: the profile opens that department's screens. A new department: it appears in Permissions by department, starting with the screens above.</p>

@@ -1,6 +1,6 @@
 // Frequently asked questions shown in Help → FAQs. roles: who sees it ('ALL' = everyone). The school adds its own in
 // Operations → Help Documents & FAQs.
-export const FAQ_TOPICS = ['Signing in', 'Attendance', 'Leave', 'Fees', 'Transport', 'Results and report cards', 'Requests to school', 'Users and access', 'Data import', 'The app'];
+export const FAQ_TOPICS = ['Signing in', 'Attendance', 'Leave', 'Fees', 'Transport', 'Results and report cards', 'Requests to school', 'Users and access', 'Data import', 'The app', 'Campus', 'Sales and demos'];
 export const FAQS = [
   ['Signing in', 'ALL', 'I forgot my password. What do I do?', 'On the sign-in page choose “Forgot password”. A 6-digit code goes to your email (or by SMS once the school connects it). Enter it and set a new password. The school never emails passwords.'],
   ['Signing in', 'ALL', 'My account is locked.', 'After 5 wrong passwords the account locks. Use “Sign in with a code” to unlock it yourself, or ask the school office.'],
@@ -31,5 +31,12 @@ export const FAQS = [
   ['Data import', 'ADMIN', 'How do we move from our old system?', 'Operations → Data Import → Templates. Download the templates, fill them in the number order (01 first) and upload each one. File names follow NN_Name_Data_SCHOOL_YYYYMMDD.xlsx so the app knows what each file is.'],
   ['Data import', 'ADMIN', 'Can I undo an import?', 'Yes — Import history → Roll back removes everything that import added.'],
   ['The app', 'ALL', 'Is there a phone app?', 'Yes — one app on Google Play and the App Store for every school. Enter the school code once. Which screens show there is set by the school.'],
-  ['The app', 'ALL', 'Where are my notifications?', 'The bell 🔔 at the top shows what needs you (for example leave to approve) and decisions on your requests. Click one to open the screen.']
+  ['The app', 'ALL', 'Where are my notifications?', 'The bell 🔔 at the top shows what needs you (for example leave to approve) and decisions on your requests. Click one to open the screen.'],
+  ['Campus', 'TEACHER,PRINCIPAL,ADMIN,PARENT', 'Where do parents see homework?', 'Campus Services → Homework. Parents see their child’s class only, with Done, Late or Missing once the teacher marks it.'],
+  ['Campus', 'TEACHER,PRINCIPAL,ADMIN,FRONT_OFFICE', 'Why can’t a student borrow a library book?', 'A student can have 2 books at a time and can’t borrow while one is overdue. Return the overdue book first (the fine is shown).'],
+  ['Campus', 'ALL', 'I don’t see Library, Hostel or Online Classes.', 'They come with higher plans or as add-ons: Online Classes and Library from Growth, Inventory from Professional, Hostel with Enterprise. Ask the school office.'],
+  ['Campus', 'ADMIN,PRINCIPAL,FRONT_OFFICE', 'How do parents get an event or circular?', 'Events & Calendar → add it → “Send to parents”. It appears in their app bell straight away.'],
+  ['Sales and demos', 'SALES,PLATFORM', 'How do I price a school?', 'Service Provider → Proposal Builder → New proposal. Enter students, tier, messaging, transport and add-ons; the price comes from the price list. Save, preview and print.'],
+  ['Sales and demos', 'SALES,PLATFORM', 'How do I show a client their own set-up?', 'Demo Builder → pick the proposal → Create demo school → Open as Principal, Teacher or Parent. End demo at the top brings you back. Remove the demo after the visit.'],
+  ['Sales and demos', 'SALES,PLATFORM', 'Can I change prices?', 'Only the platform team can, in Price List & Tiers. Sales can give up to 10% discount; more needs the owner’s approval.']
 ].map(([topic, roles, q, a], i) => ({ id: 'F' + (i + 1), topic, roles: roles.split(','), q, a }));

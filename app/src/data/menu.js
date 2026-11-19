@@ -18,8 +18,13 @@ export const ROLES = [
   { code: 'FRONT_OFFICE', name: 'Front Office', user: 'Anita Rao' },
   { code: 'PARENT', name: 'Parent', user: 'Rohit Sharma' },
   { code: 'TRANSPORT', name: 'Transport team', user: 'Manjunath Gowda' },
-  { code: 'PLATFORM', name: 'Platform team', user: 'Your company' }
+  { code: 'PLATFORM', name: 'Platform team', user: 'Your company' },
+  { code: 'SALES', name: 'Sales & marketing', user: 'Sales team' }
 ];
+// Your company's own people: they see every school's set-up, not one school's data
+export const PROVIDER_ROLES = ['PLATFORM', 'SALES'];
+export const PROVIDER_MODULES = ['PLATFORM', 'SERVICE_PROVIDER'];
+export const isProvider = (role) => PROVIDER_ROLES.includes(role);
 
 // [code, label, minPlanRank, screen]  — '#' codes are section headings
 export const MENU = [
@@ -45,6 +50,9 @@ export const MENU = [
   { code: 'ACCOUNTS', label: 'Accounts', icon: 'chart', min: 1, items: [
     ['ACC_STMT', 'Account Statement', 3], ['ACC_EXP', 'Income & Expenses', 3]] },
   // Operations: user management and data upload. Always on, so the Admin can always reach Users and Roles.
+  // Campus Services: library, hostel, homework, online classes, store and events (release 13)
+  { code: 'CAMPUS', label: 'Campus Services', icon: 'book', min: 1, items: [
+    ['CMP_EVENTS', 'Events & Calendar', 1], ['CMP_HOMEWORK', 'Homework', 1], ['CMP_CLASSES', 'Online Classes', 2], ['CMP_LIBRARY', 'Library', 2], ['CMP_INVENTORY', 'Inventory & Store', 3], ['CMP_HOSTEL', 'Hostel', 4]] },
   { code: 'OPERATIONS', label: 'Operations', icon: 'shield', min: 1, items: [
     ['#U', 'User management'], ['OPS_USERS', 'Users', 1], ['OPS_ROLES', 'Roles & Permissions', 1],
     ['#D', 'Data upload'], ['OPS_IMPORT', 'Data Import', 1], ['OPS_HELPDOCS', 'Help Documents & FAQs', 1]] },
@@ -53,6 +61,10 @@ export const MENU = [
   // Admin only: see the app as each profile sees it, without signing in as them
   { code: 'VIEWAS', label: 'View as Profile', icon: 'eye', min: 1, items: [['VA_PARENT', 'Parent', 1], ['VA_TEACHER', 'Teacher (class coordinator)', 1], ['VA_VP', 'Teacher + Vice Principal', 1], ['VA_HOTS', 'Teacher + Head of Teaching Staff', 1], ['VA_PRINCIPAL', 'Principal', 1], ['VA_ACCOUNTANT', 'Accountant', 1], ['VA_FRONT_OFFICE', 'Front Office', 1], ['VA_TRANSPORT', 'Transport team', 1]] },
   { code: 'PLATFORM', label: 'Platform Console', icon: 'cloud', min: 1, items: [['PLT_SCHOOLS', 'Schools & Plans', 1]] },
+  // Your company's sales and marketing team: price list, proposals, demos, competitors, market and roadmap
+  { code: 'SERVICE_PROVIDER', label: 'Service Provider', icon: 'brief', min: 1, items: [
+    ['#S', 'Sales'], ['SP_RATES', 'Price List & Tiers', 1], ['SP_PROPOSAL', 'Proposal Builder', 1], ['SP_DEMO', 'Demo Builder', 1],
+    ['#M', 'Market'], ['SP_COMPARE', 'Competition Comparison', 1], ['SP_MARKET', 'Market Review & Roadmap', 1]] },
   // Settings: how the school and the app are set up (branding, website, screens, templates, bank details, messages).
   { code: 'SETTINGS', label: 'Settings', icon: 'settings', min: 1, items: [
     ['#S', 'School setup'], ['OPS_APPEARANCE', 'Appearance & Branding', 1], ['OPS_WEBSITE', 'Website & Links', 1], ['OPS_CHANNELS', 'Web & App Screens', 1], ['OPS_TEMPLATES', 'Templates', 1], ['ACC_BANK', 'Bank & Payment Details', 1],
@@ -61,20 +73,24 @@ export const MENU = [
 ];
 
 const ALL = MENU.flatMap((m) => m.items.map((i) => i[0])).filter((c) => c[0] !== '#');
+export const SP_CODES = ['SP_RATES', 'SP_PROPOSAL', 'SP_DEMO', 'SP_COMPARE', 'SP_MARKET'];
+const CMP = { ALL: ['CMP_EVENTS', 'CMP_HOMEWORK', 'CMP_CLASSES', 'CMP_LIBRARY', 'CMP_INVENTORY', 'CMP_HOSTEL'], TEACH: ['CMP_EVENTS', 'CMP_HOMEWORK', 'CMP_CLASSES', 'CMP_LIBRARY'],
+  OFFICE: ['CMP_EVENTS', 'CMP_LIBRARY', 'CMP_INVENTORY', 'CMP_HOSTEL'], MONEY: ['CMP_EVENTS', 'CMP_INVENTORY', 'CMP_HOSTEL'], HOME: ['CMP_EVENTS', 'CMP_HOMEWORK', 'CMP_CLASSES'] };
 
 export const ACCESS = {
-  ADMIN: ALL.filter((c) => !['SELF_CHILD', 'SELF_FEES', 'SELF_REQUESTS', 'SELF_MYPERF', 'PLT_SCHOOLS'].includes(c)),
+  ADMIN: ALL.filter((c) => !['SELF_CHILD', 'SELF_FEES', 'SELF_REQUESTS', 'SELF_MYPERF', 'PLT_SCHOOLS', ...SP_CODES].includes(c)),
   PRINCIPAL: ['DASH', 'OPS_CHANNELS', 'HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'STU_PROFILE', 'STU_REPORTCARD', 'STU_INS', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'STU_OFFICE', 'ACA_COORD', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'SELF_PROFILE', 'ANL_HOME', 'ANL_RANK', 'ANL_TRANSPORT', 'ANL_TEACHER', 'ANL_ADMISSIONS', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE',
     'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_FORMATS', 'EXM_COSCH', 'EXM_PROFILE', 'FEE_INS', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_STRUCT', 'FEE_CONC',
-    'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
+    'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS', ...CMP.ALL],
   ACCOUNTANT: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'DASH', 'STU_LIST', 'STF_LIST', 'SELF_PROFILE', 'ANL_HOME', 'ANL_TRANSPORT', 'FEE_INS', 'FEE_COLLECT', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_RECEIPTS', 'FEE_STRUCT', 'FEE_CONC',
-    'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'OPS_OUTBOX', 'SELF_PAYSLIP', 'SELF_PREFS'],
+    'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'OPS_OUTBOX', 'SELF_PAYSLIP', 'SELF_PREFS', ...CMP.MONEY],
   TEACHER: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'DASH', 'STU_LIST', 'STU_PROFILE', 'STU_REPORTCARD', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'ANL_RANK', 'SELF_PROFILE', 'ACA_SYLLABUS', 'ACA_TIMETABLE', 'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_COSCH', 'EXM_PROFILE',
-    'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
-  FRONT_OFFICE: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'DASH', 'STU_LIST', 'STU_PROFILE', 'STU_GATE', 'STU_OFFICE', 'TRN_CHANGES', 'SELF_PROFILE', 'STU_ADMISSIONS', 'STU_ADMIT', 'ANL_ADMISSIONS', 'STU_DOCS', 'FEE_COLLECT', 'FEE_DUES', 'FEE_RECEIPTS', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS'],
-  PARENT: ['HELP_GUIDE', 'HELP_FAQ', 'DASH', 'ACA_TIMETABLE', 'SELF_CHILD', 'SELF_REQUESTS', 'SELF_FEES', 'SELF_PROFILE', 'SELF_PREFS'],
-  TRANSPORT: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'ANL_TRANSPORT', 'SELF_PROFILE', 'SELF_PREFS'],
-  PLATFORM: ['PLT_SCHOOLS', 'OPS_CHANNELS', 'HELP_GUIDE', 'HELP_FAQ']
+    'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS', ...CMP.TEACH],
+  FRONT_OFFICE: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'DASH', 'STU_LIST', 'STU_PROFILE', 'STU_GATE', 'STU_OFFICE', 'TRN_CHANGES', 'SELF_PROFILE', 'STU_ADMISSIONS', 'STU_ADMIT', 'ANL_ADMISSIONS', 'STU_DOCS', 'FEE_COLLECT', 'FEE_DUES', 'FEE_RECEIPTS', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS', ...CMP.OFFICE],
+  PARENT: ['HELP_GUIDE', 'HELP_FAQ', 'DASH', 'ACA_TIMETABLE', 'SELF_CHILD', 'SELF_REQUESTS', 'SELF_FEES', 'SELF_PROFILE', 'SELF_PREFS', ...CMP.HOME],
+  TRANSPORT: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'ANL_TRANSPORT', 'SELF_PROFILE', 'SELF_PREFS', 'CMP_EVENTS'],
+  PLATFORM: ['PLT_SCHOOLS', 'OPS_CHANNELS', 'HELP_GUIDE', 'HELP_FAQ', ...SP_CODES],
+  SALES: [...SP_CODES, 'HELP_GUIDE', 'HELP_FAQ']
 };
 
 // Modules a school can't switch off (Platform Console shows them as Always on)
@@ -91,10 +107,11 @@ export function canSee(code, role, rank, overrides = {}, perms = null) {
   const list = perms?.[role] || ACCESS[role] || [];
   if (!list.includes(code)) return false;
   const mod = MENU.find((m) => m.items.some((i) => i[0] === code));
+  if (PROVIDER_MODULES.includes(mod.code)) return isProvider(role);
   const modOn = ALWAYS_ON.includes(mod.code) || (overrides[mod.code] !== undefined ? overrides[mod.code] : rank >= mod.min);
-  if (!modOn && role !== 'PLATFORM') return false;
+  if (!modOn && !isProvider(role)) return false;
   const on = overrides[code] !== undefined ? overrides[code] : rank >= (MIN_RANK[code] || 1);
-  return on || role === 'PLATFORM';
+  return on || isProvider(role);
 }
 
 // Functions inside modules (not menus). minRank = plan from which it is on by default; null = off unless
@@ -105,7 +122,8 @@ export const FUNCTIONS = [
   { code: 'FN_SMS_OTP', module: 'SETTINGS', name: 'OTP and alerts by SMS (needs an SMS provider)', minRank: 2 },
   { code: 'FN_CUSTOM_TEMPLATES', module: 'SETTINGS', name: 'Edit and upload own templates', minRank: 2 },
   { code: 'FN_CUSTOM_ROLES', module: 'OPERATIONS', name: 'Custom roles', minRank: 3 },
-  { code: 'FN_IMAGE_IMPORT', module: 'OPERATIONS', name: 'Import from photos / scans (OCR)', minRank: 3 }
+  { code: 'FN_IMAGE_IMPORT', module: 'OPERATIONS', name: 'Import from photos / scans (OCR)', minRank: 3 },
+  { code: 'FN_ROUTE_PLANNING', module: 'TRANSPORT', name: 'Route planning, route map and pickup suggestions (Transport Plus)', minRank: 3 }
 ];
 export function funcOn(tenant, code) {
   if (tenant.overrides?.[code] !== undefined) return !!tenant.overrides[code];
@@ -146,13 +164,13 @@ export function channelIn(layout, role, code) {
   return layout?.[role]?.[code] || RECOMMENDED[role]?.[code] || 'WEB';
 }
 export const publishedLayout = (tenant) => tenant.channels?.published || {};
-export const onWeb = (tenant, role, code) => role === 'PLATFORM' || channelIn(publishedLayout(tenant), role, code) !== 'APP';
+export const onWeb = (tenant, role, code) => isProvider(role) || channelIn(publishedLayout(tenant), role, code) !== 'APP';
 export const onApp = (tenant, role, code) => channelIn(publishedLayout(tenant), role, code) !== 'WEB';
 
 // Tabs for this person in the mobile app: the school has the app on, the screen is set to the app for their role,
 // and the same web access rules allow it (plan, add-ons, role, designation, personal grants)
 export function mobileTabs(tenant, role, perms, layout = publishedLayout(tenant)) {
-  if (!tenant.mobile?.enabled || role === 'PLATFORM') return [];
+  if (!tenant.mobile?.enabled || isProvider(role)) return [];
   const rank = PLANS.find((p) => p.code === tenant.plan).rank;
   const codes = Object.keys(PHONE_READY).filter((code) => channelIn(layout, role, code) !== 'WEB' && canSee(code, role, rank, tenant.overrides, perms));
   // Account always last
@@ -162,7 +180,7 @@ export function mobileTabs(tenant, role, perms, layout = publishedLayout(tenant)
 // Website menu codes for this person (same rules, minus screens set to app only)
 export function webScreens(tenant, role, perms, layout = publishedLayout(tenant)) {
   const rank = PLANS.find((p) => p.code === tenant.plan).rank;
-  return MENU.flatMap((m) => m.items.map((i) => i[0])).filter((c) => c[0] !== '#' && canSee(c, role, rank, tenant.overrides, perms) && (role === 'PLATFORM' || channelIn(layout, role, c) !== 'APP'));
+  return MENU.flatMap((m) => m.items.map((i) => i[0])).filter((c) => c[0] !== '#' && canSee(c, role, rank, tenant.overrides, perms) && (isProvider(role) || channelIn(layout, role, c) !== 'APP'));
 }
 
 // Which demo profile each View-as item shows: a role, and optionally a designation
