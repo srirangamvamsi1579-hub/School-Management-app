@@ -99,7 +99,7 @@ export function Hostel() {
     actions={can && <button className="btn pri" onClick={() => setAdd({ studentId: null, roomId: '', mess: true })}>Give a bed</button>}>
     <div className="kpis"><Stat label="Beds" value={occ.reduce((s, b) => s + b.beds, 0)} /><Stat label="Occupied" value={res.length} sub={`${Math.round((100 * res.length) / Math.max(1, occ.reduce((s, b) => s + b.beds, 0)))}% full`} /><Stat label="Free beds" value={occ.reduce((s, b) => s + b.free, 0)} /><Stat label="Hostel fees a month" value={inr(res.reduce((s, r) => s + hostelFee(db, r), 0))} /></div>
     <div className="grid g2">{occ.map((b) => <Card key={b.id} title={b.name} right={<span className="small muted">Warden: {b.warden}</span>}>
-      <div className="row small" style={{ marginBottom: 6 }}><span>{b.used} of {b.beds} beds · {b.free} free</span></div><Progress pct={b.pct} />
+      <div className="row small" style={{ marginBottom: 6 }}><span>{b.used} of {b.beds} beds · {b.free} free</span></div><Progress pct={b.pct} label={`${b.name} beds used`} />
       <div className="grid g3" style={{ gap: 8, marginTop: 10 }}>{H.rooms.filter((r) => r.blockId === b.id).map((r) => { const who = residentsOf(db, r.id); return <div key={r.id} className="card" style={{ padding: 8, margin: 0 }}>
         <div className="row" style={{ justifyContent: 'space-between' }}><b>Room {r.no}</b><Pill kind={who.length >= r.beds ? 'warn' : 'ok'}>{who.length}/{r.beds}</Pill></div>
         <div className="small">{who.map((x) => studentName(db, x.studentId)).join(', ') || <span className="muted">Empty</span>}</div></div>; })}</div>
@@ -138,7 +138,7 @@ export function Homework() {
     actions={can && <button className="btn pri" onClick={() => setForm({ sectionId: sec, subject: 'English', title: '', details: '', due: today() })}>Set homework</button>}>
     <div className="row" style={{ marginBottom: 10 }}><Field label="Class"><Select aria-label="Class" value={sec} onChange={(e) => { setSec(e.target.value); setOpen(null); }} options={sectionOptions(db)} /></Field></div>
     <Card title={`Homework for ${classOf(db, { sectionId: sec })}`}>{list.length ? <div className="tw"><table className="t"><thead><tr><th>Homework</th><th>Subject</th><th>Set</th><th>Due</th><th>Done</th><th /></tr></thead>
-      <tbody>{list.map((x) => { const st = homeworkStats(db, x); return <tr key={x.id}><td className="b">{x.title}</td><td>{x.subject}</td><td>{dmy(x.set)}</td><td>{dmy(x.due)}</td><td style={{ minWidth: 140 }}><Progress pct={st.pct} /><div className="small muted">{st.done + st.late} of {st.total} · {st.late} late</div></td>
+      <tbody>{list.map((x) => { const st = homeworkStats(db, x); return <tr key={x.id}><td className="b">{x.title}</td><td>{x.subject}</td><td>{dmy(x.set)}</td><td>{dmy(x.due)}</td><td style={{ minWidth: 140 }}><Progress pct={st.pct} label={`${x.title} handed in`} /><div className="small muted">{st.done + st.late} of {st.total} · {st.late} late</div></td>
         <td><button className="btn sm" onClick={() => setOpen(x.id)}>{can ? 'Mark' : 'View'}</button></td></tr>; })}</tbody></table></div> : <p className="muted">No homework set for this class yet.</p>}</Card>
     {h && <Modal title={h.title} onClose={() => setOpen(null)}>
       <p className="small muted">{h.subject} · due {dmy(h.due)}</p>

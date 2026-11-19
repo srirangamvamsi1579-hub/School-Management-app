@@ -96,7 +96,7 @@ test('1. Launches and every tab opens without errors, for every role (pre-launch
 });
 
 test('2. Access rules: each role sees only its own tabs; parents never see staff screens', async () => {
-  const expect = { PARENT: ['Home', 'Requests', 'Fees', 'My child', 'Account'], TEACHER: ['Home', 'Timetable', 'Attendance', 'Approvals', 'More'], FRONT_OFFICE: ['Home', 'Gate', 'Office', 'Bus changes', 'Account'], TRANSPORT: ['Home', 'Route sheet', 'Manifest', 'Bus changes', 'Account'] };
+  const expect = { PARENT: ['Home', 'Requests', 'Fees', 'My child', 'More'], TEACHER: ['Home', 'Timetable', 'Attendance', 'Approvals', 'More'], FRONT_OFFICE: ['Home', 'Gate', 'Office', 'Bus changes', 'Account'], TRANSPORT: ['Home', 'Route sheet', 'Manifest', 'Bus changes', 'Account'] };
   for (const [role, want] of Object.entries(expect)) {
     const { ctx, page } = await phone(); await signIn(page, PEOPLE[role]);
     assert.deepEqual((await tabs(page)).map((x) => x.trim()), want, role);
@@ -150,7 +150,8 @@ test('6. Reviewer demo account signs in; privacy policy is reachable before sign
 
 test('7. Account deletion inside the app (Apple 5.1.1(v), Google Play account deletion)', async () => {
   const { ctx, page } = await phone(); await signIn(page, PEOPLE.PARENT);
-  await page.locator('.m-tabs .m-tab', { hasText: 'Account' }).click();
+  // Parents' Account sits under More since release 13 (homework, events and classes joined the app)
+  await page.locator('.m-tabs .m-tab', { hasText: 'More' }).click(); await page.locator('.m-sheet-item', { hasText: 'Account' }).click();
   await page.getByRole('button', { name: 'Delete my account' }).click();
   await page.getByLabel('Enter your password to confirm').fill(PW);
   await page.getByRole('button', { name: 'Delete permanently' }).click();

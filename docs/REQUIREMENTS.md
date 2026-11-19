@@ -363,15 +363,15 @@ Chosen so most roles fit the 5-tab phone bar; schools change them through the wo
 
 | Role | Phone app tabs | Website only by default (phone-ready) |
 | --- | --- | --- |
-| Parent | Home, Requests, Fees, My child, Account | Timetable |
-| Teacher | Home, Timetable, Attendance, Approvals, Meetings, Account (Meetings and Account under More) | Leave, Payslips |
+| Parent | Home, Requests, Fees, My child, More (Homework, Events, Classes, Account) — from release 13 | Timetable |
+| Teacher | Home, Timetable, Attendance, Approvals, Meetings, Homework, Account (Meetings, Homework and Account under More) | Leave, Payslips |
 | Front Office | Home, Gate, Office, Bus changes, Account | — |
 | Transport team | Home, Route sheet, Manifest, Bus changes, Account | — |
 | Principal | Home, Attendance, Approvals, Meetings, Office, Route sheet, Account | Leave, Manifest, Bus changes, Timetable, Payslips |
 | Accountant | Home, Payslips, Account | — |
 | Admin | Home, Account | All others |
 
-Phone-ready screens: Requests to School, Fee Dues & Pay, My Child, Timetable, Attendance, Coordinator Desk (Approvals), Parent Meetings, Gate Desk, Office Requests, Driver Route Sheets, Daily Bus Manifest, Pickup & Drop Changes, Leave Requests, My Payslips, My Account.
+Phone-ready screens: Homework, Events & Calendar, Online Classes (release 13), Requests to School, Fee Dues & Pay, My Child, Timetable, Attendance, Coordinator Desk (Approvals), Parent Meetings, Gate Desk, Office Requests, Driver Route Sheets, Daily Bus Manifest, Pickup & Drop Changes, Leave Requests, My Payslips, My Account.
 
 ### User guide and guided demos
 
@@ -980,6 +980,13 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - [ ] Anyone: Help → User Guide & Demo → Screen by screen; switch Menus I can open / Everything in our plan
 - [ ] Admin: side menu → Operations → User management (Users, Roles & Permissions), Data upload (Data Import); Settings → School setup (Bank & Payment Details now here), Messages; Accountant: no Operations, Settings shows only Bank & Payment Details, Templates and the Outbox; Platform team: Schools & Plans → Operations and Settings show Always on
 - [ ] Anyone: Help → User Guide & Demo → run a guided demo with Start / Next step
+- [ ] Sales & marketing: Proposal Builder → New proposal → 650 students → Use Professional → SMS, Transport Plus 8 buses, Data Analytics → ₹11,125 a month → Save and preview → Print
+- [ ] Sales & marketing: Save and build demo → Next ×3 → Create demo school → Open as Principal → Routes, Stops & Timings shows Plan the route → End demo
+- [ ] Sales & marketing: Competition Comparison → 400 students → Providers: All → check the price row, Our edge, Gaps and the sources; Market Review & Roadmap → set a status
+- [ ] Platform team: Price List & Tiers → change Growth to ₹11 → Save; a new proposal uses it; Sales sees the list read-only
+- [ ] Teacher: Campus Services → Homework → set homework for 8-A → Mark Aarav Done; Parent (phone app, More → Homework) sees it Done
+- [ ] Front Office: Library → issue a book to ADM-2025-0231 → Return; Inventory & Store → sell 1 School belt; Hostel → Give a bed (only the right block is offered)
+- [ ] Admin: Events & Calendar → Add event for parents → Send to parents; Parent: 🔔 shows it
 
 - [ ] Parent: Requests to School → Leave for next week; Coordinator (Sonia) approves; Attendance shows *On leave*; the route sheet says *On leave*
 - [ ] Parent: Late arrival today at 10:30; Front Office: Gate Desk → Expected late arrivals → Arrived

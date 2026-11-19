@@ -13,12 +13,12 @@ const userOf = (db, role) => db.users.find((u) => u.role === role && u.status ==
 test('parent gets only parent screens; staff screens never appear', () => {
   const db = buildSeed();
   const t = tabsFor(db, 'PARENT', userOf(db, 'PARENT'));
-  assert.deepEqual(t, ['M_HOME', 'SELF_REQUESTS', 'SELF_FEES', 'SELF_CHILD', 'SELF_PROFILE']);
+  assert.deepEqual(t, ['M_HOME', 'SELF_REQUESTS', 'SELF_FEES', 'SELF_CHILD', 'CMP_HOMEWORK', 'CMP_EVENTS', 'CMP_CLASSES', 'SELF_PROFILE']);
 });
 
 test('teacher, front office and transport each get their own minimal set', () => {
   const db = buildSeed();
-  assert.deepEqual(tabsFor(db, 'TEACHER', userOf(db, 'TEACHER')), ['M_HOME', 'ACA_TIMETABLE', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'SELF_PROFILE']);
+  assert.deepEqual(tabsFor(db, 'TEACHER', userOf(db, 'TEACHER')), ['M_HOME', 'ACA_TIMETABLE', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'CMP_HOMEWORK', 'SELF_PROFILE']);
   assert.deepEqual(tabsFor(db, 'FRONT_OFFICE', userOf(db, 'FRONT_OFFICE')), ['M_HOME', 'STU_GATE', 'STU_OFFICE', 'TRN_CHANGES', 'SELF_PROFILE']);
   assert.deepEqual(tabsFor(db, 'TRANSPORT', userOf(db, 'TRANSPORT')), ['M_HOME', 'TRN_SHEETS', 'TRN_MANIFEST', 'TRN_CHANGES', 'SELF_PROFILE']);
   assert.deepEqual(tabsFor(db, 'PLATFORM', null), [], 'platform team is web only');
@@ -76,7 +76,7 @@ test('web rules still apply on the phone: plan, school switch-off and personal g
   t.channels.published = { FRONT_OFFICE: { TRN_SHEETS: 'BOTH' } };
   assert.ok(tabsFor(db, 'FRONT_OFFICE', fo).includes('TRN_SHEETS'), 'once the role has it in the app, the grant shows there');
   assert.ok(!tabsFor(db, 'FRONT_OFFICE', userOf(db, 'FRONT_OFFICE') === fo ? { ...fo, extra: [] } : fo).includes('TRN_SHEETS'), 'without the grant, no tab');
-  assert.ok(Object.keys(PHONE_READY).length <= 16, 'mobile stays small');
+  assert.ok(Object.keys(PHONE_READY).length <= 19, 'mobile stays small (19 with homework, events and online classes from release 13)');
 });
 
 test('website deep links parse and are per school', () => {

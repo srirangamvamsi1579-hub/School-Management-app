@@ -259,7 +259,7 @@ test('Admin views the app as a parent: menus change, preview is read-only, phone
   await page.locator('.modal').getByRole('button', { name: /Cancel|Close/ }).first().click();
   await bar.getByRole('button', { name: 'Phone app' }).click();
   await page.locator('.m-tabs').waitFor();
-  assert.deepEqual((await page.locator('.m-tabs .m-tab').allInnerTexts()).map((x) => x.trim()), ['Home', 'Requests', 'Fees', 'My child', 'Account']);
+  assert.deepEqual((await page.locator('.m-tabs .m-tab').allInnerTexts()).map((x) => x.trim()), ['Home', 'Requests', 'Fees', 'My child', 'More']);
   await page.getByRole('button', { name: 'Back to Admin' }).click();
   await page.locator('nav.side button.item', { hasText: 'Users' }).waitFor();
   assert.equal(await page.getByRole('region', { name: 'Viewing as another profile' }).count(), 0);

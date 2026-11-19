@@ -141,13 +141,15 @@ export const PHONE_READY = {
   SELF_REQUESTS: ['Requests', 'send'], SELF_FEES: ['Fees', 'receipt'], SELF_CHILD: ['My child', 'user'], ACA_TIMETABLE: ['Timetable', 'calendar'],
   STU_ATT: ['Attendance', 'check'], STU_REQUESTS: ['Approvals', 'inbox'], STU_MEETINGS: ['Meetings', 'chat'], STU_GATE: ['Gate', 'shield'],
   STU_OFFICE: ['Office', 'inbox'], TRN_SHEETS: ['Route sheet', 'bus'], TRN_MANIFEST: ['Manifest', 'list'], TRN_CHANGES: ['Bus changes', 'bus'],
-  STF_LEAVE: ['Leave', 'calendar'], SELF_LEAVE: ['My leave', 'calendar'], SELF_PAYSLIP: ['Payslips', 'receipt'], SELF_PROFILE: ['Account', 'settings']
+  STF_LEAVE: ['Leave', 'calendar'], SELF_LEAVE: ['My leave', 'calendar'], SELF_PAYSLIP: ['Payslips', 'receipt'],
+  CMP_HOMEWORK: ['Homework', 'book'], CMP_EVENTS: ['Events', 'calendar'], CMP_CLASSES: ['Classes', 'video'],   // release 13
+  SELF_PROFILE: ['Account', 'settings']
 };
 export const CHANNELS = { BOTH: 'Website + app', WEB: 'Website only', APP: 'App only' };
 // Recommended defaults (17 Nov 2026), chosen so most roles fit the 5-tab phone bar. Anything not listed shows on the website only.
 export const RECOMMENDED = {
-  PARENT: { SELF_REQUESTS: 'BOTH', SELF_FEES: 'BOTH', SELF_CHILD: 'BOTH', SELF_PROFILE: 'BOTH' },
-  TEACHER: { STU_ATT: 'BOTH', STU_REQUESTS: 'BOTH', STU_MEETINGS: 'BOTH', ACA_TIMETABLE: 'BOTH', SELF_PROFILE: 'BOTH' },
+  PARENT: { SELF_REQUESTS: 'BOTH', SELF_FEES: 'BOTH', SELF_CHILD: 'BOTH', CMP_HOMEWORK: 'BOTH', CMP_EVENTS: 'BOTH', CMP_CLASSES: 'BOTH', SELF_PROFILE: 'BOTH' },
+  TEACHER: { STU_ATT: 'BOTH', STU_REQUESTS: 'BOTH', STU_MEETINGS: 'BOTH', ACA_TIMETABLE: 'BOTH', CMP_HOMEWORK: 'BOTH', SELF_PROFILE: 'BOTH' },
   FRONT_OFFICE: { STU_GATE: 'BOTH', STU_OFFICE: 'BOTH', TRN_CHANGES: 'BOTH', SELF_PROFILE: 'BOTH' },
   TRANSPORT: { TRN_SHEETS: 'BOTH', TRN_MANIFEST: 'BOTH', TRN_CHANGES: 'BOTH', SELF_PROFILE: 'BOTH' },
   PRINCIPAL: { STU_REQUESTS: 'BOTH', STU_MEETINGS: 'BOTH', STU_OFFICE: 'BOTH', STU_ATT: 'BOTH', TRN_SHEETS: 'BOTH', SELF_PROFILE: 'BOTH' },

@@ -2,6 +2,7 @@
 // software, Indian and global, as found on vendor and directory pages on 18 Nov 2026. Most prices are
 // "from" prices; real quotes depend on modules and negotiation. Foreign prices use approximate rates.
 // Feature marks: Y = offered, A = paid add-on or higher plan only, N = not offered, ? = not stated in the sources we read.
+// fsrc = the pages each provider's feature marks come from (checked 18 Nov 2026; Devryon's from its own comparison page).
 
 export const AS_OF = '2026-11-18';
 export const FX = { USD: 88, GBP: 112, EUR: 100 };   // approximate rupees per unit, Nov 2026
@@ -26,39 +27,39 @@ export const PROVIDERS = [
   { code: 'FEDENA', name: 'Fedena', country: 'India', region: 'India', model: 'Flat yearly plans; web or web + app',
     priceText: 'Web $999–$1,699 a year; web + app $1,599–$2,299 a year', price: () => [1599 * FX.USD, 2299 * FX.USD],
     source: 'https://softwarefinder.com/enterprise-resource-planning-software/fedena',
-    f: { ATTENDANCE: 'Y', REPORTCARD: 'Y', TIMETABLE: 'Y', EVENTS: 'Y', TRANSPORT: 'Y', LIBRARY: 'Y', HOSTEL: 'Y', APP: 'A', APPFREE: 'N', MULTI: 'Y', ONPREM: 'Y' } },
+    f: { ADMISSIONS: 'Y', ATTENDANCE: 'Y', REPORTCARD: 'Y', FEES: 'Y', TIMETABLE: 'Y', EVENTS: 'Y', PAYROLL: 'Y', LEAVE: 'Y', HOMEWORK: 'A', LMS: 'A', TRANSPORT: 'Y', LIBRARY: 'A', HOSTEL: 'A', INVENTORY: 'A', APP: 'A', APPFREE: 'N', MULTI: 'Y', IMPORT: 'Y', ONPREM: 'Y' }, fsrc: ['https://msb-io.github.io/Fedena/Feature-Tour.html', 'https://fedena.com/feature-tour/addon-modules', 'https://trustradius.com/products/fedena/reviews'] },
   { code: 'TEACHMINT', name: 'Teachmint', country: 'India', region: 'India', model: 'Free basic; paid monthly',
     priceText: 'Free basic; ₹2K–₹15K a month paid', price: () => [0, 15000 * 12],
     source: 'https://codingclave.com/guides/school-management-software-cost-india-2026',
-    f: { ONLINE: 'Y', LMS: 'Y', APP: 'Y', ATTENDANCE: 'Y', FEES: 'Y' } },
+    f: { ADMISSIONS: 'Y', ATTENDANCE: 'Y', REPORTCARD: 'Y', FEES: 'Y', EVENTS: 'Y', PAYROLL: 'Y', ONLINE: 'Y', LMS: 'Y', TRANSPORT: 'Y', GPS: 'Y', LIBRARY: 'Y', HOSTEL: 'Y', INVENTORY: 'Y', APP: 'Y' }, fsrc: ['https://blog.teachmint.com/how-can-teachmint-help-schools-realize-their-true-potential', 'https://blog.teachmint.com/what-is-at-the-heart-of-any-erp-system', 'https://www.goodfirms.co/software/teachmint?page=3'] },
   { code: 'ENTAB', name: 'Entab CampusCare', country: 'India', region: 'India', model: 'Per-module annual licence, quoted',
     priceText: '₹25K–₹4L a year; ₹30–₹80 per student a month cited', price: (n) => [30 * 12 * n, 80 * 12 * n],
     source: 'https://codingclave.com/blog/best-school-management-software-india',
-    f: { REPORTCARD: 'Y', APP: 'A', APPFREE: 'N', ONPREM: 'Y', STATUTORY: 'Y' } },
+    f: { ADMISSIONS: 'Y', ATTENDANCE: 'Y', REPORTCARD: 'Y', FEES: 'Y', EVENTS: 'Y', PAYROLL: 'Y', HOMEWORK: 'Y', TRANSPORT: 'Y', ROUTEPLAN: 'Y', GPS: 'Y', LIBRARY: 'Y', HOSTEL: 'Y', INVENTORY: 'Y', APP: 'Y', MULTI: 'Y', ONPREM: 'Y' }, fsrc: ['https://www.entab.in/school-management-software.html', 'https://entab.in/entab-blog-gps-track.html', 'https://entab.in/mobile-apps.html', 'https://www.softwaresuggest.com/campuscare'] },
   { code: 'DEVRYON', name: 'Devryon', country: 'India', region: 'India', model: 'Per student a month, apps included',
     priceText: '₹6–₹16 per student a month', price: (n) => [6 * 12 * n, 16 * 12 * n],
     source: 'https://gleeful-whisper-cloud.lovable.app/school-erp',
-    f: { ADMISSIONS: 'Y', ATTENDANCE: 'Y', REPORTCARD: 'Y', FEES: 'Y', TIMETABLE: 'Y', PAYROLL: 'Y', TRANSPORT: 'Y', LIBRARY: 'Y', HOSTEL: 'Y', APP: 'Y', APPFREE: 'Y', AI: 'Y', QR: 'Y' } },
+    f: { ADMISSIONS: 'Y', ATTENDANCE: 'Y', REPORTCARD: 'Y', FEES: 'Y', TIMETABLE: 'Y', PAYROLL: 'Y', ONLINE: 'Y', TRANSPORT: 'Y', LIBRARY: 'Y', HOSTEL: 'Y', APP: 'Y', APPFREE: 'Y', AI: 'Y', QR: 'Y' }, fsrc: ['https://gleeful-whisper-cloud.lovable.app/alternative/fedena'] },
   { code: 'ASKCAMPUS', name: 'AskCampus', country: 'India', region: 'India', model: 'Flat by size band, no module add-ons',
     priceText: '₹2,999/month up to 200; ₹7,999 up to 1,000; ₹18,999 up to 5,000', price: (n) => (n <= 200 ? 2999 : n <= 1000 ? 7999 : n <= 5000 ? 18999 : null) * 12 || null,
     source: 'https://askcampus.pages.dev/pricing', f: {} },
   { code: 'TACHY', name: 'TACHY School ERP', country: 'India', region: 'India', model: 'Per student a year',
     priceText: 'From ₹49 per student a year', price: (n) => 49 * n, source: 'https://tachy.in/school-erp-for-bengaluru-schools-pricing-features-setup/', f: {} },
   { code: 'MYCLASSCAMPUS', name: 'MyClassCampus', country: 'India', region: 'India', model: 'Yearly, quoted',
-    priceText: '₹15K–₹1L a year', price: () => [15000, 100000], source: 'https://codingclave.com/guides/school-management-software-cost-india-2026', f: {} },
+    priceText: '₹15K–₹1L a year', price: () => [15000, 100000], source: 'https://codingclave.com/guides/school-management-software-cost-india-2026', f: { ADMISSIONS: 'Y', ATTENDANCE: 'Y', REPORTCARD: 'Y', FEES: 'Y', TIMETABLE: 'Y', EVENTS: 'Y', PAYROLL: 'Y', HOMEWORK: 'Y', TRANSPORT: 'Y', GPS: 'Y', LIBRARY: 'Y', HOSTEL: 'Y', INVENTORY: 'Y', APP: 'Y', QR: 'Y' }, fsrc: ['https://startuptalky.com/my-class-campus-education-erp/', 'https://www.techimply.com/profile/myclasscampus', 'https://www.saasworthy.com/product/myclasscampus'] },
   { code: 'VIDYALAYA', name: 'Vidyalaya', country: 'India', region: 'India', model: 'Yearly, quoted',
     priceText: '₹30K–₹3L a year', price: () => [30000, 300000], source: 'https://codingclave.com/guides/school-management-software-cost-india-2026', f: {} },
   // ---- Global ----
   { code: 'GRADELINK', name: 'Gradelink', country: 'USA', region: 'Global', model: 'Tiered by enrolled students, monthly',
     priceText: 'From $121 a month up to 50 students; $200 for 101–150', price: (n) => (n <= 50 ? 121 : n <= 150 ? 200 : null) * 12 * FX.USD || null,
     source: 'https://www.capterra.com/p/118900/Gradelink-SIS/pricing/',
-    f: { ADMISSIONS: 'Y', ATTENDANCE: 'Y', REPORTCARD: 'Y', FEES: 'Y', TIMETABLE: 'Y', APP: 'Y' } },
+    f: { ADMISSIONS: 'Y', ATTENDANCE: 'Y', REPORTCARD: 'Y', FEES: 'Y', TIMETABLE: 'Y', EVENTS: 'Y', HOMEWORK: 'Y', APP: 'Y', APPFREE: 'Y' }, fsrc: ['https://gradelink.com/?p=26012214', 'https://www.sourceforge.net/software/product/Olly', 'https://www.gradelink.com/wp-content/uploads/2021/08/GradelinkBrochure2021.pdf'] },
   { code: 'SYCAMORE', name: 'Sycamore', country: 'USA', region: 'Global', model: 'Per student a month, all modules',
-    priceText: '$4 per student a month', price: (n) => 4 * 12 * n * FX.USD, source: 'https://sycamoreleaf.com/compare/gradelink-vs-sycamore/', f: { APP: 'Y' } },
+    priceText: '$4 per student a month', price: (n) => 4 * 12 * n * FX.USD, source: 'https://sycamoreleaf.com/compare/gradelink-vs-sycamore/', f: { ADMISSIONS: 'Y', ATTENDANCE: 'Y', REPORTCARD: 'Y', FEES: 'Y', TIMETABLE: 'Y', LIBRARY: 'Y', APP: 'Y', APPFREE: 'Y' }, fsrc: ['https://sycamoreleaf.com/llms.txt', 'https://sycamoreschool.com/jumpstart/'] },
   { code: 'ARBOR', name: 'Arbor MIS', country: 'United Kingdom', region: 'Global', model: 'Base licence + per pupil a year',
     priceText: 'Primary Core £1,575 + £2.35 per pupil a year (2024–25 G-Cloud list)', price: (n) => (1575 + 2.35 * n) * FX.GBP,
     source: 'https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-14/documents/92647/909733380395847-pricing-document-2024-11-21-1116.pdf',
-    f: { ATTENDANCE: 'Y', REPORTCARD: 'Y', FEES: 'Y', PAYROLL: 'Y', AI: 'Y', MULTI: 'Y', STATUTORY: 'Y' } },
+    f: { ATTENDANCE: 'Y', REPORTCARD: 'A', FEES: 'A', HOMEWORK: 'Y', APP: 'A', AI: 'Y', MULTI: 'Y', STATUTORY: 'Y' }, fsrc: ['https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-14/documents/92647/909733380395847-pricing-document-2025-12-09-0956.pdf', 'https://www.applytosupply.digitalmarketplace.service.gov.uk/g-cloud/services/713386037909337'] },
   { code: 'BROMCOM', name: 'Bromcom MIS', country: 'United Kingdom', region: 'Global', model: 'Base cost + per pupil a year',
     priceText: 'Secondary Standard £3,250 + £9.50 per pupil a year (2026 G-Cloud list)', price: (n) => (3250 + 9.5 * n) * FX.GBP,
     source: 'https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-15/documents/93515/618716886907305-pricing-document-2026-01-30-1315.pdf', f: { ATTENDANCE: 'Y' } },
@@ -68,7 +69,7 @@ export const PROVIDERS = [
   { code: 'CLASSTER', name: 'Classter', country: 'Greece', region: 'Global', model: 'Per active student a year, by modules',
     priceText: 'From €1.50 to €4.50 per active student a year, by modules', price: (n) => [1.5 * n * FX.EUR, 4.5 * n * FX.EUR],
     source: 'https://edtechimpact.com/products/classter',
-    f: { ADMISSIONS: 'Y', FEES: 'Y', TIMETABLE: 'Y', ONLINE: 'Y', LMS: 'Y', TRANSPORT: 'Y', LIBRARY: 'Y', APP: 'Y' } },
+    f: { ADMISSIONS: 'Y', ATTENDANCE: 'Y', REPORTCARD: 'Y', FEES: 'Y', TIMETABLE: 'Y', PAYROLL: 'Y', ONLINE: 'Y', LMS: 'Y', TRANSPORT: 'Y', ROUTEPLAN: 'Y', LIBRARY: 'Y', INVENTORY: 'Y', APP: 'Y' }, fsrc: ['https://edtechimpact.com/products/classter', 'https://www.classter.com/book-a-demo-with-classter-for-higher-education', 'https://www.classter.com/benefits/organizational/procedural/operations/', 'https://www.getapp.com/education-childcare-software/a/classter/'] },
   { code: 'TODDLE', name: 'Toddle', country: 'India (sells in 100+ countries)', region: 'Global', model: 'Quoted, tiered by users',
     priceText: 'Quote only', price: null, source: 'https://softwarefinder.com/lms/toddle',
     f: { ATTENDANCE: 'Y', REPORTCARD: 'Y', HOMEWORK: 'Y', LMS: 'Y', AI: 'Y' } }
@@ -99,7 +100,7 @@ export const MARKET = {
 };
 
 export const ROADMAP = [
-  { code: 'GPS', title: 'Live bus GPS tracking for parents', why: 'Premium Indian vendors sell it; parents ask for it first after route sheets.', seenAt: 'Premium Indian ERPs', country: 'India', priority: 'Now', effort: 'M' },
+  { code: 'GPS', title: 'Live bus GPS tracking for parents', why: 'Most Indian competitors list it; parents ask for it first after route sheets.', seenAt: 'Teachmint, Entab, MyClassCampus', country: 'India', priority: 'Now', effort: 'M' },
   { code: 'WHATSAPP', title: 'WhatsApp Business notifications', why: 'Parents read WhatsApp more than SMS; cost per message is similar.', seenAt: 'Indian vendors (SMS/WhatsApp packs)', country: 'India', priority: 'Now', effort: 'S' },
   { code: 'FLATPACK', title: 'Flat-price “school pack” option', why: 'Flat bands answer the “per-student pricing punishes growth” objection.', seenAt: 'AskCampus', country: 'India', priority: 'Now', effort: 'S' },
   { code: 'QR', title: 'QR / biometric attendance', why: 'Speeds up morning attendance and staff sign-in.', seenAt: 'Devryon', country: 'India', priority: 'Next', effort: 'M' },

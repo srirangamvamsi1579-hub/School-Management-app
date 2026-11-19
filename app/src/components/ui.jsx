@@ -55,7 +55,7 @@ export function Bars({ data, fmt = (v) => v }) {
     </div>
   );
 }
-export const Progress = ({ pct }) => <div className="bar" aria-valuenow={pct} role="progressbar"><i style={{ width: Math.min(100, pct) + '%' }} /></div>;
+export const Progress = ({ pct, label = 'Progress' }) => <div className="bar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${label}: ${pct}%`} role="progressbar"><i style={{ width: Math.min(100, pct) + '%' }} /></div>;
 
 export function Html({ html, className = 'doc' }) {
   return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;

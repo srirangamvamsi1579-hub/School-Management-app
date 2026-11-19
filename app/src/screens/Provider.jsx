@@ -342,7 +342,7 @@ export function Competition() {
       </tbody></table></div>
       <p className="small muted">✓ offered · Add-on = paid extra or higher plan only · ✗ not offered · ? not stated in the pages we read (it may still exist). Our column reflects this release.</p>
     </Card>
-    <Card title="Sources"><ul className="small">{PROVIDERS.filter((p) => p.source).map((p) => <li key={p.code}><a href={p.source} target="_blank" rel="noreferrer">{p.name}</a> — {p.country}</li>)}</ul></Card>
+    <Card title="Sources"><ul className="small">{PROVIDERS.filter((p) => p.source).map((p) => <li key={p.code}><a href={p.source} target="_blank" rel="noreferrer">{p.name}</a> — {p.country} · price{p.fsrc?.length ? <> · features: {p.fsrc.map((u, i) => <a key={u} href={u} target="_blank" rel="noreferrer" style={{ marginRight: 6 }}>[{i + 1}]</a>)}</> : <> · features not checked yet</>}</li>)}</ul></Card>
   </Page>;
 }
 

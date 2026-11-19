@@ -129,6 +129,7 @@ test('competitor data: every provider has a country and source; prices work out;
   for (const p of PROVIDERS) {
     assert.ok(p.country && p.region && p.priceText, p.code);
     if (!p.us) assert.match(p.source, /^https:\/\//, p.code);
+    for (const u of p.fsrc || []) assert.match(u, /^https:\/\//, `${p.code} feature source`);
     for (const k of Object.keys(p.f)) assert.ok(FEATURES.some((f) => f[0] === k), `${p.code}: unknown feature ${k}`);
   }
   const us = PROVIDERS.find((p) => p.us); assert.ok(FEATURES.every(([c]) => us.f[c]), 'our column covers every feature');
