@@ -36,7 +36,7 @@ export const FAQS = [
   ['Campus', 'TEACHER,PRINCIPAL,ADMIN,FRONT_OFFICE', 'Why can’t a student borrow a library book?', 'A student can have 2 books at a time and can’t borrow while one is overdue. Return the overdue book first (the fine is shown).'],
   ['Campus', 'ALL', 'I don’t see Library, Hostel or Online Classes.', 'They come with higher plans or as add-ons: Online Classes and Library from Growth, Inventory from Professional, Hostel with Enterprise. Ask the school office.'],
   ['Campus', 'ADMIN,PRINCIPAL,FRONT_OFFICE', 'How do parents get an event or circular?', 'Events & Calendar → add it → “Send to parents”. It appears in their app bell straight away.'],
-  ['Sales and demos', 'SALES,PLATFORM', 'How do I price a school?', 'Service Provider → Proposal Builder → New proposal. Enter students, tier, messaging, transport and add-ons; the price comes from the price list. Save, preview and print.'],
-  ['Sales and demos', 'SALES,PLATFORM', 'How do I show a client their own set-up?', 'Demo Builder → pick the proposal → Create demo school → Open as Principal, Teacher or Parent. End demo at the top brings you back. Remove the demo after the visit.'],
-  ['Sales and demos', 'SALES,PLATFORM', 'Can I change prices?', 'Only the platform team can, in Price List & Tiers. Sales can give up to 10% discount; more needs the owner’s approval.']
+  ['Sales and demos', 'SALES,PLATFORM,ADMIN', 'How do I price a school?', 'Service Provider → Proposal Builder → New proposal. Enter students, tier, messaging, transport and add-ons; the price comes from the price list. Save, preview and print.'],
+  ['Sales and demos', 'SALES,PLATFORM,ADMIN', 'How do I show a client their own set-up?', 'Demo Builder → pick the proposal → Create demo school → Open as Principal, Teacher or Parent. End demo at the top brings you back. Remove the demo after the visit.'],
+  ['Sales and demos', 'SALES,PLATFORM,ADMIN', 'Can I change prices?', 'Only the platform team and the Admin can, in Price List & Tiers. Sales can give up to 10% discount; more needs the owner’s approval.']
 ].map(([topic, roles, q, a], i) => ({ id: 'F' + (i + 1), topic, roles: roles.split(','), q, a }));

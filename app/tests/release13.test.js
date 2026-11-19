@@ -61,9 +61,11 @@ test('Service Provider menus are only for our company; Campus follows the plan',
   const db = buildSeed();
   for (const c of SP_CODES) {
     assert.ok(canSee(c, 'SALES', 1, {}, null) && canSee(c, 'PLATFORM', 1, {}, null), c);
-    for (const r of ['ADMIN', 'PRINCIPAL', 'TEACHER', 'PARENT']) assert.ok(!canSee(c, r, 4, {}, { [r]: [...rolePerms(db, r), c] }), `${r} must not see ${c}`);
+    assert.ok(canSee(c, 'ADMIN', 1, { SERVICE_PROVIDER: false }, null), `Admin sees ${c}, whatever the school switches`);
+    for (const r of ['PRINCIPAL', 'TEACHER', 'PARENT']) assert.ok(!canSee(c, r, 4, {}, { [r]: [...rolePerms(db, r), c] }), `${r} must not see ${c}`);
   }
-  assert.ok(!ACCESS.ADMIN.some((c) => SP_CODES.includes(c)));
+  assert.ok(SP_CODES.every((c) => ACCESS.ADMIN.includes(c)), 'Admin has Service Provider (release 13.2)');
+  assert.ok(!ACCESS.ADMIN.includes('PLT_SCHOOLS'), 'but not the Platform Console');
   assert.ok(canSee('CMP_HOMEWORK', 'PARENT', 1, {}, null)); assert.ok(!canSee('CMP_LIBRARY', 'TEACHER', 1, {}, null)); assert.ok(canSee('CMP_LIBRARY', 'TEACHER', 2, {}, null));
   assert.ok(!canSee('CMP_HOSTEL', 'PRINCIPAL', 3, {}, null)); assert.ok(canSee('CMP_HOSTEL', 'PRINCIPAL', 3, { CMP_HOSTEL: true }, null));
   assert.ok(!canSee('SP_RATES', 'SALES', 1, { SERVICE_PROVIDER: false }, null) === false, 'a school switch can never hide company menus from the company');

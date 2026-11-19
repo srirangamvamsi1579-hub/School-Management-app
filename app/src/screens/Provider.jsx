@@ -20,7 +20,7 @@ const includedText = (rc, a) => (a.includedFrom ? `Included from ${rc.plans.find
 // ================================================================ Price List & Tiers
 export function PriceList() {
   const { db, session, run, notify } = useStore();
-  const can = session.role === 'PLATFORM';
+  const can = ['PLATFORM', 'ADMIN'].includes(session.role);   // Sales views; the platform team and the Admin change prices
   const [rc, setRc] = useState(() => structuredClone(rcOf(db)));
   const dirty = JSON.stringify(rc) !== JSON.stringify(rcOf(db));
   const setPlan = (i, k, v) => setRc({ ...rc, plans: rc.plans.map((p, j) => (j === i ? { ...p, [k]: v === '' ? undefined : +v } : p)) });
@@ -31,7 +31,7 @@ export function PriceList() {
     run((d) => { d.provider = d.provider || {}; d.provider.rateCard = { ...rc, version: (rcOf(d).version || 1) + 1 }; }); notify('Price list saved — new proposals use it straight away'); };
   return <Page title="Price list & tiers" sub={`What each tier costs, which add-ons each tier includes, and hosting. Prices are a month, in rupees, before ${GST}% GST. Annual plans pay ${rc.annualMonths} months for 12.`}
     actions={can && <><button className="btn" onClick={() => setRc(structuredClone(DEFAULT_RATE_CARD))}>Back to the launch prices</button><button className="btn pri" disabled={!dirty} onClick={save}>Save price list</button></>}>
-    {!can && <p className="small muted">Only the platform team can change prices. You can see them and use them in proposals.</p>}
+    {!can && <p className="small muted">Only the platform team and the Admin can change prices. You can see them and use them in proposals.</p>}
     <Card title="Tiers">
       <div className="tw"><table className="t"><thead><tr><th>Tier</th><th>Students up to</th><th>Flat a month</th><th>Per student a month</th><th>Minimum a month</th><th>Onboarding (one-time)</th><th>Support</th></tr></thead>
         <tbody>{rc.plans.map((p, i) => <tr key={p.code}><td className="b">{p.name}</td><td>{p.cap ?? 'No limit'}</td><td>{p.perStudent ? '—' : num(p.flat, (v) => setPlan(i, 'flat', v), `${p.name} flat price`)}</td>

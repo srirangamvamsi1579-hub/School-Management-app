@@ -15,11 +15,11 @@ DO $$ BEGIN
   ASSERT EXISTS (SELECT 1 FROM roles WHERE code = 'SALES' AND tenant_id IS NULL), 'sales role';
   ASSERT EXISTS (SELECT 1 FROM role_menu_permissions p JOIN roles r USING (role_id) JOIN menus m USING (menu_id) WHERE r.code = 'SALES' AND m.code = 'SP_PROPOSAL' AND p.can_create), 'sales builds proposals';
   ASSERT EXISTS (SELECT 1 FROM role_menu_permissions p JOIN roles r USING (role_id) JOIN menus m USING (menu_id) WHERE r.code = 'SALES' AND m.code = 'SP_RATES' AND NOT p.can_edit), 'sales only views prices';
-  ASSERT NOT EXISTS (SELECT 1 FROM role_menu_permissions p JOIN roles r USING (role_id) JOIN menus m USING (menu_id) JOIN menus pm ON pm.menu_id = m.parent_id WHERE pm.code = 'SERVICE_PROVIDER' AND r.code NOT IN ('PLATFORM', 'SALES')), 'no school role has company menus';
+  ASSERT NOT EXISTS (SELECT 1 FROM role_menu_permissions p JOIN roles r USING (role_id) JOIN menus m USING (menu_id) JOIN menus pm ON pm.menu_id = m.parent_id WHERE pm.code = 'SERVICE_PROVIDER' AND r.code NOT IN ('PLATFORM', 'SALES', 'ADMIN')), 'no school role but the Admin has company menus (028)';
   ASSERT EXISTS (SELECT 1 FROM role_menu_permissions p JOIN roles r USING (role_id) JOIN menus m USING (menu_id) WHERE r.code = 'PARENT' AND m.code = 'CMP_HOMEWORK' AND p.data_scope = 'OWN_CHILD' AND NOT p.can_edit), 'parents view their child''s homework';
   BEGIN
-    INSERT INTO role_menu_permissions (role_id, menu_id, can_view) SELECT r.role_id, m.menu_id, TRUE FROM roles r, menus m WHERE r.code = 'ADMIN' AND r.tenant_id IS NULL AND m.code = 'SP_RATES';
-    RAISE EXCEPTION 'school admin given a company menu';
+    INSERT INTO role_menu_permissions (role_id, menu_id, can_view) SELECT r.role_id, m.menu_id, TRUE FROM roles r, menus m WHERE r.code = 'PRINCIPAL' AND r.tenant_id IS NULL AND m.code = 'SP_RATES';
+    RAISE EXCEPTION 'principal given a company menu';
   EXCEPTION WHEN raise_exception THEN ASSERT SQLERRM LIKE 'Service Provider menus%', SQLERRM; END;
   RAISE NOTICE 'Release 13 menus ok';
 END $$;

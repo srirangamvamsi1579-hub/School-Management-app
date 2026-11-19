@@ -43,7 +43,8 @@ export function Users() {
   const [stamp, setStamp] = useState(() => new Date());
   const allowed = canManageUsers(db, me, session.role);
   const canReset = canResetPasswords(me, session.role);
-  const roles = allRoles(db).filter((r) => !isProvider(r.code) || isProvider(session.role));
+  // The Admin also manages the Sales & marketing team's accounts (release 13.2); the Platform team stays with the platform
+  const roles = allRoles(db).filter((r) => !isProvider(r.code) || isProvider(session.role) || (session.role === 'ADMIN' && r.code === 'SALES'));
   const roleOf = (u) => u.role || u.requestedRole;
   const filter = (fn) => (e) => { fn(e.target.value); setPage(0); };
   const depts = [...new Set(db.users.filter((u) => u.status !== 'DELETED').map((u) => departmentOf(db, roleOf(u))).filter(Boolean))].sort();
@@ -181,7 +182,7 @@ export function Users() {
         <Field label="Full name" req><Input value={invite.name} onChange={(e) => setInvite({ ...invite, name: e.target.value })} /></Field>
         <Field label="Sign-in ID (Gmail / email or mobile)" req><Input value={invite.identifier} onChange={(e) => setInvite({ ...invite, identifier: e.target.value })} /></Field>
         {idType(invite.identifier) === 'MOBILE' && <Field label="Gmail for account emails"><Input value={invite.email} onChange={(e) => setInvite({ ...invite, email: e.target.value })} /></Field>}
-        <Field label={'Role' + (departmentOf(db, invite.role) ? ' · ' + departmentOf(db, invite.role) : '')}><Select value={invite.role} onChange={(e) => setInvite({ ...invite, role: e.target.value, designation: fitDesignation(db, e.target.value, invite.designation) })} options={roles.filter((r) => !isProvider(r.code)).map((r) => [r.code, r.name])} /></Field>
+        <Field label={'Role' + (departmentOf(db, invite.role) ? ' · ' + departmentOf(db, invite.role) : '')}><Select value={invite.role} onChange={(e) => setInvite({ ...invite, role: e.target.value, designation: fitDesignation(db, e.target.value, invite.designation) })} options={roles.filter((r) => r.code !== 'PLATFORM').map((r) => [r.code, r.name])} /></Field>
         {invite.role === 'PARENT' ? <Field label="Designation"><Input value="N/A" disabled aria-label="Designation: N/A" /></Field>
           : <Field label="Designation (for this role)"><Select value={invite.designation} onChange={(e) => setInvite({ ...invite, designation: e.target.value })} options={[['', 'Pick a designation'], ...designationsFor(db, invite.role)]} /></Field>}
         {invite.role === 'PARENT' && <>

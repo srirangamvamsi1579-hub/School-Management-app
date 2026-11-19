@@ -78,7 +78,7 @@ const CMP = { ALL: ['CMP_EVENTS', 'CMP_HOMEWORK', 'CMP_CLASSES', 'CMP_LIBRARY', 
   OFFICE: ['CMP_EVENTS', 'CMP_LIBRARY', 'CMP_INVENTORY', 'CMP_HOSTEL'], MONEY: ['CMP_EVENTS', 'CMP_INVENTORY', 'CMP_HOSTEL'], HOME: ['CMP_EVENTS', 'CMP_HOMEWORK', 'CMP_CLASSES'] };
 
 export const ACCESS = {
-  ADMIN: ALL.filter((c) => !['SELF_CHILD', 'SELF_FEES', 'SELF_REQUESTS', 'SELF_MYPERF', 'PLT_SCHOOLS', ...SP_CODES].includes(c)),
+  ADMIN: ALL.filter((c) => !['SELF_CHILD', 'SELF_FEES', 'SELF_REQUESTS', 'SELF_MYPERF', 'PLT_SCHOOLS'].includes(c)),   // includes Service Provider (release 13.2)
   PRINCIPAL: ['DASH', 'OPS_CHANNELS', 'HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'STU_PROFILE', 'STU_REPORTCARD', 'STU_INS', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'STU_OFFICE', 'ACA_COORD', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'SELF_PROFILE', 'ANL_HOME', 'ANL_RANK', 'ANL_TRANSPORT', 'ANL_TEACHER', 'ANL_ADMISSIONS', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE',
     'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_FORMATS', 'EXM_COSCH', 'EXM_PROFILE', 'FEE_INS', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_STRUCT', 'FEE_CONC',
     'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS', ...CMP.ALL],
@@ -107,7 +107,8 @@ export function canSee(code, role, rank, overrides = {}, perms = null) {
   const list = perms?.[role] || ACCESS[role] || [];
   if (!list.includes(code)) return false;
   const mod = MENU.find((m) => m.items.some((i) => i[0] === code));
-  if (PROVIDER_MODULES.includes(mod.code)) return isProvider(role);
+  // Company menus: the platform and sales teams, and the Admin for Service Provider (release 13.2). Never a school switch.
+  if (PROVIDER_MODULES.includes(mod.code)) return isProvider(role) || (role === 'ADMIN' && mod.code === 'SERVICE_PROVIDER');
   const modOn = ALWAYS_ON.includes(mod.code) || (overrides[mod.code] !== undefined ? overrides[mod.code] : rank >= mod.min);
   if (!modOn && !isProvider(role)) return false;
   const on = overrides[code] !== undefined ? overrides[code] : rank >= (MIN_RANK[code] || 1);

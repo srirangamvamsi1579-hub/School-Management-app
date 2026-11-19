@@ -161,14 +161,33 @@ test('sales: proposal priced from tiers → demo school → present as Principal
   await page.getByLabel('Status of Live bus GPS tracking for parents').selectOption('Planned');
   await page.getByText('Roadmap updated').waitFor();
   await go(page, 'SP_RATES');
-  await page.getByText('Only the platform team can change prices').waitFor();
+  await page.getByText('Only the platform team and the Admin can change prices').waitFor();
   assert.deepEqual(errors, []);
   await ctx.close();
 });
 
-test('school users never see the company menus; transport basic hides route planning', async () => {
+test('the Admin has Service Provider and can add a Sales & marketing user; other school users never see it', async () => {
   const { ctx, page, errors } = await start();
   await as(page, 'Admin');
+  assert.match(await page.locator('nav.side').innerText(), /Service Provider/i);
+  await go(page, 'SP_RATES');
+  await page.getByRole('heading', { name: 'Price list & tiers' }).waitFor();
+  await page.getByLabel('Growth per student').fill('11');
+  await page.getByRole('button', { name: 'Save price list' }).click();
+  await page.getByText(/Price list saved/).waitFor();
+  await go(page, 'SP_PROPOSAL');
+  await page.getByRole('button', { name: 'New proposal' }).click();
+  await page.locator('.card', { has: page.getByRole('heading', { name: 'Price', exact: true }) }).getByText('₹4,400').first().waitFor();   // 400 × ₹11
+  await go(page, 'OPS_USERS');
+  await page.getByRole('button', { name: 'Add user' }).click();
+  const role = page.locator('.modal').getByRole('combobox', { name: /^Role/ });
+  const roles = await role.locator('option').allInnerTexts();
+  assert.ok(roles.includes('Sales & marketing') && !roles.includes('Platform team'), roles.join());
+  await role.selectOption('SALES');
+  const des = await page.locator('.modal').getByRole('combobox', { name: /Designation/ }).locator('option').allInnerTexts();
+  assert.ok(des.includes('Marketing Manager') && des.includes('Sales Executive'), des.join());
+  await page.locator('.modal').getByRole('button', { name: 'Close' }).click();
+  await as(page, 'Principal');
   assert.doesNotMatch(await page.locator('nav.side').innerText(), /Service Provider/i);
   await go(page, 'SP_RATES');
   assert.equal(await page.getByRole('heading', { name: 'Price list & tiers' }).count(), 0);
