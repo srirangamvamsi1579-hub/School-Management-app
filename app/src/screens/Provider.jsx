@@ -1,189 +1,334 @@
-// Service Provider (release 13): your company's sales and marketing screens.
-// Price List & Tiers → Proposal Builder → Demo Builder, plus Competition Comparison and Market Review & Roadmap.
-import { useMemo, useState } from 'react';
+// Service Provider: your company's sales and marketing screens.
+// Release 14: Price List & Tiers (Starter, Pro, Pro+), Proposal Builder and Demo Builder share one set of
+// choices — whatever the Demo Builder changes, the linked proposal (and its demo school) changes too.
+// Competition Comparison and Market Review & Roadmap are unchanged from release 13.
+import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '../data/store.js';
-import { Page, Card, Field, Input, Select, Modal, Pill, Stat, Tabs, Switch, printPage } from '../components/ui.jsx';
-import { PLANS, LABEL } from '../data/menu.js';
+import { Page, Card, Field, Input, Select, Modal, Pill, Stat, Tabs, Switch } from '../components/ui.jsx';
+import { LABEL } from '../data/menu.js';
 import {
-  DEFAULT_RATE_CARD, MESSAGING, TRANSPORT, OPTIONAL, GST, rupees, rateText, planFor, planOf, addonOf, blankOptions, quote, demoConfig, demoCode, featureList, functionList
+  DEFAULT_RATE_CARD, GST, BASIC, SIZES, OVERHEAD_NAMES, UNIT, rupees, pct, tierOf, addonOf, basePrice, tierPrice, yearCost, bandLabel, rateText, blankOptions, quote,
+  activeAddons, demoConfig, demoCode
 } from '../lib/pricing.js';
+import { DEFAULT_PROFILE } from '../data/seedRelease14.js';
+import { saveOptions, newProposal, makeDemo } from '../lib/proposals.js';
 import { PROVIDERS, FEATURES, AS_OF, FX, MARKET, ROADMAP, ROADMAP_STATUS, mark, priceRange } from '../data/providers.js';
 
-const rcOf = (db) => db.provider?.rateCard || DEFAULT_RATE_CARD;
-const dmy = (d) => (d ? new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+const rcOf = (db) => (db.provider?.rateCard?.version >= 2 ? db.provider.rateCard : DEFAULT_RATE_CARD);
+const profileOf = (db) => ({ ...DEFAULT_PROFILE, ...(db.provider?.profile || {}) });
+const dmy = (d) => (d ? new Date(d.length === 10 ? d + 'T00:00:00' : d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
 const todayIso = () => new Date().toISOString().slice(0, 10);
 const lakh = (n) => (n >= 100000 ? '₹' + (n / 100000).toFixed(n >= 1000000 ? 1 : 2).replace(/\.?0+$/, '') + ' lakh' : rupees(n));
+const okEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e || '').trim());
 const PROPOSAL_STATUS = ['Draft', 'Sent', 'Won', 'Lost'];
 const STATUS_KIND = { Draft: 'warn', Sent: 'info', Won: 'ok', Lost: 'bad', Idea: '', Planned: 'info', 'In progress': 'warn', Released: 'ok' };
-const includedText = (rc, a) => (a.includedFrom ? `Included from ${rc.plans.find((p) => p.rank === a.includedFrom && p.code !== 'FREE')?.name}` : 'Always paid');
+const BOARDS = ['CBSE', 'ICSE', 'State board', 'IB / Cambridge', 'Mixed'];
+const stash = (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) { /* ignore */ } };
+const unstash = (k) => { let v = null; try { v = sessionStorage.getItem(k); sessionStorage.removeItem(k); } catch (e) { /* ignore */ } return v; };
+
+function TierCards({ rc, value, students, onChoose, chooseLabel = (t) => `Choose ${t.name}`, compact = false }) {
+  return <div className="tiers" role="list" aria-label="Plans">{rc.tiers.map((t, i) => {
+    const on = t.code === value;
+    const prev = rc.tiers[i - 1];
+    const adds = t.includes.filter((c) => !prev?.includes.includes(c)).map((c) => addonOf(rc, c)?.name).filter(Boolean);
+    return <div key={t.code} role="listitem" id={'tier-' + t.code} className={'tier' + (on ? ' on' : '') + (t.pick ? ' pick' : '')} aria-label={`${t.name} plan`}>
+      {(on || t.pick) && <div className="tier-flag">{on ? 'Selected plan' : 'Our pick for most schools'}</div>}
+      <h3>{t.name}</h3>
+      <p className="small muted">{t.tagline}</p>
+      <div className="tier-price">{rupees(t.rates[0])}<span> per student / year</span></div>
+      <div className="small muted">about {rupees(t.rates[0] / 12)} a child a month · from <b>{rupees(basePrice(rc, t.code))}</b> a year</div>
+      {students > 0 && <div className="small" style={{ marginTop: 4 }}>{students.toLocaleString('en-IN')} students: <b>{rupees(tierPrice(rc, t.code, students).amount)}</b> a year for the plan</div>}
+      {onChoose && <button type="button" className={'btn' + (on ? ' pri' : '')} aria-pressed={on} onClick={() => onChoose(t.code)} style={{ margin: '10px 0' }}>{on ? `${t.name} selected` : chooseLabel(t)}</button>}
+      {compact ? <div className="small muted">{i === 0 ? 'The 8 basic features' : `${prev.name} + ${adds.length} add-ons: ${adds.slice(0, 3).join(', ')}${adds.length > 3 ? '…' : ''}`}</div> : <>
+        <div className="small b">{i === 0 ? 'Included:' : `Everything in ${prev.name}, plus:`}</div>
+        <ul className="small">{(i === 0 ? BASIC.map((b) => b[1]) : adds).map((x) => <li key={x}>{x}</li>)}</ul>
+        <div className="small muted">Support: {t.support}</div></>}
+    </div>;
+  })}</div>;
+}
+
+function AddonPicker({ rc, o, set }) {
+  const t = tierOf(rc, o.tier);
+  const on = activeAddons(rc, o);
+  const up = (k, v) => set({ ...o, [k]: v });
+  const groups = [...new Set(rc.addons.map((a) => a.group))];
+  return <div className="addons">{groups.map((g) => <div key={g}><div className="small b muted" style={{ margin: '10px 0 4px', textTransform: 'uppercase', letterSpacing: '.05em' }}>{g}</div>
+    {rc.addons.filter((a) => a.group === g).map((a) => {
+      const inc = t.includes.includes(a.code);
+      const blocked = a.needs && !on.includes(a.needs);
+      return <div key={a.code} className="addon-row">
+        <Switch on={inc || (!!o.addons?.[a.code] && !blocked)} label={a.name} onClick={() => !inc && !blocked && set({ ...o, addons: { ...o.addons, [a.code]: !o.addons?.[a.code] } })} />
+        <div style={{ flex: 1, minWidth: 200 }}><b>{a.name}</b>{a.inspired && <span className="small muted"> · popular in Indian school apps</span>}<div className="small muted">{a.desc}</div>
+          {blocked && <div className="small" style={{ color: 'var(--warn)' }}>Needs {addonOf(rc, a.needs).name}.</div>}</div>
+        {a.provider === 'No service needed' && <Pill kind="ok">No service needed</Pill>}
+        {inc ? <Pill kind="ok">Included in {t.name}</Pill> : <span className="small" style={{ minWidth: 150, textAlign: 'right' }}>{rateText(a)}{a.setup ? <><br />+ {rupees(a.setup)} one-time</> : ''}</span>}
+        {a.unit === 'bus' && a.code === 'TRANSPORT' && on.includes('TRANSPORT') && <Input type="number" min="0" aria-label="Buses" value={o.buses} onChange={(e) => up('buses', e.target.value)} style={{ width: 80 }} placeholder="Buses" />}
+        {a.unit === 'resident' && on.includes(a.code) && <Input type="number" min="0" aria-label="Hostel residents" value={o.residents} onChange={(e) => up('residents', e.target.value)} style={{ width: 90 }} placeholder="Residents" />}
+      </div>;
+    })}</div>)}</div>;
+}
+
+function ClientFields({ o, set, title = 'Client and point of contact' }) {
+  const up = (k, v) => set({ ...o, [k]: v });
+  const poc = (k, v) => set({ ...o, poc: { ...o.poc, [k]: v } });
+  return <Card title={title}><div className="form">
+    <Field label="School name" req><Input value={o.client} onChange={(e) => up('client', e.target.value)} /></Field>
+    <Field label="City"><Input value={o.city} onChange={(e) => up('city', e.target.value)} /></Field>
+    <Field label="Board"><Select aria-label="Board" value={o.board} onChange={(e) => up('board', e.target.value)} options={BOARDS} /></Field>
+    <Field label="Students" req><Input type="number" min="1" aria-label="Students" value={o.students} onChange={(e) => up('students', e.target.value)} /></Field>
+    <Field label="Point of contact" req><Input aria-label="Point of contact" value={o.poc?.name || ''} onChange={(e) => poc('name', e.target.value)} placeholder="e.g. Mrs. Lakshmi Iyer" /></Field>
+    <Field label="Designation"><Input aria-label="Designation" value={o.poc?.designation || ''} onChange={(e) => poc('designation', e.target.value)} placeholder="e.g. Principal" /></Field>
+    <Field label="Email ID" req><Input type="email" aria-label="Contact email" value={o.poc?.email || ''} onChange={(e) => poc('email', e.target.value)} placeholder="name@school.example.com" /></Field>
+    <Field label="Contact number" req><Input type="tel" aria-label="Contact number" value={o.poc?.phone || ''} onChange={(e) => poc('phone', e.target.value)} placeholder="+91 …" /></Field>
+  </div>{o.poc?.email && !okEmail(o.poc.email) && <p className="small" style={{ color: 'var(--bad)' }}>Check the email ID.</p>}</Card>;
+}
+
+function DiscountField({ o, set, q }) {
+  return <Field label={`Discount % (most for this proposal: ${pct(q.economics.maxDiscountPct)})`}>
+    <Input type="number" min="0" step="0.5" max={q.economics.maxDiscountPct} aria-label="Discount %" value={o.discountPct} onChange={(e) => set({ ...o, discountPct: e.target.value })} /></Field>;
+}
+
+// Price, discount and the business case for a proposal
+function PriceSummary({ rc, q, compact }) {
+  const e = q.economics;
+  return <>
+    <Card title="Price" right={<Pill kind="info">{q.tier.name}</Pill>}>
+      {q.warnings.map((w) => <div key={w} className="ro-bar" role="status" style={{ marginBottom: 6 }}>{w}</div>)}
+      <div className="kpis" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <Stat label="A year" value={rupees(q.recurring)} sub={`${rupees(q.perStudentYear)} per student`} />
+        <Stat label="Year one with GST" value={rupees(q.yearOneTotal)} sub={`incl. ${rupees(q.oneTimeTotal)} one-time`} />
+      </div>
+      {!compact && <table className="t"><tbody>
+        <tr><th colSpan={2}>Every year</th></tr>
+        {q.lines.map((l) => <tr key={l.code}><td className="small">{l.label}{l.provider === 'No service needed' && <> <Pill kind="ok">No service needed</Pill></>}</td><td style={{ textAlign: 'right' }}>{l.included ? <Pill kind="ok">Included</Pill> : rupees(l.amount)}</td></tr>)}
+        {q.discount > 0 && <tr><td className="small">Discount {pct(q.discountPct)} (plan and add-ons)</td><td style={{ textAlign: 'right' }}>{rupees(-q.discount)}</td></tr>}
+        <tr><td className="b">Total a year</td><td className="b" style={{ textAlign: 'right' }}>{rupees(q.recurring)}</td></tr>
+        <tr><th colSpan={2}>One-time</th></tr>
+        {q.oneTime.map((l) => <tr key={l.code}><td className="small">{l.label}</td><td style={{ textAlign: 'right' }}>{l.included ? <Pill kind="ok">Included</Pill> : rupees(l.amount)}</td></tr>)}
+        <tr><td className="b">Total one-time</td><td className="b" style={{ textAlign: 'right' }}>{rupees(q.oneTimeTotal)}</td></tr>
+        <tr><td>Year one before GST</td><td style={{ textAlign: 'right' }}>{rupees(q.yearOne)}</td></tr>
+        {q.gstSplit.map(([k, v]) => <tr key={k}><td className="small">{k}</td><td style={{ textAlign: 'right' }}>{rupees(v)}</td></tr>)}
+        <tr><td className="b">Year one total</td><td className="b" style={{ textAlign: 'right' }}>{rupees(q.yearOneTotal)}</td></tr>
+      </tbody></table>}
+    </Card>
+    <Card title="Margin and profit" right={<span className="small muted">internal</span>}>
+      <table className="t"><tbody>
+        <tr><td>Discount applied</td><td style={{ textAlign: 'right' }}>{q.discount ? `${pct(q.discountPct)} · ${rupees(q.discount)}` : 'None'}</td></tr>
+        <tr><td>Maximum allowable discount</td><td className="b" style={{ textAlign: 'right' }}>{pct(e.maxDiscountPct)}</td></tr>
+        <tr><td>Running cost <span className="small muted">(cloud, storage, email, services, support)</span></td><td style={{ textAlign: 'right' }}>{rupees(e.runningCost)}</td></tr>
+        {Object.entries(e.overheads).map(([k, v]) => <tr key={k}><td className="small">{OVERHEAD_NAMES[k]} ({rc.economics.overheads[k]}%)</td><td style={{ textAlign: 'right' }}>{rupees(v)}</td></tr>)}
+        <tr><td className="b">Operating cost</td><td className="b" style={{ textAlign: 'right' }}>{rupees(e.operatingCost)}</td></tr>
+        <tr><td className="b">Profit</td><td className="b" style={{ textAlign: 'right' }}>{rupees(e.profit)} · {pct(e.profitPct)}</td></tr>
+        <tr><td>Gross margin <span className="small muted">(industry standard {e.industry[0]}–{e.industry[1]}%)</span></td><td style={{ textAlign: 'right' }}><Pill kind={e.marginStatus === 'Below' ? 'bad' : 'ok'}>{pct(e.grossMarginPct)} · {e.marginStatus.toLowerCase()}</Pill></td></tr>
+        <tr><td className="small">One-time development profit</td><td className="small" style={{ textAlign: 'right' }}>{rupees(e.oneTimeProfit)} of {rupees(e.oneTimeRevenue)}</td></tr>
+      </tbody></table>
+      <p className="small muted">Most discount keeps profit at {e.profitFloor}% or more, never over {rc.maxDiscount}%. Over {e.salesDiscount}% needs the owner's approval.</p>
+    </Card>
+  </>;
+}
 
 // ================================================================ Price List & Tiers
-export function PriceList() {
-  const { db, session, run, notify } = useStore();
+export function PriceList({ go }) {
+  const { db, session } = useStore();
+  const rc = rcOf(db);
   const can = ['PLATFORM', 'ADMIN'].includes(session.role);   // Sales views; the platform team and the Admin change prices
-  const [rc, setRc] = useState(() => structuredClone(rcOf(db)));
-  const dirty = JSON.stringify(rc) !== JSON.stringify(rcOf(db));
-  const setPlan = (i, k, v) => setRc({ ...rc, plans: rc.plans.map((p, j) => (j === i ? { ...p, [k]: v === '' ? undefined : +v } : p)) });
-  const setAddon = (i, k, v) => setRc({ ...rc, addons: rc.addons.map((a, j) => (j === i ? { ...a, [k]: v === '' || v === 'null' ? (k === 'includedFrom' ? null : undefined) : +v } : a)) });
-  const setHost = (i, k, v) => setRc({ ...rc, hosting: rc.hosting.map((h, j) => (j === i ? { ...h, [k]: +v } : h)) });
-  const num = (v, on, label) => <Input type="number" step="any" aria-label={label} value={v ?? ''} disabled={!can} onChange={(e) => on(e.target.value)} style={{ width: 90 }} />;
-  const save = () => { const bad = rc.plans.some((p) => p.code !== 'FREE' && !(p.flat >= 0 || p.perStudent > 0)); if (bad) { notify('Every paid plan needs a flat price or a price per student'); return; }
-    run((d) => { d.provider = d.provider || {}; d.provider.rateCard = { ...rc, version: (rcOf(d).version || 1) + 1 }; }); notify('Price list saved — new proposals use it straight away'); };
-  return <Page title="Price list & tiers" sub={`What each tier costs, which add-ons each tier includes, and hosting. Prices are a month, in rupees, before ${GST}% GST. Annual plans pay ${rc.annualMonths} months for 12.`}
-    actions={can && <><button className="btn" onClick={() => setRc(structuredClone(DEFAULT_RATE_CARD))}>Back to the launch prices</button><button className="btn pri" disabled={!dirty} onClick={save}>Save price list</button></>}>
+  const [edit, setEdit] = useState(false);
+  const [n, setN] = useState(400);
+  const students = Math.max(1, +n || 1);
+  const choose = (code) => { stash('sp-new-tier', code); go('SP_PROPOSAL'); };
+  if (edit) return <EditPrices rc={rc} back={() => setEdit(false)} />;
+  const groups = [...new Set(rc.addons.map((a) => a.group))];
+  return <Page title="Pricing" sub={`Three plans, priced per student a year. Rates fall as the school grows. Every feature has a price; add-ons can be added to any plan. Prices are before ${GST}% GST.`}
+    actions={<><button className="btn" onClick={() => go('HOME')}>Back to Home</button>{can && <button className="btn pri" onClick={() => setEdit(true)}>Edit prices</button>}</>}>
+    <nav className="row" aria-label="Jump to a plan" style={{ marginBottom: 10, flexWrap: 'wrap' }}>
+      {rc.tiers.map((t) => <a key={t.code} className="btn sm" href={'#tier-' + t.code} onClick={(e) => { e.preventDefault(); document.getElementById('tier-' + t.code)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}>{t.name}: from {lakh(basePrice(rc, t.code))}</a>)}
+      <span className="small muted">Pick a plan to start a proposal with it.</span>
+    </nav>
+    <TierCards rc={rc} students={students} onChoose={choose} chooseLabel={(t) => (t.code === 'STARTER' ? 'Start with Starter' : `Choose ${t.name}`)} value={null} />
+    <div className="grid g2" style={{ marginTop: 14 }}>
+      <Card title="What a year costs" right={<label className="row small">School size <Input type="number" min="1" aria-label="School size" value={n} onChange={(e) => setN(e.target.value)} style={{ width: 90 }} /></label>}>
+        <table className="t"><thead><tr><th>Children</th>{rc.tiers.map((t) => <th key={t.code} style={{ textAlign: 'right' }}>{t.name}</th>)}</tr></thead>
+          <tbody>{[...new Set([...SIZES, students])].sort((a, b) => a - b).map((s) => <tr key={s} className={s === students ? 'hl' : ''}><td className={s === students ? 'b' : ''}>{s <= rc.minStudents ? `${rc.minStudents} or fewer` : s.toLocaleString('en-IN')}</td>{rc.tiers.map((t) => <td key={t.code} style={{ textAlign: 'right' }}>{rupees(yearCost(rc, t.code, s))}</td>)}</tr>)}</tbody></table>
+        <p className="small muted">Plan price plus data storage ({rupees(rc.storage.rate)} a student a year), before GST. Schools under {rc.minStudents} students pay for {rc.minStudents}.</p>
+      </Card>
+      <Card title="Price bands (per student a year)">
+        <table className="t"><thead><tr><th>Students</th>{rc.tiers.map((t) => <th key={t.code} style={{ textAlign: 'right' }}>{t.name}</th>)}</tr></thead>
+          <tbody>{rc.bands.map((b, i) => <tr key={i}><td>{i === 0 ? `First ${b[1]}` : bandLabel(b)}</td>{rc.tiers.map((t) => <td key={t.code} style={{ textAlign: 'right' }}>{rupees(t.rates[i])}</td>)}</tr>)}</tbody></table>
+        <p className="small muted">Like tax slabs: a school of 400 pays the first 300 students at the first rate and the next 100 at the second.</p>
+        <h3 style={{ marginTop: 12 }}>One-time development</h3>
+        <table className="t"><thead><tr><th>Item</th>{rc.tiers.map((t) => <th key={t.code} style={{ textAlign: 'right' }}>{t.name}</th>)}</tr></thead>
+          <tbody>{rc.development.map((d) => <tr key={d.code}><td className="small">{d.name}</td>{rc.tiers.map((t) => <td key={t.code} style={{ textAlign: 'right' }}>{rupees(d.price[t.code])}</td>)}</tr>)}</tbody></table>
+      </Card>
+    </div>
+    <Card title="Compare the plans">
+      <div className="tw"><table className="t"><thead><tr><th>Feature</th>{rc.tiers.map((t) => <th key={t.code}>{t.name}</th>)}</tr></thead><tbody>
+        <tr><td colSpan={4} className="small b muted">Basic features: in every plan</td></tr>
+        {BASIC.map(([c, l]) => <tr key={c}><td>{l}</td>{rc.tiers.map((t) => <td key={t.code}><Pill kind="ok">Yes</Pill></td>)}</tr>)}
+        <tr><td colSpan={4} className="small b muted">Add-ons: in the plan where marked, a paid extra otherwise</td></tr>
+        {rc.addons.map((a) => <tr key={a.code}><td>{a.name}{a.provider === 'No service needed' && <> <Pill kind="ok">No service needed</Pill></>}</td>{rc.tiers.map((t) => <td key={t.code}>{t.includes.includes(a.code) ? <Pill kind="ok">Yes</Pill> : <span className="small">{rupees(a.rate)}{a.unit === 'school' ? '' : ' / ' + UNIT[a.unit]}</span>}</td>)}</tr>)}
+      </tbody></table></div>
+    </Card>
+    <Card title="Add-ons">
+      {groups.map((g) => <div key={g}><h3 style={{ marginTop: 10 }}>{g}</h3><div className="tw"><table className="t"><thead><tr><th>Add-on</th><th>What it does</th><th>Price</th><th>Outside service</th><th>Included in</th></tr></thead>
+        <tbody>{rc.addons.filter((a) => a.group === g).map((a) => <tr key={a.code}><td className="b">{a.name}</td><td className="small">{a.desc}{a.needs && <> · needs {addonOf(rc, a.needs).name}</>}</td><td className="small">{rateText(a)}{a.setup ? ` + ${rupees(a.setup)} one-time` : ''}</td>
+          <td className="small">{a.provider === 'No service needed' ? <><Pill kind="ok">No service needed</Pill><div className="muted">{a.providerNote}</div></> : a.provider || '—'}</td>
+          <td>{rc.tiers.filter((t) => t.includes.includes(a.code)).map((t) => t.name).join(', ') || <span className="small muted">Paid in every plan</span>}</td></tr>)}</tbody></table></div></div>)}
+    </Card>
+    <Card title="Costs, margin and discount rules" right={<span className="small muted">internal</span>}>
+      <div className="grid g3">
+        <div><h3>Running cost per student a year</h3><table className="t"><tbody>{rc.tiers.map((t) => <tr key={t.code}><td>{t.name} (cloud, email, support)</td><td style={{ textAlign: 'right' }}>{rupees(t.runCost)}</td></tr>)}<tr><td>Data storage</td><td style={{ textAlign: 'right' }}>{rupees(rc.storage.cost)}</td></tr></tbody></table></div>
+        <div><h3>Overheads (% of list price)</h3><table className="t"><tbody>{Object.entries(rc.economics.overheads).map(([k, v]) => <tr key={k}><td>{OVERHEAD_NAMES[k]}</td><td style={{ textAlign: 'right' }}>{v}%</td></tr>)}</tbody></table></div>
+        <div><h3>Margin and discount</h3><table className="t"><tbody>
+          <tr><td>Industry gross margin (SaaS)</td><td style={{ textAlign: 'right' }}>{rc.economics.industryMargin[0]}–{rc.economics.industryMargin[1]}%</td></tr>
+          <tr><td>Profit kept at least</td><td style={{ textAlign: 'right' }}>{rc.economics.profitFloor}%</td></tr>
+          <tr><td>Sales can give, without approval</td><td style={{ textAlign: 'right' }}>{rc.salesDiscount}%</td></tr>
+          <tr><td>Never more than</td><td style={{ textAlign: 'right' }}>{rc.maxDiscount}%</td></tr></tbody></table></div>
+      </div>
+      <p className="small muted">Each proposal works out its own maximum discount: the most it can take while profit stays at the floor after running cost and overheads.</p>
+    </Card>
     {!can && <p className="small muted">Only the platform team and the Admin can change prices. You can see them and use them in proposals.</p>}
-    <Card title="Tiers">
-      <div className="tw"><table className="t"><thead><tr><th>Tier</th><th>Students up to</th><th>Flat a month</th><th>Per student a month</th><th>Minimum a month</th><th>Onboarding (one-time)</th><th>Support</th></tr></thead>
-        <tbody>{rc.plans.map((p, i) => <tr key={p.code}><td className="b">{p.name}</td><td>{p.cap ?? 'No limit'}</td><td>{p.perStudent ? '—' : num(p.flat, (v) => setPlan(i, 'flat', v), `${p.name} flat price`)}</td>
-          <td>{p.perStudent !== undefined ? num(p.perStudent, (v) => setPlan(i, 'perStudent', v), `${p.name} per student`) : '—'}</td><td>{p.perStudent !== undefined ? num(p.min, (v) => setPlan(i, 'min', v), `${p.name} minimum`) : '—'}</td>
-          <td>{num(p.setup, (v) => setPlan(i, 'setup', v), `${p.name} onboarding`)}</td><td className="small">{p.support}</td></tr>)}</tbody></table></div>
-    </Card>
-    <Card title="Add-ons and what each tier includes">
-      <div className="tw"><table className="t"><thead><tr><th>Add-on</th><th>Charged per</th><th>Rate a month</th><th>Minimum</th><th>One-time</th>{rc.plans.filter((p) => p.code !== 'FREE').map((p) => <th key={p.code}>{p.name}</th>)}<th>Included from</th></tr></thead>
-        <tbody>{rc.addons.map((a, i) => <tr key={a.code}><td className="b">{a.name}</td><td>{a.unit === 'flat' ? 'School' : a.unit}</td><td>{num(a.rate, (v) => setAddon(i, 'rate', v), `${a.name} rate`)}</td>
-          <td>{a.unit === 'bus' ? <>{num(a.minQty, (v) => setAddon(i, 'minQty', v), `${a.name} minimum buses`)} buses</> : a.unit === 'flat' ? '—' : num(a.min, (v) => setAddon(i, 'min', v), `${a.name} minimum`)}</td>
-          <td>{a.setup !== undefined ? num(a.setup, (v) => setAddon(i, 'setup', v), `${a.name} one-time`) : '—'}</td>
-          {rc.plans.filter((p) => p.code !== 'FREE').map((p) => <td key={p.code}>{a.includedFrom !== null && p.rank >= a.includedFrom ? <Pill kind="ok">Included</Pill> : <span className="small">{a.unit === 'flat' ? rupees(a.rate) : rateText(a.rate) + ' / ' + a.unit}</span>}</td>)}
-          <td><Select aria-label={`${a.name} included from`} disabled={!can} value={String(a.includedFrom)} onChange={(e) => setAddon(i, 'includedFrom', e.target.value)} options={[['null', 'Always paid'], ...PLANS.map((p) => [String(p.rank), p.name])]} /></td></tr>)}</tbody></table></div>
-      <p className="small muted">Messaging: email and app notices are free on every tier; SMS is the paid add-on. Transport Basic or Plus is chosen per school; Plus adds route planning and pickup suggestions.</p>
-    </Card>
-    <Card title="Hosting">
-      <div className="tw"><table className="t"><thead><tr><th>Option</th><th>One-time</th><th>A month</th><th>Note</th></tr></thead>
-        <tbody>{rc.hosting.map((h, i) => <tr key={h.code}><td className="b">{h.name}{h.enterpriseOnly && <> <Pill>Enterprise only</Pill></>}</td><td>{num(h.setup, (v) => setHost(i, 'setup', v), `${h.name} one-time`)}</td>
-          <td>{h.monthlyPct ? <>{num(h.monthlyPct, (v) => setHost(i, 'monthlyPct', v), `${h.name} percent`)}% of plan</> : num(h.monthly, (v) => setHost(i, 'monthly', v), `${h.name} monthly`)}</td><td className="small">{h.note || ''}</td></tr>)}</tbody></table></div>
-    </Card>
-    <Card title="Rules"><div className="form">
-      <Field label="Annual plan: months charged for 12"><Input type="number" disabled={!can} value={rc.annualMonths} onChange={(e) => setRc({ ...rc, annualMonths: +e.target.value })} /></Field>
-      <Field label="Discount sales can give (%)"><Input type="number" disabled={!can} value={rc.maxSalesDiscount} onChange={(e) => setRc({ ...rc, maxSalesDiscount: +e.target.value })} /></Field>
-      <Field label="Highest discount allowed (%)"><Input type="number" disabled={!can} value={rc.maxDiscount} onChange={(e) => setRc({ ...rc, maxDiscount: +e.target.value })} /></Field>
+  </Page>;
+}
+
+function EditPrices({ rc: start, back }) {
+  const { run, notify } = useStore();
+  const [rc, setRc] = useState(() => structuredClone(start));
+  const dirty = JSON.stringify(rc) !== JSON.stringify(start);
+  const num = (v, on, label, w = 90) => <Input type="number" step="any" min="0" aria-label={label} value={v ?? ''} onChange={(e) => on(e.target.value === '' ? undefined : +e.target.value)} style={{ width: w }} />;
+  const setTier = (i, f) => setRc({ ...rc, tiers: rc.tiers.map((t, j) => (j === i ? f(structuredClone(t)) : t)) });
+  const setAddon = (i, k, v) => setRc({ ...rc, addons: rc.addons.map((a, j) => (j === i ? { ...a, [k]: v } : a)) });
+  const save = () => {
+    if (rc.tiers.some((t) => t.rates.some((r) => !(r > 0)))) { notify('Every band needs a price above zero — no plan is free'); return; }
+    if (rc.addons.some((a) => !(a.rate > 0))) { notify('Every add-on needs a price above zero'); return; }
+    run((d) => { d.provider.rateCard = { ...rc, version: Math.max(2, rc.version) }; d.provider.priceVersion = (d.provider.priceVersion || 1) + 1; });
+    notify('Prices saved — proposals use them straight away'); back();
+  };
+  return <Page title="Edit prices" sub="Change plan rates, add-on prices and costs. Nothing can be free: every price must be above zero."
+    actions={<><button className="btn" onClick={back}>Back to Pricing</button><button className="btn pri" disabled={!dirty} onClick={save}>Save prices</button></>}>
+    <Card title="Plans: price per student a year, by band"><div className="tw"><table className="t"><thead><tr><th>Plan</th>{rc.bands.map((b) => <th key={b[0]}>{bandLabel(b)}</th>)}<th>Running cost / student</th>{rc.development.map((d) => <th key={d.code}>{d.code === 'WEB_DESIGN' ? 'Web page design' : 'Database set-up'}</th>)}</tr></thead>
+      <tbody>{rc.tiers.map((t, i) => <tr key={t.code}><td className="b">{t.name}</td>{t.rates.map((r, k) => <td key={k}>{num(r, (v) => setTier(i, (x) => { x.rates[k] = v; return x; }), `${t.name} rate ${bandLabel(rc.bands[k])}`)}</td>)}
+        <td>{num(t.runCost, (v) => setTier(i, (x) => ({ ...x, runCost: v })), `${t.name} running cost`)}</td>
+        {rc.development.map((d, k) => <td key={d.code}>{num(d.price[t.code], (v) => setRc({ ...rc, development: rc.development.map((x, j) => (j === k ? { ...x, price: { ...x.price, [t.code]: v } } : x)) }), `${t.name} ${d.code}`)}</td>)}</tr>)}</tbody></table></div>
+      <div className="form" style={{ marginTop: 10 }}>
+        <Field label="Minimum students billed">{num(rc.minStudents, (v) => setRc({ ...rc, minStudents: v }), 'Minimum students billed')}</Field>
+        <Field label="Data storage per student a year">{num(rc.storage.rate, (v) => setRc({ ...rc, storage: { ...rc.storage, rate: v } }), 'Storage price')}</Field>
+        <Field label="Storage cost per student a year">{num(rc.storage.cost, (v) => setRc({ ...rc, storage: { ...rc.storage, cost: v } }), 'Storage cost')}</Field>
+      </div></Card>
+    <Card title="Add-ons"><div className="tw"><table className="t"><thead><tr><th>Add-on</th><th>Per</th><th>Price a year</th><th>Minimum</th><th>One-time</th><th>Our cost per unit a year</th><th>Included in</th></tr></thead>
+      <tbody>{rc.addons.map((a, i) => <tr key={a.code}><td className="b">{a.name}</td><td>{UNIT[a.unit]}</td><td>{num(a.rate, (v) => setAddon(i, 'rate', v), `${a.name} price`)}</td>
+        <td>{a.unit === 'school' ? '—' : a.unit === 'bus' ? <>{num(a.minQty, (v) => setAddon(i, 'minQty', v), `${a.name} minimum buses`, 60)} buses</> : num(a.min, (v) => setAddon(i, 'min', v), `${a.name} minimum`)}</td>
+        <td>{a.setup !== undefined ? num(a.setup, (v) => setAddon(i, 'setup', v), `${a.name} one-time`) : '—'}</td>
+        <td>{a.provider === 'No service needed' ? <Pill kind="ok">No service needed (₹0)</Pill> : num(a.cost, (v) => setAddon(i, 'cost', v), `${a.name} cost`)}</td>
+        <td><div className="row">{rc.tiers.map((t, k) => <label key={t.code} className="row small"><input type="checkbox" checked={t.includes.includes(a.code)} onChange={(e) => setTier(k, (x) => ({ ...x, includes: e.target.checked ? [...x.includes, a.code] : x.includes.filter((c) => c !== a.code) }))} />{t.name}</label>)}</div></td></tr>)}</tbody></table></div></Card>
+    <Card title="Margin and discount rules"><div className="form">
+      {Object.entries(rc.economics.overheads).map(([k, v]) => <Field key={k} label={`${OVERHEAD_NAMES[k]} (% of list price)`}>{num(v, (x) => setRc({ ...rc, economics: { ...rc.economics, overheads: { ...rc.economics.overheads, [k]: x } } }), OVERHEAD_NAMES[k])}</Field>)}
+      <Field label="Profit kept at least (%)">{num(rc.economics.profitFloor, (v) => setRc({ ...rc, economics: { ...rc.economics, profitFloor: v } }), 'Profit floor')}</Field>
+      <Field label="Discount sales can give (%)">{num(rc.salesDiscount, (v) => setRc({ ...rc, salesDiscount: v }), 'Sales discount')}</Field>
+      <Field label="Highest discount allowed (%)">{num(rc.maxDiscount, (v) => setRc({ ...rc, maxDiscount: v }), 'Highest discount')}</Field>
     </div></Card>
   </Page>;
 }
 
 // ================================================================ Proposal Builder
-function QuoteCard({ rc, o, q }) {
-  return <Card title="Price" right={<Pill kind="info">{q.plan.name}</Pill>}>
-    {q.warnings.map((w) => <div key={w} className="ro-bar" role="status" style={{ marginBottom: 6 }}>{w}</div>)}
-    <table className="t"><tbody>
-      <tr><th colSpan={2}>Every month</th></tr>
-      {q.monthly.map((l) => <tr key={l.code}><td className="small">{l.label}</td><td style={{ textAlign: 'right' }}>{l.included ? <Pill kind="ok">Included</Pill> : rupees(l.amount)}</td></tr>)}
-      <tr><td className="b">Monthly total</td><td className="b" style={{ textAlign: 'right' }}>{rupees(q.monthlyTotal)}</td></tr>
-      {q.oneTime.length > 0 && <><tr><th colSpan={2}>One-time</th></tr>{q.oneTime.map((l) => <tr key={l.code}><td className="small">{l.label}</td><td style={{ textAlign: 'right' }}>{rupees(l.amount)}</td></tr>)}</>}
-    </tbody></table>
-    <div className="kpis" style={{ marginTop: 10 }}>
-      <Stat label={o.billing === 'MONTHLY' ? 'A year (12 monthly bills)' : `A year (${q.months} months billed)`} value={rupees(q.yearly)} sub={`${rupees(q.yearlyWithGst)} with GST`} />
-      <Stat label="Per student a year" value={rupees(q.perStudentYear)} sub="before GST" />
-      <Stat label="First invoice" value={rupees(q.firstInvoiceTotal)} sub={`incl. ${rupees(q.firstInvoiceGst)} GST`} />
+function EmailProposal({ p, rc, profile, onClose }) {
+  const { run, notify, session } = useStore();
+  const o = p.options;
+  const q = quote(rc, o);
+  const [f, setF] = useState(() => ({
+    to: o.poc?.email || '', cc: profile.email,
+    subject: `Proposal ${p.no}: ${profile.product} for ${o.client}`,
+    body: `Dear ${o.poc?.name || 'Sir / Madam'},\n\nThank you for meeting us. Please find attached our proposal for ${o.client}: the ${q.tier.name} plan for ${q.students} students at ${rupees(q.recurring)} a year (${rupees(q.yearOneTotal)} in year one including one-time development and GST).\n\nWe would be glad to set up a demo for your team or answer any questions. Please contact ${profile.contact} on ${profile.phone} or reply to this email.\n\nWarm regards,\n${session.name}\n${profile.name}\n${profile.phone} · ${profile.email}`
+  }));
+  const send = async () => {
+    if (!okEmail(f.to)) { notify('Enter a valid email ID for the client'); return; }
+    let size = 0; let name = `${p.no}.pdf`;
+    try { const m = await import('../lib/proposalPdf.js'); const bytes = m.proposalPdfBytes({ proposal: p, rc, profile }); size = bytes.byteLength; name = m.proposalFileName(p); } catch (e) { /* PDF made when sent in production */ }
+    run((d) => {
+      const x = d.provider.proposals.find((y) => y.id === p.id);
+      d.outbox.unshift({ id: 'M' + (d.outbox.length + 1) + '-' + Math.random().toString(36).slice(2, 6), to: f.to + (f.cc ? `, cc ${f.cc}` : ''), kind: 'Proposal', status: 'SENT', at: new Date().toISOString(), related: x.no,
+        subject: f.subject, body: f.body.split('\n').map((l) => `<p>${l.replace(/</g, '&lt;') || '&nbsp;'}</p>`).join('') + `<p><b>Attached:</b> ${name} (${Math.max(1, Math.round(size / 1024))} KB)</p>`, attachment: { name, size } });
+      x.status = x.status === 'Draft' ? 'Sent' : x.status; x.sent = [...(x.sent || []), { to: f.to, at: new Date().toISOString(), by: session.name }];
+    });
+    notify(`Proposal emailed to ${f.to} with the PDF attached`); onClose();
+  };
+  return <Modal title={`Email proposal ${p.no}`} onClose={onClose} actions={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn pri" onClick={send}>Send email</button></>}>
+    <div className="form">
+      <Field label="To" req full><Input type="email" aria-label="Email to" value={f.to} onChange={(e) => setF({ ...f, to: e.target.value })} /></Field>
+      <Field label="Cc" full><Input aria-label="Email cc" value={f.cc} onChange={(e) => setF({ ...f, cc: e.target.value })} /></Field>
+      <Field label="Subject" full><Input aria-label="Subject" value={f.subject} onChange={(e) => setF({ ...f, subject: e.target.value })} /></Field>
+      <Field label="Message" full><textarea className="i" aria-label="Message" rows={10} value={f.body} onChange={(e) => setF({ ...f, body: e.target.value })} style={{ fontFamily: 'inherit' }} /></Field>
     </div>
-  </Card>;
+    <p className="small muted">The proposal PDF is attached. The email is recorded in Settings → Email &amp; SMS Outbox and the proposal is marked Sent.</p>
+  </Modal>;
 }
 
-function ProposalForm({ o, set, rc }) {
-  const plan = planOf(rc, o.plan);
-  const fit = planFor(rc, +o.students || 0, { allowFree: o.plan === 'FREE' });
-  const up = (k, v) => set({ ...o, [k]: v });
-  return <>
-    <Card title="1. Client"><div className="form">
-      <Field label="School name" req><Input value={o.client} onChange={(e) => up('client', e.target.value)} /></Field>
-      <Field label="City"><Input value={o.city} onChange={(e) => up('city', e.target.value)} /></Field>
-      <Field label="Board"><Select value={o.board} onChange={(e) => up('board', e.target.value)} options={['CBSE', 'ICSE', 'State board', 'IB / Cambridge', 'Mixed']} /></Field>
-      <Field label="Contact (role)"><Input value={o.contact} onChange={(e) => up('contact', e.target.value)} placeholder="e.g. Principal" /></Field>
-    </div></Card>
-    <Card title="2. Size and tier"><div className="form">
-      <Field label="Students" req><Input type="number" min="1" value={o.students} onChange={(e) => up('students', e.target.value)} /></Field>
-      <Field label="Tier" req><Select aria-label="Tier" value={o.plan} onChange={(e) => up('plan', e.target.value)} options={rc.plans.map((p) => [p.code, `${p.name} (${p.cap ? 'up to ' + p.cap : (rc.plans[rc.plans.length - 2]?.cap || 0) + 1 + '+'} students)`])} /></Field>
-      <div style={{ alignSelf: 'end', paddingBottom: 6 }}>{fit.code !== o.plan ? <button type="button" className="btn sm" onClick={() => up('plan', fit.code)}>Use {fit.name} — fits {o.students} students</button> : <span className="small muted">{plan.name} fits this size.</span>}</div>
-    </div></Card>
-    <Card title="3. Messaging and transport"><div className="form">
-      <Field label="Messages to parents and staff"><Select aria-label="Messaging" value={o.messaging} onChange={(e) => up('messaging', e.target.value)} options={MESSAGING} /></Field>
-      <Field label="Transport"><Select aria-label="Transport" value={o.transport} onChange={(e) => up('transport', e.target.value)} options={TRANSPORT} /></Field>
-      {o.transport !== 'NONE' && <Field label="Buses"><Input type="number" min="0" value={o.buses} onChange={(e) => up('buses', e.target.value)} /></Field>}
-    </div></Card>
-    <Card title="4. Add-ons">
-      {OPTIONAL.map((code) => { const a = addonOf(rc, code); const inc = a.includedFrom !== null && plan.rank >= a.includedFrom && plan.code !== 'FREE';
-        return <div key={code} className="row" style={{ borderTop: '1px solid var(--line)', padding: '6px 0' }}>
-          <Switch on={inc || !!o.addons[code]} label={a.name} onClick={() => !inc && set({ ...o, addons: { ...o.addons, [code]: !o.addons[code] } })} />
-          <span style={{ flex: 1 }}>{a.name}</span>
-          {inc ? <Pill kind="ok">Included in {plan.name}</Pill> : <span className="small muted">{a.unit === 'flat' ? rupees(a.rate) + ' a month' : `${rateText(a.rate)} per ${a.unit} a month${a.min ? ', min ' + rupees(a.min) : ''}`}{a.setup ? ` + ${rupees(a.setup)} one-time` : ''}</span>}
-          {code === 'HOSTEL' && (o.addons.HOSTEL || inc) && <Input type="number" aria-label="Hostel residents" value={o.residents} onChange={(e) => up('residents', e.target.value)} style={{ width: 90 }} placeholder="Residents" />}
-        </div>; })}
-    </Card>
-    <Card title="5. Hosting and billing"><div className="form">
-      <Field label="Hosting"><Select aria-label="Hosting" value={o.hosting} onChange={(e) => up('hosting', e.target.value)} options={rc.hosting.map((h) => [h.code, h.name])} /></Field>
-      <Field label="Billing"><Select aria-label="Billing" value={o.billing} onChange={(e) => up('billing', e.target.value)} options={[['ANNUAL', `Annual, paid up front (${rc.annualMonths} months)`], ['MONTHLY', 'Monthly']]} /></Field>
-      <Field label="Discount %"><Input type="number" min="0" value={o.discountPct} onChange={(e) => up('discountPct', e.target.value)} /></Field>
-      <label className="row small"><input type="checkbox" checked={o.interState} onChange={(e) => up('interState', e.target.checked)} /> School is in another state (IGST)</label>
-      {o.plan === 'STARTER' && <label className="row small"><input type="checkbox" checked={o.assisted} onChange={(e) => up('assisted', e.target.checked)} /> Assisted onboarding ({rupees(plan.assistedSetup)})</label>}
-    </div></Card>
-  </>;
+function PdfPreview({ p, rc, profile, onClose }) {
+  const [url, setUrl] = useState(null);
+  useEffect(() => { import('../lib/proposalPdf.js').then((m) => setUrl(m.buildProposalPdf({ proposal: p, rc, profile }).output('bloburl'))).catch(() => setUrl('')); }, [p, rc, profile]);
+  return <Modal title={`Proposal ${p.no} (PDF)`} onClose={onClose} actions={<button className="btn pri" onClick={() => downloadPdf(p, rc, profile)}>Download PDF</button>}>
+    {url ? <iframe title="Proposal PDF" src={String(url)} style={{ width: '100%', height: '70vh', border: '1px solid var(--line)' }} /> : <p className="muted">{url === '' ? 'The preview could not be made here; use Download PDF.' : 'Making the PDF…'}</p>}
+  </Modal>;
 }
+const downloadPdf = (p, rc, profile) => import('../lib/proposalPdf.js').then((m) => m.downloadProposalPdf({ proposal: p, rc, profile }));
 
-function ProposalDoc({ p, rc }) {
-  const o = p.options; const q = quote(rc, o); const feats = featureList(rc, o).filter((m) => m.on);
-  const valid = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
-  return <div className="doc">
-    <h1 style={{ marginBottom: 4 }}>Proposal for {o.client || 'your school'}</h1>
-    <p className="muted">{p.no} · {dmy(p.created)} · valid until {dmy(valid)}{o.city ? ' · ' + o.city : ''}</p>
-    <h2>Recommended: {q.plan.name} tier</h2>
-    <p>For {q.students} students{o.transport !== 'NONE' ? `, ${o.buses} buses` : ''}. {q.plan.name} costs {rupees(q.monthlyTotal)} a month with the options below; on the annual plan that is {rupees(q.yearly)} a year ({rupees(q.perStudentYear)} per student), plus GST. A free phone app for every parent and staff member is included.</p>
-    <h2>What the school gets</h2>
-    <ul>{feats.map((m) => <li key={m.code}><b>{m.label}:</b> {m.items.filter((i) => i.on).map((i) => i.label).join(', ')}</li>)}</ul>
-    <p className="small">Messages: {MESSAGING.find((x) => x[0] === o.messaging)[1]}. Hosting: {rc.hosting.find((h) => h.code === o.hosting).name}, data kept in India. Support: {q.plan.support}.</p>
-    <h2>Price</h2>
-    <table className="t"><thead><tr><th>Item</th><th style={{ textAlign: 'right' }}>A month</th></tr></thead><tbody>
-      {q.monthly.map((l) => <tr key={l.code}><td>{l.label}</td><td style={{ textAlign: 'right' }}>{l.included ? 'Included' : rupees(l.amount)}</td></tr>)}
-      <tr><td className="b">Monthly total</td><td className="b" style={{ textAlign: 'right' }}>{rupees(q.monthlyTotal)}</td></tr></tbody></table>
-    {q.oneTime.length > 0 && <table className="t" style={{ marginTop: 8 }}><thead><tr><th>One-time</th><th style={{ textAlign: 'right' }}>Amount</th></tr></thead><tbody>{q.oneTime.map((l) => <tr key={l.code}><td>{l.label}</td><td style={{ textAlign: 'right' }}>{rupees(l.amount)}</td></tr>)}</tbody></table>}
-    <table className="t" style={{ marginTop: 8 }}><tbody>
-      <tr><td>{o.billing === 'MONTHLY' ? 'First month + one-time' : `Year one: ${q.months} months billed for 12 + one-time`}</td><td style={{ textAlign: 'right' }}>{rupees(q.firstInvoice)}</td></tr>
-      {q.gstSplit.map(([k, v]) => <tr key={k}><td>{k}</td><td style={{ textAlign: 'right' }}>{rupees(v)}</td></tr>)}
-      <tr><td className="b">First invoice total</td><td className="b" style={{ textAlign: 'right' }}>{rupees(q.firstInvoiceTotal)}</td></tr></tbody></table>
-    <h2>Terms</h2>
-    <ul className="small"><li>Prices exclude GST at {GST}%. Student numbers are checked each October on annual plans.</li><li>Every table can be exported at any time; data is kept 90 days after the contract ends.</li><li>Payment by bank transfer or UPI within 15 days of the invoice. If the school deducts TDS, please send the certificate.</li></ul>
-  </div>;
+function ProposalEditor({ id, back, go }) {
+  const { db, run, notify, session } = useStore();
+  const rc = rcOf(db); const profile = profileOf(db);
+  const p = db.provider.proposals.find((x) => x.id === id);
+  const [modal, setModal] = useState(null);
+  const o = p.options;
+  const q = useMemo(() => quote(rc, o), [rc, o]);
+  const set = (options) => run((d) => saveOptions(d, id, options));
+  const ready = () => { const miss = [!String(o.client).trim() && 'school name', !o.poc?.name && 'point of contact', !okEmail(o.poc?.email) && 'contact email', !o.poc?.phone && 'contact number'].filter(Boolean); if (miss.length) { notify('Fill in: ' + miss.join(', ')); return false; } return true; };
+  const demo = p.demoId && db.tenants.find((t) => t.id === p.demoId);
+  return <Page title={`Proposal ${p.no}${o.client ? ' · ' + o.client : ''}`} sub="Choices save as you go. The Demo Builder uses the same choices, so the demo always matches this proposal."
+    actions={<><button className="btn" onClick={back}>Back to proposals</button><button className="btn" onClick={() => ready() && setModal('pdf')}>Preview PDF</button><button className="btn" onClick={() => ready() && downloadPdf(p, rc, profile)}>Download PDF</button>
+      <button className="btn" onClick={() => { stash('sp-demo-from', id); go('SP_DEMO'); }}>{demo ? 'Open demo' : 'Build demo'}</button><button className="btn pri" onClick={() => ready() && setModal('email')}>Email proposal</button></>}>
+    <div className="grid g-side"><div>
+      <ClientFields o={o} set={set} />
+      <Card title="Plan"><TierCards rc={rc} value={o.tier} students={+o.students || 0} onChoose={(tier) => set({ ...o, tier })} /></Card>
+      <Card title="Add-ons"><AddonPicker rc={rc} o={o} set={set} /></Card>
+      <Card title="Hosting, discount and GST"><div className="form">
+        <Field label="Hosting"><Select aria-label="Hosting" value={o.hosting} onChange={(e) => set({ ...o, hosting: e.target.value })} options={rc.hosting.map((h) => [h.code, h.name])} /></Field>
+        <DiscountField o={o} set={set} q={q} />
+        <label className="row small"><input type="checkbox" checked={!!o.interState} onChange={(e) => set({ ...o, interState: e.target.checked })} /> School is in another state (IGST)</label>
+        <label className="row small"><input type="checkbox" checked={o.showInternal !== false} onChange={(e) => set({ ...o, showInternal: e.target.checked })} /> Show margin, profit and operating cost in the PDF</label>
+      </div></Card>
+    </div><div className="sticky-side"><PriceSummary rc={rc} q={q} />
+      <Card title="Status"><Select aria-label="Proposal status" value={p.status} onChange={(e) => run((d) => { d.provider.proposals.find((x) => x.id === id).status = e.target.value; })} options={PROPOSAL_STATUS} />
+        {(p.sent || []).map((s) => <div key={s.at} className="small muted" style={{ marginTop: 4 }}>Emailed to {s.to} · {dmy(s.at)} · {s.by}</div>)}
+        {demo && <div className="small" style={{ marginTop: 6 }}>Demo school: <b>{demo.name}</b> (updates with this proposal)</div>}</Card>
+    </div></div>
+    {modal === 'pdf' && <PdfPreview p={p} rc={rc} profile={profile} onClose={() => setModal(null)} />}
+    {modal === 'email' && <EmailProposal p={p} rc={rc} profile={profile} onClose={() => setModal(null)} />}
+  </Page>;
 }
 
 export function ProposalBuilder({ go }) {
-  const { db, run, notify, session } = useStore();
+  const { db, run, session } = useStore();
   const rc = rcOf(db);
   const list = db.provider?.proposals || [];
-  const [edit, setEdit] = useState(null);     // { id?, options }
-  const [view, setView] = useState(null);
+  const [open, setOpen] = useState(() => { const tier = unstash('sp-new-tier'); const id = unstash('sp-open-proposal'); return id && list.some((p) => p.id === id) ? id : tier ? { tier } : null; });
   const [filter, setFilter] = useState('ALL');
-  const q = useMemo(() => (edit ? quote(rc, { ...edit.options, students: +edit.options.students || 0 }) : null), [edit, rc]);
-  const save = (thenDemo) => {
-    if (!String(edit.options.client).trim()) { notify('Enter the school name'); return null; }
-    const id = run((d) => {
-      d.provider.proposals = d.provider.proposals || [];
-      if (edit.id) { const p = d.provider.proposals.find((x) => x.id === edit.id); p.options = edit.options; p.updated = todayIso(); return p.id; }
-      d.seq.proposal = (d.seq.proposal || 0) + 1;
-      const p = { id: 'PR' + d.seq.proposal, no: `PROP-${todayIso().slice(0, 4)}-${String(d.seq.proposal).padStart(3, '0')}`, status: 'Draft', created: todayIso(), by: session.name, options: edit.options };
-      d.provider.proposals.unshift(p); return p.id;
-    });
-    notify('Proposal saved'); setEdit({ ...edit, id });
-    if (thenDemo) { try { sessionStorage.setItem('sp-demo-from', id); } catch (e) { /* ignore */ } go('SP_DEMO'); }
-    return id;
-  };
-  const setStatus = (id, status) => { run((d) => { d.provider.proposals.find((p) => p.id === id).status = status; }); notify(`Marked ${status}`); };
-  if (edit) return <Page title={edit.id ? `Proposal ${list.find((p) => p.id === edit.id)?.no}` : 'New proposal'} sub="Pick the tier and options; the price works itself out from the price list. Save it, print it for the client, or build a demo from it."
-    actions={<><button className="btn" onClick={() => setEdit(null)}>Back to proposals</button><button className="btn" onClick={() => { const id = save(false); if (id) setView(id); }}>Save and preview</button><button className="btn" onClick={() => save(true)}>Save and build demo</button><button className="btn pri" onClick={() => save(false)}>Save</button></>}>
-    <div className="grid g-side"><div><ProposalForm o={edit.options} set={(options) => setEdit({ ...edit, options })} rc={rc} /></div><div><QuoteCard rc={rc} o={edit.options} q={q} /></div></div>
-    {view && <Modal title="Proposal" onClose={() => setView(null)} actions={<button className="btn pri" onClick={printPage}>Print or save as PDF</button>}><ProposalDoc p={(db.provider.proposals || []).find((x) => x.id === view)} rc={rc} /></Modal>}
-  </Page>;
+  const create = (tier) => { const p = run((d) => newProposal(d, { ...blankOptions(rcOf(d)), ...(tier ? { tier } : {}) }, session.name)); setOpen(p.id); };
+  useEffect(() => { if (open && typeof open === 'object') create(open.tier); }, []);   // came from a plan's “Choose” button
+  if (open && typeof open === 'object') return null;
+  if (open && list.some((p) => p.id === open)) return <ProposalEditor id={open} back={() => setOpen(null)} go={go} />;
   const rows = list.filter((p) => filter === 'ALL' || p.status === filter);
-  const won = list.filter((p) => p.status === 'Won').reduce((s, p) => s + quote(rc, p.options).yearly, 0);
-  const open = list.filter((p) => ['Draft', 'Sent'].includes(p.status)).reduce((s, p) => s + quote(rc, p.options).yearly, 0);
-  return <Page title="Proposals" sub="Build a priced proposal from the tiers and add-ons, print it for the client, and track it to won or lost."
-    actions={<button className="btn pri" onClick={() => setEdit({ options: blankOptions(rc) })}>New proposal</button>}>
-    <div className="kpis"><Stat label="Proposals" value={list.length} /><Stat label="Open (draft or sent)" value={lakh(open)} sub="a year" /><Stat label="Won" value={lakh(won)} sub="a year" /><Stat label="Win rate" value={(() => { const d = list.filter((p) => ['Won', 'Lost'].includes(p.status)); return d.length ? Math.round((100 * d.filter((p) => p.status === 'Won').length) / d.length) + '%' : '—'; })()} /></div>
+  const yearOf = (p) => quote(rc, p.options).recurring;
+  const won = list.filter((p) => p.status === 'Won').reduce((s, p) => s + yearOf(p), 0);
+  const openSum = list.filter((p) => ['Draft', 'Sent'].includes(p.status)).reduce((s, p) => s + yearOf(p), 0);
+  return <Page title="Proposals" sub="Build a priced proposal from a plan and add-ons, download it as a PDF or email it to the client, and track it to won or lost."
+    actions={<><button className="btn" onClick={() => go('SP_RATES')}>Back to Pricing</button><button className="btn pri" onClick={() => create(null)}>New proposal</button></>}>
+    <div className="kpis"><Stat label="Proposals" value={list.length} /><Stat label="Open (draft or sent)" value={lakh(openSum)} sub="a year" /><Stat label="Won" value={lakh(won)} sub="a year" /><Stat label="Win rate" value={(() => { const d = list.filter((p) => ['Won', 'Lost'].includes(p.status)); return d.length ? Math.round((100 * d.filter((p) => p.status === 'Won').length) / d.length) + '%' : '—'; })()} /></div>
     <Card right={<Select aria-label="Status filter" value={filter} onChange={(e) => setFilter(e.target.value)} options={[['ALL', 'All'], ...PROPOSAL_STATUS]} />}>
-      <div className="tw"><table className="t"><thead><tr><th>Proposal</th><th>School</th><th>Students</th><th>Tier</th><th>A month</th><th>A year</th><th>Status</th><th /></tr></thead>
-        <tbody>{rows.map((p) => { const x = quote(rc, p.options); return <tr key={p.id}><td className="b">{p.no}<div className="small muted">{dmy(p.created)} · {p.by}</div></td><td>{p.options.client}<div className="small muted">{p.options.city}</div></td><td>{p.options.students}</td><td>{x.plan.name}</td><td>{rupees(x.monthlyTotal)}</td><td>{rupees(x.yearly)}</td>
-          <td><Select aria-label={`Status of ${p.no}`} value={p.status} onChange={(e) => setStatus(p.id, e.target.value)} options={PROPOSAL_STATUS} /></td>
-          <td><div className="row"><button className="btn sm" onClick={() => setEdit({ id: p.id, options: structuredClone(p.options) })}>Open</button><button className="btn sm" onClick={() => setView(p.id)}>Preview</button>
-            <button className="btn sm" onClick={() => { try { sessionStorage.setItem('sp-demo-from', p.id); } catch (e) { /* ignore */ } go('SP_DEMO'); }}>Build demo</button></div></td></tr>; })}</tbody></table></div>
+      <div className="tw"><table className="t"><thead><tr><th>Proposal</th><th>School</th><th>Contact</th><th>Students</th><th>Plan</th><th>A year</th><th>Discount</th><th>Status</th><th /></tr></thead>
+        <tbody>{rows.map((p) => { const x = quote(rc, p.options); return <tr key={p.id}><td className="b">{p.no}<div className="small muted">{dmy(p.created)} · {p.by}</div></td><td>{p.options.client || <span className="muted">Not named yet</span>}<div className="small muted">{p.options.city}</div></td>
+          <td className="small">{p.options.poc?.name}<div className="muted">{p.options.poc?.email}</div></td><td>{p.options.students}</td><td>{x.tier.name}</td><td>{rupees(x.recurring)}</td><td>{x.discountPct ? pct(x.discountPct) : '—'}</td>
+          <td><Pill kind={STATUS_KIND[p.status]}>{p.status}</Pill></td>
+          <td><div className="row"><button className="btn sm" onClick={() => setOpen(p.id)}>Open</button>
+            <button className="btn sm" onClick={() => { stash('sp-demo-from', p.id); go('SP_DEMO'); }}>{p.demoId ? 'Demo' : 'Build demo'}</button></div></td></tr>; })}</tbody></table></div>
     </Card>
-    {view && <Modal title="Proposal" onClose={() => setView(null)} actions={<button className="btn pri" onClick={printPage}>Print or save as PDF</button>}><ProposalDoc p={list.find((x) => x.id === view)} rc={rc} /></Modal>}
   </Page>;
 }
 
@@ -191,22 +336,24 @@ export function ProposalBuilder({ go }) {
 const DEMO_ROLES = [['PRINCIPAL', 'Principal'], ['ADMIN', 'Admin'], ['TEACHER', 'Teacher'], ['PARENT', 'Parent'], ['ACCOUNTANT', 'Accountant'], ['FRONT_OFFICE', 'Front office'], ['TRANSPORT', 'Transport team']];
 // What to show, in order, for these choices: [screen, role to show it as, what to say]
 export function demoScript(o, cfg) {
-  const on = (c) => cfg.overrides[c] !== false;
-  const s = [['DASH', 'PRINCIPAL', 'Start with the dashboard: what changed this month, not just counts.'],
-    ['STU_PROFILE', 'PRINCIPAL', 'One student: personal, academic and performance with rank in class.'],
-    ['STU_ATT', 'TEACHER', 'Attendance as a register: tap present or absent for the month.'],
-    ['FEE_COLLECT', 'ACCOUNTANT', 'Collect a fee and print the receipt; parents pay online too.']];
-  if (on('STU_REPORTCARD')) s.push(['STU_REPORTCARD', 'PRINCIPAL', 'Report cards by grade, term or exam — print or let parents view them.']);
-  if (cfg.overrides.TRANSPORT) s.push(['TRN_ROUTES', 'TRANSPORT', o.transport === 'PLUS' ? 'Route options, pickup suggestions and the route map (Transport Plus).' : 'Routes, stops and timings, and the driver route sheets.']);
-  if (cfg.overrides.PAYROLL !== false && cfg.plan !== 'STARTER') s.push(['PAY_RUN', 'ACCOUNTANT', 'Run payroll and print payslips.']);
-  s.push(['STF_LEAVE', 'PRINCIPAL', 'A leave request arrives with an alert; approve it in one tap.']);
-  if (cfg.overrides.CMP_LIBRARY) s.push(['CMP_LIBRARY', 'FRONT_OFFICE', 'Library: issue a book and see overdue fines.']);
-  if (cfg.overrides.CMP_HOSTEL) s.push(['CMP_HOSTEL', 'FRONT_OFFICE', 'Hostel: blocks, rooms, free beds and monthly fees.']);
-  s.push(['CMP_HOMEWORK', 'TEACHER', 'Set homework; parents see it with their child\'s status.']);
-  if (cfg.overrides.CMP_CLASSES) s.push(['CMP_CLASSES', 'TEACHER', 'Schedule an online class with a meeting link.']);
-  if (cfg.overrides.ANALYTICS) s.push(['ANL_HOME', 'PRINCIPAL', 'Data Analytics: the report catalogue.']);
-  if (cfg.overrides.EXM_QB) s.push(['EXM_QB', 'TEACHER', 'Question bank and paper builder.']);
-  s.push(['SELF_CHILD', 'PARENT', 'The parent view: child, fees, requests — the same on the free app.']);
+  const on = (c) => cfg.overrides[c] === true;
+  const s = [];
+  if (on('DASH')) s.push(['DASH', 'PRINCIPAL', 'Start with the dashboard: what changed this month, not just counts.']);
+  s.push(['STU_ADMISSIONS', 'FRONT_OFFICE', 'An enquiry becomes an admission in a few steps.'],
+    ['STU_PROFILE', 'PRINCIPAL', 'One student: details with photo, attendance, fees and marks.'],
+    ['STU_ATT', 'TEACHER', 'Roll call as a register: tap present or absent.'],
+    ['FEE_COLLECT', 'ACCOUNTANT', 'Collect a fee at the counter and print the receipt.'],
+    ['STU_REPORTCARD', 'PRINCIPAL', 'Report cards by term or exam — print or let parents view them.']);
+  if (on('STU_REQUESTS')) s.push(['STU_REQUESTS', 'TEACHER', 'Coordinator Desk: approve requests from parents in one place.']);
+  if (on('STU_GATE')) s.push(['STU_GATE', 'FRONT_OFFICE', 'Gate Desk: early pick-ups and gate passes.']);
+  if (on('TRN_ROUTES')) s.push(['TRN_ROUTES', 'TRANSPORT', on('FN_STOP_TIMINGS') ? 'Routes, the route map and stop timings.' : 'Routes, stops and the route map.']);
+  if (on('CMP_HOMEWORK')) s.push(['CMP_HOMEWORK', 'TEACHER', 'Set homework; parents see it with their child\'s status.']);
+  if (on('ACA_CURRICULUM')) s.push(['ACA_CURRICULUM', 'TEACHER', 'Curriculum plan: units by month and how much is taught.']);
+  if (on('STU_PORTFOLIO')) s.push(['STU_PORTFOLIO', 'TEACHER', 'A student\'s portfolio of best work.']);
+  if (on('FN_BOARD')) s.push(['EXM_COSCH', 'PRINCIPAL', 'Board integration: pick the board; grades follow it.']);
+  if (on('OPS_BACKUP')) s.push(['OPS_BACKUP', 'ADMIN', 'Backups: nightly backups and restore.']);
+  if (on('ANL_HOME')) s.push(['ANL_HOME', 'PRINCIPAL', 'Data analytics: the report catalogue.']);
+  s.push(['SELF_CHILD', 'PARENT', 'The parent view on the free phone app: child, fees, notices.']);
   return s;
 }
 
@@ -215,31 +362,19 @@ export function DemoBuilder({ go }) {
   const rc = rcOf(db);
   const proposals = db.provider?.proposals || [];
   const demos = db.tenants.filter((t) => t.demo);
-  const [step, setStep] = useState(1);
-  const [src, setSrc] = useState(() => { let id = null; try { id = sessionStorage.getItem('sp-demo-from'); sessionStorage.removeItem('sp-demo-from'); } catch (e) { /* ignore */ } return id && proposals.some((p) => p.id === id) ? id : (proposals[0]?.id || 'QUICK'); });
-  const [quick, setQuick] = useState(() => blankOptions(rc));
-  const o = src === 'QUICK' ? quick : proposals.find((p) => p.id === src)?.options || quick;
-  const base = useMemo(() => demoConfig(rc, o), [rc, o]);
-  const [extra, setExtra] = useState({});
-  const cfg = { ...base, overrides: { ...base.overrides, ...extra } };
-  const feats = featureList(rc, o, cfg);
-  const [name, setName] = useState('');
-  const schoolName = name || (o.client ? o.client.replace(/\s*\(example\)$/, '') : 'Demo school');
-  const [made, setMade] = useState(null);
-  const tenant = db.tenants.find((t) => t.id === made);
-  const pick = (id) => { setSrc(id); setExtra({}); setName(''); setMade(null); };
-  const toggle = (code, cur) => setExtra({ ...extra, [code]: !cur });
+  const [src, setSrc] = useState(() => { const id = unstash('sp-demo-from'); return id && proposals.some((p) => p.id === id) ? id : proposals[0]?.id || ''; });
+  const [editProv, setEditProv] = useState(false);
+  const p = proposals.find((x) => x.id === src);
+  const profile = profileOf(db);
+  if (!p) return <Page title="Demo builder" sub="Set up a demo school for a client visit."><Card><button className="btn pri" onClick={() => { const x = run((d) => newProposal(d, blankOptions(rcOf(d)), session.name)); setSrc(x.id); }}>Start a new client</button></Card></Page>;
+  const o = p.options;
+  const q = quote(rc, o);
+  const set = (options) => run((d) => saveOptions(d, p.id, options));
+  const tenant = p.demoId && db.tenants.find((t) => t.id === p.demoId);
+  const setProfile = (k, v) => run((d) => { d.provider.profile = { ...profileOf(d), [k]: v }; });
   const create = () => {
-    const t = run((d) => {
-      const code = demoCode(schoolName, d.tenants.map((x) => x.code));
-      d.seq.demo = (d.seq.demo || 0) + 1;
-      const t = { id: 'TD' + d.seq.demo, code, name: `${schoolName} (demo)`, subdomain: 'demo-' + code.toLowerCase(), plan: cfg.plan, status: 'Demo', overrides: cfg.overrides,
-        mobile: { enabled: true, appStatus: cfg.branded ? 'Branded app (demo preview)' : 'Shared app' }, renews: '—',
-        demo: { proposalId: src === 'QUICK' ? null : src, client: o.client || schoolName, tier: planOf(rc, o.plan).name, by: session.name, byUser: session.userId, byRole: session.role, created: todayIso() } };
-      d.tenants.push(t); d.provider.demos = [...(d.provider.demos || []), t.id];
-      return t;
-    });
-    setMade(t.id); setStep(5); notify(`Demo school ${t.name} is ready`);
+    if (!String(o.client).trim()) { notify('Enter the school name'); return; }
+    const t = run((d) => makeDemo(d, p.id, session)); notify(`Demo school ${t.name} is ready`);
   };
   const present = (tenantId, role) => {
     const u = db.users.find((x) => x.role === role && x.status === 'ACTIVE' && !['Vice Principal', 'Head of Teaching Staff'].includes(x.designation));
@@ -248,40 +383,37 @@ export function DemoBuilder({ go }) {
     login({ role: u.role, userId: u.id, name: u.name });
     notify(`Showing the demo as ${u.name} — use “End demo” at the top to come back`);
   };
-  const remove = (id) => { run((d) => { if (d.tenantId === id) d.tenantId = d.provider.returnTenant || 'T1'; d.tenants = d.tenants.filter((t) => t.id !== id); d.provider.demos = (d.provider.demos || []).filter((x) => x !== id); }); notify('Demo school removed'); if (made === id) setMade(null); };
-  const STEPS = ['Client and tier', 'What the demo shows', 'Name the demo school', 'Create', 'Present'];
-  return <Page title="Demo builder" sub="Turn a proposal into a working demo school: the client's tier and add-ons decide which menus and functions are on. Then present it as the Principal, a teacher or a parent on the client visit.">
-    <div className="tabs" role="tablist" aria-label="Steps">{STEPS.map((s, i) => <button key={s} role="tab" aria-selected={step === i + 1} className={step === i + 1 ? 'on' : ''} onClick={() => (i + 1 < 5 || made) && setStep(i + 1)}>{i + 1}. {s}</button>)}</div>
-    {step === 1 && <Card title="1. Which client?">
-      <Field label="Start from"><Select aria-label="Start from" value={src} onChange={(e) => pick(e.target.value)} options={[...proposals.map((p) => [p.id, `${p.no} · ${p.options.client} · ${planOf(rc, p.options.plan).name}`]), ['QUICK', 'Quick demo — pick a tier and options here']]} /></Field>
-      {src === 'QUICK' ? <ProposalForm o={quick} set={setQuick} rc={rc} /> : <p className="small">{o.client}: {o.students} students, {planOf(rc, o.plan).name} tier, {MESSAGING.find((m) => m[0] === o.messaging)[1].toLowerCase()}, {TRANSPORT.find((m) => m[0] === o.transport)[1].toLowerCase()}{OPTIONAL.filter((c) => o.addons?.[c]).length ? ', with ' + OPTIONAL.filter((c) => o.addons?.[c]).map((c) => addonOf(rc, c).name.split(' (')[0]).join(', ') : ''}. <a href="#/s/SP_PROPOSAL">Change it in the proposal</a>.</p>}
-      <div className="row end"><button className="btn pri" onClick={() => setStep(2)}>Next</button></div>
-    </Card>}
-    {step === 2 && <Card title="2. What the demo shows" right={<span className="small muted">From the {planOf(rc, o.plan).name} tier and the add-ons. Switch anything on or off for this demo only.</span>}>
-      <div className="grid g3">{feats.map((m) => <div key={m.code} className="card" style={{ margin: 0 }}>
-        <div className="row"><Switch on={m.on} label={m.label} onClick={() => !['OPERATIONS', 'SETTINGS'].includes(m.code) && toggle(m.code, m.on)} /><b>{m.label}</b></div>
-        {m.on && <div className="small" style={{ marginTop: 6 }}>{m.items.map((i) => <label key={i.code} className="row"><input type="checkbox" checked={i.on} onChange={() => toggle(i.code, i.on)} />{i.label}</label>)}</div>}</div>)}</div>
-      <h3>Functions</h3><div className="row small" style={{ flexWrap: 'wrap' }}>{functionList(cfg).map((f) => <label key={f.code} className="row" style={{ marginRight: 12 }}><input type="checkbox" checked={f.on} onChange={() => toggle(f.code, f.on)} />{f.name}</label>)}</div>
-      <div className="row end"><button className="btn" onClick={() => setStep(1)}>Back</button><button className="btn pri" onClick={() => setStep(3)}>Next</button></div>
-    </Card>}
-    {step === 3 && <Card title="3. Name the demo school"><div className="form">
-      <Field label="Name shown in the demo"><Input value={schoolName} onChange={(e) => setName(e.target.value)} /></Field>
-      <Field label="Plan in the app"><Input value={PLANS.find((p) => p.code === cfg.plan).name + (o.plan === 'FREE' ? ' (Free: some screens off)' : '')} disabled /></Field>
-      <Field label="Phone app"><Input value={cfg.branded ? 'Branded app preview' : 'Shared free app'} disabled /></Field></div>
-      <p className="small muted">The demo uses the fictional demo data (students, staff, buses) with the client's name and set-up, so nothing real is shown.</p>
-      <div className="row end"><button className="btn" onClick={() => setStep(2)}>Back</button><button className="btn pri" onClick={() => setStep(4)}>Next</button></div></Card>}
-    {step === 4 && <Card title="4. Create the demo school">
-      <p>Creates <b>{schoolName} (demo)</b> on the <b>{PLANS.find((p) => p.code === cfg.plan).name}</b> plan with {Object.values(cfg.overrides).filter(Boolean).length} switches on and {Object.values(cfg.overrides).filter((v) => v === false).length} off. It shows in Platform Console → Schools & Plans as a demo and can be removed after the visit.</p>
-      <div className="row end"><button className="btn" onClick={() => setStep(3)}>Back</button><button className="btn pri" onClick={create}>Create demo school</button></div></Card>}
-    {step === 5 && tenant && <Card title={`5. Present ${tenant.name}`}>
-      <p className="small">Open the demo as one of these people. A bar at the top of every screen says it's a demo and has <b>End demo</b> to bring you back here.</p>
-      <div className="row" style={{ flexWrap: 'wrap', marginBottom: 12 }}>{DEMO_ROLES.map(([r, l]) => <button key={r} className="btn" onClick={() => present(tenant.id, r)}>Open as {l}</button>)}</div>
-      <h3>Demo script</h3>
-      <ol>{demoScript(o, { ...cfg, plan: tenant.plan, overrides: tenant.overrides }).map(([code, role, say]) => <li key={code} style={{ marginBottom: 6 }}><b>{LABEL[code]}</b> <span className="small muted">as {DEMO_ROLES.find((x) => x[0] === role)?.[1]}</span> — {say}</li>)}</ol>
-    </Card>}
-    <Card title={`Demo schools (${demos.length})`}>{demos.length ? <div className="tw"><table className="t"><thead><tr><th>Demo school</th><th>Client</th><th>Tier</th><th>Created</th><th /></tr></thead>
+  const remove = (id) => { run((d) => { if (d.tenantId === id) d.tenantId = d.provider.returnTenant || 'T1'; d.tenants = d.tenants.filter((t) => t.id !== id); d.provider.demos = (d.provider.demos || []).filter((x) => x !== id); d.provider.proposals.forEach((x) => { if (x.demoId === id) delete x.demoId; }); }); notify('Demo school removed'); };
+  return <Page title="Demo builder" sub="Four short steps. Everything you pick here updates the linked proposal straight away, and the demo school follows it."
+    actions={<><button className="btn" onClick={() => { const x = run((d) => newProposal(d, blankOptions(rcOf(d)), session.name)); setSrc(x.id); }}>New client</button>
+      <button className="btn" onClick={() => { stash('sp-open-proposal', p.id); go('SP_PROPOSAL'); }}>Open proposal {p.no}</button></>}>
+    <div className="row" style={{ marginBottom: 10, flexWrap: 'wrap' }}>
+      <Field label="Client"><Select aria-label="Client" value={src} onChange={(e) => setSrc(e.target.value)} options={proposals.map((x) => [x.id, `${x.options.client || 'New client'} · ${x.no} · ${tierOf(rc, x.options.tier).name}`])} /></Field>
+      <span className="small muted" style={{ alignSelf: 'end', paddingBottom: 8 }}>Linked to proposal <b>{p.no}</b> · changes save as you go</span>
+    </div>
+    <div className="grid g-side"><div>
+      <Card title="1. Service provider" right={<button className="btn sm" onClick={() => setEditProv(!editProv)}>{editProv ? 'Done' : 'Change'}</button>}>
+        {editProv ? <div className="form">
+          {[['name', 'Company'], ['product', 'Product'], ['contact', 'Contact person'], ['designation', 'Designation'], ['email', 'Email ID'], ['phone', 'Contact number'], ['website', 'Website'], ['city', 'City']].map(([k, l]) =>
+            <Field key={k} label={l}><Input aria-label={'Provider ' + l} value={profile[k] || ''} onChange={(e) => setProfile(k, e.target.value)} /></Field>)}
+          <Field label="About us (opens the proposal)" full><textarea className="i" rows={3} aria-label="About us" value={profile.about} onChange={(e) => setProfile('about', e.target.value)} style={{ fontFamily: 'inherit' }} /></Field>
+        </div> : <div className="provider-card"><b>{profile.name}</b><div className="small">{profile.contact}, {profile.designation} · {profile.email} · {profile.phone}</div><div className="small muted">{profile.website} · {profile.city}</div></div>}
+      </Card>
+      <ClientFields o={o} set={set} title="2. Client and point of contact" />
+      <Card title="3. Plan"><TierCards compact rc={rc} value={o.tier} students={+o.students || 0} onChoose={(tier) => set({ ...o, tier })} /></Card>
+      <Card title="4. Add-ons and discount"><AddonPicker rc={rc} o={o} set={set} /><div className="form" style={{ marginTop: 10 }}><DiscountField o={o} set={set} q={q} /></div></Card>
+    </div><div className="sticky-side">
+      <Card title="Demo school">
+        {tenant ? <><p className="small">{tenant.name} is set up as <b>{tierOf(rc, o.tier).name}</b> with {activeAddons(rc, o).length} add-ons on. It changes with every choice you make here.</p>
+          <div className="row" style={{ flexWrap: 'wrap' }}>{DEMO_ROLES.map(([r, l]) => <button key={r} className="btn sm" onClick={() => present(tenant.id, r)}>Open as {l}</button>)}</div></>
+          : <><p className="small">Creates <b>{(o.client || 'Demo school').replace(/\s*\(example\)$/, '')} (demo)</b> with exactly these screens, using fictional students and staff.</p><button className="btn pri" onClick={create}>Create demo school</button></>}
+      </Card>
+      <PriceSummary rc={rc} q={q} compact />
+      {tenant && <Card title="Demo script"><ol className="small">{demoScript(o, { overrides: tenant.overrides }).map(([code, role, say]) => <li key={code} style={{ marginBottom: 5 }}><b>{LABEL[code]}</b> <span className="muted">as {DEMO_ROLES.find((x) => x[0] === role)?.[1]}</span> — {say}</li>)}</ol></Card>}
+    </div></div>
+    <Card title={`Demo schools (${demos.length})`}>{demos.length ? <div className="tw"><table className="t"><thead><tr><th>Demo school</th><th>Client</th><th>Plan</th><th>Created</th><th /></tr></thead>
       <tbody>{demos.map((t) => <tr key={t.id}><td className="b">{t.name}<div className="small muted">code {t.code}</div></td><td>{t.demo.client}</td><td>{t.demo.tier}</td><td>{dmy(t.demo.created)} · {t.demo.by}</td>
-        <td><div className="row"><button className="btn sm" onClick={() => { setMade(t.id); setStep(5); }}>Present</button><button className="btn sm" onClick={() => remove(t.id)}>Remove</button></div></td></tr>)}</tbody></table></div> : <p className="muted">No demo schools yet.</p>}</Card>
+        <td><div className="row">{t.demo.proposalId && proposals.some((x) => x.id === t.demo.proposalId) && <button className="btn sm" onClick={() => setSrc(t.demo.proposalId)}>Select</button>}<button className="btn sm" onClick={() => remove(t.id)}>Remove</button></div></td></tr>)}</tbody></table></div> : <p className="muted">No demo schools yet.</p>}</Card>
   </Page>;
 }
 
@@ -306,30 +438,32 @@ export function Competition() {
   const { db } = useStore();
   const rc = rcOf(db);
   const [n, setN] = useState(400);
+  const [tier, setTier] = useState('PRO');
   const [region, setRegion] = useState('India');
   const [group, setGroup] = useState('ALL');
   const students = Math.max(1, +n || 1);
-  const ours = quote(rc, { ...blankOptions(rc), students, plan: planFor(rc, students).code });
+  const ours = quote(rc, { ...blankOptions(rc), students, tier });
   const provs = PROVIDERS.filter((p) => p.us || region === 'ALL' || p.region === region);
-  const priceOf = (p) => (p.us ? [ours.yearly, ours.yearly] : priceRange(p, students));
+  const priceOf = (p) => (p.us ? [ours.recurring, ours.recurring] : priceRange(p, students));
   const others = PROVIDERS.filter((p) => !p.us);
   const known = (code) => others.filter((p) => mark(p, code) !== '?');
   const edge = FEATURES.filter(([c]) => mark(PROVIDERS[0], c) === 'Y' && known(c).length >= 2 && known(c).filter((p) => mark(p, c) === 'Y').length / known(c).length < 0.5);
   const unique = FEATURES.filter(([c]) => mark(PROVIDERS[0], c) === 'Y' && !others.some((p) => mark(p, c) === 'Y'));
   const gaps = FEATURES.filter(([c]) => mark(PROVIDERS[0], c) !== 'Y' && others.some((p) => mark(p, c) === 'Y'));
   const priced = PROVIDERS.filter((p) => !p.us && priceOf(p)).map((p) => [p, (priceOf(p)[0] + priceOf(p)[1]) / 2]);
-  const cheaper = priced.filter(([, v]) => v < ours.yearly).length;
+  const cheaper = priced.filter(([, v]) => v < ours.recurring).length;
   const feats = FEATURES.filter((f) => group === 'ALL' || f[2] === group);
   return <Page title="Competition comparison" sub={`What we offer against Indian and global school software, with an estimated yearly price at the top for a school of the size you enter. Public prices as of ${dmy(AS_OF)}.`}>
     <div className="row" style={{ marginBottom: 10, flexWrap: 'wrap' }}>
       <Field label="Students"><Input type="number" min="1" aria-label="Students" value={n} onChange={(e) => setN(e.target.value)} style={{ width: 110 }} /></Field>
+      <Field label="Our plan"><Select aria-label="Our plan" value={tier} onChange={(e) => setTier(e.target.value)} options={rc.tiers.map((x) => [x.code, x.name])} /></Field>
       <Field label="Providers"><Select aria-label="Providers" value={region} onChange={(e) => setRegion(e.target.value)} options={[['India', 'Indian'], ['Global', 'Global'], ['ALL', 'All']]} /></Field>
       <Field label="Features"><Select aria-label="Feature group" value={group} onChange={(e) => setGroup(e.target.value)} options={[['ALL', 'All features'], ...[...new Set(FEATURES.map((f) => f[2]))]]} /></Field>
     </div>
     <div className="grid g3">
       <Card title="Our edge"><p className="small muted">We offer these; fewer than half the competitors that mention the feature offer it. “None listed”: no competitor page we read mentions it — check before claiming it in a pitch.</p><ul className="small">{[...new Set([...unique, ...edge])].map(([c, l]) => <li key={c}>{l}{unique.some((u) => u[0] === c) && <> <Pill kind="ok">None listed</Pill></>}</li>)}</ul></Card>
       <Card title="Gaps to close"><p className="small muted">At least one competitor offers these and we don't (or only as an add-on).</p><ul className="small">{gaps.map(([c, l]) => <li key={c}>{l} — {others.filter((p) => mark(p, c) === 'Y').map((p) => p.name).join(', ')}</li>)}</ul></Card>
-      <Card title="Price position"><p>For {students} students our {ours.plan.name} tier costs <b>{rupees(ours.yearly)}</b> a year ({rupees(ours.perStudentYear)} per student) before add-ons.</p>
+      <Card title="Price position"><p>For {students} students our {ours.tier.name} tier costs <b>{rupees(ours.recurring)}</b> a year ({rupees(ours.perStudentYear)} per student) before add-ons.</p>
         <p className="small">{cheaper} of {priced.length} priced competitors cost less at this size (mid-point of their range); {priced.length - cheaper} cost more. Global prices are converted at about ₹{FX.USD}/$, ₹{FX.GBP}/£ and ₹{FX.EUR}/€.</p></Card>
     </div>
     <Card title="Feature and price comparison">

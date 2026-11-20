@@ -3,59 +3,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildSeed } from '../src/data/seed.js';
 import { MENU, ACCESS, canSee, PLANS, SP_CODES } from '../src/data/menu.js';
-import { DEFAULT_RATE_CARD as RC, quote, planFor, blankOptions, demoConfig, demoCode, featureList } from '../src/lib/pricing.js';
+import { demoCode } from '../src/lib/pricing.js';
 import * as C from '../src/lib/campus.js';
 import { PROVIDERS, FEATURES, priceRange, ROADMAP } from '../src/data/providers.js';
 import { seedRelease13 } from '../src/data/seedRelease13.js';
 import { rolePerms } from '../src/lib/auth.js';
 
-const o = (x) => ({ ...blankOptions(RC), ...x });
 
-test('quotes match the worked quotes in the pricing plan', () => {
-  const a = quote(RC, o({ students: 180, plan: 'STARTER', messaging: 'EMAIL' }));
-  assert.equal(a.monthlyTotal, 1800); assert.equal(a.yearly, 19800); assert.equal(a.yearlyWithGst, 23364); assert.equal(a.perStudentYear, 110);
-  const b = quote(RC, o({ students: 400, plan: 'GROWTH', messaging: 'SMS', transport: 'BASIC', buses: 4 }));
-  assert.equal(b.monthlyTotal, 5200); assert.equal(b.yearly, 57200); assert.equal(b.oneTimeTotal, 12500); assert.equal(b.firstInvoiceTotal, 82246);
-  const c = quote(RC, o({ students: 800, plan: 'PROFESSIONAL', messaging: 'SMS', transport: 'PLUS', buses: 10, addons: { ANALYTICS: true } }));
-  assert.equal(c.monthlyTotal, 7200 + 1200 + 3500 + 1600);   // question bank included from Professional
-  assert.ok(c.monthly.some((l) => l.code === 'QBANK') === false);
-  const d = quote(RC, o({ students: 2000, plan: 'ENTERPRISE', transport: 'PLUS', buses: 25, hosting: 'DEDICATED_DB', addons: { ANALYTICS: true, BRANDED_APP: true } }));
-  assert.equal(d.monthlyTotal, 38250); assert.equal(d.yearly, 420750); assert.equal(d.oneTimeTotal, 50000 + 15000 + 40000);
-});
-
-test('tiers, minimums, included add-ons, discounts and warnings', () => {
-  assert.equal(planFor(RC, 90).code, 'STARTER'); assert.equal(planFor(RC, 90, { allowFree: true }).code, 'FREE');
-  assert.equal(planFor(RC, 251).code, 'GROWTH'); assert.equal(planFor(RC, 1000).code, 'PROFESSIONAL'); assert.equal(planFor(RC, 1001).code, 'ENTERPRISE');
-  assert.equal(quote(RC, o({ students: 260, plan: 'GROWTH' })).monthly[0].amount, 2600);
-  assert.equal(quote(RC, o({ students: 10, plan: 'GROWTH' })).monthly[0].amount, 2500, 'minimum applies');
-  assert.match(quote(RC, o({ students: 600, plan: 'GROWTH' })).warnings.join(), /over the Growth limit/);
-  const lib = quote(RC, o({ students: 200, plan: 'STARTER', addons: { LIBRARY: true } }));
-  assert.equal(lib.monthly.find((l) => l.code === 'LIBRARY').amount, 300, 'library minimum on Starter');
-  assert.ok(quote(RC, o({ students: 400, plan: 'GROWTH', addons: { LIBRARY: true } })).monthly.find((l) => l.code === 'LIBRARY').included, 'library included from Growth');
-  const bus = quote(RC, o({ students: 400, plan: 'GROWTH', transport: 'PLUS', buses: 2 }));
-  assert.equal(bus.monthly.find((l) => l.code === 'TRANSPORT_PLUS').amount, 5 * 350, 'Transport Plus minimum 5 buses');
-  const disc = quote(RC, o({ students: 400, plan: 'GROWTH', messaging: 'SMS', discountPct: 15 }));
-  assert.equal(disc.monthly.find((l) => l.code === 'DISCOUNT').amount, -600, 'discount on the plan, not on SMS');
-  assert.match(disc.warnings.join(), /owner's approval/);
-  assert.match(quote(RC, o({ plan: 'GROWTH', hosting: 'ON_PREM' })).warnings.join(), /Enterprise schools only/);
-  assert.equal(quote(RC, o({ students: 400, plan: 'GROWTH', billing: 'MONTHLY' })).yearly, 48000);
-  assert.deepEqual(quote(RC, o({ students: 400, plan: 'GROWTH', interState: true })).gstSplit.map((x) => x[0]), ['IGST 18%']);
-});
-
-test('a proposal becomes the app set-up the demo shows', () => {
-  const plus = demoConfig(RC, o({ plan: 'GROWTH', transport: 'PLUS', messaging: 'SMS', addons: { ANALYTICS: true } }));
-  assert.equal(plus.plan, 'GROWTH');
-  assert.equal(plus.overrides.FN_ROUTE_PLANNING, true); assert.equal(plus.overrides.FN_SMS_OTP, true); assert.equal(plus.overrides.ANALYTICS, true);
-  assert.equal(plus.overrides.CMP_LIBRARY, true, 'library included in Growth'); assert.equal(plus.overrides.CMP_HOSTEL, false);
-  const none = demoConfig(RC, o({ plan: 'STARTER', transport: 'NONE', messaging: 'APP' }));
-  assert.equal(none.overrides.TRANSPORT, false); assert.equal(none.overrides.FN_SMS_OTP, false); assert.equal(none.overrides.EXM_QB, false, 'question bank is an add-on below Professional');
-  const free = demoConfig(RC, o({ plan: 'FREE' }));
-  assert.equal(free.plan, 'STARTER'); assert.equal(free.overrides.STU_REPORTCARD, false);
-  const f = featureList(RC, o({ plan: 'ENTERPRISE', transport: 'BASIC' }));
-  assert.ok(f.find((m) => m.code === 'CAMPUS').items.every((i) => i.on), 'Enterprise has every Campus screen');
-  assert.ok(!f.some((m) => ['SERVICE_PROVIDER', 'PLATFORM'].includes(m.code)), 'company menus never sold to schools');
-  assert.equal(demoCode('Hillview Public School', []), 'DHPS'); assert.equal(demoCode('Hillview Public School', ['DHPS']), 'DHP2');
-});
+// Pricing tests moved to release14.test.js (Starter / Pro / Pro+).
 
 test('Service Provider menus are only for our company; Campus follows the plan', () => {
   const db = buildSeed();

@@ -22,6 +22,7 @@ import { Admissions } from './Admissions.jsx';
 import { ReportCatalogue, TopBottom, TransportReports, TeacherPerformance, AdmissionsFunnel } from './Analytics.jsx';
 import { Library, Hostel, Homework, OnlineClasses, Inventory, Events } from './Campus.jsx';
 import { PriceList, ProposalBuilder, DemoBuilder, Competition, MarketReview } from './Provider.jsx';
+import { Curriculum, Portfolios, Backups } from './Release14.jsx';
 import { Users, Roles, Templates, Appearance, WebsiteLinks, Outbox, Platform, MyPrefs } from './Operations.jsx';
 
 function MyChild() {
@@ -50,5 +51,6 @@ export const SCREENS = {
   OPS_USERS: Users, OPS_ROLES: Roles, OPS_TEMPLATES: Templates, OPS_IMPORT: DataImport, OPS_APPEARANCE: Appearance, OPS_WEBSITE: WebsiteLinks, OPS_OUTBOX: Outbox,
   HELP_FAQ: Faqs, OPS_HELPDOCS: HelpDocs, SELF_CHILD: MyChild, SELF_FEES: ParentFees, SELF_PAYSLIP: MySlips, SELF_PREFS: MyPrefs, PLT_SCHOOLS: Platform,
   CMP_LIBRARY: Library, CMP_HOSTEL: Hostel, CMP_HOMEWORK: Homework, CMP_CLASSES: OnlineClasses, CMP_INVENTORY: Inventory, CMP_EVENTS: Events,
-  SP_RATES: PriceList, SP_PROPOSAL: ProposalBuilder, SP_DEMO: DemoBuilder, SP_COMPARE: Competition, SP_MARKET: MarketReview
+  SP_RATES: PriceList, SP_PROPOSAL: ProposalBuilder, SP_DEMO: DemoBuilder, SP_COMPARE: Competition, SP_MARKET: MarketReview,
+  ACA_CURRICULUM: Curriculum, STU_PORTFOLIO: Portfolios, OPS_BACKUP: Backups
 };

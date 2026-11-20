@@ -5,6 +5,9 @@ import { Page, Card, Field, Input, Select, Modal, Pill, Stat, Tabs, Progress } f
 import { log } from '../lib/logic.js';
 import { alert as sendAlert } from '../lib/alerts.js';
 import { myChildren } from './Requests.jsx';
+import { funcOn } from '../data/menu.js';
+import { tenantOf } from '../lib/logic.js';
+import { whatsappShare } from '../lib/release14.js';
 import {
   today, daysBetween, studentName, classOf, available, onLoan, fineFor, overdue, addBook, issueBook, returnBook,
   occupancy, freeBeds, residentsOf, allocate, vacate, hostelFee, setHomework, markHomework, homeworkStats, studentsInSection,
@@ -238,6 +241,7 @@ export function Events() {
   const audienceOk = (e) => e.audience === 'ALL' || (session.role === 'PARENT' ? e.audience === 'PARENTS' : e.audience === 'STAFF' || can);
   const items = calendar(db, past ? '0000' : t).filter(audienceOk);
   const months = [...new Set(items.map((e) => e.date.slice(0, 7)))];
+  const wa = funcOn(tenantOf(db), 'FN_WHATSAPP');   // share to a class or parents' WhatsApp group from the phone
   const notify = (e) => act((d) => { const n = sendAlert(d, { to: audienceUsers(d, e.audience).map((u) => u.id), title: `${e.type}: ${e.title}`, body: `${dmy(e.date)}${e.end !== e.date ? ' to ' + dmy(e.end) : ''}. ${e.details}`, screen: 'CMP_EVENTS', email: false }); d.events.find((x) => x.id === e.id).notified = true; return n; }, (n) => `Sent to ${n} people in the app`);
   return <Page title="Events & calendar" sub="School events, exams, parent meetings, circulars and holidays in one calendar. Send each one to parents and staff in the app."
     actions={<>{<label className="row small"><input type="checkbox" checked={past} onChange={(e) => setPast(e.target.checked)} /> Show past</label>}{can && <button className="btn pri" onClick={() => setForm({ title: '', date: t, end: '', type: 'Event', audience: 'ALL', details: '' })}>Add event</button>}</>}>
@@ -246,6 +250,7 @@ export function Events() {
         <div style={{ width: 120 }} className="b">{dmy(e.date)}{e.end !== e.date && <div className="small muted">to {dmy(e.end)}</div>}</div>
         <div style={{ flex: 1 }}><div><b>{e.title}</b> <Pill kind={TYPE_KIND[e.type]}>{e.type}</Pill>{e.audience !== 'ALL' && <Pill>{AUDIENCES.find((a) => a[0] === e.audience)[1]} only</Pill>}</div>{e.details && <div className="small">{e.details}</div>}</div>
         {can && !e.holiday && (e.notified ? <span className="small muted">Sent</span> : <button className="btn sm" onClick={() => notify(e)}>Send to {AUDIENCES.find((a) => a[0] === e.audience)[1].toLowerCase()}</button>)}
+        {can && wa && <a className="btn sm" href={whatsappShare(`${e.type}: ${e.title} — ${dmy(e.date)}${e.end !== e.date ? ' to ' + dmy(e.end) : ''}. ${e.details || ''} (${tenantOf(db).name})`)} target="_blank" rel="noreferrer" aria-label={`Share ${e.title} on WhatsApp`}>WhatsApp</a>}
       </div>)}</Card>)}
     {!months.length && <Card><p className="muted">Nothing on the calendar.</p></Card>}
     {form && <Modal title="Add event" onClose={() => setForm(null)} actions={<button className="btn pri" onClick={() => { if (act((d) => addEvent(d, { ...form, by: session.name }), 'Added to the calendar — send it when ready')) setForm(null); }}>Save</button>}>

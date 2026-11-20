@@ -69,7 +69,8 @@ export function RoutesRiders({ go }) {
   const [mode, setMode] = useState(null);          // map: 'add' | { move: stopName }
   const [newStop, setNewStop] = useState(null);    // { x, y, name, riders }
   const can = ['ADMIN', 'TRANSPORT', 'PRINCIPAL'].includes(session.role);
-  const planning = funcOn(tenantOf(db), 'FN_ROUTE_PLANNING');   // Transport Plus
+  const planning = funcOn(tenantOf(db), 'FN_ROUTE_PLANNING');   // route map and planning
+  const timings = funcOn(tenantOf(db), 'FN_STOP_TIMINGS');      // Timings add-on
   const r = db.routes.find((x) => x.id === rid);
   const kids = db.students.filter((s) => s.status === 'Active' && s.routeId === r.id);
   const opts = routeOptions(db, r.id);
@@ -106,7 +107,7 @@ export function RoutesRiders({ go }) {
       <Tabs tabs={[['stops', 'Stops & timings'], ...(planning ? [['plan', 'Plan the route'], ['suggest', `Pickup suggestions (${mineSug.moves.length + mineSug.newStops.length})`], ['map', 'Route map']] : [])]} value={tab} onChange={setTab} />
       {!planning && <p className="small muted">Route planning, the route map and pickup suggestions come with Transport Plus. Ask your platform team to switch it on.</p>}
       <div style={{ marginTop: 12 }}>
-      {tab === 'stops' && <Card title={`${r.id} · ${r.name}`} right={can && <div className="row"><button className="btn sm" onClick={() => setEdit(structuredClone(r))}>Edit timings</button>{planning && <button className="btn sm" onClick={() => { setTab('map'); setMode('add'); }}>Add a stop</button>}</div>}>
+      {tab === 'stops' && <Card title={`${r.id} · ${r.name}`} right={can && <div className="row">{timings && <button className="btn sm" onClick={() => setEdit(structuredClone(r))}>Edit timings</button>}{planning && <button className="btn sm" onClick={() => { setTab('map'); setMode('add'); }}>Add a stop</button>}</div>}>
         <p className="small">Bus {r.bus} · Driver {r.driver} ({r.driverMobile}) · Attendant {r.attendant}</p>
         <table className="t" aria-label={`Stops on ${r.id}`}><thead><tr><th>#</th><th>Stop</th><th className="num">Morning pickup</th><th className="num">Afternoon drop</th><th className="num">Riders</th><th className="num">From school</th>{can && <th />}</tr></thead>
           <tbody>{r.stops.map((st) => <tr key={st.name}><td>{st.order}</td><td>{st.name}</td><td className="num">{st.am}</td><td className="num">{st.pm}</td><td className="num">{kids.filter((k) => k.stop === st.name).length}</td><td className="num">{st.x != null ? km(st, SCHOOL).toFixed(1) + ' km' : '—'}</td>

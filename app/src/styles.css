@@ -351,3 +351,21 @@ nav.side .mod:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
 .t.compare th.us, .t.compare td.us { background: var(--accent-soft, rgba(37, 99, 235, .08)); }
 .t.compare th { vertical-align: bottom; }
 .doc ul { padding-left: 18px; }
+
+/* Release 14: pricing plans, add-ons and the sales builders */
+.tiers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.tier { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 16px 14px; display: flex; flex-direction: column; }
+.tier.pick { border-color: var(--brand); }
+.tier.on { border: 2px solid var(--brand); box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+.tier-flag { position: absolute; top: -11px; left: 14px; background: var(--brand); color: var(--brand-ink); font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+.tier:not(.on) .tier-flag { background: var(--brand-soft); color: var(--brand); }
+.tier h3 { font-size: 19px; margin: 2px 0 2px; }
+.tier .tier-price { font-size: 26px; font-weight: 800; color: var(--brand); margin-top: 6px; }
+.tier .tier-price span { font-size: 12px; font-weight: 500; color: var(--ink-3); margin-left: 6px; }
+.tier ul { margin: 4px 0 8px; padding-left: 18px; flex: 1; }
+.tier ul li { margin: 2px 0; }
+.addon-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 8px 0; border-top: 1px solid var(--line); }
+.sticky-side { position: sticky; top: 8px; align-self: start; }
+table.t tr.hl td { background: var(--brand-soft); }
+.provider-card { padding: 4px 0; }
+@media (max-width: 900px) { .tiers { grid-template-columns: 1fr; } .sticky-side { position: static; } }

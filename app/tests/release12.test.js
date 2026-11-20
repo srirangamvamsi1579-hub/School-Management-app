@@ -47,7 +47,9 @@ test('attendance register: holidays, saved marks, cycle, summary', () => {
   const sunday = days('2026-07-01', '2026-07-07').find((d) => new Date(d + 'T00:00:00Z').getUTCDay() === 0);
   assert.equal(studentMark(db, s, sunday), 'H');
   assert.equal(studentMark(db, s, '2026-08-15'), 'H', 'Independence Day');
-  assert.equal(studentMark(db, s, addDays(today, 30)), null, 'future days are blank');
+  // Future days are blank (or a holiday from the calendar), never a mark
+  const ahead = Array.from({ length: 14 }, (_, i) => studentMark(db, s, addDays(today, 30 + i)));
+  assert.ok(ahead.every((m) => m === null || m === 'H') && ahead.includes(null), 'future days are blank');
   setStudentMark(db, s, '2026-07-01', 'A');
   assert.equal(studentMark(db, s, '2026-07-01'), 'A');
   const sum = summarize(['P', 'P', 'A', 'LATE', 'H', null]);

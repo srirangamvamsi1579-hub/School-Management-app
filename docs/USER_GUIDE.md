@@ -40,13 +40,13 @@ Website menus and phone tabs with the recommended layout. Schools change this in
 
 | Role | Website (main menus and sub-menus) | Phone app tabs |
 | --- | --- | --- |
-| **Parent** | **Dashboard:** Dashboard<br>**Academics:** Timetable<br>**Campus Services:** Events & Calendar, Homework, Online Classes<br>**My Space:** My Child, Requests to School, Fee Dues & Pay, My Account, My Preferences<br>**Help:** User Guide & Demo, FAQs | Home, Requests, Fees, My child, Homework, Events, Classes, Account |
-| **Teacher** | **Dashboard:** Dashboard<br>**Students:** All Students, Student Profile, Attendance, Coordinator Desk, Parent Meetings, Report Cards<br>**Academics:** Boards, Syllabus & Textbooks, Timetable<br>**Exams:** Question Papers, Approved Papers, Question Bank, Co-Scholastic Grades, Assessment Profiles<br>**Data Analytics:** Top & Bottom Performers<br>**Campus Services:** Events & Calendar, Homework, Online Classes, Library<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**Settings:** Templates<br>**Help:** User Guide & Demo, FAQs | Home, Timetable, Attendance, Approvals, Meetings, Homework, Account |
+| **Parent** | **Dashboard:** Dashboard<br>**Students:** Portfolios<br>**Academics:** Timetable<br>**Campus Services:** Events & Calendar, Homework, Online Classes<br>**My Space:** My Child, Requests to School, Fee Dues & Pay, My Account, My Preferences<br>**Help:** User Guide & Demo, FAQs | Home, Requests, Fees, My child, Homework, Events, Classes, Account |
+| **Teacher** | **Dashboard:** Dashboard<br>**Students:** All Students, Student Profile, Attendance, Coordinator Desk, Parent Meetings, Report Cards, Portfolios<br>**Academics:** Boards, Syllabus & Textbooks, Timetable, Curriculum Planning<br>**Exams:** Question Papers, Approved Papers, Question Bank, Co-Scholastic Grades, Assessment Profiles<br>**Data Analytics:** Top & Bottom Performers<br>**Campus Services:** Events & Calendar, Homework, Online Classes, Library<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**Settings:** Templates<br>**Help:** User Guide & Demo, FAQs | Home, Timetable, Attendance, Approvals, Meetings, Homework, Account |
 | **Front Office** | **Dashboard:** Dashboard<br>**Students:** All Students, Student Profile, Admissions & Enquiries, New Admission, Office Requests, Gate Desk, Documents & ID Cards<br>**Fees:** Collect Fee, Dues & Reminders, Receipts<br>**Transport:** Pickup & Drop Changes<br>**Data Analytics:** Admissions Funnel<br>**Campus Services:** Events & Calendar, Library, Inventory & Store, Hostel<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**Settings:** Templates<br>**Help:** User Guide & Demo, FAQs | Home, Gate, Office, Bus changes, Account |
 | **Transport team** | **Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Transport Reports<br>**Campus Services:** Events & Calendar<br>**My Space:** My Leave, My Account, My Preferences<br>**Help:** User Guide & Demo, FAQs | Home, Route sheet, Manifest, Bus changes, Account |
-| **Principal** | **Dashboard:** Dashboard<br>**Students:** Insights, All Students, Student Profile, Admissions & Enquiries, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Report Cards<br>**Staff:** Insights, All Staff, Staff Attendance, Leave Requests<br>**Academics:** Classes & Sections, Class Coordinators, Boards, Syllabus & Textbooks, Timetable<br>**Exams:** Question Papers, Approved Papers, Question Bank, Blueprints, Co-Scholastic Grades, Assessment Profiles<br>**Fees:** Insights, Fee Request Emails, Payment Matching, Dues & Reminders, Fee Structure, Concessions<br>**Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Account Statement, Income & Expenses<br>**Campus Services:** Events & Calendar, Homework, Online Classes, Library, Inventory & Store, Hostel<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**Settings:** Web & App Screens, Templates, Bank & Payment Details<br>**Help:** User Guide & Demo, FAQs | Home, Attendance, Approvals, Meetings, Office, Route sheet, Account |
+| **Principal** | **Dashboard:** Dashboard<br>**Students:** Insights, All Students, Student Profile, Admissions & Enquiries, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Report Cards, Portfolios<br>**Staff:** Insights, All Staff, Staff Attendance, Leave Requests<br>**Academics:** Classes & Sections, Class Coordinators, Boards, Syllabus & Textbooks, Timetable, Curriculum Planning<br>**Exams:** Question Papers, Approved Papers, Question Bank, Blueprints, Co-Scholastic Grades, Assessment Profiles<br>**Fees:** Insights, Fee Request Emails, Payment Matching, Dues & Reminders, Fee Structure, Concessions<br>**Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Account Statement, Income & Expenses<br>**Campus Services:** Events & Calendar, Homework, Online Classes, Library, Inventory & Store, Hostel<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**Settings:** Web & App Screens, Templates, Bank & Payment Details<br>**Help:** User Guide & Demo, FAQs | Home, Attendance, Approvals, Meetings, Office, Route sheet, Account |
 | **Accountant** | **Dashboard:** Dashboard<br>**Students:** All Students<br>**Staff:** All Staff<br>**Fees:** Insights, Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions<br>**Data Analytics:** Report Catalogue, Transport Reports<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Account Statement, Income & Expenses<br>**Campus Services:** Events & Calendar, Inventory & Store, Hostel<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**Settings:** Templates, Bank & Payment Details, Email & SMS Outbox<br>**Help:** User Guide & Demo, FAQs | Home, Payslips, Account |
-| **Admin** | **Dashboard:** Dashboard<br>**Students:** Insights, All Students, Student Profile, Admissions & Enquiries, New Admission, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Gate Desk, Report Cards, Documents & ID Cards<br>**Staff:** Insights, All Staff, Staff Attendance, Leave Requests<br>**Academics:** Classes & Sections, Class Coordinators, Boards, Syllabus & Textbooks, Timetable<br>**Exams:** Question Papers, Approved Papers, Question Bank, Blueprints, Co-Scholastic Grades, Assessment Profiles<br>**Fees:** Insights, Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions<br>**Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Account Statement, Income & Expenses<br>**Campus Services:** Events & Calendar, Homework, Online Classes, Library, Inventory & Store, Hostel<br>**Operations:** Users, Roles & Permissions, Data Import, Help Documents & FAQs<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**View as Profile:** Parent, Teacher (class coordinator), Teacher + Vice Principal, Teacher + Head of Teaching Staff, Principal, Accountant, Front Office, Transport team<br>**Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Competition Comparison, Market Review & Roadmap<br>**Settings:** Appearance & Branding, Website & Links, Web & App Screens, Templates, Bank & Payment Details, SMS Gateway, Email & SMS Outbox<br>**Help:** User Guide & Demo, FAQs | Home, Account |
+| **Admin** | **Dashboard:** Dashboard<br>**Students:** Insights, All Students, Student Profile, Admissions & Enquiries, New Admission, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Gate Desk, Report Cards, Documents & ID Cards, Portfolios<br>**Staff:** Insights, All Staff, Staff Attendance, Leave Requests<br>**Academics:** Classes & Sections, Class Coordinators, Boards, Syllabus & Textbooks, Timetable, Curriculum Planning<br>**Exams:** Question Papers, Approved Papers, Question Bank, Blueprints, Co-Scholastic Grades, Assessment Profiles<br>**Fees:** Insights, Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions<br>**Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Account Statement, Income & Expenses<br>**Campus Services:** Events & Calendar, Homework, Online Classes, Library, Inventory & Store, Hostel<br>**Operations:** Users, Roles & Permissions, Data Import, Help Documents & FAQs<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**View as Profile:** Parent, Teacher (class coordinator), Teacher + Vice Principal, Teacher + Head of Teaching Staff, Principal, Accountant, Front Office, Transport team<br>**Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Competition Comparison, Market Review & Roadmap<br>**Settings:** Appearance & Branding, Website & Links, Web & App Screens, Templates, Bank & Payment Details, SMS Gateway, Email & SMS Outbox, Backups & Restore<br>**Help:** User Guide & Demo, FAQs | Home, Account |
 | **Platform team** | **Platform Console:** Schools & Plans<br>**Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Competition Comparison, Market Review & Roadmap<br>**Settings:** Web & App Screens<br>**Help:** User Guide & Demo, FAQs | Website only |
 | **Sales & marketing** | **Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Competition Comparison, Market Review & Roadmap<br>**Help:** User Guide & Demo, FAQs | Website only |
 
@@ -318,13 +318,15 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 
 *Sales & marketing · about 4 min*
 
-1. **Sales team (our company) → Proposal Builder:** New proposal: “Hillview School”, 650 students. Tier changes to Professional. Messaging SMS; Transport Plus with 8 buses; add Data Analytics. Save and preview.  
-   *You should see:* Price on the right: ₹11,125 a month (plan ₹5,850 + SMS ₹975 + 8 buses ₹2,800 + analytics minimum ₹1,500); the preview prints as a proposal.
-2. **Sales team (our company) → Demo Builder:** Start from the Hillview proposal → Next → check the menus → Next → Next → Create demo school.  
-   *You should see:* Step 5 lists the demo script for Professional with route planning and analytics.
-3. **Sales team (our company) → Demo Builder:** Open as Principal, show two screens from the script, then End demo at the top.  
+1. **Sales team (our company) → Proposal Builder:** New proposal: “Hillview School”, 650 students, contact name, email and phone. Choose Pro. Add Transport routes and route map (8 buses), Timings, SMS and Data analytics.  
+   *You should see:* A year: ₹3,30,000 (Pro ₹2,59,000 by band + storage ₹7,800 + transport ₹24,000 + timings ₹8,000 + SMS ₹11,700 + analytics ₹19,500); maximum discount 13.5%.
+2. **Sales team (our company) → Proposal Builder:** Discount 10% → Download PDF → Email proposal → Send email.  
+   *You should see:* Discount ₹31,050; profit falls from 25.9% to 18.2%. The PDF has the plan cards with Pro selected; the email is in the Outbox and the proposal says Sent.
+3. **Sales team (our company) → Demo Builder:** Pick Hillview School → step 4: add Portfolios → Create demo school.  
+   *You should see:* The proposal now lists Portfolios too; the demo script includes Portfolios and the route map.
+4. **Sales team (our company) → Demo Builder:** Open as Principal, show two screens from the script, then End demo at the top.  
    *You should see:* The demo school name shows at the top left; End demo brings you back to the Demo builder.
-4. **Sales team (our company) → Competition Comparison:** Enter 650 students and look at the price row and Our edge.  
+5. **Sales team (our company) → Competition Comparison:** Enter 650 students and look at the price row and Our edge.  
    *You should see:* Our price sits among the Indian providers; route planning and the free app show as our edge.
 
 ### 4.21 Homework and the school calendar reach parents
@@ -364,6 +366,7 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 | **Gate Desk** | Gate Desk: today’s collections and expected late arrivals; checking new pickup people. | Check photo ID, enter the 4-digit gate code, Hand over. For late arrivals press Arrived. "Approve pickup people" checks new collectors. | Front Office, Admin | Website; app for Front Office |
 | **Report Cards** | Report cards (academic profile) for printing, saving as PDF and publishing to parents. | Pick grade, section, student (or all) and a term, the whole year or one exam → Generate → Print / save as PDF → Publish to parents. | Teacher, Principal, Admin | Website |
 | **Documents & ID Cards** | Documents and ID cards. | Upload or print certificates and ID cards from the school’s templates. | Front Office, Admin | Website |
+| **Portfolios** <br>*Professional+* | Student portfolios (add-on): best work, projects, reflections and certificates with a teacher’s comment. Shared items show to parents. | Find the student → Add to portfolio → title, kind, subject, date, comment → Share with parents → Save. | Parent, Teacher, Principal, Admin | Website |
 
 ### 5.3 Staff
 
@@ -382,6 +385,7 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 | **Class Coordinators** | Primary and secondary class coordinator for each section. | Pick two different teachers per section; they receive that section’s parent requests. | Principal, Admin | Website |
 | **Boards, Syllabus & Textbooks** | Boards, textbooks, chapters and topics. | Pick the board and class; chapters feed question papers. | Teacher, Principal, Admin | Website |
 | **Timetable** | Class and teacher timetables. | Click a cell to set subject and teacher; clashes are flagged. Parents see their child’s. | Parent, Teacher, Principal, Admin | Website; app for Teacher |
+| **Curriculum Planning** <br>*Professional+* | Curriculum planning (LMS add-on): units for each class and subject by month, and how many periods are taught. | Pick the class and subject → Add a unit (month, periods, outcomes) → type the periods taught as you go; coverage updates. | Teacher, Principal, Admin | Website |
 
 ### 5.5 Exams
 
@@ -496,9 +500,9 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |
-| **Price List & Tiers** | Your company’s price list: tiers, add-ons (and which tier includes each), hosting and discount rules. | Platform team or Admin: change a price and Save price list; new proposals use it at once. Sales can see it but not change it. | Admin, Platform team, Sales & marketing | Website |
-| **Proposal Builder** | Priced proposals for schools: tier, messaging, transport, add-ons, hosting and billing, with the price worked out from the price list. | New proposal → fill in steps 1 to 5 and watch the price on the right → Save → Preview to print or save as PDF → set the status to Sent, Won or Lost. Build demo opens the Demo builder. | Admin, Platform team, Sales & marketing | Website |
-| **Demo Builder** | Builds a working demo school for a client visit from a proposal or a quick tier choice. | Pick the proposal → check what the demo shows (switch extras on or off) → name it → Create → Open as Principal, Teacher or Parent and follow the demo script. End demo at the top brings you back. | Admin, Platform team, Sales & marketing | Website |
+| **Price List & Tiers** | Pricing: the Starter, Pro and Pro+ plans with price per student a year in bands, what a year costs by school size, a plan comparison, every add-on with its price, and the cost, margin and discount rules. | Pick a plan (Start with Starter, Choose Pro, Choose Pro+) to start a proposal with it. Platform team or Admin: Edit prices → change → Save prices, or Back to Pricing to leave without saving. | Admin, Platform team, Sales & marketing | Website |
+| **Proposal Builder** | Priced proposals: client and point of contact, plan, add-ons, hosting and discount, with price, operating cost, gross margin, profit and the maximum discount worked out as you go. | New proposal (or a plan’s Choose button) → fill in the school and contact → pick the plan and add-ons → discount → Preview PDF or Download PDF → Email proposal. Choices save as you go. | Admin, Platform team, Sales & marketing | Website |
+| **Demo Builder** | Sets up a working demo school for a client visit in four steps, linked to a proposal: what you change here changes the proposal and the demo school. | Pick the client or New client → 1 check the service provider (pre-filled) → 2 school and point of contact → 3 plan → 4 add-ons and discount → Create demo school → Open as Principal, Teacher or Parent. End demo at the top brings you back. | Admin, Platform team, Sales & marketing | Website |
 | **Competition Comparison** | Our features and price against Indian and global school software, with our edge and our gaps. | Enter the school’s student count to see each provider’s estimated yearly price at the top; filter Indian, global or all, and by feature group. Sources are listed at the bottom. | Admin, Platform team, Sales & marketing | Website |
 | **Market Review & Roadmap** | Indian and global market review (with each provider’s country) and the future enhancements we plan. | Read the Indian and Global tabs; Future enhancements lists each idea with where it comes from — set its priority and status as plans change. | Admin, Platform team, Sales & marketing | Website |
 
@@ -513,6 +517,7 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 | **Bank & Payment Details** | The school’s bank and UPI details shown on invoices. | Edit; a second person (Principal) approves before it is used. | Principal, Accountant, Admin | Website |
 | **SMS Gateway** | Connect an SMS provider (MSG91, Amazon SNS, Gupshup, Twilio or your own API). | Choose provider → DLT template IDs → Dry run → Go live. | Admin | Website |
 | **Email & SMS Outbox** | Every email and SMS the app has sent (test inbox). | Open a message to read it. | Accountant, Admin | Website |
+| **Backups & Restore** <br>*Growth+* | Backups & restore (add-on): nightly automatic backups kept 30 days, a backup on demand, and restore from a backup file. | Back up now downloads the backup file. To restore: Choose backup file → check what it contains → Restore. Only the Admin can restore. | Admin | Website |
 
 ### 5.18 Help
 
@@ -653,6 +658,14 @@ How to use each screen, in the order you click through it. In the app (Help → 
 1. Pick class and section
 2. Print ID cards
 
+**Portfolios** — Student portfolios (add-on): best work, projects, reflections and certificates with a teacher’s comment. Shared items show to parents.
+
+1. Find the student
+2. Add to portfolio
+3. Share with parents
+
+- *Portfolios add-on (in Pro+). Parents see shared items.*
+
 ### 6.3 Staff
 
 **Insights** — Staff numbers, attendance and leave trends.
@@ -717,6 +730,15 @@ How to use each screen, in the order you click through it. In the app (Help → 
 3. Clashes are refused
 
 - *Grade-wide blocks cover every section.*
+
+**Curriculum Planning** — Curriculum planning (LMS add-on): units for each class and subject by month, and how many periods are taught.
+
+1. Pick class and subject
+2. Add a unit: month, periods, outcomes
+3. Type periods taught
+4. Watch coverage
+
+- *LMS add-on (in Pro+).*
 
 ### 6.5 Exams
 
@@ -1057,38 +1079,43 @@ How to use each screen, in the order you click through it. In the app (Help → 
 
 ### 6.16 Service Provider
 
-**Price List & Tiers** — Your company’s price list: tiers, add-ons (and which tier includes each), hosting and discount rules.
+**Price List & Tiers** — Pricing: the Starter, Pro and Pro+ plans with price per student a year in bands, what a year costs by school size, a plan comparison, every add-on with its price, and the cost, margin and discount rules.
 
-1. Tiers: flat or per-student price, minimum, onboarding
-2. Add-ons: rate, minimum, one-time, which tier includes it
-3. Hosting
-4. Rules: annual months, discount limits
-5. Save price list
+1. Three plan cards: price per student a year, from-price, what is included
+2. Start with Starter / Choose Pro / Choose Pro+ starts a proposal
+3. What a year costs by school size (type your size)
+4. Price bands and one-time development
+5. Compare the plans and the add-on list
+6. Costs, margin and discount rules (internal)
 
-- *Only the platform team and the Admin can change prices; sales can view them.*
+- *Only the platform team and the Admin see Edit prices; Back to Pricing leaves without saving.*
+- *Nothing is free: every price must be above zero.*
 
-**Proposal Builder** — Priced proposals for schools: tier, messaging, transport, add-ons, hosting and billing, with the price worked out from the price list.
+**Proposal Builder** — Priced proposals: client and point of contact, plan, add-ons, hosting and discount, with price, operating cost, gross margin, profit and the maximum discount worked out as you go.
 
 1. New proposal
-2. 1 Client · 2 Size and tier · 3 Messaging and transport · 4 Add-ons · 5 Hosting and billing
-3. Check the price on the right
-4. Save → Preview → Print or save as PDF
-5. Set status: Sent, Won or Lost
-6. Build demo
+2. School and point of contact (name, email ID, contact number)
+3. Plan: Starter, Pro or Pro+
+4. Add-ons
+5. Hosting, discount, GST
+6. Watch price, margin and profit on the right
+7. Preview PDF / Download PDF / Email proposal
 
-- *“Use … — fits N students” picks the right tier.*
-- *Discounts above 10% need the owner’s approval; SMS and analytics are never discounted.*
+- *The discount can’t go over the maximum shown; above 10% needs the owner’s approval.*
+- *Untick “Show margin, profit and operating cost in the PDF” for a client-only copy.*
 
-**Demo Builder** — Builds a working demo school for a client visit from a proposal or a quick tier choice.
+**Demo Builder** — Sets up a working demo school for a client visit in four steps, linked to a proposal: what you change here changes the proposal and the demo school.
 
-1. 1 Client and tier (a proposal or a quick choice)
-2. 2 What the demo shows: switch menus and functions
-3. 3 Name the demo school
-4. 4 Create
-5. 5 Present: Open as Principal / Teacher / Parent, follow the demo script
-6. End demo (bar at the top)
+1. Pick the client (or New client)
+2. 1 Service provider: pre-filled, Change if needed
+3. 2 School and point of contact
+4. 3 Plan
+5. 4 Add-ons and discount
+6. Create demo school
+7. Open as Principal / Teacher / Parent, follow the demo script
+8. End demo (bar at the top)
 
-- *Demos use fictional data with the client’s name and set-up.*
+- *Every change saves to the linked proposal and sets the demo school up again.*
 - *Remove demo schools after the visit.*
 
 **Competition Comparison** — Our features and price against Indian and global school software, with our edge and our gaps.
@@ -1153,6 +1180,15 @@ How to use each screen, in the order you click through it. In the app (Help → 
 **Email & SMS Outbox** — Every email and SMS the app has sent (test inbox).
 
 1. See every email and SMS the app sent or queued
+
+**Backups & Restore** — Backups & restore (add-on): nightly automatic backups kept 30 days, a backup on demand, and restore from a backup file.
+
+1. See the last backup
+2. Back up now (downloads the file)
+3. Set the schedule and how long to keep
+4. Restore from a backup file
+
+- *Backups add-on (in Pro and Pro+). Only the Admin restores.*
 
 ### 6.18 Help
 
@@ -1328,8 +1364,8 @@ Campus Services → Homework. Parents see their child’s class only, with Done,
 **Why can’t a student borrow a library book?** *(Teacher, Principal, Admin, Front Office)*  
 A student can have 2 books at a time and can’t borrow while one is overdue. Return the overdue book first (the fine is shown).
 
-**I don’t see Library, Hostel or Online Classes.**   
-They come with higher plans or as add-ons: Online Classes and Library from Growth, Inventory from Professional, Hostel with Enterprise. Ask the school office.
+**I don’t see Library, Hostel, Portfolios or Curriculum Planning.**   
+They come with some plans or as add-ons the school buys: Homework from Pro; Portfolios and Curriculum Planning from Pro+; Library, Online Classes, Inventory and Hostel as add-ons. Ask the school office.
 
 **How do parents get an event or circular?** *(Admin, Principal, Front Office)*  
 Events & Calendar → add it → “Send to parents”. It appears in their app bell straight away.
@@ -1337,10 +1373,13 @@ Events & Calendar → add it → “Send to parents”. It appears in their app 
 ### Sales and demos
 
 **How do I price a school?** *(Sales & marketing, Platform team, Admin)*  
-Service Provider → Proposal Builder → New proposal. Enter students, tier, messaging, transport and add-ons; the price comes from the price list. Save, preview and print.
+Service Provider → Price List & Tiers → Choose Starter, Pro or Pro+ (or Proposal Builder → New proposal). Enter the school, students and the point of contact, then the add-ons and any discount. The price, operating cost, margin, profit and the most discount allowed show on the right. Download PDF or Email proposal.
 
 **How do I show a client their own set-up?** *(Sales & marketing, Platform team, Admin)*  
-Demo Builder → pick the proposal → Create demo school → Open as Principal, Teacher or Parent. End demo at the top brings you back. Remove the demo after the visit.
+Demo Builder → pick the client (or New client) → check the service provider, the contact, the plan and add-ons → Create demo school → Open as Principal, Teacher or Parent. Anything you change there changes the proposal and the demo school too. End demo at the top brings you back.
 
 **Can I change prices?** *(Sales & marketing, Platform team, Admin)*  
-Only the platform team and the Admin can, in Price List & Tiers. Sales can give up to 10% discount; more needs the owner’s approval.
+Only the platform team and the Admin can: Price List & Tiers → Edit prices → Save prices (Back to Pricing leaves without saving). Nothing can be free. Sales can give up to 10% discount, never more than the maximum the proposal shows; more than 10% needs the owner’s approval.
+
+**Why does WhatsApp say “No service needed”?** *(Sales & marketing, Platform team, Admin)*  
+WhatsApp messages go from the school’s phone to the parent’s phone (click to chat), not through our app or website, so there is no provider to pay. The add-on still has a price for the feature.

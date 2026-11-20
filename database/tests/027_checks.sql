@@ -1,4 +1,4 @@
--- Checks for 027 (release 13). Rolled back.
+-- Checks for 027 (release 13). Rolled back. Proposals use the release 14 plan codes (029 replaced GROWTH etc. with STARTER / PRO / PRO_PLUS).
 -- Expect NOTICE: Release 13 menus ok, Library ok, Hostel ok, Homework and classes ok, Store and events ok, Service Provider ok, Tenant isolation ok
 \set ON_ERROR_STOP 1
 SET client_min_messages = notice;
@@ -96,9 +96,9 @@ DO $$ DECLARE pl INT; pr INT; t INT; BEGIN
   INSERT INTO price_lists (version, card, is_current) VALUES (1, '{"plans": [], "addons": []}', TRUE) RETURNING price_list_id INTO pl;
   BEGIN INSERT INTO price_lists (version, card, is_current) VALUES (2, '{"plans": [], "addons": []}', TRUE); RAISE EXCEPTION 'two current price lists'; EXCEPTION WHEN unique_violation THEN NULL; END;
   BEGIN INSERT INTO price_lists (version, card) VALUES (3, '{"plans": 1}'); RAISE EXCEPTION 'bad card'; EXCEPTION WHEN check_violation THEN NULL; END;
-  INSERT INTO sales_proposals (proposal_no, client_name, students, plan_code, options, price_list_id, monthly_total, yearly_total) VALUES ('PROP-T-001', 'Example School', 400, 'GROWTH', '{}', pl, 5200, 57200) RETURNING proposal_id INTO pr;
-  BEGIN INSERT INTO sales_proposals (proposal_no, client_name, students, plan_code, options, monthly_total, yearly_total, discount_pct) VALUES ('PROP-T-002', 'X', 400, 'GROWTH', '{}', 1, 1, 15); RAISE EXCEPTION 'big discount without approval'; EXCEPTION WHEN check_violation THEN NULL; END;
-  BEGIN INSERT INTO sales_proposals (proposal_no, client_name, students, plan_code, options, monthly_total, yearly_total, status) VALUES ('PROP-T-003', 'X', 400, 'GROWTH', '{}', 1, 1, 'Maybe'); RAISE EXCEPTION 'bad status'; EXCEPTION WHEN check_violation THEN NULL; END;
+  INSERT INTO sales_proposals (proposal_no, client_name, students, plan_code, options, price_list_id, monthly_total, yearly_total) VALUES ('PROP-T-001', 'Example School', 400, 'PRO', '{}', pl, 5200, 57200) RETURNING proposal_id INTO pr;
+  BEGIN INSERT INTO sales_proposals (proposal_no, client_name, students, plan_code, options, monthly_total, yearly_total, discount_pct) VALUES ('PROP-T-002', 'X', 400, 'PRO', '{}', 1, 1, 15); RAISE EXCEPTION 'big discount without approval'; EXCEPTION WHEN check_violation THEN NULL; END;
+  BEGIN INSERT INTO sales_proposals (proposal_no, client_name, students, plan_code, options, monthly_total, yearly_total, status) VALUES ('PROP-T-003', 'X', 400, 'PRO', '{}', 1, 1, 'Maybe'); RAISE EXCEPTION 'bad status'; EXCEPTION WHEN check_violation THEN NULL; END;
   INSERT INTO tenants (code, name, subdomain, is_demo, demo_proposal_id) VALUES ('DEXS', 'Example School (demo)', 'demo-dexs', TRUE, pr) RETURNING tenant_id INTO t;
   ASSERT (SELECT is_demo FROM tenants WHERE tenant_id = t), 'demo school';
   ASSERT (SELECT count(*) FROM competitors) >= 8 AND NOT EXISTS (SELECT 1 FROM competitors WHERE country IS NULL OR source_url IS NULL), 'competitors with country and source';

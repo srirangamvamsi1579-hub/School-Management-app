@@ -766,6 +766,61 @@ The pricing plan said the Question Bank was not built. It is (Exams → Question
 
 Menus, plan features and permissions for both new menus; roles SALES and PLATFORM; a trigger that refuses company menus for any school role, department or designation. Library (`library_rules`, `library_books`, `library_loans`, `library_issue()`, `library_return()`, `v_library_overdue`), hostel (`hostel_blocks`, `hostel_rooms`, `hostel_residents` with one bed per student and a capacity and block check that locks the room, `v_hostel_occupancy`), `homework`, `homework_status`, `online_classes` (https link, no clash), `online_class_attendance`, inventory (`inventory_items`, `inventory_moves` with a stock check that locks the item, `v_inventory_stock`), `school_events`; row-level security on all of them. Company tables without a school: `price_lists` (one current), `sales_proposals` (a discount above 10% needs an approver), `tenants.is_demo` and `demo_proposal_id`, `competitors`, `competitor_features`, `roadmap_items`.
 
+## Added 19 Nov 2026 (release 14)
+
+Release 14 rebuilds the sales screens around three plans, makes every feature a priced item, links the Demo Builder to the Proposal Builder, and adds the PDF and email for proposals. It also builds the add-ons the new plans sell.
+
+### 1. Plans and prices (Service Provider → Price List & Tiers, now titled **Pricing**)
+
+No features are free. Every proposal has a plan price, data storage, and one-time development (web page design; database set-up and data migration).
+
+| Plan | Per student a year, by band (1–300 · 301–700 · 701–1,500 · 1,501+) | Base price (200 students) | Includes |
+|---|---|---|---|
+| Starter | ₹280 · ₹250 · ₹220 · ₹190 | ₹56,000 | The 8 basic features |
+| **Pro** (our pick) | ₹420 · ₹380 · ₹340 · ₹300 | ₹84,000 | Starter + Dashboard menu, Students desks (Coordinator Desk, Gate Desk, Parent Meetings), Templates/appearance/branding, Homework and assignments, Question bank, WhatsApp, Backups |
+| Pro+ | ₹600 · ₹540 · ₹480 · ₹420 | ₹1,20,000 | Pro + Transport routes and route map, Timings, Web and app screens, Board integration, LMS: curriculum planning, Portfolios, Data analytics, Payroll |
+
+- Bands work like tax slabs (a school of 400 on Pro pays 300 × ₹420 + 100 × ₹380 = ₹1,64,000), so adding a student never lowers the price. Schools under 200 students pay for 200.
+- **Basic features (every plan):** admissions from enquiry to enrolment; student and staff records with photos; roll call, staff attendance and leave; fee structures, counter collection and receipts; exams, marks and report cards; timetable and school calendar; notices, phone app and parent portal; basic email service.
+- **Add-ons (not in the basic tier; bought on any plan, or included where shown):** Dashboard menu; Students desks; Transport routes and route map (₹3,000 a bus a year, min 2); Timings (₹1,000 a bus, needs Transport); Web and app screens; Templates, appearance and branding; Backups and restore; **WhatsApp (₹6,000 a year; provider cost ₹0, labelled “No service needed” because messages go phone to phone, not through the app or website)**; SMS; **Board integration** (board selection in the Exams menu: CBSE, ICSE, State board, IB, Cambridge; grading scales follow it); Homework and assignments, LMS: curriculum planning, Portfolios (popular in Indian school apps); Question bank; Online classes; Data analytics; Payroll; Accounts; Library; Inventory; Hostel; Branded app.
+- **Development:** web page design ₹20,000 / ₹30,000 / ₹45,000 and database set-up ₹10,000 / ₹15,000 / ₹25,000 (Starter / Pro / Pro+). **Data storage:** ₹12 a student a year (min ₹3,000).
+- The page shows three plan cards with **Start with Starter / Choose Pro / Choose Pro+** (each opens a new proposal on that plan) and quick links to each plan, what a year costs by school size, price bands, development prices, a plan comparison, the add-on list, and the cost, margin and discount rules. **Back to the launch prices** was removed. **Back to Home** goes to the Main menu; the Platform team and the Admin get **Edit prices**, whose **Back to Pricing** leaves without saving. A price of zero is refused.
+
+### 2. Margin, profit, operating cost and discount (every proposal)
+
+- **Running cost:** cloud, email and support per student by plan (₹50 / ₹65 / ₹85), storage ₹6, and each add-on's own cost (SMS gateway ₹15 a student, analytics licences ₹10, WhatsApp ₹0, …). Included add-ons still count as cost.
+- **Overheads:** sales and marketing 25%, product development 15%, administration 10% of the list price.
+- **Operating cost** = running cost + overheads. **Profit** = price after discount − operating cost, in ₹ and %.
+- **Gross margin** compared with the SaaS industry standard of **70–80%** (shown as below, within or above).
+- **Maximum allowable discount** for the proposal: the most that keeps profit at 15% or more, never over 20%. Higher is cut back with a warning; over 10% needs the owner's approval. The discount applies to the plan and add-ons, not to storage, SMS or hosting.
+- Example: Pro, 650 students, 8 buses with Transport and Timings, SMS and analytics = ₹3,30,000 a year + ₹47,500 one-time; maximum discount 13.5%; at 10% (₹31,050) profit is 18.2%.
+
+### 3. Proposal Builder
+
+- Client and **point of contact** (name, designation, **email ID**, **contact number**), plan cards, add-ons by group, hosting, discount (with the maximum shown), inter-state GST, and **Show margin, profit and operating cost in the PDF** (untick for a client-only copy). Choices save as you go.
+- Right side: price (every year, one-time, year one with GST) and **Margin and profit** (discount applied, maximum allowable discount, running cost, overheads, operating cost, profit, gross margin against the industry standard, one-time development profit).
+- **Preview PDF**, **Download PDF** and **Email proposal** (to the contact's email ID, cc our sales email, subject and message filled in with an invitation to contact us; the PDF is attached; recorded in the Outbox; the proposal becomes Sent).
+- **The PDF** follows the layout of a modern Indian school pricing page (deep green): breadcrumb and title, an introductory note from the provider by name, prepared for / prepared by, the three plan cards with the chosen one marked **Your plan**, what a year costs by size (this school's row highlighted), compare the plans, what the school gets (basic, in the plan, add-ons), the price by band, one-time development, year one with CGST/SGST or IGST, discount and maximum discount, the commercial summary (operating cost, gross margin, profit), questions schools ask, and a closing panel with the provider's phone, email and website inviting the school to get in touch.
+
+### 4. Demo Builder (linked to the proposal)
+
+Four short steps on one page: **1 Service provider** (our company's details, pre-filled; Change to edit), **2 Client and point of contact**, **3 Plan**, **4 Add-ons and discount**. Every choice saves to the linked proposal at once, and its demo school is set up again to match (one demo school per proposal). **Create demo school**, then **Open as** Principal, Admin, Teacher, Parent, Accountant, Front office or Transport, with a demo script for what was bought. **New client** starts a new proposal; **Open proposal** goes to it. Demo schools are set screen by screen from the plan and add-ons (anything not bought is off), and the side menu shows the plan name (Starter, Pro or Pro+).
+
+### 5. New add-on screens in schools
+
+| Add-on | Where | What it does |
+|---|---|---|
+| LMS: curriculum planning | Academics → Curriculum Planning | Units for each class and subject by month (Jun–Mar), periods planned and taught, coverage per subject and class |
+| Portfolios | Students → Portfolios | Work samples, projects, reflections, certificates, art and sports with a teacher's comment; parents see shared items |
+| Backups and restore | Settings → Backups & Restore | Nightly (or weekly) automatic backups kept 7, 30 or 90 days; **Back up now** downloads the school's data; restore from a backup file after checking it is for this school and app version (Admin only) |
+| Board integration | Exams (every screen) | Board bar at the top: CBSE, ICSE / ISC, State board, IB, Cambridge; co-scholastic grades use that board's scale |
+| WhatsApp | Fees → Dues & Reminders, Events & Calendar | **WhatsApp** opens the parent's chat (or a group share for events) with the message ready; no message charge |
+| Timings | Transport → Routes, Stops & Timings | **Edit timings** only with this add-on |
+
+### 6. Database (029_release14.sql)
+
+Menus STU_PORTFOLIO, ACA_CURRICULUM, OPS_BACKUP; functions FN_STOP_TIMINGS, FN_WHATSAPP, FN_BOARD; `tenants.exam_board`; `curriculum_units` (status worked out from periods taught), `portfolio_items`, `backup_settings`, `backups`, `backups_to_expire`; company tables `provider_profile`, `sales_settings`, `sales_tiers`, `sales_bands`, `sales_tier_rates`, `sales_addons` (WhatsApp: cost 0 and “No service needed”), `sales_tier_addons`, `sales_development`, `sales_tier_price()`; every price must be above zero. `sales_proposals` moves to STARTER / PRO / PRO_PLUS and gains the point of contact, one-time total, operating cost, profit (= price − operating cost), gross margin and maximum discount (the discount can't go over it); `sales_proposal_emails` with the PDF, which marks a draft Sent.
+
 ## Database schema summary
 
 PostgreSQL 15+, twenty-eight migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.
@@ -1035,6 +1090,10 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - Should parent sign-up also ask for the student's date of birth? Classmates may know a child's name, grade and admission number.
 - ~~Plan prices per tier and add-on~~ — drafted in the pricing plan and loaded as the launch price list (Service Provider → Price List & Tiers, `price_lists`); final approval pending.
 - Which Campus add-ons to pilot first, and with which two schools.
+- Release 14 prices (Starter ₹280, Pro ₹420, Pro+ ₹600 per student a year, bands, add-ons, cost and overhead percentages) are a draft for approval. The cost figures are estimates until the first months of AWS, SMS and support bills.
+- The Platform Console still names the school plans Starter / Growth / Professional / Enterprise; the sales plans are Starter / Pro / Pro+. Rename the console plans to match before go-live?
+- Proposal PDFs include margin, profit and operating cost by default (as asked). Should the client copy leave them out by default?
+- Board integration: was “Wunder Board” this exam-board selection, or a specific product to integrate with?
 - Service Provider for the Admin (release 13.2): in production, limit it to our own company's Admin account so school Admins don't see our prices, proposals and competitor research.
 - Competitor features marked "?" need checking before sales use them in a pitch.
 - SMS OTP provider (MSG91, Gupshup or Amazon SNS) and the DLT-approved OTP template.

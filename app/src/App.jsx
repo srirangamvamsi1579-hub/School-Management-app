@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DemoEndBar } from './screens/Provider.jsx';
+import { BoardBar } from './screens/Release14.jsx';
 import { useStore } from './data/store.js';
-import { MENU, PLANS, ROLES, LABEL, MODULE_OF, canSee, onWeb, viewAsUser } from './data/menu.js';
+import { MENU, PLANS, ROLES, LABEL, MODULE_OF, canSee, onWeb, viewAsUser, funcOn } from './data/menu.js';
 import { applyTheme } from './lib/theme.js';
 import { tenantOf } from './lib/logic.js';
 import { screensFor, roleName, accessLevel } from './lib/auth.js';
@@ -107,7 +108,7 @@ export default function App() {
 
   const sideNav = (
     <nav className={'side' + (navOpen ? ' open' : '')} aria-label="Main menu">
-      <div className="school"><div className="logo">{tenant.name[0]}</div><div><div className="b" style={{ fontSize: 13 }}>{tenant.name}</div><div className="small" style={{ opacity: .7 }}>{PLANS.find((p) => p.rank === rank).name} plan</div></div></div>
+      <div className="school"><div className="logo">{tenant.name[0]}</div><div><div className="b" style={{ fontSize: 13 }}>{tenant.name}</div><div className="small" style={{ opacity: .7 }}>{tenant.demo ? tenant.demo.tier : PLANS.find((p) => p.rank === rank).name} plan</div></div></div>
       <button className={'item' + (screen === 'HOME' ? ' on' : '')} onClick={() => go('HOME')} aria-current={screen === 'HOME' ? 'page' : undefined}>⌂ Main menu</button>
       {links.filter((l) => l.under === 'TOP').map((l) => <a key={l.id} className="item" href={l.url} target="_blank" rel="noreferrer">{l.label}<span className="ext">↗</span></a>)}
       {visible.map((m) => {
@@ -157,7 +158,7 @@ export default function App() {
         {viewBar}
         <DemoEndBar tenant={tenant} />
         {locked && <div className="ro-bar" role="status">Read only — you can view this screen but not change anything. Your school sets this in Roles &amp; Permissions.</div>}
-        <main className={'content' + (locked ? ' ro' : '')}><Screen go={go} code={screen} menus={visible} /></main>
+        <main className={'content' + (locked ? ' ro' : '')}>{/^EXM_/.test(screen) && funcOn(tenant, 'FN_BOARD') && <BoardBar />}<Screen go={go} code={screen} menus={visible} /></main>
         <DemoBar />
       </div>
       {toast && <div className="toast" role="status">{toast.msg}</div>}

@@ -5,6 +5,8 @@ import { inr, num, dmy, dmon } from '../lib/format.js';
 import { fullName, classLabel, guardianOf, openInvoices, balance, recordPayment, sendFeeRequests, receiveNotification, applyToMessage, renderFor, wordsINR, tenantOf, log } from '../lib/logic.js';
 import { GROUPS, BASE_FEE, PREV_FEE, BAND_TOTAL } from '../data/seed.js';
 import { myChildren } from './Requests.jsx';
+import { funcOn } from '../data/menu.js';
+import { whatsappLink } from '../lib/release14.js';
 
 const findStudent = (db, q) => db.students.filter((s) => (fullName(s) + ' ' + s.admNo).toLowerCase().includes(q.toLowerCase())).slice(0, 8);
 
@@ -177,10 +179,13 @@ export function Dues() {
   const { db, run, notify, session } = useStore();
   const [inv, setInv] = useState(null);
   const rows = db.invoices.filter((i) => i.status === 'OVERDUE' || (i.status !== 'PAID' && i.instalment === 'Installment III'));
+  const wa = funcOn(tenantOf(db), 'FN_WHATSAPP');   // WhatsApp add-on: phone to phone, no service needed
+  const waText = (s, i) => `Dear parent, ${s.first}'s fee (${i.instalment}) of ${inr(balance(i))} was due on ${dmy(i.due)}. Please pay at the school office or online. — ${tenantOf(db).name}`;
   return <Page title="Dues & reminders" sub={`${rows.length} unpaid invoices · ${inr(rows.reduce((a, i) => a + balance(i), 0))}`}
     actions={<button className="btn pri" onClick={() => { const c = run((d) => sendFeeRequests(d, { classIds: d.classes.map((x) => x.id), scope: 'OVERDUE', dueDate: '2026-11-30', by: session.role })); notify(`Reminders: ${c.counts.sent} emails, ${c.counts.noEmail} SMS`); }}>Remind all overdue</button>}>
     <div className="tw"><table className="t"><thead><tr><th>Invoice</th><th>Student</th><th>Class</th><th>Instalment</th><th>Due</th><th className="num">Balance</th><th>Status</th><th /></tr></thead>
-      <tbody>{rows.map((i) => { const s = db.students.find((x) => x.id === i.studentId); return <tr key={i.id}><td>{i.no}</td><td className="b">{fullName(s)}</td><td>{classLabel(db, s)}</td><td>{i.instalment}</td><td>{dmy(i.due)}</td><td className="num">{inr(balance(i))}</td><td><Status s={i.status} /></td><td><button className="btn sm" onClick={() => setInv(i)}>Invoice</button></td></tr>; })}</tbody></table></div>
+      <tbody>{rows.map((i) => { const s = db.students.find((x) => x.id === i.studentId); return <tr key={i.id}><td>{i.no}</td><td className="b">{fullName(s)}</td><td>{classLabel(db, s)}</td><td>{i.instalment}</td><td>{dmy(i.due)}</td><td className="num">{inr(balance(i))}</td><td><Status s={i.status} /></td><td><div className="row"><button className="btn sm" onClick={() => setInv(i)}>Invoice</button>{wa && guardianOf(db, s)?.mobile && <a className="btn sm" href={whatsappLink(guardianOf(db, s).mobile, waText(s, i))} target="_blank" rel="noreferrer" aria-label={`WhatsApp ${fullName(s)}'s parent`}>WhatsApp</a>}</div></td></tr>; })}</tbody></table></div>
+    {wa && <p className="small muted">WhatsApp opens on this phone or computer with the reminder ready to send. It goes phone to phone, so there is no message charge.</p>}
     {inv && <InvoiceView inv={inv} onClose={() => setInv(null)} />}
   </Page>;
 }

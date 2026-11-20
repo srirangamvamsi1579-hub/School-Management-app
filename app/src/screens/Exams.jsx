@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useStore } from '../data/store.js';
 import { Page, Card, Field, Select, Html, printPage } from '../components/ui.jsx';
-import { log, fullName, classLabel, renderFor } from '../lib/logic.js';
+import { log, fullName, classLabel, renderFor, tenantOf } from '../lib/logic.js';
+import { funcOn } from '../data/menu.js';
+import { BOARDS, boardOf } from '../lib/release14.js';
 
 const AREAS = ['Work education', 'Art education', 'Health & physical education', 'Discipline', 'Life skills'];
 export function CoScholastic() {
@@ -9,10 +11,12 @@ export function CoScholastic() {
   const [sec, setSec] = useState('C8A');
   const list = db.students.filter((s) => s.sectionId === sec);
   const g = (sid, a) => db.cosch[sid + ':' + a] || '';
-  return <Page title="Co-scholastic grades" sub="CBSE 3-point scale (A / B / C) per area, Term 2" actions={<button className="btn pri" onClick={() => notify('Grades saved')}>Save</button>}>
+  // Board integration: the grading scale follows the school's exam board (CBSE when the add-on is off)
+  const board = BOARDS[funcOn(tenantOf(db), 'FN_BOARD') ? boardOf(tenantOf(db)) : 'CBSE'];
+  return <Page title="Co-scholastic grades" sub={`${board.name} scale (${board.cosch.join(' / ')}) per area, Term 2`} actions={<button className="btn pri" onClick={() => notify('Grades saved')}>Save</button>}>
     <div className="row" style={{ marginBottom: 12 }}><Select value={sec} onChange={(e) => setSec(e.target.value)} options={db.sections.map((x) => [x.id, db.classes.find((c) => c.id === x.classId).name + '-' + x.name])} /></div>
     <div className="tw"><table className="t"><thead><tr><th>Student</th>{AREAS.map((a) => <th key={a}>{a}</th>)}</tr></thead>
-      <tbody>{list.map((s) => <tr key={s.id}><td className="b">{fullName(s)}</td>{AREAS.map((a) => <td key={a}><select className="i" value={g(s.id, a)} onChange={(e) => mutate((d) => { d.cosch[s.id + ':' + a] = e.target.value; })}><option value="">—</option><option>A</option><option>B</option><option>C</option></select></td>)}</tr>)}</tbody></table></div>
+      <tbody>{list.map((s) => <tr key={s.id}><td className="b">{fullName(s)}</td>{AREAS.map((a) => <td key={a}><select className="i" value={g(s.id, a)} onChange={(e) => mutate((d) => { d.cosch[s.id + ':' + a] = e.target.value; })}><option value="">—</option>{board.cosch.map((x) => <option key={x}>{x}</option>)}</select></td>)}</tr>)}</tbody></table></div>
   </Page>;
 }
 
