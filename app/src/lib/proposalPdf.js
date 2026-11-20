@@ -3,6 +3,7 @@
 // price, discount and commercial summary, a few questions answered and a closing call to contact us.
 import { jsPDF } from 'jspdf';
 import { CARLITO_REGULAR, CARLITO_BOLD } from './pdfFonts.js';
+import { saveFile } from './saveFile.js';
 import { GST, quote, offering, tierOf, basePrice, yearCost, SIZES, BASIC, bandLabel, rupees, pct, OVERHEAD_NAMES } from './pricing.js';
 
 const C = { green: [31, 77, 63], tint: [234, 242, 238], ink: [29, 42, 38], muted: [91, 107, 102], line: [217, 226, 222], white: [255, 255, 255], amber: [180, 110, 20] };
@@ -208,9 +209,8 @@ export function buildProposalPdf({ proposal, rc, profile }) {
 
 export const proposalFileName = (p) => `${p.no}-${String(p.options.client || 'school').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '')}.pdf`;
 
-export function downloadProposalPdf(args) {
+export async function downloadProposalPdf(args) {
   const doc = buildProposalPdf(args);
-  doc.save(proposalFileName(args.proposal));
-  return doc;
+  return saveFile(proposalFileName(args.proposal), doc.output('blob'));
 }
 export const proposalPdfBytes = (args) => buildProposalPdf(args).output('arraybuffer');

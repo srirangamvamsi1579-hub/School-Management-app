@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
+import { saveWorkbook } from '../lib/saveFile.js';
 import { funcOn } from '../data/menu.js';
 import { tenantOf } from '../lib/logic.js';
 import { useStore } from '../data/store.js';
@@ -244,7 +245,7 @@ export function DriverRouteSheets() {
         rows.push([trip === 'AM' ? `Morning (school ${rt.schoolArrive})` : `Afternoon (leave ${rt.schoolLeave})`, trip === 'AM' ? st.am : st.pm, st.name, x.name, x.cls, x.status === 'BOARD' ? 'Boards' : x.status === 'CHECK' ? 'Check' : 'Not boarding', x.reason]))));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), rt.id);
     });
-    try { XLSX.writeFile(wb, `route-sheets-${date}.xlsx`); } catch (e) { notify('Downloads are off in this preview — use the hosted site'); }
+    saveWorkbook(XLSX, wb, `route-sheets-${date}.xlsx`).catch(() => notify('The file could not be saved here — use the hosted site'));
   };
   return (
     <Page title="Driver route sheets" sub="One sheet per route (Route #) with the stop timings for the morning pickup and the afternoon drop, and who will and won't board today. Each driver receives only their own route's sheet."

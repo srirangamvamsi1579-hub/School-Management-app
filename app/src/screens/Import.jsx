@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
+import { saveWorkbook } from '../lib/saveFile.js';
 import { useStore } from '../data/store.js';
 import { Page, Card, Select, Status, Tabs, Field, Input } from '../components/ui.jsx';
 import { dmon } from '../lib/format.js';
@@ -40,7 +41,7 @@ export function DataImport() {
   const [cols, setCols] = useState(null);
   const fields = IMPORT_FIELDS[entity] || [];
   const school = tenantOf(db)?.code || 'SCHOOL';
-  const download = (list, name) => { try { XLSX.writeFile(templateBook(list), name); notify(`Downloaded ${name}`); } catch (e) { notify('Downloads are off in this preview — use the hosted site'); } };
+  const download = (list, name) => { saveWorkbook(XLSX, templateBook(list), name).then((r) => r === 'saved' && notify(`Downloaded ${name}`)).catch(() => notify('The file could not be saved here — use the hosted site')); };
 
   const startMappingEnt = (ent, name, kind, rows, image = null) => {
     const flds = IMPORT_FIELDS[ent];

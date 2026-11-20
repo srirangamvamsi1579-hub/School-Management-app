@@ -269,7 +269,7 @@ function PdfPreview({ p, rc, profile, onClose }) {
     {url ? <iframe title="Proposal PDF" src={String(url)} style={{ width: '100%', height: '70vh', border: '1px solid var(--line)' }} /> : <p className="muted">{url === '' ? 'The preview could not be made here; use Download PDF.' : 'Making the PDF…'}</p>}
   </Modal>;
 }
-const downloadPdf = (p, rc, profile) => import('../lib/proposalPdf.js').then((m) => m.downloadProposalPdf({ proposal: p, rc, profile }));
+const downloadPdf = (p, rc, profile) => import('../lib/proposalPdf.js').then((m) => m.downloadProposalPdf({ proposal: p, rc, profile })).catch(() => {});
 
 function ProposalEditor({ id, back, go }) {
   const { db, run, notify, session } = useStore();

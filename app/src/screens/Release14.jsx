@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useStore } from '../data/store.js';
 import { Page, Card, Field, Input, Select, Modal, Pill, Stat, Progress } from '../components/ui.jsx';
 import { log, tenantOf } from '../lib/logic.js';
+import { saveFile } from '../lib/saveFile.js';
 import { myChildren } from './Requests.jsx';
 import { StudentPick } from './Campus.jsx';
 import {
@@ -126,7 +127,7 @@ export function Backups() {
     const json = backupJson(db);
     const code = tenantOf(db).code;
     const name = `backup-${code}-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')}.json`;
-    try { const url = URL.createObjectURL(new Blob([json], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000); } catch (e) { /* download blocked */ }
+    saveFile(name, json).catch((e) => notify(e.message));
     run((d) => { recordBackup(d, { kind: 'On demand', by: session.name, size: json.length }); log(d, session.name, 'Backup taken', name); });
     notify(`Backup downloaded: ${name}`);
   };
