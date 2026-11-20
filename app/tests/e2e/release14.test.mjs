@@ -64,10 +64,15 @@ test('sales: pricing → Choose Pro → proposal with margin and discount → PD
   const margin = card(page, 'Margin and profit');
   assert.match(await margin.innerText(), /Maximum allowable discount\s*13\.5%/);
   assert.match(await margin.innerText(), /Gross margin[\s\S]*within/);
-  await page.getByLabel('Discount %').fill('10');
+  await page.getByLabel('Discount %', { exact: true }).fill('10');
   await price.getByText('₹2,98,950').first().waitFor();
   assert.match(await margin.innerText(), /Profit\s*₹[\d,]+ · 18\.2%/);
   assert.match(await margin.innerText(), /Operating cost\s*₹/);
+  await page.getByLabel('Additional discount %').fill('5');
+  await price.getByText('₹2,84,003').first().waitFor();            // 5% more on the final amount: ₹2,98,950 × 0.95
+  assert.match(await margin.innerText(), /Additional discount on the final amount\s*5%/);
+  await page.getByLabel('Additional discount %').fill('0');
+  await price.getByText('₹2,98,950').first().waitFor();
 
   // PDF
   const [dl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download PDF' }).click()]);

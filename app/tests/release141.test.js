@@ -112,3 +112,24 @@ test('the seed has a converted client for the Won sample proposal', () => {
   assert.equal(db.provider.projects.length, 1);
   assert.equal(db.provider.proposals.find((p) => p.id === 'PR3').projectId, db.provider.projects[0].id);
 });
+
+test('release 14.2: additional discount on the final amount; the client PDF shows only what was applied', async () => {
+  const { quote } = await import('../src/lib/pricing.js');
+  const { clientDiscountRows } = await import('../src/lib/proposalPdf.js');
+  const base = o({ discountPct: 10 });
+  const a = quote(RC, base);
+  const b = quote(RC, { ...base, finalDiscountPct: 5 });
+  assert.equal(b.beforeFinal, a.recurring);
+  assert.equal(b.recurring, Math.round(a.recurring * 0.95 * 100) / 100);
+  assert.equal(b.oneTimeTotal, Math.round(a.oneTimeTotal * 0.95 * 100) / 100);
+  assert.equal(b.finalDiscount, Math.round((a.recurring + a.oneTimeTotal) * 0.05 * 100) / 100);
+  assert.equal(b.totalDiscount, Math.round((a.discount + b.finalDiscount) * 100) / 100);
+  assert.equal(b.yearOne, Math.round((b.recurring + b.oneTimeTotal) * 100) / 100);
+  assert.ok(b.economics.profit < a.economics.profit, 'profit reflects the additional discount');
+  assert.match(quote(RC, { ...base, finalDiscountPct: 15 }).warnings.join(), /below 15%/);
+  assert.equal(quote(RC, { ...base, finalDiscountPct: 50 }).finalDiscountPct, RC.maxDiscount);
+  const rows = clientDiscountRows(b).map((r) => r.join(' ')).join(' | ');
+  assert.match(rows, /10% on the plan and add-ons/); assert.match(rows, /Additional 5% on the final amount/); assert.match(rows, /Year one payable with GST/);
+  assert.doesNotMatch(rows, /maximum|approv|margin|profit|sales team/i);
+  assert.deepEqual(clientDiscountRows(quote(RC, o())).map((r) => r[0]), ['Total discount in year one', 'Year one payable with GST']);
+});

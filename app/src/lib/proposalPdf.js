@@ -149,12 +149,14 @@ export function buildProposalPdf({ proposal, rc, profile }) {
   h2('Your price', `For ${q.students.toLocaleString('en-IN')} students. Amounts in rupees, before GST.`);
   const rows = q.lines.map((l) => [l.label, l.included ? `Included (worth ${rupees(l.listValue)})` : rupees(l.amount)]);
   if (q.discount) rows.push([`Discount ${pct(q.discountPct)} on the plan and add-ons`, rupees(-q.discount)]);
-  rows.push(['Total a year', rupees(q.recurring)]);
+  if (q.finalDiscountPct) { rows.push(['Total a year before the additional discount', rupees(q.beforeFinal)]); rows.push([`Additional discount ${pct(q.finalDiscountPct)}`, rupees(-q.finalDiscountRecurring)]); }
+  rows.push(['Payable a year', rupees(q.recurring)]);
   table([{ label: 'Every year', w: CW - 52 }, { label: 'Amount', w: 52, align: 'right' }], rows, { bold: (ri) => ri === rows.length - 1, fill: (ri) => ri === rows.length - 1 });
   // Bands for the plan line
   para(`${q.tier.name} plan by band: ${q.bands.map((b) => `${b.qty.toLocaleString('en-IN')} × ${rupees(b.rate)}`).join(' + ')} = ${rupees(q.lines[0].amount)}.`, M, CW, 9, false, C.muted);
   const once = q.oneTime.map((l) => [l.label, l.included ? 'Included' : rupees(l.amount)]);
-  once.push(['Total one-time', rupees(q.oneTimeTotal)]);
+  if (q.finalDiscountPct && q.oneTimeList) { once.push(['Total one-time before the additional discount', rupees(q.oneTimeList)]); once.push([`Additional discount ${pct(q.finalDiscountPct)}`, rupees(-q.finalDiscountOneTime)]); }
+  once.push(['Payable one-time', rupees(q.oneTimeTotal)]);
   table([{ label: 'One-time (development and set-up)', w: CW - 52 }, { label: 'Amount', w: 52, align: 'right' }], once, { bold: (ri) => ri === once.length - 1, fill: (ri) => ri === once.length - 1 });
   const inv = [['Year one: one year + one-time', rupees(q.yearOne)], ...q.gstSplit.map(([k, v]) => [k, rupees(v)]), ['Year one total with GST', rupees(q.yearOneTotal)],
     ['From year two (a year, before GST)', rupees(q.recurring)], ['Per student a year (before GST)', rupees(q.perStudentYear)], ['Monthly equivalent', rupees(q.monthly)]];
@@ -162,12 +164,17 @@ export function buildProposalPdf({ proposal, rc, profile }) {
 
   // ================================================== Discount and commercial summary
   const e = q.economics;
-  h2('Discount', null);
-  table([{ label: 'Discount', w: CW - 52 }, { label: '', w: 52, align: 'right' }], [
-    ['Discount applied to this proposal', q.discount ? `${pct(q.discountPct)} (${rupees(q.discount)})` : 'None'],
-    ['Maximum allowable discount for this proposal', pct(e.maxDiscountPct)],
-    ['Discount the sales team can approve', `up to ${pct(e.salesDiscount)}`]]);
+  // The client sees only the discount applied and what it does to the amount payable
+  if (q.totalDiscount > 0) {
+    h2('Your discount', 'Already taken off the amounts above.');
+    const dr = clientDiscountRows(q);
+    table([{ label: 'Discount applied', w: CW - 52 }, { label: 'Amount', w: 52, align: 'right' }], dr, { bold: (ri) => ri >= dr.length - 2, fill: (ri) => ri === dr.length - 1 });
+  }
   if (o.showInternal === true) {
+    h2('Discount limits (internal)');
+    table([{ label: 'Discount', w: CW - 52 }, { label: '', w: 52, align: 'right' }], [
+      ['Maximum allowable discount on the plan and add-ons', pct(e.maxDiscountPct)],
+      ['Discount the sales team can approve', `up to ${pct(e.salesDiscount)}`]]);
     h2('Commercial summary', `How the price covers the cost of running the service. Gross margin is compared with the industry standard for software-as-a-service companies (${e.industry[0]}–${e.industry[1]}%).`);
     table([{ label: 'A year, after discount', w: CW - 52 }, { label: 'Amount', w: 52, align: 'right' }], [
       ['Revenue', rupees(e.revenue)],
@@ -207,6 +214,14 @@ export function buildProposalPdf({ proposal, rc, profile }) {
   return doc;
 }
 
+// What the client is told about discounts: only what was applied and the amount payable
+export function clientDiscountRows(q) {
+  const dr = [];
+  if (q.discount) dr.push([`${pct(q.discountPct)} on the plan and add-ons (a year)`, rupees(-q.discount)]);
+  if (q.finalDiscountPct) dr.push([`Additional ${pct(q.finalDiscountPct)} on the final amount (year one)`, rupees(-q.finalDiscount)]);
+  dr.push(['Total discount in year one', rupees(-q.totalDiscount)], ['Year one payable with GST', rupees(q.yearOneTotal)]);
+  return dr;
+}
 export const proposalFileName = (p) => `${p.no}-${String(p.options.client || 'school').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '')}.pdf`;
 
 export async function downloadProposalPdf(args) {

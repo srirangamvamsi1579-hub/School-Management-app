@@ -113,7 +113,7 @@ export const blankOptions = (rc = DEFAULT_RATE_CARD) => ({
   client: '', city: '', board: 'CBSE', students: 400, buses: 0, residents: 0,
   poc: { name: '', designation: 'Principal', email: '', phone: '' },
   tier: (rc.tiers.find((t) => t.pick) || rc.tiers[0]).code, addons: {}, hosting: 'SHARED',
-  discountPct: 0, interState: false, showInternal: false   // margin, profit and operating cost stay out of the client's PDF unless ticked
+  discountPct: 0, finalDiscountPct: 0, interState: false, showInternal: false   // margin, profit and operating cost stay out of the client's PDF unless ticked
 });
 
 // Add-ons that apply: chosen, or included in the tier. Timings only with Transport.
@@ -185,22 +185,33 @@ export function quote(rc, o) {
   if (d > rc.salesDiscount) warnings.push(`A discount above ${rc.salesDiscount}% needs the owner's approval.`);
   const discount = round2(discountable * d / 100);
 
-  const recurring = round2(listTotal - discount);
-  const oneTimeTotal = oneTime.reduce((s, l) => s + l.amount, 0);
+  const beforeFinal = round2(listTotal - discount);            // a year, after the discount on the plan and add-ons
+  const oneTimeList = oneTime.reduce((s, l) => s + l.amount, 0);
+  // Additional discount the provider gives on the final proposal: on everything payable (every year and one-time)
+  let fd = Math.max(0, +o.finalDiscountPct || 0);
+  if (fd > rc.maxDiscount) { warnings.push(`The additional discount can't be more than ${rc.maxDiscount}%. Set to ${rc.maxDiscount}%.`); fd = rc.maxDiscount; }
+  const finalDiscountRecurring = round2(beforeFinal * fd / 100);
+  const finalDiscountOneTime = round2(oneTimeList * fd / 100);
+  const recurring = round2(beforeFinal - finalDiscountRecurring); // payable a year
+  const oneTimeTotal = round2(oneTimeList - finalDiscountOneTime); // payable once
   const oneTimeCost = round2(oneTime.reduce((s, l) => s + l.cost, 0));
   const tax = (n) => round2(n * GST / 100);
   const yearOne = round2(recurring + oneTimeTotal);
   const grossMarginPct = recurring ? (recurring - runningCost) / recurring * 100 : 0;
   const operatingCost = round2(runningCost + overheadTotal);
   const profit = round2(recurring - operatingCost);
+  const profitPct = recurring ? profit / recurring * 100 : 0;
+  if (fd > 0 && profitPct < rc.economics.profitFloor) warnings.push(`With the additional discount, profit is ${pct(profitPct)} — below ${rc.economics.profitFloor}%. Needs the owner's approval.`);
   const [lo, hi] = rc.economics.industryMargin;
   return {
-    tier, students, billed: tp.billed, bands: tp.bands, lines, oneTime, listTotal, discountable, discountPct: d, discount, recurring, oneTimeTotal, yearOne,
+    tier, students, billed: tp.billed, bands: tp.bands, lines, oneTime, listTotal, discountable, discountPct: d, discount, beforeFinal,
+    finalDiscountPct: fd, finalDiscountRecurring, finalDiscountOneTime, finalDiscount: round2(finalDiscountRecurring + finalDiscountOneTime),
+    oneTimeList, recurring, oneTimeTotal, yearOne, totalDiscount: round2(discount + finalDiscountRecurring + finalDiscountOneTime),
     perStudentYear: students ? round2(recurring / students) : 0, monthly: round2(recurring / 12),
     yearOneGst: tax(yearOne), yearOneTotal: round2(yearOne + tax(yearOne)), recurringWithGst: round2(recurring + tax(recurring)),
     gstSplit: o.interState ? [['IGST 18%', tax(yearOne)]] : [['CGST 9%', round2(tax(yearOne) / 2)], ['SGST 9%', round2(tax(yearOne) / 2)]],
     economics: {
-      revenue: recurring, runningCost, overheads, overheadTotal, operatingCost, profit, profitPct: recurring ? profit / recurring * 100 : 0,
+      revenue: recurring, runningCost, overheads, overheadTotal, operatingCost, profit, profitPct,
       grossMarginPct, industry: [lo, hi], marginStatus: grossMarginPct >= lo ? (grossMarginPct > hi ? 'Above' : 'Within') : 'Below',
       oneTimeRevenue: oneTimeTotal, oneTimeCost, oneTimeProfit: round2(oneTimeTotal - oneTimeCost),
       maxDiscountPct, salesDiscount: rc.salesDiscount, profitFloor: rc.economics.profitFloor

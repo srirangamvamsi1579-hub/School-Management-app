@@ -86,8 +86,13 @@ function ClientFields({ o, set, title = 'Client and point of contact' }) {
 }
 
 function DiscountField({ o, set, q }) {
-  return <Field label={`Discount % (most for this proposal: ${pct(q.economics.maxDiscountPct)})`}>
-    <Input type="number" min="0" step="0.5" max={q.economics.maxDiscountPct} aria-label="Discount %" value={o.discountPct} onChange={(e) => set({ ...o, discountPct: e.target.value })} /></Field>;
+  return <>
+    <Field label={`Discount % on the plan and add-ons (most for this proposal: ${pct(q.economics.maxDiscountPct)})`}>
+      <Input type="number" min="0" step="0.5" max={q.economics.maxDiscountPct} aria-label="Discount %" value={o.discountPct} onChange={(e) => set({ ...o, discountPct: e.target.value })} /></Field>
+    <Field label="Additional discount % on the final amount">
+      <Input type="number" min="0" step="0.5" aria-label="Additional discount %" value={o.finalDiscountPct || 0} onChange={(e) => set({ ...o, finalDiscountPct: e.target.value })} /></Field>
+    <p className="small muted" style={{ gridColumn: '1 / -1', margin: 0 }}>The client's PDF shows only the discount applied and the amount payable; limits and approvals stay internal.</p>
+  </>;
 }
 
 // Price, discount and the business case for a proposal
@@ -104,10 +109,12 @@ function PriceSummary({ rc, q, compact }) {
         <tr><th colSpan={2}>Every year</th></tr>
         {q.lines.map((l) => <tr key={l.code}><td className="small">{l.label}{l.provider === 'No service needed' && <> <Pill kind="ok">No service needed</Pill></>}</td><td style={{ textAlign: 'right' }}>{l.included ? <Pill kind="ok">Included</Pill> : rupees(l.amount)}</td></tr>)}
         {q.discount > 0 && <tr><td className="small">Discount {pct(q.discountPct)} (plan and add-ons)</td><td style={{ textAlign: 'right' }}>{rupees(-q.discount)}</td></tr>}
-        <tr><td className="b">Total a year</td><td className="b" style={{ textAlign: 'right' }}>{rupees(q.recurring)}</td></tr>
+        {q.finalDiscountPct > 0 && <tr><td className="small">Additional discount {pct(q.finalDiscountPct)}</td><td style={{ textAlign: 'right' }}>{rupees(-q.finalDiscountRecurring)}</td></tr>}
+        <tr><td className="b">Payable a year</td><td className="b" style={{ textAlign: 'right' }}>{rupees(q.recurring)}</td></tr>
         <tr><th colSpan={2}>One-time</th></tr>
         {q.oneTime.map((l) => <tr key={l.code}><td className="small">{l.label}</td><td style={{ textAlign: 'right' }}>{l.included ? <Pill kind="ok">Included</Pill> : rupees(l.amount)}</td></tr>)}
-        <tr><td className="b">Total one-time</td><td className="b" style={{ textAlign: 'right' }}>{rupees(q.oneTimeTotal)}</td></tr>
+        {q.finalDiscountPct > 0 && q.oneTimeList > 0 && <tr><td className="small">Additional discount {pct(q.finalDiscountPct)}</td><td style={{ textAlign: 'right' }}>{rupees(-q.finalDiscountOneTime)}</td></tr>}
+        <tr><td className="b">Payable one-time</td><td className="b" style={{ textAlign: 'right' }}>{rupees(q.oneTimeTotal)}</td></tr>
         <tr><td>Year one before GST</td><td style={{ textAlign: 'right' }}>{rupees(q.yearOne)}</td></tr>
         {q.gstSplit.map(([k, v]) => <tr key={k}><td className="small">{k}</td><td style={{ textAlign: 'right' }}>{rupees(v)}</td></tr>)}
         <tr><td className="b">Year one total</td><td className="b" style={{ textAlign: 'right' }}>{rupees(q.yearOneTotal)}</td></tr>
@@ -116,6 +123,7 @@ function PriceSummary({ rc, q, compact }) {
     <Card title="Margin and profit" right={<span className="small muted">internal</span>}>
       <table className="t"><tbody>
         <tr><td>Discount applied</td><td style={{ textAlign: 'right' }}>{q.discount ? `${pct(q.discountPct)} · ${rupees(q.discount)}` : 'None'}</td></tr>
+        {q.finalDiscountPct > 0 && <tr><td>Additional discount on the final amount</td><td style={{ textAlign: 'right' }}>{pct(q.finalDiscountPct)} · {rupees(q.finalDiscount)}</td></tr>}
         <tr><td>Maximum allowable discount</td><td className="b" style={{ textAlign: 'right' }}>{pct(e.maxDiscountPct)}</td></tr>
         <tr><td>Running cost <span className="small muted">(cloud, storage, email, services, support)</span></td><td style={{ textAlign: 'right' }}>{rupees(e.runningCost)}</td></tr>
         {Object.entries(e.overheads).map(([k, v]) => <tr key={k}><td className="small">{OVERHEAD_NAMES[k]} ({rc.economics.overheads[k]}%)</td><td style={{ textAlign: 'right' }}>{rupees(v)}</td></tr>)}
