@@ -1,6 +1,7 @@
 // Campus Services: library, hostel, homework, online classes, inventory & store, events & calendar.
 // Pure functions on the in-memory database; each throws an Error with a plain message when a rule is broken.
 
+import { same, duplicateError, realDate } from './validate.js';
 const iso = (d) => new Date(d).toISOString().slice(0, 10);
 export const today = () => iso(Date.now());
 export const addDays = (date, n) => { const d = new Date(date + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return iso(d); };
@@ -16,9 +17,11 @@ export const available = (db, bookId) => (db.library.books.find((b) => b.id === 
 export const fineFor = (loan, on = today(), rules = LIBRARY_RULES) => Math.max(0, daysBetween(loan.due, loan.returned || on)) * rules.finePerDay;
 export const overdue = (db, on = today()) => db.library.loans.filter((l) => !l.returned && l.due < on);
 
-export function addBook(db, { title, author, subject, copies, shelf }) {
+export function addBook(db, { title, author, subject, copies, shelf, allowDuplicate = false }) {
   if (!String(title || '').trim()) throw new Error('Enter the book title');
-  if (!(+copies >= 1)) throw new Error('Copies must be 1 or more');
+  if (!(+copies >= 1) || !Number.isInteger(+copies)) throw new Error('Copies must be a whole number, 1 or more');
+  const twin = !allowDuplicate && db.library.books.find((x) => same(x.title, title) && same(x.author, author));
+  if (twin) throw duplicateError(`“${twin.title}”${twin.author ? ' by ' + twin.author : ''} is already in the library (${twin.copies} copies) — add copies to it instead`);
   const b = { id: nextId(db, 'book', 'BK'), title: title.trim(), author: (author || '').trim(), subject: subject || 'General', copies: +copies, shelf: shelf || '' };
   db.library.books.push(b); return b;
 }
@@ -74,6 +77,7 @@ export const hostelFee = (db, r) => (db.hostel.fees?.room || 0) + (r.mess ? db.h
 export const studentsInSection = (db, sectionId) => db.students.filter((s) => s.sectionId === sectionId && s.status === 'Active');
 export function setHomework(db, { sectionId, subject, title, details = '', due, by, on = today() }) {
   if (!db.sections.some((s) => s.id === sectionId)) throw new Error('Pick a class');
+  if (!String(subject || '').trim()) throw new Error('Pick a subject');
   if (!String(title || '').trim()) throw new Error('Enter what the homework is');
   if (!due || due < on) throw new Error('Due date must be today or later');
   const h = { id: nextId(db, 'hw', 'HW'), sectionId, subject, title: title.trim(), details, set: on, due, by, done: {} };
@@ -92,11 +96,12 @@ export function homeworkStats(db, h) {
 }
 
 // ---------------------------------------------------------------- Online classes
-export function scheduleClass(db, { sectionId, subject, date, time, minutes = 40, link, teacher, on = today() }) {
+export function scheduleClass(db, { sectionId, subject, date, time, minutes = 40, link, teacher, on = today(), now = new Date().toTimeString().slice(0, 5) }) {
   if (!db.sections.some((s) => s.id === sectionId)) throw new Error('Pick a class');
   if (!/^https:\/\/\S+\.\S+/.test(link || '')) throw new Error('Paste the meeting link (it must start with https://)');
   if (!date || date < on) throw new Error('Pick today or a later date');
   if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time || '')) throw new Error('Use HH:MM for the time');
+  if (date === on && time <= now) throw new Error(`${time} today has already passed — pick a later time`);
   if (!(+minutes >= 10 && +minutes <= 180)) throw new Error('Length must be 10 to 180 minutes');
   const clash = db.onlineClasses.find((c) => c.sectionId === sectionId && c.date === date && c.time === time);
   if (clash) throw new Error(`This class already has ${clash.subject} at ${time}`);
@@ -128,11 +133,14 @@ export const salesTotal = (db, from = '0000') => db.inventory.moves.filter((m) =
 // ---------------------------------------------------------------- Events & calendar
 export const EVENT_TYPES = ['Event', 'Exam', 'Holiday', 'Parent meeting', 'Circular', 'Sports'];
 export const AUDIENCES = [['ALL', 'Everyone'], ['PARENTS', 'Parents'], ['STAFF', 'Staff']];
-export function addEvent(db, { title, date, end, type = 'Event', audience = 'ALL', details = '', by }) {
+export function addEvent(db, { title, date, end, type = 'Event', audience = 'ALL', details = '', by, allowDuplicate = false }) {
   if (!String(title || '').trim()) throw new Error('Enter a title');
   if (!date) throw new Error('Pick a date');
+  if (!realDate(date) || (end && !realDate(end))) throw new Error('Pick a valid date');
   if (end && end < date) throw new Error('End date is before the start date');
   if (!EVENT_TYPES.includes(type)) throw new Error('Unknown type');
+  const twin = !allowDuplicate && db.events.find((x) => x.date === date && same(x.title, title));
+  if (twin) throw duplicateError(`“${twin.title}” is already on the calendar on ${date}`);
   const e = { id: nextId(db, 'event', 'EV'), title: title.trim(), date, end: end || date, type, audience, details, by, notified: false };
   db.events.push(e); db.events.sort((a, b) => a.date.localeCompare(b.date)); return e;
 }

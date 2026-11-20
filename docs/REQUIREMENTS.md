@@ -881,6 +881,45 @@ The same links are used for web hosting (dev, pre-prod, production), AWS, and th
   - An approval is required when the additional discount takes profit under 15%.
   - `v_proposal_client_discount` holds only what the client is shown.
 
+## Added 20 Nov 2026 (release 15 — fixes from the QA cycle)
+
+A full QA cycle ran 390 test cases (file upload excluded) and found 14 findings. Fixes F01–F12 were applied on the owner's go-ahead; F13 and F14 wait for a decision. The retest passes 388 of 390. The full results are in the QA report and the test-case sheet.
+
+- **Add-on-only features follow the tier in every school (F01).** Dashboard, the three desks, Transport (routes, manifest, driver sheets, route map), Web & App Screens, Templates and Appearance, Timings and Backup are hidden on Starter.
+  - Pro includes Dashboard, the desks, Branding and Backup; Pro+ includes all of them.
+  - A school that buys one gets it switched on.
+  - This now holds for existing schools on the older app plans too (`ADDON_OF` / `PLAN_ADDONS` in `menu.js`, kept in step with the price list by a test).
+- **Admission number = running number + surname initial + year of joining (F02), at most 10 characters**, e.g. `0042R2026`.
+  - With no surname, the first name's initial is used; X for names with no Latin letter.
+  - The number restarts each year, never goes back, and is never reused, even after a student record is removed.
+  - Existing students keep their numbers. Parent sign-up and child linking accept both styles.
+  - Student, guardian and staff ids are no longer counted from the list length.
+- **Duplicates (F03, F04, F10).**
+  - Admissions (same name and DOB, or same first name and guardian mobile), enquiries (child + parent mobile + grade), events and library books show "Possible duplicate … Save anyway".
+  - A staff short code already in use, and a curriculum unit already planned, are refused.
+- **Field rules in one place (`lib/validate.js`), used by the forms and the business functions (F05–F09, F11).**
+  - Names: letters in any script, spaces and . ' - only; spaces trimmed.
+  - Mobile numbers: 10 digits starting 6–9.
+  - Dates: real dates. Date of birth not in the future, age 2½–20, with a warning when the age is unusual for the class. Staff joining at most 6 months ahead. Portfolio work not dated in the future.
+  - Marks: 1–20. Periods and copies: whole numbers.
+  - Money: more than ₹0; non-cash payments need a reference.
+  - Basic pay: at most ₹10,00,000 a month, with a confirm tick above ₹3,00,000.
+  - Online classes can't be booked for a time that has passed today. Homework needs a subject.
+  - A parent's request must be for their own child.
+  - A proposal can't be emailed, downloaded or converted with a malformed contact email or phone.
+- **Safe auto-corrections, shown before saving (F11, F12).**
+  - A mobile typed "+91 98450 12399" or "098450-12399" shows "Will be saved as 9845012399" and is saved that way (no longer cut off at 10 characters).
+  - Amounts are rounded to paise with "Will be saved as ₹12.35"; the amount in words includes paise.
+- **Database (`032_release15_qa_fixes.sql`):**
+  - `admission_counters` and `next_admission_no()`: locked, per school and year, skipping numbers already taken.
+  - `find_duplicate_students()`.
+  - Question marks 1–20.
+  - A plausible date of birth for new students.
+- **Waiting for a decision:**
+  - F13: should the Accountant keep Student Profile?
+  - F14: are custom roles basic, Pro+ or a paid add-on?
+  - The proposed analytics moves into Data Analytics and the report catalogue (see the QA report).
+
 ## Database schema summary
 
 PostgreSQL 15+, thirty-one migration files loaded in order. Every table carries `tenant_id` with row-level security; the app connects as a non-owner role and sets `app.tenant_id` per request. Full detail: `database/README.md`.

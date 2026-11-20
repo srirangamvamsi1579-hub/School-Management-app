@@ -3,6 +3,7 @@ import { useStore } from '../data/store.js';
 import { Page, Card, Field, Input, Status, Modal, Html, Stat, printPage } from '../components/ui.jsx';
 import { inr, num, dmy } from '../lib/format.js';
 import { renderFor, log, wordsINR } from '../lib/logic.js';
+import { moneyNote, roundMoney } from '../lib/validate.js';
 import { amountInWords } from '../lib/format.js';
 
 const gross = (s) => s.salary.Basic + s.salary.HRA + s.salary.DA + s.salary.Transport;
@@ -111,13 +112,13 @@ export function Expenses() {
   const [f, setF] = useState({ head: '5100 Electricity', amount: '', note: '' });
   const exp = db.vouchers.filter((v) => v.type === 'Payment');
   const add = () => { run((d) => { d.seq.voucher += 1; d.vouchers.unshift({ id: 'V' + d.seq.voucher, no: 'PV-' + d.seq.voucher, date: new Date().toISOString().slice(0, 10), type: 'Payment', source: 'Expenses', narration: f.note || f.head,
-    lines: [{ account: f.head, debit: Number(f.amount), credit: 0 }, { account: '1010 Bank Account', debit: 0, credit: Number(f.amount) }] }); log(d, session.role, 'Expense recorded', f.head + ' ₹' + f.amount); }); setF({ ...f, amount: '', note: '' }); notify('Expense recorded'); };
+    lines: [{ account: f.head, debit: roundMoney(f.amount), credit: 0 }, { account: '1010 Bank Account', debit: 0, credit: roundMoney(f.amount) }] }); log(d, session.role, 'Expense recorded', f.head + ' ₹' + roundMoney(f.amount)); }); setF({ ...f, amount: '', note: '' }); notify('Expense recorded'); };
   return <Page title="Income & expenses">
     <Card title="Record an expense"><div className="row">
       <select className="i" value={f.head} onChange={(e) => setF({ ...f, head: e.target.value })}>{['5100 Electricity', '5110 Water', '5200 Transport Fuel', '5300 Maintenance', '5400 Stationery'].map((h) => <option key={h}>{h}</option>)}</select>
       <Input type="number" placeholder="Amount" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} /><Input placeholder="Note / bill no." value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} />
       <button className="btn pri" disabled={!(Number(f.amount) > 0)} onClick={add}>Save</button></div>
-      {f.amount && <p className="small muted">{wordsINR(f.amount)}</p>}</Card>
+      {f.amount && <p className="small muted">{wordsINR(f.amount)}{moneyNote(f.amount) ? ' · ' + moneyNote(f.amount) : ''}</p>}</Card>
     <div className="tw"><table className="t"><thead><tr><th>Date</th><th>Voucher</th><th>Head</th><th>Note</th><th className="num">Amount</th></tr></thead>
       <tbody>{exp.map((v) => <tr key={v.id}><td>{dmy(v.date)}</td><td>{v.no}</td><td>{v.lines[0].account}</td><td>{v.narration}</td><td className="num">{inr(v.lines[0].debit)}</td></tr>)}</tbody></table></div>
   </Page>;

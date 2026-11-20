@@ -17,6 +17,9 @@ const meOf = (db, session) => db.users.find((u) => u.id === session.userId);
 const examStarted = (paper) => new Date(`${paper.date}T${paper.startTime || '09:00'}:00`) <= new Date();
 
 // ---------------------------------------------------------------- Question papers: list
+// Release 15 (QA F07): a question carries 1 to 20 whole marks
+const marksOk = (m) => Number.isInteger(Number(m)) && Number(m) >= 1 && Number(m) <= 20;
+
 export function QuestionPapers() {
   const { db, run, notify, session } = useStore();
   const [examId, setExamId] = useState(() => upcomingExam(db));
@@ -250,7 +253,7 @@ function PaperEditor({ id, back }) {
         else if (picker.mode === 'add') { const last = s.slots.map((x, k) => [x, k]).filter(([x]) => x.section === picker.section).pop(); s.slots.splice((last ? last[1] : s.slots.length - 1) + 1, 0, { section: picker.section, qid: q.id, orQid: null, locked: true, edit: null }); }
         else s.slots[picker.slot] = { ...s.slots[picker.slot], qid: q.id, edit: null, locked: true };
       }), 'Question added — it is locked so regenerating keeps it'); setPicker(null); }} />}
-    {edit && <Modal title="Edit for this paper" onClose={() => setEdit(null)} actions={<button className="btn pri" disabled={edit.text.trim().length < 5} onClick={() => { change('Edited a question', onSet((s) => { s.slots[edit.slot].edit = { text: edit.text.trim(), marks: Number(edit.marks) }; s.slots[edit.slot].locked = true; }), 'Changed on this paper only — the bank keeps the original'); setEdit(null); }}>Save</button>}>
+    {edit && <Modal title="Edit for this paper" onClose={() => setEdit(null)} actions={<button className="btn pri" disabled={edit.text.trim().length < 5 || !marksOk(edit.marks)} onClick={() => { change('Edited a question', onSet((s) => { s.slots[edit.slot].edit = { text: edit.text.trim(), marks: Number(edit.marks) }; s.slots[edit.slot].locked = true; }), 'Changed on this paper only — the bank keeps the original'); setEdit(null); }}>Save</button>}>
       <Field label="Question" full><textarea className="i" rows={4} value={edit.text} onChange={(e) => setEdit({ ...edit, text: e.target.value })} /></Field>
       <Field label="Marks"><Input type="number" min="1" max="20" value={edit.marks} onChange={(e) => setEdit({ ...edit, marks: e.target.value })} /></Field>
       <p className="small muted">The change is only on this paper. The question bank keeps the original.</p>
@@ -412,7 +415,7 @@ export function QuestionBank() {
         {rows.length > 200 && <p className="small muted">Showing 200 of {rows.length} — narrow the filters.</p>}
       </Card>
     </div>
-    {q && <Modal title={q.id ? 'Edit question' : 'Add a question'} onClose={() => setQ(null)} actions={<button className="btn pri" disabled={!q.text || q.text.trim().length < 10} onClick={save}>Save</button>}>
+    {q && <Modal title={q.id ? 'Edit question' : 'Add a question'} onClose={() => setQ(null)} actions={<><span className="small muted" role="status">{marksOk(q.marks) ? '' : 'Marks must be a whole number from 1 to 20'}</span><button className="btn pri" disabled={!q.text || q.text.trim().length < 10 || !marksOk(q.marks)} onClick={save}>Save</button></>}>
       <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
         <Field label="Chapter"><Select value={q.chapter} onChange={(e) => { const c = chapters.find((x) => x.no === Number(e.target.value)); setQ({ ...q, chapter: c.no, topic: c.topics[0] }); }} options={chapters.map((c) => [c.no, `${c.no}. ${c.name}`])} /></Field>
         <Field label="Topic"><Select value={q.topic} onChange={(e) => setQ({ ...q, topic: e.target.value })} options={chapters.find((c) => c.no === Number(q.chapter))?.topics || []} /></Field>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { deleteAccount } from '../lib/users.js';
+import { deleteAccount, ADM_FORMAT } from '../lib/users.js';
 import { useStore } from '../data/store.js';
 import { Page, Card, Field, Input, Select, Switch, Modal, Status } from '../components/ui.jsx';
 import { dmon } from '../lib/format.js';
@@ -86,7 +86,7 @@ export function MyAccount() {
         {me.role === 'PARENT' && <Card title="My children">
           {kids.map((s) => <div key={s.id} className="small" style={{ padding: '4px 0' }}><b>{fullName(s)}</b> · {classLabel(db, s)} · {s.admNo}</div>)}
           <div className="row" style={{ marginTop: 10 }}><Input placeholder="Another child's admission no." value={link} onChange={(e) => setLink(e.target.value.toUpperCase())} />
-            <button className="btn" disabled={!/^ADM-\d{4}-\d{4}$/.test(link)} onClick={() => { request('LINK_CHILD', link); setLink(''); }}>Ask to link</button></div>
+            <button className="btn" disabled={!ADM_FORMAT.test(link)} onClick={() => { request('LINK_CHILD', link); setLink(''); }}>Ask to link</button></div>
           <p className="small muted">The school checks and links siblings to your account.</p>
         </Card>}
         <Card title="Delete my account">

@@ -11,7 +11,7 @@ import {
   activeAddons, demoConfig, demoCode
 } from '../lib/pricing.js';
 import { DEFAULT_PROFILE } from '../data/seedRelease14.js';
-import { saveOptions, newProposal, makeDemo } from '../lib/proposals.js';
+import { saveOptions, newProposal, makeDemo, proposalProblems, phoneOk } from '../lib/proposals.js';
 import * as dlv from '../lib/delivery.js';
 import { saveFile } from '../lib/saveFile.js';
 import { PROVIDERS, FEATURES, AS_OF, FX, MARKET, ROADMAP, ROADMAP_STATUS, mark, priceRange } from '../data/providers.js';
@@ -82,7 +82,8 @@ function ClientFields({ o, set, title = 'Client and point of contact' }) {
     <Field label="Designation"><Input aria-label="Designation" value={o.poc?.designation || ''} onChange={(e) => poc('designation', e.target.value)} placeholder="e.g. Principal" /></Field>
     <Field label="Email ID" req><Input type="email" aria-label="Contact email" value={o.poc?.email || ''} onChange={(e) => poc('email', e.target.value)} placeholder="name@school.example.com" /></Field>
     <Field label="Contact number" req><Input type="tel" aria-label="Contact number" value={o.poc?.phone || ''} onChange={(e) => poc('phone', e.target.value)} placeholder="+91 …" /></Field>
-  </div>{o.poc?.email && !okEmail(o.poc.email) && <p className="small" style={{ color: 'var(--bad)' }}>Check the email ID.</p>}</Card>;
+  </div>{o.poc?.email && !okEmail(o.poc.email) && <p className="small" style={{ color: 'var(--bad)' }}>Check the email ID.</p>}
+    {o.poc?.phone && !phoneOk(o.poc.phone) && <p className="small" style={{ color: 'var(--bad)' }}>Check the contact number: 10 to 13 digits.</p>}</Card>;
 }
 
 function DiscountField({ o, set, q }) {
@@ -289,7 +290,7 @@ function ProposalEditor({ id, back, go }) {
   const o = p.options;
   const q = useMemo(() => quote(rc, o), [rc, o]);
   const set = (options) => run((d) => saveOptions(d, id, options));
-  const ready = () => { const miss = [!String(o.client).trim() && 'school name', !o.poc?.name && 'point of contact', !okEmail(o.poc?.email) && 'contact email', !o.poc?.phone && 'contact number'].filter(Boolean); if (miss.length) { notify('Fill in: ' + miss.join(', ')); return false; } return true; };
+  const ready = () => { const miss = proposalProblems(o); if (miss.length) { notify('Fill in: ' + miss.join(', ')); return false; } return true; };
   const demo = p.demoId && db.tenants.find((t) => t.id === p.demoId);
   return <Page title={`Proposal ${p.no}${o.client ? ' · ' + o.client : ''}`} sub="Choices save as you go. The Demo Builder uses the same choices, so the demo always matches this proposal."
     actions={<><button className="btn" onClick={back}>Back to proposals</button><button className="btn" onClick={() => ready() && setModal('pdf')}>Preview PDF</button><button className="btn" onClick={() => ready() && downloadPdf(p, rc, profile)}>Download PDF</button>

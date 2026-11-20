@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../data/store.js';
 import { Page, Card, Tabs } from '../components/ui.jsx';
-import { MENU, ACCESS, PLANS, MIN_RANK, LABEL, CHANNELS, PHONE_READY, channelIn, publishedLayout, mobileTabs, webScreens, canSee, FUNCTIONS, funcOn, ALWAYS_ON } from '../data/menu.js';
+import { MENU, ACCESS, PLANS, MIN_RANK, LABEL, CHANNELS, PHONE_READY, channelIn, publishedLayout, mobileTabs, webScreens, canSee, FUNCTIONS, funcOn, ALWAYS_ON, planDefault } from '../data/menu.js';
 import { SCREEN_FLOW } from '../data/guideFlows.js';
 import { docsFor } from './Help.jsx';
 import { SCREEN_HELP, WORKFLOWS, DEMO_PEOPLE } from '../data/guide.js';
@@ -77,7 +77,7 @@ export default function HelpGuide() {
   const [scope, setScope] = useState(session && !['PLATFORM', 'SALES'].includes(session.role) ? 'MINE' : 'SCHOOL');
   const me = session ? db.users.find((u) => u.id === session.userId) : null;
   const inPlan = (code) => { const mod = MENU.find((m) => m.items.some((i) => i[0] === code)); if (!mod) return true; const ov = t.overrides || {};
-    const modOn = ALWAYS_ON.includes(mod.code) || (ov[mod.code] !== undefined ? ov[mod.code] : rank >= mod.min); return modOn && (ov[code] !== undefined ? ov[code] : rank >= (MIN_RANK[code] || 1)); };
+    const modOn = ALWAYS_ON.includes(mod.code) || (ov[mod.code] !== undefined ? ov[mod.code] : rank >= mod.min); return modOn && (ov[code] !== undefined ? ov[code] : planDefault(code, rank)); };
   const mineList = session ? screensFor(db, me, session.role) : [];
   const shown = (code) => (scope === 'ALL' ? true : scope === 'SCHOOL' ? inPlan(code) : inPlan(code) && (session?.role === 'ADMIN' ? ACCESS.ADMIN.includes(code) : mineList.includes(code)) && canSee(code, session.role, rank, t.overrides, { [session.role]: mineList }));
   const menus = MENU.map((m) => ({ ...m, items: m.items.filter((i) => i[0][0] !== '#' && shown(i[0])) })).filter((m) => m.items.length);

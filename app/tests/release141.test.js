@@ -38,7 +38,7 @@ test('Service Provider is for our company\'s Admin only, and never inside a clie
 test('converting a proposal creates the school, documents and links, and marks it Won', () => {
   const db = buildSeed();
   const p = newProposal(db, o(), 'Sales team');
-  assert.throws(() => D.convertProposal(db, newProposal(db, o({ poc: { name: 'X' } }), 'S').id, 'S'), /email ID/);
+  assert.throws(() => D.convertProposal(db, newProposal(db, o({ poc: { name: 'X' } }), 'S').id, 'S'), /valid contact email/);
   const cp = D.convertProposal(db, p.id, 'Sales team');
   assert.equal(p.status, 'Won'); assert.equal(p.projectId, cp.id);
   assert.equal(D.convertProposal(db, p.id, 'x').id, cp.id, 'one project per proposal');

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useStore } from '../data/store.js';
-import { Page, Card, Field, Input, Select, Modal, Stat, Tabs } from '../components/ui.jsx';
+import { Page, Card, Field, Input, Select, Modal, Stat, Tabs, Hint } from '../components/ui.jsx';
 import { dmy } from '../lib/format.js';
 import { fullName, classLabel, guardianOf } from '../lib/logic.js';
 import { REQ_TYPES, GROUPS, DECIDER, DISMISSAL, SCHOOL_START, MEET_MODES, MEET_SLOTS, OTHER_KINDS, teachersFor, markArrived, submitRequest, decide, cancelRequest, handOver, coordinatorsOf, staffName, sectionsCoordinatedBy, collectorsFor, addCollector, verifyCollector } from '../lib/pickup.js';
+import { mobileNote } from '../lib/validate.js';
 
 const KIND = { Submitted: 'warn', Approved: 'ok', Completed: 'ok', Declined: 'bad', Cancelled: '' };
 const WAIT = { COORDINATOR: 'Waiting for coordinator', TEACHER: 'Waiting for teacher', OFFICE: 'With the office', AUTO: 'Submitted' };
@@ -182,7 +183,7 @@ function Collectors({ kids }) {
         <div className="form" style={{ gridTemplateColumns: '1fr 1fr' }}>
           <Field label="Full name" req><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></Field>
           <Field label="Relation"><Select value={f.relation} onChange={(e) => setF({ ...f, relation: e.target.value })} options={RELS} /></Field>
-          <Field label="Mobile" req><Input maxLength={10} value={f.mobile} onChange={(e) => setF({ ...f, mobile: e.target.value.replace(/\D/g, '') })} /></Field>
+          <Field label="Mobile" req><Input maxLength={16} inputMode="tel" value={f.mobile} onChange={(e) => setF({ ...f, mobile: e.target.value })} aria-label="Mobile" aria-describedby="pick-mob" /><Hint id="pick-mob">{mobileNote(f.mobile)}</Hint></Field>
           <Field label="Valid until (optional)"><Input type="date" value={f.validUntil} onChange={(e) => setF({ ...f, validUntil: e.target.value })} /></Field>
           <Field label="Photo ID type"><Select value={f.idType} onChange={(e) => setF({ ...f, idType: e.target.value })} options={ID_TYPES} /></Field>
           <Field label="Last 4 digits of the ID" req><Input maxLength={4} value={f.idLast4} onChange={(e) => setF({ ...f, idLast4: e.target.value.replace(/\D/g, '') })} /></Field>

@@ -14,7 +14,7 @@ test('parent check: admission no., student name and grade must all match the stu
   assert.match(checkStudent(db, { admissionNo: 'ADM-2025-0231', studentName: 'Aarav Sharma', grade: '7' }).error, /don't match/, 'wrong grade');
   assert.match(checkStudent(db, { admissionNo: 'ADM-2025-0231', studentName: 'Rahul Sharma', grade: '8' }).error, /don't match/, 'wrong name');
   assert.match(checkStudent(db, { admissionNo: 'ADM-2099-9999', studentName: 'Aarav Sharma', grade: '8' }).error, /don't match/, 'unknown number');
-  assert.match(checkStudent(db, { admissionNo: '231', studentName: 'Aarav', grade: '8' }).error, /like ADM-/);
+  assert.match(checkStudent(db, { admissionNo: '231', studentName: 'Aarav', grade: '8' }).error, /like 0042R2026 or ADM-/);
   assert.match(checkStudent(db, { admissionNo: 'ADM-2025-0231', studentName: '', grade: '8' }).error, /name/);
   // the same message for every mismatch, so it doesn't reveal which part was wrong
   const msgs = new Set([['Sharma', '8'], ['Aarav Sharma', '7'], ['Rahul', '8']].map(([n, g]) => checkStudent(db, { admissionNo: 'ADM-2025-0231', studentName: n, grade: g }).error));

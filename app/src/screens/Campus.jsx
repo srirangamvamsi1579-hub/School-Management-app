@@ -21,7 +21,8 @@ const SUBJECTS = ['English', 'Mathematics', 'Science', 'Social Science', 'Hindi'
 
 function useAct() {
   const { run, notify, session } = useStore();
-  return { session, act: (fn, msg) => { try { const r = run(fn); notify(typeof msg === 'function' ? msg(r) : msg); return r || true; } catch (e) { notify(e.message); return false; } } };
+  // onDup: a possible duplicate (release 15) goes to the form, which offers “Save anyway”
+  return { session, act: (fn, msg, onDup) => { try { const r = run(fn); notify(typeof msg === 'function' ? msg(r) : msg); return r || true; } catch (e) { if (e.code === 'DUPLICATE' && onDup) onDup(e.message); else notify(e.message); return false; } } };
 }
 const may = (session, roles) => roles.includes(session.role);
 
@@ -81,7 +82,7 @@ export function Library() {
         <Field label="Title" req><Input value={book.title} onChange={(e) => setBook({ ...book, title: e.target.value })} /></Field>
         <Field label="Author"><Input value={book.author} onChange={(e) => setBook({ ...book, author: e.target.value })} /></Field>
         <Field label="Subject"><Select value={book.subject} onChange={(e) => setBook({ ...book, subject: e.target.value })} options={['Fiction', 'Non-fiction', 'Biography', 'Textbook', 'Reference', 'Science', 'History', 'Language', 'Computers', 'General']} /></Field>
-        <Field label="Copies" req><Input type="number" min="1" value={book.copies} onChange={(e) => setBook({ ...book, copies: e.target.value })} /></Field>
+        <Field label="Copies" req><Input type="number" min="1" step="1" value={book.copies} onChange={(e) => setBook({ ...book, copies: e.target.value })} /></Field>
         <Field label="Shelf"><Input value={book.shelf} onChange={(e) => setBook({ ...book, shelf: e.target.value })} placeholder="e.g. B-2" /></Field>
       </div></Modal>}
   </Page>;
@@ -253,12 +254,13 @@ export function Events() {
         {can && wa && <a className="btn sm" href={whatsappShare(`${e.type}: ${e.title} — ${dmy(e.date)}${e.end !== e.date ? ' to ' + dmy(e.end) : ''}. ${e.details || ''} (${tenantOf(db).name})`)} target="_blank" rel="noreferrer" aria-label={`Share ${e.title} on WhatsApp`}>WhatsApp</a>}
       </div>)}</Card>)}
     {!months.length && <Card><p className="muted">Nothing on the calendar.</p></Card>}
-    {form && <Modal title="Add event" onClose={() => setForm(null)} actions={<button className="btn pri" onClick={() => { if (act((d) => addEvent(d, { ...form, by: session.name }), 'Added to the calendar — send it when ready')) setForm(null); }}>Save</button>}>
+    {form && <Modal title="Add event" onClose={() => setForm(null)} actions={<button className="btn pri" disabled={!!form.dup} onClick={() => { if (act((d) => addEvent(d, { ...form, by: session.name }), 'Added to the calendar — send it when ready', (m) => setForm({ ...form, dup: m }))) setForm(null); }}>Save</button>}>
+      {form.dup && <div className="note warn" role="alert" style={{ marginBottom: 10 }}>{form.dup}. <button className="btn" onClick={() => { if (act((d) => addEvent(d, { ...form, allowDuplicate: true, by: session.name }), 'Added to the calendar — send it when ready')) setForm(null); }}>Add anyway</button></div>}
       <div className="form">
-        <Field label="Title" req full><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field>
+        <Field label="Title" req full><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, dup: "" })} /></Field>
         <Field label="Type"><Select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} options={EVENT_TYPES} /></Field>
         <Field label="For"><Select value={form.audience} onChange={(e) => setForm({ ...form, audience: e.target.value })} options={AUDIENCES} /></Field>
-        <Field label="From" req><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></Field>
+        <Field label="From" req><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value, dup: "" })} /></Field>
         <Field label="To (optional)"><Input type="date" value={form.end} onChange={(e) => setForm({ ...form, end: e.target.value })} /></Field>
         <Field label="Details" full><Input value={form.details} onChange={(e) => setForm({ ...form, details: e.target.value })} /></Field>
       </div></Modal>}

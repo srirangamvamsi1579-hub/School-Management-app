@@ -24,6 +24,8 @@ export function Field({ label, req, children, full }) {
   return <label className={'f' + (full ? ' full' : '')}><span className={req ? 'req' : ''}>{label}</span>{children}</label>;
 }
 export const Input = (p) => <input className="i" {...p} />;
+// A note under a field (e.g. “Will be saved as 9845012399”). Kept out of the field's name; the field points to it with aria-describedby.
+export const Hint = ({ id, children }) => (children ? <span id={id} className="small muted" aria-hidden="true" style={{ display: 'block', marginTop: 2 }}>{children}</span> : null);
 export const Select = ({ options, ...p }) => (
   <select className="i" {...p}>{options.map((o) => (Array.isArray(o) ? <option key={o[0]} value={o[0]}>{o[1]}</option> : <option key={o} value={o}>{o}</option>))}</select>
 );

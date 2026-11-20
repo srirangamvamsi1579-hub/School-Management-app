@@ -14,9 +14,11 @@ export const childLines = (db, u) => childrenOf(u).map((adm) => { const s = db.s
 export const MAX_PARENT_TRIES = 5;
 // A parent gives the admission no., the student's name and grade. All three must match an enrolled student.
 // Every word of the name typed must be in the student's name, and the first name must be there (order and case don't matter).
+// Admission numbers: new style 0042R2026 (release 15), old style ADM-2025-0231, or numbers kept from a school's old system
+export const ADM_FORMAT = /^[A-Z0-9][A-Z0-9/-]{3,19}$/;
 export function checkStudent(db, { admissionNo, studentName: typed, grade }) {
   const adm = String(admissionNo || '').trim().toUpperCase();
-  if (!/^ADM-\d{4}-\d{4}$/.test(adm)) return { error: "Enter the admission number as on the school ID card, like ADM-2025-0231" };
+  if (!ADM_FORMAT.test(adm)) return { error: "Enter the admission number as on the school ID card, like 0042R2026 or ADM-2025-0231" };
   if (norm(typed).length === 0) return { error: "Enter the student's name" };
   if (!grade) return { error: "Pick the student's grade" };
   const s = db.students.find((x) => x.admNo === adm && x.status !== 'Left');

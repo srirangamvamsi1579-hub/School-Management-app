@@ -2,6 +2,7 @@
 // Power BI report page in docs/powerbi/REPORTS.md, so the test build and Power BI show the same numbers.
 import { SUBJECTS, ADM_STATUSES } from '../data/seed2.js';
 import { groupOf, transportFor } from '../data/seed.js';
+import { clean, nameProblem, mobileProblem, cleanMobile, emailProblem, dobCheck, same, duplicateError } from './validate.js';
 import { fullName, admitStudent, log, renderFor, tenantOf } from './logic.js';
 
 const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
@@ -102,7 +103,20 @@ export function admissionsSummary(db, { grades = [] } = {}) {
     offerAccept: reached('Offered') ? Math.round(100 * tot.Enrolled / reached('Offered')) : 0 };
 }
 
+// Release 15: the same rules as the form, so the public website form and imports are checked too
+export function enquiryProblems(db, f) {
+  const dob = f.dob || f.application ? dobCheck(f.dob, { level: Number(f.grade), yearStart: '2027-04-01' }) : {};
+  return { error: nameProblem(f.first, "Child's first name") || nameProblem(f.last, "Child's last name", false) || nameProblem(f.parent, 'Parent name')
+    || mobileProblem(f.mobile) || emailProblem(f.email) || dob.error || (f.application && !f.consent && f.consent !== undefined ? 'Parent consent is required' : ''), warning: dob.warning || '' };
+}
+export const findDuplicateEnquiry = (db, f) => db.enquiries.find((e) => !['Opted out', 'Enrolled'].includes(e.status) && same(e.first, f.first)
+  && cleanMobile(e.mobile) === cleanMobile(f.mobile) && Number(e.grade) === Number(f.grade));
 export function addEnquiry(db, f, by) {
+  const p = enquiryProblems(db, f);
+  if (p.error) throw new Error(p.error);
+  const dup = !f.allowDuplicate && findDuplicateEnquiry(db, f);
+  if (dup) throw duplicateError(`Possible duplicate: ${dup.first} ${dup.last || ''} (${dup.no}, Grade ${dup.grade}, ${dup.status}) has the same parent mobile`);
+  f = { ...f, first: clean(f.first), last: clean(f.last), parent: clean(f.parent), mobile: cleanMobile(f.mobile), email: clean(f.email) };
   db.seq.enquiry += 1;
   const status = f.application ? 'Submitted' : 'Enquiry';
   const today = new Date().toISOString().slice(0, 10);
@@ -135,7 +149,8 @@ export function moveEnquiry(db, id, to, { by, note = '', interview = '', reason 
   if (to === 'Enrolled') {
     const cls = db.classes.find((c) => c.level === e.grade);
     const sec = db.sections.filter((x) => x.classId === cls.id).map((x) => ({ x, n: db.students.filter((s) => s.sectionId === x.id).length })).sort((a, b) => a.n - b.n)[0].x;
-    student = admitStudent(db, { first: e.first, last: e.last, gender: e.gender, dob: e.dob, sectionId: sec.id, guardianName: e.parent, relation: 'Guardian', mobile: e.mobile, email: e.email, band: e.transport ? 1 : 0 }, by);
+    student = admitStudent(db, { first: e.first, last: e.last, gender: e.gender, dob: e.dob, sectionId: sec.id, guardianName: e.parent, relation: 'Guardian', mobile: e.mobile, email: e.email, band: e.transport ? 1 : 0,
+      year: Number(String(e.year || '').slice(0, 4)) || undefined, allowDuplicate: true }, by);   // the application was already reviewed
     e.studentId = student.id;
     if (e.email) {
       const letter = renderFor(db, 'ADMISSION_LETTER', { date: new Date().toLocaleDateString('en-GB'), guardian_name: e.parent, student_name: `${e.first} ${e.last}`, class: `${cls.name}-${sec.name}`, admission_no: student.admNo, start_date: '01-04-2027' });

@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useStore } from '../data/store.js';
-import { Page, Card, Field, Input, Select, Status, Tabs, Modal, Stat } from '../components/ui.jsx';
+import { Page, Card, Field, Input, Select, Status, Tabs, Modal, Stat, Hint } from '../components/ui.jsx';
 import { Register, RangeFilter, Legend, useRange } from '../components/Register.jsx';
 import { staffMark, setStaffMark } from '../lib/attendance.js';
 import { leaveTypes, balances, checkLeave, leaveDays, applyLeave, decideLeave, cancelLeave, canApprove, approversFor, LEAVE_STATUS } from '../lib/leave.js';
 import { gross } from '../lib/dashboard.js';
 import { inr, num, dmy, todayISO } from '../lib/format.js';
-import { log } from '../lib/logic.js';
+import { log, nextId } from '../lib/logic.js';
 import { CHAPTERS } from '../data/seed.js';
+import { clean, same, cleanMobile, nameProblem, mobileProblem, mobileNote, emailProblem, joinProblem } from '../lib/validate.js';
 
 const DEPTS = ['English', 'Mathematics', 'Science', 'Social Science', 'Languages', 'Computers', 'Primary', 'Sports', 'Leadership', 'Accounts', 'Administration', 'Transport'];
 const DESIGS = ['PRT', 'TGT', 'PGT', 'Coordinator', 'Head of Department', 'Vice Principal', 'Principal', 'Accountant', 'Office Assistant', 'Receptionist', 'Transport In-charge', 'Driver', 'Bus Helper / Attendant'];
@@ -45,21 +46,28 @@ export function StaffForm({ staff, onClose }) {
   const { db, run, notify, session } = useStore();
   const blank = { first: '', last: '', short: '', gender: 'Female', dept: 'Science', desig: 'TGT', type: 'Full time', mobile: '', email: '', join: todayISO(), basic: 30000 };
   const [f, setF] = useState(staff ? { ...staff, basic: staff.salary?.Basic || 0 } : blank);
+  const [bigPay, setBigPay] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
-  const dupe = db.staff.find((x) => x.id !== staff?.id && (x.mobile === f.mobile || (f.email && x.email === f.email)));
-  const err = !f.first ? 'First name is required' : !/^[6-9]\d{9}$/.test(f.mobile) ? 'Mobile must be 10 digits' : !f.short ? 'Short code is used on the timetable' : f.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email) ? 'Email looks wrong' : dupe ? `${dupe.first} ${dupe.last} already has this mobile or email` : !(+f.basic > 0) ? 'Basic pay must be more than 0' : '';
+  const mob = cleanMobile(f.mobile);
+  const dupe = db.staff.find((x) => x.id !== staff?.id && (cleanMobile(x.mobile) === mob || (f.email && same(x.email, f.email))));
+  const shortTaken = clean(f.short) && db.staff.find((x) => x.id !== staff?.id && x.status !== 'Left' && same(x.short, f.short));
+  const err = nameProblem(f.first, 'First name') || nameProblem(f.last, 'Last name', false) || mobileProblem(f.mobile) || (!clean(f.short) ? 'Short code is used on the timetable' : '')
+    || (shortTaken ? `Short code ${clean(f.short).toUpperCase()} is already used by ${shortTaken.first} ${shortTaken.last}` : '') || emailProblem(f.email)
+    || (dupe ? `${dupe.first} ${dupe.last} already has this mobile or email` : '') || joinProblem(f.join)
+    || (!(+f.basic > 0) ? 'Basic pay must be more than 0' : +f.basic > 1000000 ? 'Basic pay can be at most ₹10,00,000 a month' : +f.basic > 300000 && !bigPay ? 'Tick to confirm basic pay above ₹3,00,000 a month' : '');
   const save = () => {
     const st = run((d) => {
       const b = Number(f.basic);
       const salary = { Basic: b, HRA: Math.round(b * 0.4), DA: Math.round(b * 0.1), Transport: f.type === 'Part time' ? 0 : 1600, PF: Math.round(b * 0.12), Tax: staff?.salary?.Tax || 0 };
-      if (staff) { const x = d.staff.find((y) => y.id === staff.id); Object.assign(x, { first: f.first, last: f.last, short: f.short.toUpperCase(), gender: f.gender, dept: f.dept, desig: f.desig, type: f.type, mobile: f.mobile, email: f.email, join: f.join, salary }); log(d, session.role, 'Staff updated', x.code); return x; }
-      const n = d.staff.length + 1;
-      const x = { id: 'E' + (100 + n), code: 'EMP-' + String(300 + n).padStart(4, '0'), first: f.first, last: f.last, short: f.short.toUpperCase(), gender: f.gender, dept: f.dept, desig: f.desig, type: f.type, mobile: f.mobile, email: f.email, join: f.join, salary, status: 'Active' };
+      const v = { first: clean(f.first), last: clean(f.last), short: clean(f.short).toUpperCase(), gender: f.gender, dept: f.dept, desig: f.desig, type: f.type, mobile: mob, email: clean(f.email), join: f.join, salary };
+      if (staff) { const x = d.staff.find((y) => y.id === staff.id); Object.assign(x, v); log(d, session.role, 'Staff updated', x.code); return x; }
+      const n = Math.max(0, ...d.staff.map((y) => Number(String(y.code).replace(/^EMP-/, '')) || 0)) + 1;   // never reuses a code
+      const x = { id: nextId(d.staff, 'E'), code: 'EMP-' + String(n).padStart(4, '0'), ...v, status: 'Active' };
       d.staff.push(x); log(d, session.role, 'Staff added', x.code + ' ' + x.first); return x;
     });
     notify(staff ? `Saved ${st.first}` : `Added ${st.first} — employee code ${st.code}. They can now register with this code.`); onClose();
   };
-  return <Modal title={staff ? `Edit ${staff.first} ${staff.last} · ${staff.code}` : 'Add staff'} onClose={onClose} actions={<><span className="small muted">{err}</span><button className="btn pri" disabled={!!err} onClick={save}>{staff ? 'Save' : 'Save staff'}</button></>}>
+  return <Modal title={staff ? `Edit ${staff.first} ${staff.last} · ${staff.code}` : 'Add staff'} onClose={onClose} actions={<><span className="small muted" role="status">{err}</span><button className="btn pri" disabled={!!err} onClick={save}>{staff ? 'Save' : 'Save staff'}</button></>}>
     <div className="form">
       <Field label="First name" req><Input value={f.first} onChange={set('first')} /></Field>
       <Field label="Last name"><Input value={f.last} onChange={set('last')} /></Field>
@@ -69,10 +77,11 @@ export function StaffForm({ staff, onClose }) {
       <Field label="Designation"><Select value={f.desig} onChange={set('desig')} options={[...new Set([...DESIGS, f.desig])]} /></Field>
       <Field label="Employment type"><Select value={f.type} onChange={set('type')} options={['Full time', 'Part time']} /></Field>
       <Field label="Date of joining"><Input type="date" value={f.join} onChange={set('join')} /></Field>
-      <Field label="Mobile" req><Input value={f.mobile} onChange={set('mobile')} maxLength={10} /></Field>
+      <Field label="Mobile" req><Input value={f.mobile} onChange={set('mobile')} maxLength={16} aria-label="Mobile" aria-describedby="stf-mob" /><Hint id="stf-mob">{mobileNote(f.mobile)}</Hint></Field>
       <Field label="Email"><Input value={f.email} onChange={set('email')} /></Field>
-      <Field label="Basic pay / month"><Input type="number" value={f.basic} onChange={set('basic')} /></Field>
+      <Field label="Basic pay / month"><Input type="number" min={1} max={1000000} value={f.basic} onChange={set('basic')} /></Field>
     </div>
+    {+f.basic > 300000 && +f.basic <= 1000000 && <label className="row small"><input type="checkbox" checked={bigPay} onChange={(e) => setBigPay(e.target.checked)} />Yes, basic pay is {inr(+f.basic)} a month</label>}
     {!staff && <p className="small muted">The employee code is generated on save. The person registers on the website or app with this code, their name and this mobile or email — no approval is needed.</p>}
   </Modal>;
 }

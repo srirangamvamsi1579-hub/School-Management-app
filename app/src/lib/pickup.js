@@ -2,6 +2,7 @@
 // gate handover and the bus manifests built from them.
 import { queueSms } from './sms.js';
 import { fullName, classLabel, guardianOf, tenantOf, log } from './logic.js';
+import { clean, cleanMobile, mobileOk, nameProblem } from './validate.js';
 
 export const REQ_TYPES = {
   PICKUP: { name: 'In-person pickup after school', trips: ['PM'], short: 'Parent collecting in person' },
@@ -54,8 +55,9 @@ export function collectorsFor(db, studentId, { verifiedOnly = false } = {}) {
   return own.concat((db.collectors || []).filter((c) => c.studentId === studentId && c.status !== 'REVOKED' && (!c.validUntil || c.validUntil >= today) && (!verifiedOnly || c.status === 'VERIFIED')));
 }
 export function addCollector(db, f, by) {
-  if (!f.name?.trim()) throw new Error('Name is required');
-  if (!/^[6-9]\d{9}$/.test(f.mobile || '')) throw new Error('10-digit mobile is required');
+  const np = nameProblem(f.name, 'Name'); if (np) throw new Error(np);
+  if (!mobileOk(f.mobile)) throw new Error('10-digit mobile is required');
+  f = { ...f, name: clean(f.name), mobile: cleanMobile(f.mobile) };
   if (!f.photo) throw new Error('A photo is required so the gate can recognise them');
   if (!/^\d{4}$/.test(f.idLast4 || '')) throw new Error('Last 4 digits of their photo ID are required');
   if (collectorsFor(db, f.studentId).some((c) => c.mobile === f.mobile)) throw new Error('This person is already on the list');
@@ -93,6 +95,8 @@ function tellTransport(db, r, s) {
 
 export function submitRequest(db, f, user) {
   const s = db.students.find((x) => x.id === f.studentId);
+  if (!s) throw new Error('Pick the child');
+  if (user?.role === 'PARENT' && !(user.children || []).includes(s.admNo)) throw new Error('You can only send requests for your own children');
   if (f.dateFrom < today()) throw new Error('Pick today or a later date');
   if (f.dateTo && f.dateTo < f.dateFrom) throw new Error('End date is before the start date');
   if (f.type === 'EARLY_LEAVE') {

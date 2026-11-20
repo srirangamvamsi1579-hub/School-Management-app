@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../data/store.js';
 import { Page, Card, Field, Input, Select, Status, Modal, Html, Stat, Tabs, printPage } from '../components/ui.jsx';
 import { inr, num, dmy, dmon } from '../lib/format.js';
+import { moneyNote, roundMoney } from '../lib/validate.js';
 import { fullName, classLabel, guardianOf, openInvoices, balance, recordPayment, sendFeeRequests, receiveNotification, applyToMessage, renderFor, wordsINR, tenantOf, log } from '../lib/logic.js';
 import { GROUPS, BASE_FEE, PREV_FEE, BAND_TOTAL } from '../data/seed.js';
 import { myChildren } from './Requests.jsx';
@@ -154,10 +155,10 @@ export function PaymentMatching() {
           </Card>
           <Card title="Enter a bank line">
             <div className="grid" style={{ gap: 8 }}>
-              <Field label="Amount"><Input type="number" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} /></Field>
+              <Field label="Amount"><Input type="number" min="1" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} />{f.amount !== '' && !(+f.amount > 0) ? <span className="small" style={{ color: 'var(--bad)' }}>Amount must be more than ₹0</span> : moneyNote(f.amount) && <span className="small muted">{moneyNote(f.amount)}</span>}</Field>
               <Field label="UTR / reference"><Input value={f.ref} onChange={(e) => setF({ ...f, ref: e.target.value })} /></Field>
               <Field label="Narration"><Input value={f.narration} onChange={(e) => setF({ ...f, narration: e.target.value })} placeholder="e.g. NEFT/…/ADM-2025-0231" /></Field>
-              <button className="btn pri" disabled={!f.amount || !f.ref} onClick={() => { add({ ...f, amount: Number(f.amount) }); setF({ ...f, amount: '', ref: '', narration: '' }); }}>Add</button>
+              <button className="btn pri" disabled={!(+f.amount > 0) || !f.ref.trim()} onClick={() => { add({ ...f, amount: roundMoney(f.amount) }); setF({ ...f, amount: '', ref: '', narration: '' }); }}>Add</button>
             </div>
           </Card>
         </div>

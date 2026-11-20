@@ -104,6 +104,20 @@ LABEL.HOME = 'Main menu';
 export const MODULE_OF = Object.fromEntries(MENU.flatMap((m) => m.items.map((i) => [i[0], m.label])));
 
 // Is this sub-menu switched on for the school (plan rank, add-ons, switched off) and allowed for the role?
+// Release 15 (QA F01): add-on-only features. In a school on an app plan (no explicit switch), each is on only when the
+// plan's tier includes that add-on — Starter has none of them, Pro has the first four, Pro+ has all. A school that
+// buys one gets an explicit switch (Platform → Schools & plans, or the demo/client set-up from its proposal).
+// Kept in step with pricing.js DEFAULT_RATE_CARD.tiers by tests/release15.test.js.
+export const ADDON_OF = { DASH: 'DASHBOARD', STU_REQUESTS: 'DESKS', STU_GATE: 'DESKS', STU_MEETINGS: 'DESKS', OPS_TEMPLATES: 'BRANDING', OPS_APPEARANCE: 'BRANDING',
+  FN_CUSTOM_TEMPLATES: 'BRANDING', OPS_BACKUP: 'BACKUP', TRN_MANIFEST: 'TRANSPORT', TRN_SHEETS: 'TRANSPORT', TRN_CHANGES: 'TRANSPORT', TRN_ROUTES: 'TRANSPORT',
+  ANL_TRANSPORT: 'TRANSPORT', FN_ATTENDANT_TRACKING: 'TRANSPORT', FN_ROUTE_PLANNING: 'TRANSPORT', FN_STOP_TIMINGS: 'TIMINGS', OPS_CHANNELS: 'CHANNELS' };
+export const PLAN_ADDONS = { 1: [], 2: ['DASHBOARD', 'DESKS', 'BRANDING', 'BACKUP'], 3: ['DASHBOARD', 'DESKS', 'BRANDING', 'BACKUP', 'TRANSPORT', 'TIMINGS', 'CHANNELS'], 4: ['DASHBOARD', 'DESKS', 'BRANDING', 'BACKUP', 'TRANSPORT', 'TIMINGS', 'CHANNELS'] };
+// The default (no explicit switch) for a sub-menu or function on a plan
+export function planDefault(code, rank, min = MIN_RANK[code] || 1) {
+  if (ADDON_OF[code]) return (PLAN_ADDONS[rank] || []).includes(ADDON_OF[code]);
+  return rank >= min;
+}
+
 export function canSee(code, role, rank, overrides = {}, perms = null) {
   const list = perms?.[role] || ACCESS[role] || [];
   if (!list.includes(code)) return false;
@@ -112,7 +126,7 @@ export function canSee(code, role, rank, overrides = {}, perms = null) {
   if (PROVIDER_MODULES.includes(mod.code)) return isProvider(role) || (role === 'ADMIN' && mod.code === 'SERVICE_PROVIDER');
   const modOn = ALWAYS_ON.includes(mod.code) || (overrides[mod.code] !== undefined ? overrides[mod.code] : rank >= mod.min);
   if (!modOn && !isProvider(role)) return false;
-  const on = overrides[code] !== undefined ? overrides[code] : rank >= (MIN_RANK[code] || 1);
+  const on = overrides[code] !== undefined ? overrides[code] : planDefault(code, rank);
   return on || isProvider(role);
 }
 
@@ -135,7 +149,9 @@ export function funcOn(tenant, code) {
   if (tenant.overrides?.[code] !== undefined) return !!tenant.overrides[code];
   const f = FUNCTIONS.find((x) => x.code === code);
   const rank = PLANS.find((p) => p.code === tenant.plan).rank;
-  return !!f && f.minRank !== null && rank >= f.minRank;
+  if (!f || f.minRank === null) return false;          // optional functions stay off until switched on
+  if (ADDON_OF[code]) return planDefault(code, rank);
+  return rank >= f.minRank;
 }
 
 // ---------- Website or mobile app, per role (Settings → Web & App Screens) ----------

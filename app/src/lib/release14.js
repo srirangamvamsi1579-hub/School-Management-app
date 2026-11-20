@@ -1,4 +1,5 @@
 // Release 14 add-ons: exam boards, curriculum planning (LMS), student portfolios, backups & restore, WhatsApp links.
+import { same, duplicateError, realDate, todayIso } from './validate.js';
 
 // ---------------------------------------------------------------- Board integration
 export const BOARDS = {
@@ -22,9 +23,11 @@ export function addUnit(db, { classId, subject, title, month, periods, outcomes 
   if (!classId || !subject) throw new Error('Pick the class and subject');
   if (!String(title || '').trim()) throw new Error('Enter the unit name');
   if (!MONTHS.includes(month)) throw new Error('Pick the month');
-  const p = Math.round(+periods);
+  if (!Number.isInteger(+periods)) throw new Error('Periods must be a whole number');
+  const p = +periods;
   if (!(p >= 1 && p <= 60)) throw new Error('Periods must be 1 to 60');
   db.curriculum = db.curriculum || [];
+  if (db.curriculum.some((u) => u.classId === classId && u.subject === subject && same(u.title, title))) throw duplicateError(`“${String(title).trim()}” is already planned for this class and subject`);
   db.seq.unit = (db.seq.unit || 0) + 1;
   const u = { id: 'UN' + db.seq.unit, classId, subject, title: String(title).trim(), month, periods: p, outcomes, status: 'Planned', taught: 0, by };
   db.curriculum.push(u);
@@ -49,7 +52,8 @@ export function addPortfolioItem(db, { studentId, title, kind, subject = '', dat
   if (!db.students.some((s) => s.id === studentId)) throw new Error('Pick the student');
   if (!String(title || '').trim()) throw new Error('Enter a title');
   if (!PORTFOLIO_KINDS.includes(kind)) throw new Error('Pick the kind of item');
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '')) throw new Error('Enter the date');
+  if (!realDate(date)) throw new Error('Enter the date');
+  if (date > todayIso()) throw new Error("The date can't be in the future");
   db.portfolios = db.portfolios || [];
   db.seq.portfolio = (db.seq.portfolio || 0) + 1;
   const it = { id: 'PF' + db.seq.portfolio, studentId, title: String(title).trim(), kind, subject, date, note, shared: !!shared, by };

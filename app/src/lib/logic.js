@@ -4,6 +4,7 @@ import { undoTemplate } from './importTemplates.js';
 import { amountInWords, num, todayISO, dmy, dmon } from './format.js';
 import { CATEGORIES, renderTemplate, SAMPLE } from '../data/templates.js';
 import { FORMATS } from '../data/seed.js';
+import { clean, nameProblem, mobileProblem, cleanMobile, emailProblem, dobCheck, same, duplicateError, roundMoney } from './validate.js';
 
 export const sectionOf = (db, s) => db.sections.find((x) => x.id === s.sectionId);
 export const classOf = (db, s) => db.classes.find((c) => c.id === sectionOf(db, s)?.classId);
@@ -44,6 +45,10 @@ export function queueEmail(db, { to, subject, body, kind, related }) {
 // ---------- Payments: receipt + invoices + voucher + confirmation ----------
 export function recordPayment(db, { studentId, amount, mode, ref = '', by = 'System', invoiceIds = null, source = 'COUNTER', at = null }) {
   const student = db.students.find((s) => s.id === studentId);
+  if (!student) throw new Error('Pick the student');
+  if (amount === '' || amount === null || !isFinite(Number(amount)) || Number(amount) <= 0) throw new Error('Amount must be more than ₹0');
+  amount = roundMoney(amount);
+  if (mode && !/^cash$/i.test(mode) && !clean(ref)) throw new Error(`Enter the ${mode} reference (UTR / cheque no.)`);
   const invs = (invoiceIds ? invoiceIds.map((id) => db.invoices.find((i) => i.id === id)) : openInvoices(db, studentId)).filter(Boolean)
     .filter((i) => i.status !== 'PAID').sort((a, b) => a.due.localeCompare(b.due));
   db.seq.receipt += 1; db.seq.voucher += 1;
@@ -150,15 +155,62 @@ export function applyToMessage(db, n, msg, kind, how = 'matched by accounts') {
 }
 
 // ---------- Admission ----------
-export function admitStudent(db, f, by) {
+// Next number for ids like S1234 / P567: one more than the highest in use, so a removed record never frees its id
+export function nextId(list, prefix) {
+  const max = list.reduce((m, x) => { const n = Number(String(x.id).slice(prefix.length)); return String(x.id).startsWith(prefix) && Number.isFinite(n) && n > m ? n : m; }, 0);
+  return prefix + (max + 1);
+}
+// Release 15 admission number: running number + surname initial + year of joining, at most 10 characters,
+// e.g. 0042R2026. The running number restarts each year, never goes back, and is unique within the year.
+export const ADM_NEW = /^\d{4,5}[A-Z]\d{4}$/;
+export const ADM_OLD = /^ADM-\d{4}-\d{4}$/;
+export const initialOf = (s) => { const n = String(s || '').normalize('NFD').replace(/[^A-Za-z]/g, ''); return n ? n[0].toUpperCase() : ''; };
+export const joinYearOf = (db) => Number(String(db.year || '2026-27').slice(0, 4));
+export function nextAdmissionNo(db, { first, last, year } = {}) {
+  const y = Number(year || joinYearOf(db));
+  db.seq.admission = db.seq.admission || {};
+  if (db.seq.admission[y] == null) {   // start after any number already used for that year, old style or new
+    db.seq.admission[y] = db.students.reduce((m, s) => {
+      const a = String(s.admNo || ''); let n = 0;
+      if (ADM_NEW.test(a) && a.endsWith(String(y))) n = Number(a.slice(0, -5));
+      else if (ADM_OLD.test(a) && a.slice(4, 8) === String(y)) n = Number(a.slice(9));
+      return Math.max(m, n);
+    }, 0);
+  }
+  const ini = initialOf(last) || initialOf(first) || 'X';
+  let no;
+  do {
+    db.seq.admission[y] += 1;
+    if (db.seq.admission[y] > 99999) throw new Error(`No admission numbers left for ${y}`);
+    no = String(db.seq.admission[y]).padStart(4, '0') + ini + y;
+  } while (db.students.some((s) => s.admNo === no));
+  return no;
+}
+// A child already on the rolls: same name and date of birth, or same first name and guardian mobile
+export function findDuplicateStudent(db, f) {
+  const mob = cleanMobile(f.mobile);
+  return db.students.find((s) => s.status !== 'Left' && same(s.first, f.first) && (
+    (same(s.last, f.last) && s.dob === f.dob) || (mob && cleanMobile(db.guardians.find((g) => g.id === s.guardianId)?.mobile) === mob)));
+}
+export function admissionProblems(db, f) {
   const sec = db.sections.find((x) => x.id === f.sectionId);
-  const cls = db.classes.find((c) => c.id === sec.classId);
-  const gId = 'P' + (db.guardians.length + 1);
-  db.guardians.push({ id: gId, name: f.guardianName, relation: f.relation, mobile: f.mobile, email: f.email || '' });
-  const n = db.students.length + 1;
-  const s = { id: 'S' + (900 + n), admNo: 'ADM-2026-' + String(400 + n).padStart(4, '0'), first: f.first, last: f.last, gender: f.gender, dob: f.dob,
+  const level = sec && db.classes.find((c) => c.id === sec.classId)?.level;
+  const dob = dobCheck(f.dob, { level, yearStart: `${f.year || joinYearOf(db)}-04-01` });
+  return { error: nameProblem(f.first, 'First name') || nameProblem(f.last, 'Last name', false) || dob.error || (!sec ? 'Pick the class' : '')
+    || nameProblem(f.guardianName, 'Guardian name') || mobileProblem(f.mobile, 'Guardian mobile') || emailProblem(f.email), warning: dob.warning || '' };
+}
+export function admitStudent(db, f, by) {
+  const p = admissionProblems(db, f);
+  if (p.error) throw new Error(p.error);
+  const dup = !f.allowDuplicate && findDuplicateStudent(db, f);
+  if (dup) throw duplicateError(`Possible duplicate: ${fullName(dup)} (${dup.admNo}, ${classLabel(db, dup)}) has the same name and date of birth or guardian mobile`);
+  const sec = db.sections.find((x) => x.id === f.sectionId);
+  const gId = nextId(db.guardians, 'P');
+  db.guardians.push({ id: gId, name: clean(f.guardianName), relation: f.relation, mobile: cleanMobile(f.mobile), email: clean(f.email) });
+  const first = clean(f.first), last = clean(f.last);
+  const s = { id: nextId(db.students, 'S'), admNo: nextAdmissionNo(db, { first, last, year: f.year }), first, last, gender: f.gender, dob: f.dob,
     sectionId: sec.id, roll: db.students.filter((x) => x.sectionId === sec.id).length + 1, guardianId: gId, band: Number(f.band || 0), payPlan: 'THREE',
-    status: 'Active', house: f.house || 'Blue', attendance: 100 };
+    status: 'Active', house: f.house || 'Blue', attendance: 100, joined: todayISO() };
   db.students.push(s);
   return s;
 }
@@ -311,8 +363,8 @@ export function commitImport(db, entity, mapped, fileName, by) {
       const sec = db.sections.find((x) => x.classId === cls.id && x.name.toLowerCase() === o.section.toLowerCase());
       let g = db.guardians.find((x) => x.mobile === o.guardian_mobile);   // siblings share one guardian
       let newG = false;
-      if (!g) { g = { id: 'P' + (db.guardians.length + 1), name: o.guardian_name, relation: 'Father', mobile: o.guardian_mobile, email: o.guardian_email || '' }; db.guardians.push(g); newG = true; }
-      const s = { id: 'S' + (2000 + db.students.length), admNo: o.admission_no, first: o.first_name, last: o.last_name, gender: o.gender, dob: o.dob, sectionId: sec.id,
+      if (!g) { g = { id: nextId(db.guardians, 'P'), name: o.guardian_name, relation: 'Father', mobile: o.guardian_mobile, email: o.guardian_email || '' }; db.guardians.push(g); newG = true; }
+      const s = { id: nextId(db.students, 'S'), admNo: o.admission_no, first: o.first_name, last: o.last_name, gender: o.gender, dob: o.dob, sectionId: sec.id,
         roll: db.students.filter((x) => x.sectionId === sec.id).length + 1, guardianId: g.id, band: 0, payPlan: 'THREE', status: 'Active', house: 'Blue', attendance: 100, importedBy: job.id };
       db.students.push(s);
       job.created.push({ student: s.id, guardian: newG ? g.id : null });
@@ -339,4 +391,5 @@ export function rollbackImport(db, jobId, by) {
   log(db, by, 'Import rolled back', `${job.fileName}`);
 }
 
-export const wordsINR = (n) => 'INR ' + amountInWords(n) + ' only';
+// Rupees and paise in words: 12.345 → "INR Twelve and Paise Thirty Five only" (rounded to paise)
+export const wordsINR = (n) => { const r = roundMoney(n); const p = Math.round((r - Math.floor(r)) * 100); return `INR ${amountInWords(Math.floor(r))}${p ? ' and Paise ' + amountInWords(p) : ''} only`; };

@@ -6,6 +6,7 @@
 import { PLANS, PHONE_READY, RECOMMENDED, LABEL } from '../data/menu.js';
 import { DEFAULT_RATE_CARD, quote, offering, tierOf, demoConfig, rupees, pct, activeAddons } from './pricing.js';
 import { TEMPLATES } from './importTemplates.js';
+import { proposalProblems } from './proposals.js';
 
 const rcOf = (db) => (db.provider?.rateCard?.version >= 2 ? db.provider.rateCard : DEFAULT_RATE_CARD);
 const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -258,7 +259,8 @@ export function convertProposal(db, proposalId, by) {
   if (!p) throw new Error('Proposal not found');
   const o = p.options;
   if (!String(o.client || '').trim()) throw new Error('The proposal needs the school name');
-  if (!o.poc?.email) throw new Error('The proposal needs the contact\'s email ID');
+  const miss = proposalProblems(o);
+  if (miss.length) throw new Error('The proposal needs ' + miss.join(', '));
   db.provider.projects = db.provider.projects || [];
   const existing = db.provider.projects.find((x) => x.proposalId === proposalId);
   if (existing) return existing;

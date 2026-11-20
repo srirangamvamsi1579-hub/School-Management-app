@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useStore } from '../data/store.js';
-import { Page, Card, Field, Input, Select, Modal, Status, Stat, Progress, Tabs, printPage } from '../components/ui.jsx';
+import { Page, Card, Field, Input, Select, Modal, Status, Stat, Progress, Tabs, printPage, Hint } from '../components/ui.jsx';
 import { Register, RangeFilter, Legend, useRange } from '../components/Register.jsx';
 import { studentMark, setStudentMark, NEXT_MARK, studentMonths, summarize } from '../lib/attendance.js';
 import { performance, standing, gradeOf, subjectsOf, reportCard, SCOPES } from '../lib/results.js';
 import { alert } from '../lib/alerts.js';
 import { inr, dmy, dmon, initials, todayISO } from '../lib/format.js';
-import { classLabel, guardianOf, fullName, admitStudent, log, balance, classOf, tenantOf } from '../lib/logic.js';
+import { classLabel, guardianOf, fullName, admitStudent, admissionProblems, log, balance, classOf, tenantOf } from '../lib/logic.js';
 import { GROUPS, groupOf, BAND_TOTAL, baseTotal } from '../data/seed.js';
+import { mobileNote } from '../lib/validate.js';
 
 export function StudentList() {
   const { db, session } = useStore();
@@ -192,16 +193,19 @@ export function Admission() {
   const blank = { first: '', last: '', gender: 'Female', dob: '', sectionId: 'C1A', guardianName: '', relation: 'Father', mobile: '', email: '', band: 0, house: 'Blue' };
   const [f, setF] = useState(blank);
   const [done, setDone] = useState(null);
-  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
-  const err = !f.first ? 'First name is required' : !f.dob ? 'Date of birth is required' : !f.guardianName ? 'Guardian name is required'
-    : !/^[6-9]\d{9}$/.test(f.mobile) ? 'Guardian mobile must be 10 digits starting 6–9' : f.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email) ? 'Email looks wrong' : '';
+  const [dup, setDup] = useState('');
+  const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); setDup(''); };
+  const chk = admissionProblems(db, f);
+  const err = chk.error;
   const lv = parseInt(f.sectionId.slice(1), 10), gi = groupOf(lv);
-  const submit = () => {
-    const s = run((d) => { const st = admitStudent(d, f, session.role); log(d, session.role, 'Student admitted', `${st.admNo} ${st.first}`); return st; });
-    setDone(s); setF(blank); notify(`Admitted ${s.first} — ${s.admNo}`);
+  const submit = (allowDuplicate = false) => {
+    try {
+      const s = run((d) => { const st = admitStudent(d, { ...f, allowDuplicate }, session.role); log(d, session.role, 'Student admitted', `${st.admNo} ${st.first}`); return st; });
+      setDone(s); setF(blank); setDup(''); notify(`Admitted ${s.first} — ${s.admNo}`);
+    } catch (e) { if (e.code === 'DUPLICATE') setDup(e.message); else notify(e.message); }
   };
   return (
-    <Page title="New admission" sub="Fields marked * are required. The admission number is generated on save.">
+    <Page title="New admission" sub="Fields marked * are required. The admission number is generated on save: running number + surname initial + year of joining, e.g. 0042R2026.">
       {done && <div className="note" style={{ marginBottom: 14 }}>Saved <b>{done.first} {done.last}</b> as <b>{done.admNo}</b>. Fee invoices are created when the fee structure is applied for the year.</div>}
       <Card title="Student">
         <div className="form">
@@ -217,7 +221,7 @@ export function Admission() {
         <div className="form">
           <Field label="Guardian name" req><Input value={f.guardianName} onChange={set('guardianName')} /></Field>
           <Field label="Relation"><Select value={f.relation} onChange={set('relation')} options={['Father', 'Mother', 'Guardian']} /></Field>
-          <Field label="Mobile" req><Input inputMode="numeric" maxLength={10} value={f.mobile} onChange={set('mobile')} placeholder="10 digits" /></Field>
+          <Field label="Mobile" req><Input inputMode="tel" maxLength={16} value={f.mobile} onChange={set('mobile')} placeholder="10 digits" aria-label="Mobile" aria-describedby="adm-mob" /><Hint id="adm-mob">{mobileNote(f.mobile)}</Hint></Field>
           <Field label="Email (used for fee emails)"><Input type="email" value={f.email} onChange={set('email')} /></Field>
         </div>
       </Card>
@@ -227,7 +231,9 @@ export function Admission() {
           <div className="full note">Fee group <b>{GROUPS[gi].name}</b> · yearly total {inr(Number(f.band) ? BAND_TOTAL[f.band - 1][gi] : baseTotal(gi))} {Number(f.band) ? 'including transport' : '(transport not added)'}</div>
         </div>
       </Card>
-      <div className="row end"><span className="muted small">{err}</span><button className="btn pri" disabled={!!err} onClick={submit}>Save admission</button></div>
+      {!err && chk.warning && <div className="note warn" style={{ marginBottom: 10 }}>{chk.warning}</div>}
+      {dup && <div className="note warn" role="alert" style={{ marginBottom: 10 }}>{dup}. <button className="btn" onClick={() => submit(true)}>Save anyway</button></div>}
+      <div className="row end"><span className="muted small">{err}</span><button className="btn pri" disabled={!!err || !!dup} onClick={() => submit()}>Save admission</button></div>
     </Page>
   );
 }

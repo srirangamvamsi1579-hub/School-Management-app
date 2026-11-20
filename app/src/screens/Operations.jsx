@@ -5,7 +5,8 @@ import { Page, Card, Field, Input, Select, Status, Modal, Html, Tabs, Switch } f
 import { dmon } from '../lib/format.js';
 import { log, resolveTemplate, renderFor, categoryName, tenantOf } from '../lib/logic.js';
 import { CATEGORIES, FIELDS, SAMPLE, renderTemplate, sanitize } from '../data/templates.js';
-import { isProvider, PROVIDER_MODULES, MENU, ROLES, ACCESS, LABEL, PLANS, canSee, FUNCTIONS, funcOn, mobileTabs, ALWAYS_ON } from '../data/menu.js';
+import { isProvider, PROVIDER_MODULES, MENU, ROLES, ACCESS, LABEL, PLANS, canSee, FUNCTIONS, funcOn, mobileTabs, ALWAYS_ON, planDefault } from '../data/menu.js';
+import { nameProblem } from '../lib/validate.js';
 import { PRESETS, TEMPLATES, contrast, accessible } from '../lib/theme.js';
 import { allRoles, roleName, rolePerms, accessLevel, accessSource, screensFor, departments, syncDeptPerms, defaultScreens, baseRoleOf, canManageUsers, accountEmail, createAccount, idType, isGmail, findUser } from '../lib/auth.js';
 import { designationsFor, fitDesignation, designationProblem, departmentOf, STANDARD_PROFILES } from '../data/designations.js';
@@ -68,7 +69,7 @@ export function Users() {
     const kids = (edit.childrenText || '').split(/[\s,]+/).filter(Boolean);
     const bad = kids.find((k) => !db.students.some((x) => x.admNo === k.toUpperCase()));
     const clash = [edit.email, edit.mobile].filter(Boolean).map((v) => findUser(db, v)).find((o) => o && o.id !== edit.id);
-    return !edit.name?.trim() ? 'Name is required' : edit.email && !idType(edit.email) ? 'Email looks wrong' : edit.mobile && idType(edit.mobile) !== 'MOBILE' ? 'Mobile must be 10 digits'
+    return nameProblem(edit.name, 'Name') ? nameProblem(edit.name, 'Name') : edit.email && !idType(edit.email) ? 'Email looks wrong' : edit.mobile && idType(edit.mobile) !== 'MOBILE' ? 'Mobile must be 10 digits'
       : clash ? 'Another account already uses that email or mobile' : edit.role === 'PARENT' && !kids.length ? 'A parent needs at least one admission number' : edit.role === 'PARENT' && bad ? `No student with admission no. ${bad}`
       : edit.role !== 'PARENT' && designationProblem(db, edit.role, edit.designation) ? designationProblem(db, edit.role, edit.designation) : edit.role === 'ADMIN' && session.role !== 'ADMIN' ? 'Only an Admin can give the Admin role' : edit.id === me?.id && edit.role !== me.role ? "You can't change your own role" : '';
   };
@@ -98,6 +99,7 @@ export function Users() {
     if (!canAddUsers(session.role)) { notify('Only the Admin can add a user'); return; }
     const why = invite.reason === 'Other' ? (invite.reasonText || '').trim() : invite.reason;
     if (!why) { notify('Say why this person is being added instead of registering'); return; }
+    const np = nameProblem(invite.name, 'Full name'); if (np) { notify(np); return; }
     if (!idType(invite.identifier)) { notify('Enter a Gmail / email or 10-digit mobile'); return; }
     if (findUser(db, invite.identifier)) { notify('That sign-in ID already has an account'); return; }
     const dp = invite.role !== 'PARENT' && designationProblem(db, invite.role, invite.designation); if (dp) { notify(dp); return; }
@@ -171,7 +173,7 @@ export function Users() {
     </Modal>}
     {confirmDel && edit && <Modal title={`Delete ${edit.name}?`} onClose={() => setConfirmDel(false)} actions={<><button className="btn" onClick={() => setConfirmDel(false)}>Cancel</button><button className="btn danger" onClick={doDelete}>Delete</button></>}>
       <p>{edit.name} will no longer be able to sign in. The account moves to <b>Archived</b> with the reason “{edit.reason}”.</p></Modal>}
-    {invite && <Modal title="Add user" onClose={() => setInvite(null)} actions={<button className="btn pri" disabled={!invite.name} onClick={sendInvite}>Create and email link</button>}>
+    {invite && <Modal title="Add user" onClose={() => setInvite(null)} actions={<button className="btn pri" disabled={!!nameProblem(invite.name, 'Full name')} onClick={sendInvite}>Create and email link</button>}>
       <p className="note small" style={{ marginBottom: 12 }}>Parents and staff normally create their own account by registering on the school website or in the app. Add someone here only as an exception; the reason is recorded.</p>
       {(db.userArchive || []).length > 0 && <div className="card" style={{ marginBottom: 12 }}>
         <h3>Coming back? Copy details from the archive</h3>
@@ -506,8 +508,8 @@ export function Platform() {
   const [sel, setSel] = useState(db.tenantId);
   const t = db.tenants.find((x) => x.id === sel);
   const rank = PLANS.find((p) => p.code === t.plan).rank;
-  const isOn = (code, min) => (t.overrides[code] !== undefined ? t.overrides[code] : rank >= min);
-  const toggle = (code, min) => mutate((d) => { const x = d.tenants.find((y) => y.id === sel); const now = x.overrides[code] !== undefined ? x.overrides[code] : rank >= min; x.overrides = { ...x.overrides, [code]: !now }; });
+  const isOn = (code, min) => (t.overrides[code] !== undefined ? t.overrides[code] : planDefault(code, rank, min));
+  const toggle = (code, min) => mutate((d) => { const x = d.tenants.find((y) => y.id === sel); const now = x.overrides[code] !== undefined ? x.overrides[code] : planDefault(code, rank, min); x.overrides = { ...x.overrides, [code]: !now }; });
   return <Page title="Schools & plans" sub="Your company's console. Plan sets the default switches; turn any module or sub-menu on (add-on) or off per school.">
     <div className="grid" style={{ gridTemplateColumns: '300px 1fr' }}>
       <Card title="Schools">{db.tenants.map((x) => <button key={x.id} className={'btn' + (sel === x.id ? ' pri' : '')} style={{ display: 'block', width: '100%', textAlign: 'left', marginBottom: 6 }} onClick={() => setSel(x.id)}>{x.name}<div className="small" style={{ opacity: .8 }}>{PLANS.find((p) => p.code === x.plan).name} · {x.subdomain}.yourapp.com</div></button>)}</Card>

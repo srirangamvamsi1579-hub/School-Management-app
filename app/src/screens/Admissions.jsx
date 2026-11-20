@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useStore } from '../data/store.js';
-import { Page, Card, Field, Input, Select, Status, Modal, Tabs, Stat } from '../components/ui.jsx';
+import { Page, Card, Field, Input, Select, Status, Modal, Tabs, Stat, Hint } from '../components/ui.jsx';
 import { dmy, roman } from '../lib/format.js';
 import { ADM_STATUSES } from '../data/seed2.js';
-import { admissionsSummary, addEnquiry, moveEnquiry, NEXT } from '../lib/analytics.js';
+import { admissionsSummary, addEnquiry, enquiryProblems, moveEnquiry, NEXT } from '../lib/analytics.js';
+import { mobileNote } from '../lib/validate.js';
 
 const KIND = { Enquiry: '', Submitted: 'info', 'In review': 'warn', Offered: 'warn', Enrolled: 'ok', 'Opted out': 'bad' };
 const Pill = ({ s }) => <span className={'pill ' + (KIND[s] || '')}>{s}</span>;
@@ -64,11 +65,16 @@ export function Admissions({ go }) {
 
 function EnquiryForm({ application, onClose, onSave }) {
   const [f, setF] = useState({ first: '', last: '', gender: 'Female', dob: '', grade: 1, prevSchool: '', parent: '', mobile: '', email: '', source: 'Walk-in', transport: false, address: '', siblings: '', birthCert: false, photo: false, reportCard: false, consent: false, application });
-  const set = (k) => (e) => setF({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
-  const err = !f.first ? "Child's first name is required" : !f.parent ? 'Parent name is required' : !/^[6-9]\d{9}$/.test(f.mobile) ? 'Mobile must be 10 digits starting 6–9'
-    : f.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email) ? 'Email looks wrong' : application && !f.dob ? 'Date of birth is required on the application' : application && !f.consent ? 'Parent consent is required' : '';
+  const { db, notify } = useStore();
+  const [dup, setDup] = useState('');
+  const set = (k) => (e) => { setF({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }); setDup(''); };
+  const chk = enquiryProblems(db, { ...f, consent: application ? f.consent : undefined });
+  const err = application && !f.dob ? 'Date of birth is required on the application' : chk.error;
+  const save = (allowDuplicate = false) => { try { onSave({ ...f, allowDuplicate }); } catch (e) { if (e.code === 'DUPLICATE') setDup(e.message); else notify(e.message); } };
   return (
-    <Modal title={application ? 'Application form — 2027-28' : 'New enquiry'} onClose={onClose} actions={<><span className="small muted">{err}</span><button className="btn pri" disabled={!!err} onClick={() => onSave(f)}>{application ? 'Submit application' : 'Save enquiry'}</button></>}>
+    <Modal title={application ? 'Application form — 2027-28' : 'New enquiry'} onClose={onClose} actions={<><span className="small muted" role="status">{err}</span><button className="btn pri" disabled={!!err || !!dup} onClick={() => save()}>{application ? 'Submit application' : 'Save enquiry'}</button></>}>
+      {!err && chk.warning && <div className="note warn" style={{ marginBottom: 10 }}>{chk.warning}</div>}
+      {dup && <div className="note warn" role="alert" style={{ marginBottom: 10 }}>{dup}. <button className="btn" onClick={() => save(true)}>Save anyway</button></div>}
       {application && <p className="small muted">The same form is published on the school website for parents to fill in themselves; it arrives here as “Submitted”.</p>}
       <h3>Child</h3>
       <div className="form">
@@ -82,7 +88,7 @@ function EnquiryForm({ application, onClose, onSave }) {
       <h3 style={{ marginTop: 14 }}>Parent / guardian</h3>
       <div className="form">
         <Field label="Name" req><Input value={f.parent} onChange={set('parent')} /></Field>
-        <Field label="Mobile" req><Input value={f.mobile} maxLength={10} onChange={set('mobile')} /></Field>
+        <Field label="Mobile" req><Input value={f.mobile} maxLength={16} onChange={set('mobile')} aria-label="Mobile" aria-describedby="enq-mob" /><Hint id="enq-mob">{mobileNote(f.mobile)}</Hint></Field>
         <Field label="Email (Gmail)"><Input value={f.email} onChange={set('email')} /></Field>
         <Field label="How did you hear about us?"><Select value={f.source} onChange={set('source')} options={['Walk-in', 'Website', 'Referral', 'Social media', 'School fair']} /></Field>
         {application && <Field label="Address" full><Input value={f.address} onChange={set('address')} /></Field>}

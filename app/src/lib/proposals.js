@@ -2,6 +2,15 @@
 // through saveOptions, so the two always agree, and a proposal's demo school is set up again to match.
 import { DEFAULT_RATE_CARD, tierOf, demoConfig, demoCode } from './pricing.js';
 
+import { clean, emailOk } from './validate.js';
+
+// Release 15: what a proposal still needs before it can be emailed, downloaded or converted.
+// Drafts save as you type, so these are checked at those steps (and shown next to the fields).
+export const phoneOk = (v) => { const d = String(v || '').replace(/[\s\-()+]/g, ''); return /^\d{10,13}$/.test(d); };
+export function proposalProblems(o) {
+  return [!clean(o.client) && 'school name', !clean(o.poc?.name) && 'point of contact', !emailOk(o.poc?.email) && 'a valid contact email',
+    !phoneOk(o.poc?.phone) && 'a valid contact number (10 to 13 digits)'].filter(Boolean);
+}
 const rcOf = (db) => (db.provider?.rateCard?.version >= 2 ? db.provider.rateCard : DEFAULT_RATE_CARD);
 const todayIso = () => new Date().toISOString().slice(0, 10);
 

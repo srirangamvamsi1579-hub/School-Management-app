@@ -1,0 +1,249 @@
+{
+ "total": 390,
+ "pass": 338,
+ "fail": 52,
+ "findings": {
+  "F01": {
+   "severity": "High",
+   "title": "Add-on-only menus show in existing schools on the older app plans",
+   "cause": "Existing schools (Sunrise = Starter app plan, St. Mary's = Pro) are gated by plan rank. Dashboard, the three desks, Transport, Web & App Screens, Templates, Appearance and Timings have rank 1, so every plan gets them. Only demo and client schools use the add-on rules.",
+   "fix": "Store tier + bought add-ons on every school and derive menu switches from them with the same function demo/client schools use; migrate seed schools by mapping app plan to tier.",
+   "cases": [
+    "PLAN-T2-Dashboard",
+    "PLAN-T2-CoordinatorDes",
+    "PLAN-T2-GateDesk",
+    "PLAN-T2-ParentMeetings",
+    "PLAN-T2-TransportRoute",
+    "PLAN-T2-WebAppScreens",
+    "PLAN-T2-Templates",
+    "PLAN-T2-AppearanceBran",
+    "PLAN-T2-Timings",
+    "PLAN-T3-TransportRoute",
+    "PLAN-T3-WebAppScreens",
+    "PLAN-T3-Timings",
+    "UI-TIER-T2-Admin"
+   ]
+  },
+  "F02": {
+   "severity": "High",
+   "title": "Admission numbers and student IDs can repeat",
+   "cause": "admitStudent numbers new students from students.length + 1. After any student record is removed (for example an import rollback), the next admission gets a number already in use.",
+   "fix": "Number from a sequence counter (db.seq.admission) that never goes back; add a unique check (database already has a unique key, so the API would error).",
+   "cases": [
+    "STU_ADMIT-04"
+   ]
+  },
+  "F03": {
+   "severity": "Medium",
+   "title": "No duplicate check for admissions and enquiries",
+   "cause": "Neither the New Admission form nor admitStudent/addEnquiry look for the same child (name + date of birth + guardian mobile).",
+   "fix": "Before saving, look for a match and show \u201cPossible duplicate: <name, ADM no.> \u2014 save anyway?\u201d; same for enquiries by child name + parent mobile + grade.",
+   "cases": [
+    "STU_ADMIT-02",
+    "UI-STU_ADMIT-12",
+    "STU_ADMISSIONS-03"
+   ]
+  },
+  "F04": {
+   "severity": "Medium",
+   "title": "Staff short code can duplicate an existing one",
+   "cause": "StaffForm checks mobile/email duplicates but not the timetable short code, which the timetable clash check relies on.",
+   "fix": "Refuse a short code already used by another active staff member (case-insensitive).",
+   "cases": [
+    "UI-STF_LIST-03"
+   ]
+  },
+  "F05": {
+   "severity": "Medium",
+   "title": "Dates are not checked for plausibility",
+   "cause": "Date fields check only presence. Date of birth can be in the future or give an age that does not fit the class; joining date can be 2099; portfolio dates can be in the future or impossible (2026-13-45).",
+   "fix": "Date of birth: not in the future, age 2.5\u201320 and within \u00b12 years of the class\u2019s usual age (warn, not block, outside that). Joining date: not more than 6 months ahead. Portfolio date: real date, not in the future.",
+   "cases": [
+    "STU_ADMIT-03",
+    "UI-STU_ADMIT-09",
+    "UI-STU_ADMIT-10",
+    "STU_ADMISSIONS-06",
+    "UI-STU_ADMISSIONS-06",
+    "UI-STF_LIST-06",
+    "STU_PORTFOLIO-03",
+    "STU_PORTFOLIO-04",
+    "CMP_EVENTS-05"
+   ]
+  },
+  "F06": {
+   "severity": "Medium",
+   "title": "Names made of spaces (or digits and symbols) are accepted",
+   "cause": "Required checks test `!f.first`, so \"   \" passes. Add user then creates an account whose name is blank after trimming.",
+   "fix": "Trim before the required check; names allow letters, spaces and . ' - only (any script).",
+   "cases": [
+    "UI-STU_ADMIT-07",
+    "UI-STU_ADMISSIONS-05",
+    "UI-OPS_USERS-05",
+    "UI-STU_ADMIT-08"
+   ]
+  },
+  "F07": {
+   "severity": "Medium",
+   "title": "Negative or unrealistic numbers are accepted",
+   "cause": "Question marks have no lower bound (\u22122 saved, which breaks paper totals); Payment Matching \u201cAdd\u201d only checks that amount is filled (\u2212\u20b9500 allowed); basic pay has no upper bound.",
+   "fix": "Marks 1\u201320 whole numbers; incoming payment amount > 0; basic pay \u2264 \u20b910,00,000 a month with a confirm above \u20b93,00,000.",
+   "cases": [
+    "UI-EXM_QB-02",
+    "UI-FEE_MATCHING-01",
+    "UI-STF_LIST-05"
+   ]
+  },
+  "F08": {
+   "severity": "Medium",
+   "title": "A parent request can be saved for a child who is not theirs (business layer)",
+   "cause": "submitRequest does not check that the student is one of the signed-in parent\u2019s children; only the screen limits the choice.",
+   "fix": "In submitRequest (and the API), refuse unless studentId is in user.children.",
+   "cases": [
+    "SELF_REQ-05"
+   ]
+  },
+  "F09": {
+   "severity": "Low",
+   "title": "Business rules live only in the screens",
+   "cause": "recordPayment accepts 0, negative or text amounts and UPI without a reference; addEnquiry accepts a blank name/mobile; proposals save a malformed contact email. The forms block these, but imports, the public form and the future API call the same functions.",
+   "fix": "Move each form rule into the matching lib function (one source of truth) and keep the form check for instant feedback.",
+   "cases": [
+    "FEE_COLLECT-02",
+    "FEE_COLLECT-03",
+    "FEE_COLLECT-04",
+    "STU_ADMISSIONS-02",
+    "SP_PROPOSAL-07"
+   ]
+  },
+  "F10": {
+   "severity": "Low",
+   "title": "Duplicates allowed for events, library books and curriculum units",
+   "cause": "addEvent, addBook and addUnit do not look for the same title on the same date / author / class+subject.",
+   "fix": "Warn \u201calready exists \u2014 add copies instead?\u201d for books; refuse identical unit names in one class+subject; warn for same event title on the same date.",
+   "cases": [
+    "CMP_EVENTS-07",
+    "CMP_LIBRARY-03",
+    "ACA_CURRICULUM-05"
+   ]
+  },
+  "F11": {
+   "severity": "Low",
+   "title": "Small validation gaps",
+   "cause": "Homework subject not required; an online class can be booked today at a time already past; library copies 2.5 accepted; curriculum periods 2.6 silently saved as 3; expense 12.345 is shown as \u201cTwelve only\u201d.",
+   "fix": "Require subject; refuse past times today; copies whole numbers; round periods/amounts and show the corrected value before saving.",
+   "cases": [
+    "CMP_HOMEWORK-04",
+    "CMP_CLASSES-08",
+    "CMP_LIBRARY-02",
+    "ACA_CURRICULUM-03",
+    "UI-ACC_EXP-01"
+   ]
+  },
+  "F12": {
+   "severity": "Low",
+   "title": "Mobile numbers typed with +91 or spaces are refused (or cut off)",
+   "cause": "Admission mobile has maxLength 10, so \u201c+91 98450 12399\u201d is cut to \u201c+91 98450 \u201d and refused; the pickup list refuses it outright. The sign-in field already normalises the same input.",
+   "fix": "Proposed auto-correction (needs your approval): strip spaces, dashes and a leading +91/0, show \u201cSaved as 9845012399\u201d.",
+   "cases": [
+    "UI-STU_ADMIT-11",
+    "SELF_REQ-PICKUP-04"
+   ]
+  },
+  "F13": {
+   "severity": "Low",
+   "title": "Needs decision: Accountant can open Student Profile",
+   "cause": "The seeded department \u201cAccounts & Finance\u201d includes Student Profile (guardian contacts, attendance, marks), wider than the Accountant role list.",
+   "fix": "If not intended, remove STU_PROFILE from that department, or give Accountant a fees-only student view.",
+   "cases": [
+    "ACC-ACCOUNTANT-X-STU_PROFILE"
+   ]
+  },
+  "F14": {
+   "severity": "Low",
+   "title": "Needs decision: Custom roles are on for every tier",
+   "cause": "demoConfig always switches on FN_CUSTOM_ROLES, which the older app plans gave only from Pro+.",
+   "fix": "Decide whether custom roles are a basic feature, part of Pro+, or a paid add-on; then set it in the rate card.",
+   "cases": [
+    "TIER-STARTER-CustomRoles"
+   ]
+  }
+ },
+ "byArea": {
+  "Role access": [
+   124,
+   123
+  ],
+  "Login": [
+   5,
+   5
+  ],
+  "Tier & add-on": [
+   79,
+   66
+  ],
+  "CRUD & validation": [
+   92,
+   70
+  ],
+  "Browser: Login / role menus": [
+   11,
+   11
+  ],
+  "Browser: Unauthorized access": [
+   11,
+   11
+  ],
+  "Browser: Action not permitted for role": [
+   4,
+   4
+  ],
+  "Browser: UI visibility by add-on": [
+   7,
+   7
+  ],
+  "Browser: UI visibility by tier": [
+   1,
+   0
+  ],
+  "Browser: Add/Save/Retrieve": [
+   6,
+   6
+  ],
+  "Browser: Mandatory field": [
+   6,
+   6
+  ],
+  "Browser: Wrong format": [
+   12,
+   11
+  ],
+  "Browser: Invalid input": [
+   5,
+   2
+  ],
+  "Browser: Special characters": [
+   1,
+   0
+  ],
+  "Browser: Boundary": [
+   17,
+   9
+  ],
+  "Browser: Duplicate": [
+   5,
+   3
+  ],
+  "Browser: Edit": [
+   1,
+   1
+  ],
+  "Browser: Delete": [
+   2,
+   2
+  ],
+  "Browser: Business rule": [
+   1,
+   1
+  ]
+ }
+}

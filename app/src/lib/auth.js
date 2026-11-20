@@ -72,6 +72,7 @@ export function createAccount(db, f) {
   const type = idType(f.identifier);
   const salt = Math.random().toString(36).slice(2, 8);
   db.seq.user += 1;
+  if (!String(f.name || "").trim()) throw new Error("Name is required");
   const u = { id: 'U' + db.seq.user, name: f.name.trim(), login: id, loginType: type, email: type === 'EMAIL' ? id : (f.email || '').toLowerCase(), mobile: type === 'MOBILE' ? id : normMobile(f.mobile || ''),
     role: null, requestedRole: f.requestedRole, designation: f.designation || null, status: 'PENDING', verified: true, salt, pw: hashPassword(f.password, salt), failed: 0,
     createdAt: new Date().toISOString(), lastLogin: null, extra: [], linkedStudent: f.admissionNo || null, note: f.note || '', source: f.source || 'WEBSITE', addReason: f.addReason || null };
