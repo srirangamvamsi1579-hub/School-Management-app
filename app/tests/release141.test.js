@@ -43,7 +43,7 @@ test('converting a proposal creates the school, documents and links, and marks i
   assert.equal(p.status, 'Won'); assert.equal(p.projectId, cp.id);
   assert.equal(D.convertProposal(db, p.id, 'x').id, cp.id, 'one project per proposal');
   const t = db.tenants.find((x) => x.id === cp.tenantId);
-  assert.equal(t.plan, 'GROWTH'); assert.equal(t.status, 'Onboarding'); assert.equal(t.overrides.DASH, true); assert.equal(t.overrides.ACA_CURRICULUM, false);
+  assert.equal(t.plan, 'GROWTH'); assert.equal(t.status, 'Customer testing'); assert.equal(t.env, 'UAT'); assert.equal(t.name, 'Hillview School – UAT/DEMO'); assert.equal(t.overrides.PRJ_LINKS, true); assert.equal(t.overrides.DASH, true); assert.equal(t.overrides.ACA_CURRICULUM, false);
   assert.equal(cp.version, '1.0'); assert.equal(cp.documents.length, 8);
   const byCode = Object.fromEntries(cp.links.map((l) => [l.code, l]));
   assert.equal(byCode.TEST_BUILD.status, 'Ready'); assert.equal(byCode.TEST_BUILD.version, '1.0');
@@ -66,7 +66,7 @@ test('the test-build link opens the school as sold in another browser', () => {
   const p = D.readTrial(url.slice(url.indexOf('#')));
   const other = buildSeed();
   const t = D.applyTrial(other, p);
-  assert.equal(other.tenantId, t.id); assert.equal(t.name, 'Hillview School'); assert.equal(t.trial.version, '1.0');
+  assert.equal(other.tenantId, t.id); assert.equal(t.name, 'Hillview School – UAT/DEMO'); assert.equal(t.trial.version, '1.0'); assert.equal(t.env, 'UAT'); assert.equal(t.overrides.PRJ_LINKS, true);
   const sold = db.tenants.find((x) => x.id === cp.tenantId).overrides;
   ['DASH', 'STU_PORTFOLIO', 'TRN_ROUTES', 'FN_STOP_TIMINGS', 'ACA_CURRICULUM', 'STU_ADMISSIONS'].forEach((c) => assert.equal(t.overrides[c], sold[c], c));
   D.applyTrial(other, p); assert.equal(other.tenants.filter((x) => x.code === t.code).length, 1, 'opening it again replaces it');

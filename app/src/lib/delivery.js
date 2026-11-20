@@ -12,7 +12,11 @@ const rcOf = (db) => (db.provider?.rateCard?.version >= 2 ? db.provider.rateCard
 const todayIso = () => new Date().toISOString().slice(0, 10);
 export const dmy = (d) => new Date((d || '').length === 10 ? d + 'T00:00:00' : d || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 const addDays = (s, n) => { const d = new Date(s + 'T00:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
-export const PROJECT_STATUS = ['Onboarding', 'Customer testing', 'Live'];
+// Release 16: a client goes UAT / demo school → client approval and signing → live school
+export const PROJECT_STATUS = ['UAT / Demo', 'Signed off', 'Live'];
+export const ENV_NAME = { UAT: 'UAT/DEMO', LIVE: 'Live' };
+export const DEFAULT_REPO = 'https://github.com/srirangamvamsi1579-hub/School-Management-app';
+export const schoolBranch = (sub) => `school/${sub}`;
 // Placeholder: still to be filled in · Planned: the address we will use, not live yet · Ready: live · Shared: sent to the customer
 export const LINK_STATUS = ['Placeholder', 'Planned', 'Ready', 'Shared'];
 // The sales plans run on these app plans (the Platform Console shows the same names)
@@ -32,8 +36,13 @@ const unb64 = (s) => { const t = s.replace(/-/g, '+').replace(/_/g, '/'); return
 // Short: the add-ons that are on (included in the plan or bought); the screens follow from them
 export function trialPayload(tenant, project, rc = DEFAULT_RATE_CARD) {
   return { v: 2, c: tenant.code, n: tenant.name, s: tenant.subdomain, p: tenant.plan, t: project.tierName, b: tenant.examBoard || 'CBSE', ver: project.version, d: project.updated || project.created,
-    a: activeAddons(rc, project.options) };
+    a: activeAddons(rc, project.options), k: tenant.env || 'UAT', no: project.no,
+    l: Object.fromEntries((project.links || []).filter((l) => PROJECT_MENU_LINKS.includes(l.code) && !TRIAL_CODES.includes(l.code) && !['TEST_GUIDE', 'BRANCH'].includes(l.code) && ['Ready', 'Shared'].includes(l.status) && !isPlaceholder(l.url)).map((l) => [l.code, l.url])), r: project.release?.branch };
 }
+// Links shown in the school's own Project → Project Links menu
+// The four links that are the test build itself (they open from the trial link, so they are never carried inside it)
+export const TRIAL_CODES = ['TEST_BUILD', 'TEST_SITE', 'TEST_APP', 'REQ_DOC'];
+export const PROJECT_MENU_LINKS = ['TEST_BUILD', 'TEST_SITE', 'TEST_APP', 'REQ_DOC', 'TEST_GUIDE', 'WEB_PROD', 'PLAY', 'APPSTORE', 'BRANCH'];
 export const trialLink = (base, tenant, project, rc) => `${String(base).replace(/#.*$/, '')}#/try/${b64(JSON.stringify(trialPayload(tenant, project, rc)))}`;
 export function readTrial(hash) {
   const m = /^#\/try\/([A-Za-z0-9_-]+)/.exec(hash || '');
@@ -41,13 +50,15 @@ export function readTrial(hash) {
   try { const p = JSON.parse(unb64(m[1])); return p && p.v === 2 && p.c && Array.isArray(p.a) ? p : null; } catch (e) { return null; }
 }
 // Put the school from a trial link into this browser's data (replacing an older version of the same school)
-export function applyTrial(db, p) {
+export function applyTrial(db, p, hash = '') {
   // Same switches as the sold school: basic features plus the add-ons in the link
   const rc = DEFAULT_RATE_CARD;
   const addons = Object.fromEntries(p.a.filter((c) => rc.addons.some((x) => x.code === c)).map((c) => [c, true]));
   const { overrides } = demoConfig({ ...rc, tiers: rc.tiers.map((t) => ({ ...t, includes: [] })) }, { tier: 'STARTER', addons });
+  overrides.PROJECT = true; overrides.PRJ_LINKS = true;
   const t = { id: 'TT-' + p.c, code: p.c, name: p.n, subdomain: p.s, plan: PLANS.some((x) => x.code === p.p) ? p.p : 'ENTERPRISE', status: 'Customer testing', overrides, examBoard: p.b,
-    mobile: { enabled: p.m, appStatus: 'Shared app' }, renews: '—', trial: { tier: p.t, version: p.ver, date: p.d } };
+    mobile: { enabled: p.m, appStatus: 'Shared app' }, renews: '—', trial: { tier: p.t, version: p.ver, date: p.d }, env: p.k || 'UAT',
+    delivery: { projectNo: p.no, version: p.ver, date: p.d, tier: p.t, addons: p.a, branch: p.r, links: p.l || {}, trial: String(hash).replace(/\?.*$/, '') } };
   db.tenants = db.tenants.filter((x) => x.id !== t.id);
   db.tenants.push(t);
   db.tenantId = t.id;
@@ -59,8 +70,10 @@ export function applyTrial(db, p) {
 export const LINK_GROUPS = ['Testing', 'Website', 'Hosting', 'AWS', 'Mobile', 'Release'];
 export const LINK_TYPES = [
   ['Testing', 'TEST_BUILD', 'Customer test build (the school as sold, demo data)', 'Test', (c) => trialLink(c.testBase, c.tenant, c.project, c.rc)],
+  ['Testing', 'TEST_SITE', 'UAT website (starter page with this school\'s links)', 'Test', (c) => trialLink(c.testBase, c.tenant, c.project, c.rc) + '?to=site'],
+  ['Testing', 'TEST_APP', 'UAT phone app (school code {code})', 'Test', (c) => trialLink(c.testBase, c.tenant, c.project, c.rc) + '?to=app'],
+  ['Testing', 'REQ_DOC', 'Requirements document (scope of the school as agreed)', 'Test', (c) => trialLink(c.testBase, c.tenant, c.project, c.rc) + '?to=req'],
   ['Testing', 'TEST_GUIDE', 'User guide and guided demos', 'Test', (c) => c.testBase + '#/p/guide'],
-  ['Testing', 'TEST_PHONE', 'Phone app preview (school code ' + '{code})', 'Test', (c) => c.testBase + '#/p/mobile'],
   ['Website', 'SITE', 'School website (starter page)', 'Production', (c) => `https://www.<${c.sub}-domain>/`],
   ['Website', 'PORTAL', 'Parent and staff sign-in', 'Production', (c) => `https://${c.sub}.yourapp.com/`],
   ['Website', 'ADMISSION', 'Admission enquiry form', 'Production', (c) => `https://${c.sub}.yourapp.com/#/p/apply`],
@@ -76,15 +89,17 @@ export const LINK_TYPES = [
   ['Mobile', 'PLAY', 'Google Play listing', 'Production', (c) => `https://play.google.com/store/apps/details?id=${c.bundle}`],
   ['Mobile', 'TESTFLIGHT', 'Apple TestFlight', 'Test', () => 'https://testflight.apple.com/join/<invite-code>'],
   ['Mobile', 'APPSTORE', 'App Store listing', 'Production', (c) => `https://apps.apple.com/in/app/${c.branded ? slug(c.client) : 'yourapp-school-platform'}/id<apple-id>`],
-  ['Release', 'RELEASE', 'Release notes and build tag', 'All', (c) => `https://github.com/<org>/school-management-app/releases/tag/${c.sub}-v${c.project.version}`]
+  ['Release', 'BRANCH', 'School branch (from dev)', 'All', (c) => `${c.repo}/tree/${schoolBranch(c.sub)}`],
+  ['Release', 'UAT_TAG', 'UAT build tag', 'Test', (c) => `${c.repo}/releases/tag/${c.sub}-uat-v${c.project.version}`],
+  ['Release', 'RELEASE', 'Live release tag (after sign-off)', 'Production', (c) => c.project.live ? `${c.repo}/releases/tag/${c.sub}-v${c.project.live.version}` : `${c.repo}/releases/tag/${c.sub}-v<signed-version>`]
 ];
-const isPlaceholder = (url) => /<[^>]*>/.test(url);
+export const isPlaceholder = (url) => /<[^>]*>/.test(url);
 
 function linkCtx(db, project) {
   const tenant = db.tenants.find((t) => t.id === project.tenantId);
   const prof = db.provider?.profile || {};
   const o = project.options;
-  return { rc: rcOf(db), tenant, project, testBase: prof.testSite || 'https://yourapp.example.com/test/', sub: tenant.subdomain, client: o.client, hosting: o.hosting || 'SHARED',
+  return { rc: rcOf(db), tenant, project, repo: (prof.repo || DEFAULT_REPO).replace(/\/$/, ''), testBase: prof.testSite || 'https://yourapp.example.com/test/', sub: tenant.liveSubdomain || tenant.subdomain, client: o.client, hosting: o.hosting || 'SHARED',
     branded: !!o.addons?.BRANDED_APP, bundle: o.addons?.BRANDED_APP ? `com.yourapp.${slug(o.client)}` : 'com.yourapp.school' };
 }
 // Build or refresh the register: auto links follow the project version; a link the team filled in keeps its URL
@@ -95,7 +110,7 @@ export function refreshLinks(db, project, by) {
   project.links = LINK_TYPES.map(([group, code, label, env, make]) => {
     const auto = make(ctx).replace('{code}', ctx.tenant.code);
     const old = prev[code];
-    const generated = group === 'Testing';
+    const generated = group === 'Testing' || ['BRANCH', 'UAT_TAG'].includes(code);
     if (old && old.edited) return old;                        // the team set this link; keep it
     const url = auto;
     const changed = !old || old.url !== url || old.version !== project.version;
@@ -192,7 +207,7 @@ export function buildDoc(db, project, code) {
     const steps = [['Sign in as the Admin and open the Main menu', 'Every menu bought is there; nothing else'], ['Students: open a student profile with photo', 'Details, attendance and fees show'], ['Admissions: add an enquiry and move it to Enrolled', 'The student is created'], ['Attendance: mark today for one class', 'The register saves'], ['Fees: collect a fee and print the receipt', 'Receipt in the school format'], ['Exams: open report cards for one class', 'Marks and grades show'], ['Timetable and calendar: open both', 'Periods and events show'], ['Parent: sign in on the phone preview', 'Child, fees and notices show']];
     off.inTier.concat(off.chosen).forEach((a) => { const first = (a.menus || [])[0]; if (first && LABEL[first]) steps.push([`${a.name}: open ${LABEL[first]}`, 'The screen opens and works with the demo data']); else if (a.functions?.length) steps.push([`${a.name}`, 'The function shows where described in the user guide']); });
     S.push(intro,
-      { h: 'Where to test', table: { cols: ['Link', 'Address', 'Version'], rows: ['TEST_BUILD', 'TEST_GUIDE', 'TEST_PHONE', 'WEB_PREPROD'].map((c) => [link(c).label, link(c).url, link(c).version]) } },
+      { h: 'Where to test', table: { cols: ['Link', 'Address', 'Version'], rows: ['TEST_BUILD', 'TEST_SITE', 'TEST_APP', 'REQ_DOC', 'TEST_GUIDE', 'WEB_PREPROD'].map((c) => [link(c).label, link(c).url, link(c).version]) } },
       { h: 'How to sign in', p: 'The test build opens as the school Admin. Use Switch user → Demo quick access to try the other roles (Principal, Teacher, Parent, Accountant, Front office, Transport). Data stays in your browser; Reset demo data starts over.' },
       { h: 'Tests', table: { cols: ['#', 'Do', 'You should see', 'Pass / fail'], rows: steps.map(([d, s], i) => [String(i + 1), d, s, '']) } },
       { h: 'Sign-off', table: { cols: ['', 'Name', 'Date', 'Signature'], rows: [['For the school', o.poc?.name || '', '', ''], ['For ' + prof.name, prof.contact, '', '']] } });
@@ -211,12 +226,24 @@ export function buildDoc(db, project, code) {
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 export function websiteHtml(db, project) {
   const o = project.options;
-  const prof = db.provider?.profile || {};
-  const name = o.client.replace(/\s*\(example\)$/, '');
-  const link = (c) => project.links.find((l) => l.code === c)?.url || '#';
-  const real = (c) => !/<[^>]*>/.test(link(c));
+  return siteHtml({ name: o.client.replace(/\s*\(example\)$/, ''), board: o.board, city: o.city, colour: db.theme?.color, product: db.provider?.profile?.product,
+    branded: !!o.addons?.BRANDED_APP, ref: project.no, version: project.version, date: project.updated || project.created, code: (() => { const t = db.tenants.find((x) => x.id === project.tenantId); return t?.liveCode || t?.code; })(), link: (c) => project.links.find((l) => l.code === c)?.url || '#' });
+}
+// Release 16: the website of a UAT/demo or live school, from the set-up the school was built with (works in the customer's browser too)
+export function tenantSiteHtml(db, tenant, base = '') {
+  const d = tenant.delivery || {};
+  const home = base.replace(/#.*$/, '');
+  const own = { PORTAL: home + '#/s/HOME', ADMISSION: home + '#/p/apply', PRIVACY: home + '#/p/privacy', DELETE: home + '#/p/delete', ...(tenant.env === 'LIVE' ? {} : { PLAY: home + '#/p/mobile', APPSTORE: home + '#/p/mobile' }) };
+  return siteHtml({ name: tenant.name, board: tenant.examBoard, colour: db.theme?.color, product: db.provider?.profile?.product, ref: d.projectNo || tenant.code, code: tenant.code, version: d.version || '1.0', date: d.date,
+    link: (c) => d.links?.[c] && !isPlaceholder(d.links[c]) ? d.links[c] : own[c] || '#' });
+}
+function siteHtml({ name, board, city, colour: col, product, branded, ref, version, date, link, code }) {
+  const o = { board, city, addons: { BRANDED_APP: branded } };
+  const prof = { product };
+  const project = { no: ref, version, updated: date, options: o };
+  const real = (c) => !/<[^>]*>/.test(link(c)) && link(c) !== '#';
   const btn = (c, label, pri) => `<a class="btn${pri ? ' pri' : ''}" href="${real(c) ? esc(link(c)) : '#'}"${real(c) ? '' : ' aria-disabled="true" title="Link to be added"'}>${esc(label)}</a>`;
-  const colour = db.theme?.color || '#1F4D3F';
+  const colour = col || '#1F4D3F';
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(name)}${o.city ? ' — ' + esc(o.city) : ''}</title>
@@ -244,7 +271,7 @@ ${btn('ADMISSION', 'Admission enquiry', true)}${btn('PORTAL', 'Parent and staff 
 <div class="card"><h3>2. Apply</h3><p>Complete the application with the child's documents.</p></div>
 <div class="card"><h3>3. Join</h3><p>Accept the offer and pay the admission fee.</p></div></div>
 ${btn('ADMISSION', 'Start an enquiry', true)}</section>
-<section id="parents"><h2>For parents</h2><p>Attendance, fees, homework, notices and requests to the school — on the website and in the phone app${project.options.addons?.BRANDED_APP ? '' : ` (install “${esc(prof.product || 'the school app')}” and enter the school code <b>${esc(db.tenants.find((t) => t.id === project.tenantId)?.code)}</b>)`}.</p>
+<section id="parents"><h2>For parents</h2><p>Attendance, fees, homework, notices and requests to the school — on the website and in the phone app${project.options.addons?.BRANDED_APP ? '' : ` (install “${esc(prof.product || 'the school app')}” and enter the school code <b>${esc(code)}</b>)`}.</p>
 ${btn('PORTAL', 'Sign in')}${btn('PLAY', 'Get it on Google Play')}${btn('APPSTORE', 'Download on the App Store')}</section>
 <section id="contact" style="background:var(--tint)"><h2>Contact</h2><p>[Address, phone, email and office hours — to be added.]</p></section>
 </main>
@@ -270,20 +297,84 @@ export function convertProposal(db, proposalId, by) {
   while (taken.includes(code)) code = code.slice(0, 2) + i++;
   let sub = slug(name); let j = 2;
   while (db.tenants.some((t) => t.subdomain === sub)) sub = slug(name) + j++;
-  const cfg = demoConfig(rc, o);
+  const cfg = schoolConfig(rc, o);
   db.seq.client = (db.seq.client || 0) + 1;
-  const tenant = { id: 'TC' + db.seq.client, code, name, subdomain: sub, plan: APP_PLAN[o.tier] || 'GROWTH', status: 'Onboarding', overrides: cfg.overrides, examBoard: 'CBSE',
-    mobile: { enabled: true, appStatus: cfg.branded ? 'Branded app (to build)' : 'Shared app' }, renews: addDays(todayIso(), 365), client: { proposalId } };
+  // Release 16: the client's UAT / demo school — basic menus plus every add-on agreed with the client, and the Project menu
+  const tenant = { id: 'TC' + db.seq.client, code: code + '-UAT', liveCode: code, name: `${name} – ${ENV_NAME.UAT}`, schoolName: name, env: 'UAT', subdomain: 'uat-' + sub, liveSubdomain: sub,
+    plan: APP_PLAN[o.tier] || 'GROWTH', status: 'Customer testing', overrides: cfg.overrides, examBoard: o.board || 'CBSE',
+    mobile: { enabled: true, appStatus: cfg.branded ? 'Branded app (to build)' : 'Shared app' }, renews: '—', client: { proposalId } };
   db.tenants.push(tenant);
   db.seq.project = (db.seq.project || 0) + 1;
-  const project = { id: 'CP' + db.seq.project, no: `CP-${todayIso().slice(0, 4)}-${String(db.seq.project).padStart(3, '0')}`, proposalId, proposalNo: p.no, tenantId: tenant.id,
-    client: o.client, tierName: tierOf(rc, o.tier).name, options: structuredClone(o), optionsHash: optionsHash(o), version: '1.0', status: 'Onboarding', created: todayIso(), updated: todayIso(), by, shares: [], log: [{ at: new Date().toISOString(), by, what: `Converted from ${p.no}` }] };
+  const project = { id: 'CP' + db.seq.project, no: `CP-${todayIso().slice(0, 4)}-${String(db.seq.project).padStart(3, '0')}`, proposalId, proposalNo: p.no, tenantId: tenant.id, uatTenantId: tenant.id, liveTenantId: null,
+    client: o.client, tierName: tierOf(rc, o.tier).name, options: structuredClone(o), optionsHash: optionsHash(o), version: '1.0', status: 'UAT / Demo', created: todayIso(), updated: todayIso(), by, shares: [], signoffs: [], live: null,
+    release: { repo: (db.provider?.profile?.repo || DEFAULT_REPO).replace(/\/$/, ''), base: 'dev', branch: schoolBranch(sub), created: todayIso() },
+    log: [{ at: new Date().toISOString(), by, what: `Converted from ${p.no}: UAT/demo school ${tenant.name} (${tenant.code}) set up; branch ${schoolBranch(sub)} from dev` }] };
+  tenant.delivery = { projectNo: project.no, version: '1.0', date: todayIso(), branch: project.release.branch };
   refreshLinks(db, project, by);
   project.documents = DOC_TYPES.map(([c]) => ({ code: c, version: '1.0', date: todayIso() }));
   db.provider.projects.unshift(project);
   p.status = 'Won'; p.projectId = project.id; p.won = todayIso();
   return project;
 }
+// Every client school: the basic menus plus every add-on agreed with the client (included in the plan or bought), and the Project menu
+export function schoolConfig(rc, o) {
+  const cfg = demoConfig(rc, o);
+  cfg.overrides = { ...cfg.overrides, PROJECT: true, PRJ_LINKS: true };
+  return cfg;
+}
+
+// Release 16: client approval and signing → the live school (first sign-off), or the signed version applied to it (later sign-offs)
+export function signOff(db, projectId, { signedBy, designation, date, reference }, by) {
+  const project = db.provider.projects.find((x) => x.id === projectId);
+  if (!project) throw new Error('Project not found');
+  const who = String(signedBy || '').trim();
+  if (!who) throw new Error('Enter who signed for the school');
+  const on = String(date || todayIso());
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(on) || isNaN(new Date(on + 'T00:00:00'))) throw new Error('Enter the date it was signed');
+  if (on > todayIso()) throw new Error('The signing date can\'t be in the future');
+  if (proposalChanged(db, project)) throw new Error('The proposal has changed — regenerate the UAT school first, so the client signs off what they tested');
+  if (project.live && !project.live.pending) throw new Error(`Version ${project.version} is already signed off and live`);
+  const uat = db.tenants.find((t) => t.id === project.uatTenantId || t.id === project.tenantId);
+  const sign = { version: project.version, signedBy: who, designation: String(designation || '').trim(), date: on, reference: String(reference || '').trim(), by, at: new Date().toISOString() };
+  project.signoffs = [sign, ...(project.signoffs || [])];
+  const name = uat.schoolName || project.client.replace(/\s*\(example\)$/, '');
+  let live = db.tenants.find((t) => t.id === project.liveTenantId);
+  if (!live) {
+    db.seq.client = (db.seq.client || 0) + 1;
+    live = { id: 'TC' + db.seq.client, code: uat.liveCode || uat.code.replace(/-UAT$/, ''), name: `${name} – ${ENV_NAME.LIVE} (${dmy(on)})`, schoolName: name, env: 'LIVE', subdomain: uat.liveSubdomain || uat.subdomain.replace(/^uat-/, ''),
+      plan: uat.plan, status: 'Onboarding', overrides: structuredClone(uat.overrides), examBoard: uat.examBoard, mobile: structuredClone(uat.mobile), renews: addDays(on, 365), client: { proposalId: project.proposalId } };
+    db.tenants.push(live);
+    project.liveTenantId = live.id;
+  } else Object.assign(live, { plan: uat.plan, overrides: structuredClone(uat.overrides), examBoard: uat.examBoard });
+  live.delivery = { projectNo: project.no, version: project.version, date: on, branch: project.release?.branch, signedBy: who };
+  project.live = { version: project.version, date: on, pending: null };
+  project.status = 'Signed off';
+  refreshLinks(db, project, by);
+  project.log.unshift({ at: new Date().toISOString(), by, what: `Signed off v${project.version} by ${who}${sign.designation ? ' (' + sign.designation + ')' : ''} on ${dmy(on)}${sign.reference ? ', ref ' + sign.reference : ''}: live school ${live.name} (${live.code}); tag ${live.subdomain}-v${project.version} on ${project.release?.branch}` });
+  return project;
+}
+export function setProjectStatus(db, projectId, status, by) {
+  const project = db.provider.projects.find((x) => x.id === projectId);
+  if (!PROJECT_STATUS.includes(status)) throw new Error('Unknown status');
+  if (status !== 'UAT / Demo' && !project.liveTenantId) throw new Error('Record the client\'s approval and signing first — that builds the live school');
+  project.status = status;
+  const live = db.tenants.find((t) => t.id === project.liveTenantId);
+  if (live) live.status = status === 'Live' ? 'Active' : 'Onboarding';
+  project.log.unshift({ at: new Date().toISOString(), by, what: 'Status: ' + status });
+  return project;
+}
+// The school's file on its branch (schools/<subdomain>/school.json): what the build for this school switches on
+export function schoolFile(db, project) {
+  const rc = rcOf(db);
+  const uat = db.tenants.find((t) => t.id === project.uatTenantId || t.id === project.tenantId);
+  const live = db.tenants.find((t) => t.id === project.liveTenantId);
+  return { school: uat.schoolName || project.client, project: project.no, proposal: project.proposalNo, version: project.version, plan: project.tierName, board: uat.examBoard,
+    addons: activeAddons(rc, project.options), branch: project.release?.branch, base: project.release?.base || 'dev',
+    uat: { code: uat.code, subdomain: uat.subdomain, name: uat.name },
+    live: live ? { code: live.code, subdomain: live.subdomain, name: live.name, signedVersion: project.live?.version, signedOn: project.live?.date } : null,
+    screens: Object.entries(uat.overrides).filter(([, v]) => v).map(([k]) => k).sort() };
+}
+
 // The proposal changed after conversion: bring the school, documents and links up to date as a new version
 export function proposalChanged(db, project) {
   const p = db.provider.proposals.find((x) => x.id === project.proposalId);
@@ -297,8 +388,11 @@ export function regenerate(db, projectId, by) {
   project.client = p.options.client; project.tierName = tierOf(rc, p.options.tier).name;
   project.version = bumpVersion(project.version); project.updated = todayIso();
   const t = db.tenants.find((x) => x.id === project.tenantId);
-  const cfg = demoConfig(rc, p.options);
+  const cfg = schoolConfig(rc, p.options);
   Object.assign(t, { overrides: cfg.overrides, plan: APP_PLAN[p.options.tier] || t.plan });
+  if (t.delivery) Object.assign(t.delivery, { version: project.version, date: todayIso() });
+  // The live school changes only after the client signs off this version
+  if (project.live) project.live.pending = project.version;
   project.documents = DOC_TYPES.map(([c]) => ({ code: c, version: project.version, date: todayIso() }));
   refreshLinks(db, project, by);
   project.log.unshift({ at: new Date().toISOString(), by, what: `Version ${project.version}: documents and links regenerated from ${p.no}` });

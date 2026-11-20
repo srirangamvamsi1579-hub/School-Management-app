@@ -38,6 +38,7 @@ export function Placeholder({ code }) {
 }
 
 import { AnalyticsScreen, withReports } from './Reports.jsx';
+import { ProjectLinks } from './Project.jsx';
 const InsightsR = withReports(Insights);
 
 export const SCREENS = {
@@ -56,5 +57,6 @@ export const SCREENS = {
   CMP_LIBRARY: Library, CMP_HOSTEL: Hostel, CMP_HOMEWORK: Homework, CMP_CLASSES: OnlineClasses, CMP_INVENTORY: Inventory, CMP_EVENTS: Events,
   SP_RATES: PriceList, SP_PROPOSAL: ProposalBuilder, SP_DEMO: DemoBuilder, SP_COMPARE: Competition, SP_MARKET: MarketReview, SP_DELIVERY: ClientDelivery,
   ACA_CURRICULUM: Curriculum, STU_PORTFOLIO: Portfolios, OPS_BACKUP: Backups,
-  ANL_ATTENDANCE: AnalyticsScreen, ANL_EXAMS: AnalyticsScreen, ANL_TIMETABLE: AnalyticsScreen, ANL_ACADEMICS: AnalyticsScreen, ANL_COMMS: AnalyticsScreen, ANL_CAMPUS: AnalyticsScreen, SP_ANALYTICS: AnalyticsScreen
+  ANL_ATTENDANCE: AnalyticsScreen, ANL_EXAMS: AnalyticsScreen, ANL_TIMETABLE: AnalyticsScreen, ANL_ACADEMICS: AnalyticsScreen, ANL_COMMS: AnalyticsScreen, ANL_CAMPUS: AnalyticsScreen, SP_ANALYTICS: AnalyticsScreen,
+  PRJ_LINKS: ProjectLinks
 };

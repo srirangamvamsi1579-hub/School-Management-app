@@ -1,0 +1,32 @@
+# Release 16: one branch per school (school/<subdomain>, cut from dev).
+# Every push to a school branch is tested and built; a UAT tag (<sub>-uat-v1.0) or a live tag (<sub>-v1.0, after the
+# client signs off) keeps the built site as a release artifact. Deploying it uses deploy.yml's approvals (pre-prod, prod).
+name: School release
+on:
+  push:
+    branches: ['school/**']
+    tags: ['*-uat-v*', '*-v*']
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Which school
+        id: school
+        run: |
+          ref="${GITHUB_REF_NAME}"
+          sub="${ref#school/}"; sub="${sub%-uat-v*}"; sub="${sub%-v*}"
+          test -f "schools/$sub/school.json" || { echo "schools/$sub/school.json is missing on this branch"; exit 1; }
+          node -e "const f=require('./schools/$sub/school.json'); if(!f.school||!f.branch||!Array.isArray(f.addons)) process.exit(1); console.log(f.school, f.version, f.addons.join(','))"
+          echo "sub=$sub" >> "$GITHUB_OUTPUT"
+      - run: cd app && npm ci && npm test
+      - run: cd app && npm run build:single
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.school.outputs.sub }}-${{ github.ref_name == format('school/{0}', steps.school.outputs.sub) && 'branch' || github.ref_name }}
+          path: |
+            app/dist-single/index.html
+            schools/${{ steps.school.outputs.sub }}/school.json

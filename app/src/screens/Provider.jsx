@@ -543,22 +543,26 @@ function ProjectView({ id, back }) {
   const [edit, setEdit] = useState(null);       // link being edited
   const [view, setView] = useState(null);       // document code being previewed
   const [share, setShare] = useState(null);
+  const [sign, setSign] = useState(null);        // client approval and signing
   const changed = dlv.proposalChanged(db, project);
+  const live = db.tenants.find((t) => t.id === project.liveTenantId);
+  const canSign = !project.live || !!project.live.pending;
+  const file = useMemo(() => dlv.schoolFile(db, project), [db, project]);
   const act = (fn, msg) => { try { run(fn); notify(msg); return true; } catch (e) { notify(e.message); return false; } };
   const html = useMemo(() => dlv.websiteHtml(db, project), [db, project]);
   const ready = project.links.filter((l) => ['Ready', 'Shared'].includes(l.status)).length;
   const docOf = (c) => dlv.buildDoc(db, project, c);
   const pdf = (c) => import('../lib/docPdf.js').then((m) => m.downloadDocPdf(docOf(c), profile)).catch((e) => notify(e.message || 'The PDF could not be saved'));
-  return <Page title={`${project.client} · ${project.no}`} sub={`Converted from ${project.proposalNo} on ${dlv.dmy(project.created)}. ${project.tierName} plan · school code ${tenant.code} · version ${project.version} (${dlv.dmy(project.updated)}).`}
-    actions={<><button className="btn" onClick={back}>Back to clients</button><button className="btn pri" onClick={() => setShare({ to: project.options.poc?.email || '', cc: profile.email, links: project.links.filter((l) => l.group === 'Testing').map((l) => l.code), docs: ['UAT', 'LINKS'], message: `Dear ${project.options.poc?.name || 'Sir / Madam'},\n\nThank you for choosing ${profile.product}. Please find below the links for testing your school's set-up, and the documents for this version. Do get in touch with any questions.` })}>Share with customer</button></>}>
+  return <Page title={`${project.client} · ${project.no}`} sub={`Converted from ${project.proposalNo} on ${dlv.dmy(project.created)}. ${project.tierName} plan · version ${project.version} (${dlv.dmy(project.updated)}). UAT/demo school: ${tenant.name} (${tenant.code}). Live school: ${live ? `${live.name} (${live.code})` : 'built when the client signs off'}.`}
+    actions={<><button className="btn" onClick={back}>Back to clients</button>{canSign && <button className="btn" onClick={() => setSign({ signedBy: project.options.poc?.name || '', designation: project.options.poc?.designation || '', date: new Date().toISOString().slice(0, 10), reference: '' })}>{project.live ? `Sign off v${project.version} for Live` : 'Record client sign-off'}</button>}<button className="btn pri" onClick={() => setShare({ to: project.options.poc?.email || '', cc: profile.email, links: project.links.filter((l) => l.group === 'Testing').map((l) => l.code), docs: ['UAT', 'LINKS'], message: `Dear ${project.options.poc?.name || 'Sir / Madam'},\n\nThank you for choosing ${profile.product}. Please find below the links for testing your school's set-up, and the documents for this version. Do get in touch with any questions.` })}>Share with customer</button></>}>
     {changed && <div className="ro-bar" role="status" style={{ marginBottom: 10 }}>The proposal has changed since version {project.version}. <button className="btn sm pri" onClick={() => act((d) => dlv.regenerate(d, id, session.name), `Version ${dlv.bumpVersion(project.version)}: school, documents and links brought up to date`)}>Regenerate as version {dlv.bumpVersion(project.version)}</button></div>}
     <div className="kpis">
-      <Stat label="Status" value={<Select aria-label="Project status" value={project.status} onChange={(e) => act((d) => { const p = d.provider.projects.find((x) => x.id === id); p.status = e.target.value; d.tenants.find((t) => t.id === p.tenantId).status = e.target.value === 'Live' ? 'Active' : e.target.value; p.log.unshift({ at: new Date().toISOString(), by: session.name, what: 'Status: ' + e.target.value }); }, 'Status: ' + e.target.value)} options={dlv.PROJECT_STATUS} />} />
+      <Stat label="Status" value={<Select aria-label="Project status" value={project.status} onChange={(e) => act((d) => dlv.setProjectStatus(d, id, e.target.value, session.name), 'Status: ' + e.target.value)} options={dlv.PROJECT_STATUS} />} sub={live ? `Live school ${live.code}${project.live?.pending ? ` · v${project.live.pending} waiting for sign-off` : ''}` : 'UAT / demo school only'} />
       <Stat label="Version" value={project.version} sub={dlv.dmy(project.updated)} />
       <Stat label="Links live" value={`${ready} / ${project.links.length}`} sub={`${project.links.filter((l) => l.status === 'Planned').length} planned · ${project.links.filter((l) => l.status === 'Placeholder').length} placeholders to fill`} />
       <Stat label="Shared with the customer" value={project.shares.length} sub={project.shares[0] ? dlv.dmy(project.shares[0].at) : 'not yet'} />
     </div>
-    <Tabs tabs={[['links', 'Links'], ['docs', `Documents (${dlv.DOC_TYPES.length})`], ['site', 'Website'], ['log', 'History']]} value={tab} onChange={setTab} />
+    <Tabs tabs={[['links', 'Links'], ['docs', `Documents (${dlv.DOC_TYPES.length})`], ['site', 'Website'], ['release', 'Release & branch'], ['log', 'History']]} value={tab} onChange={setTab} />
     {tab === 'links' && dlv.LINK_GROUPS.map((g) => <Card key={g} title={g}>
       <div className="tw"><table className="t"><thead><tr><th>Link</th><th>Environment</th><th>Address</th><th>Version</th><th>Date</th><th>Status</th><th /></tr></thead>
         <tbody>{project.links.filter((l) => l.group === g).map((l) => <tr key={l.code}><td className="b">{l.label}{l.note && <div className="small muted">{l.note}</div>}</td><td>{l.env}</td>
@@ -575,6 +579,28 @@ function ProjectView({ id, back }) {
     {tab === 'site' && <Card title="Starter website page" right={<div className="row"><button className="btn sm" onClick={() => saveFile(`${tenant.subdomain}-website-v${project.version}.html`, html).catch(() => {})}>Download HTML</button></div>}>
       <p className="small muted">Generated for version {project.version} with the school's name, admissions, parent sign-in and app buttons. Buttons whose link is still a placeholder are greyed until it is filled in. Upload it to the school's website hosting, or send it to the school's web designer.</p>
       <iframe title="Website preview" srcDoc={html} sandbox="" style={{ width: '100%', height: 560, border: '1px solid var(--line)', borderRadius: 8 }} /></Card>}
+    {tab === 'release' && <>
+      <Card title="School branch" right={<button className="btn sm" onClick={() => saveFile(`school.json`, JSON.stringify(file, null, 2)).then(() => notify('school.json saved — commit it to the branch as schools/' + tenant.liveSubdomain + '/school.json')).catch(() => {})}>Download school.json</button>}>
+        <p className="small">Each school has its own branch, cut from <b>{project.release?.base || 'dev'}</b>, so its set-up and fixes are kept apart and are easy to maintain. Product changes go into <b>dev</b> → <b>main</b> and are merged into each school's branch.</p>
+        <div className="tw"><table className="t"><tbody>
+          <tr><td className="b">Repository</td><td className="small"><a href={project.release?.repo} target="_blank" rel="noreferrer">{project.release?.repo}</a></td></tr>
+          <tr><td className="b">Branch</td><td><code>{project.release?.branch}</code> (from <code>{project.release?.base || 'dev'}</code>, {dlv.dmy(project.release?.created || project.created)})</td></tr>
+          <tr><td className="b">UAT build tag</td><td><code>{tenant.liveSubdomain || tenant.subdomain}-uat-v{project.version}</code></td></tr>
+          <tr><td className="b">Live release tag</td><td>{project.live ? <code>{(tenant.liveSubdomain || tenant.subdomain)}-v{project.live.version}</code> : <span className="muted">after sign-off</span>}</td></tr>
+          <tr><td className="b">School file</td><td><code>schools/{tenant.liveSubdomain || tenant.subdomain}/school.json</code> · {file.addons.length} add-ons · {file.screens.length} switches</td></tr></tbody></table></div>
+        <h3>Commands (run in the repository)</h3>
+        <pre className="small" style={{ whiteSpace: 'pre-wrap', background: 'var(--surface)', padding: 10, borderRadius: 8 }}>{`# 1. Create the school's branch from dev, with its school.json (once)
+tools/release/school-branch.sh create ${tenant.liveSubdomain || tenant.subdomain} path/to/school.json
+# 2. Tag the UAT build of this version
+tools/release/school-branch.sh uat ${tenant.liveSubdomain || tenant.subdomain} ${project.version}
+# 3. After the client signs off: tag the live release
+tools/release/school-branch.sh live ${tenant.liveSubdomain || tenant.subdomain} ${project.live?.version || project.version}
+# Bring product fixes from main into the school's branch
+tools/release/school-branch.sh update ${tenant.liveSubdomain || tenant.subdomain}`}</pre></Card>
+      <Card title="Client sign-offs">{(project.signoffs || []).length ? <div className="tw"><table className="t"><thead><tr><th>Version</th><th>Signed by</th><th>Date</th><th>Reference</th><th>Recorded by</th></tr></thead>
+        <tbody>{project.signoffs.map((x, k) => <tr key={k}><td>v{x.version}</td><td>{x.signedBy}{x.designation && <div className="small muted">{x.designation}</div>}</td><td>{dlv.dmy(x.date)}</td><td>{x.reference || '—'}</td><td>{x.by}</td></tr>)}</tbody></table></div>
+        : <p className="small muted">Not signed yet. When the school approves the UAT / demo school and signs, record it here: the live school is built from that version.</p>}</Card>
+    </>}
     {tab === 'log' && <Card title="History"><ul className="small">{project.log.map((l, i) => <li key={i}>{new Date(l.at).toLocaleString('en-IN')} · {l.by} · {l.what}</li>)}</ul>
       {project.shares.length > 0 && <><h3>Shared</h3><div className="tw"><table className="t"><thead><tr><th>When</th><th>To</th><th>Version</th><th>Links</th><th>Documents</th></tr></thead><tbody>{project.shares.map((s, i) => <tr key={i}><td>{dlv.dmy(s.at)}</td><td>{s.to}</td><td>{s.version}</td><td>{s.links.length}</td><td>{s.docs.length}</td></tr>)}</tbody></table></div></>}</Card>}
     {edit && <Modal title="Link" onClose={() => setEdit(null)} actions={<button className="btn pri" onClick={() => { if (act((d) => dlv.setLink(d, id, edit.code, edit, session.name), 'Link saved')) setEdit(null); }}>Save</button>}>
@@ -585,6 +611,12 @@ function ProjectView({ id, back }) {
         <label className="row small"><input type="checkbox" checked={edit.live} onChange={(e) => setEdit({ ...edit, live: e.target.checked })} /> This link is live now (otherwise it stays Planned)</label></div>
       <p className="small muted">Replace the part in &lt; &gt; with the real value. The old address is kept in the link's history with its version and date.</p></Modal>}
     {view && <Modal title={dlv.DOC_TYPES.find((d) => d[0] === view)[1]} onClose={() => setView(null)} actions={<button className="btn pri" onClick={() => pdf(view)}>Download PDF</button>}><DocPreview d={docOf(view)} /></Modal>}
+    {sign && <Modal title={project.live ? `Sign off version ${project.version} for the live school` : 'Client approval and signing'} onClose={() => setSign(null)} actions={<><button className="btn" onClick={() => setSign(null)}>Cancel</button><button className="btn pri" onClick={() => { if (act((d) => dlv.signOff(d, id, sign, session.name), project.live ? `Version ${project.version} applied to the live school` : 'Signed off: live school built')) setSign(null); }}>{project.live ? 'Apply to Live' : 'Sign off and build the live school'}</button></>}>
+      <p className="small">{project.live ? `The school approved version ${project.version} after testing. Its add-ons and menus will be applied to ${live?.name}.` : `The school has tested ${tenant.name} and signed. This builds “${(tenant.schoolName || project.client)} – Live” with the same basic menus and agreed add-ons, and the live release tag on ${project.release?.branch}.`}</p>
+      <div className="form"><Field label="Signed for the school by" req><Input aria-label="Signed by" value={sign.signedBy} onChange={(e) => setSign({ ...sign, signedBy: e.target.value })} /></Field>
+        <Field label="Designation"><Input aria-label="Signer designation" value={sign.designation} onChange={(e) => setSign({ ...sign, designation: e.target.value })} /></Field>
+        <Field label="Date signed" req><Input type="date" aria-label="Date signed" value={sign.date} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setSign({ ...sign, date: e.target.value })} /></Field>
+        <Field label="Agreement reference"><Input aria-label="Agreement reference" value={sign.reference} onChange={(e) => setSign({ ...sign, reference: e.target.value })} placeholder="e.g. signed order form no." /></Field></div></Modal>}
     {share && <Modal title={`Share with ${project.client}`} onClose={() => setShare(null)} actions={<><button className="btn" onClick={() => setShare(null)}>Cancel</button><button className="btn pri" onClick={() => { if (act((d) => dlv.shareWithCustomer(d, id, { to: share.to, cc: share.cc, linkCodes: share.links, docCodes: share.docs, message: share.message }, session.name), `Sent to ${share.to}`)) setShare(null); }}>Send email</button></>}>
       <div className="form"><Field label="To" req><Input type="email" aria-label="Share to" value={share.to} onChange={(e) => setShare({ ...share, to: e.target.value })} /></Field><Field label="Cc"><Input aria-label="Share cc" value={share.cc} onChange={(e) => setShare({ ...share, cc: e.target.value })} /></Field>
         <Field label="Message" full><textarea className="i" rows={5} aria-label="Share message" value={share.message} onChange={(e) => setShare({ ...share, message: e.target.value })} style={{ fontFamily: 'inherit' }} /></Field></div>

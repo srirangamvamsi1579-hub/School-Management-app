@@ -10,6 +10,7 @@ import Login from './screens/Login.jsx';
 import { SCREENS, Placeholder } from './screens/index.js';
 import { alertsFor, unreadFor, markRead } from './lib/alerts.js';
 import { PublicEnquiry, PrivacyPolicy, DeleteAccountRequest } from './screens/Public.jsx';
+import { PublicSite, RequirementsPage } from './screens/Project.jsx';
 import MobileApp from './mobile/MobileApp.jsx';
 import HelpGuide, { DemoBar } from './screens/Guide.jsx';
 import { parseHash } from './lib/links.js';
@@ -68,6 +69,8 @@ export default function App() {
   if (link?.kind === 'p' && link.code === 'apply') return <PublicEnquiry embed={link.embed} />;
   if (link?.kind === 'p' && link.code === 'privacy') return <PrivacyPolicy />;
   if (link?.kind === 'p' && link.code === 'delete') return <DeleteAccountRequest />;
+  if (link?.kind === 'p' && link.code === 'site') return <PublicSite />;
+  if (link?.kind === 'p' && link.code === 'requirements') return <RequirementsPage />;
   if (link?.kind === 'p' && link.code === 'mobile') return <MobileApp preview={window.innerWidth > 500} />;
   if (link?.kind === 'p' && link.code === 'guide' && !session) return <HelpGuide />;
   if (!session) return <><Login next={link?.kind === 's' ? LABEL[link.code] : null} /><DemoBar /></>;

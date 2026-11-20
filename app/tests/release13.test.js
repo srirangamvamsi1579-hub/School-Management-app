@@ -61,15 +61,16 @@ test('hostel: right block, capacity, one bed each, vacate frees it', () => {
 
 test('homework, online classes, store and calendar rules', () => {
   const db = buildSeed(); const t = C.today();
+  const tm = new Date(Date.now() + 864e5).toISOString().slice(0, 10);   // online classes: a time that hasn't passed, whatever the clock says
   assert.throws(() => C.setHomework(db, { sectionId: 'C8A', subject: 'Maths', title: 'x', due: '2000-01-01' }), /today or later/);
   const sec = db.sections[0].id;
   const h = C.setHomework(db, { sectionId: sec, subject: 'Maths', title: 'Ex 1', due: t });
   const kid = C.studentsInSection(db, sec)[0];
   C.markHomework(db, h.id, kid.id, 'DONE');
   assert.equal(C.homeworkStats(db, h).done, 1);
-  assert.throws(() => C.scheduleClass(db, { sectionId: sec, subject: 'Maths', date: t, time: '10:00', link: 'http://x.com' }), /https/);
-  C.scheduleClass(db, { sectionId: sec, subject: 'Maths', date: t, time: '10:00', link: 'https://meet.example.com/a' });
-  assert.throws(() => C.scheduleClass(db, { sectionId: sec, subject: 'English', date: t, time: '10:00', link: 'https://meet.example.com/b' }), /already has Maths/);
+  assert.throws(() => C.scheduleClass(db, { sectionId: sec, subject: 'Maths', date: tm, time: '10:00', link: 'http://x.com' }), /https/);
+  C.scheduleClass(db, { sectionId: sec, subject: 'Maths', date: tm, time: '10:00', link: 'https://meet.example.com/a' });
+  assert.throws(() => C.scheduleClass(db, { sectionId: sec, subject: 'English', date: tm, time: '10:00', link: 'https://meet.example.com/b' }), /already has Maths/);
   const item = db.inventory.items[0]; const stock = C.stockOf(db, item.id);
   assert.throws(() => C.sellItem(db, { itemId: item.id, qty: stock + 1, studentId: kid.id }), /in stock/);
   const sale = C.sellItem(db, { itemId: item.id, qty: 2, studentId: kid.id });

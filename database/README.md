@@ -37,6 +37,7 @@ Run the files in order. Each one builds on the one before.
 | 31 | `031_final_discount.sql` | Release 14.2: `sales_proposals.final_discount_pct` (additional discount on the final amount, 0–20%) and `payable_year_one`; owner's approval when it takes profit under 15%; `v_proposal_client_discount` (only what the client sees) |
 | 32 | `032_release15_qa_fixes.sql` | Release 15 (QA fixes): `admission_counters` + `next_admission_no()` — running number + surname initial + year of joining, at most 10 characters, locked per school and year, never reused; `find_duplicate_students()`; question marks 1–20; plausible date of birth for new students |
 | 33 | `033_release151_analytics.sql` | Release 15.1: Student, Staff and Fee Insights moved under Data Analytics; new Attendance, Exam Results, Timetable & Cover, Syllabus Coverage, Parent Communication and Campus Trends screens; Service Provider › Sales Analytics (company only); teachers see their own classes; Accounts & Finance no longer opens Student Profile by default (F13); the analytics add-on opens the new screens; roadmap status Backlog with the nine QA enhancements |
+| 34 | `034_release16_uat_live.sql` | Release 16: every client gets a UAT / demo school (`tenants.environment`), and a live school only after the client signs a version (`client_project_signoffs`, enforced by a trigger); `client_projects.git_branch` = `school/<subdomain>` from `dev`; Project → Project Links menu for Admin and Principal; `v_client_environments` with UAT and live tags |
 
 ```bash
 createdb school

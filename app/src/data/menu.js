@@ -74,6 +74,8 @@ export const MENU = [
   { code: 'SETTINGS', label: 'Settings', icon: 'settings', min: 1, items: [
     ['#S', 'School setup'], ['OPS_APPEARANCE', 'Appearance & Branding', 1], ['OPS_WEBSITE', 'Website & Links', 1], ['OPS_CHANNELS', 'Web & App Screens', 1], ['OPS_TEMPLATES', 'Templates', 1], ['ACC_BANK', 'Bank & Payment Details', 1],
     ['#M', 'Messages'], ['OPS_SMS', 'SMS Gateway', 1], ['OPS_OUTBOX', 'Email & SMS Outbox', 1], ['#B', 'Data'], ['OPS_BACKUP', 'Backups & Restore', 2]] },
+  // Release 16: in a client's UAT/demo and live schools only (switched on when the school is set up from Client Delivery)
+  { code: 'PROJECT', label: 'Project', icon: 'link', min: 9, items: [['PRJ_LINKS', 'Project Links', 9]] },
   { code: 'HELP', label: 'Help', icon: 'book', min: 1, items: [['HELP_GUIDE', 'User Guide & Demo', 1], ['HELP_FAQ', 'FAQs', 1]] }
 ];
 
@@ -86,7 +88,7 @@ const CMP = { ALL: ['CMP_EVENTS', 'CMP_HOMEWORK', 'CMP_CLASSES', 'CMP_LIBRARY', 
 
 export const ACCESS = {
   ADMIN: ALL.filter((c) => !['SELF_CHILD', 'SELF_FEES', 'SELF_REQUESTS', 'SELF_MYPERF', 'PLT_SCHOOLS'].includes(c)),   // includes Service Provider (release 13.2)
-  PRINCIPAL: ['DASH', 'OPS_CHANNELS', 'HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'STU_PROFILE', 'STU_REPORTCARD', 'STU_INS', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'STU_OFFICE', 'ACA_COORD', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'SELF_PROFILE', 'ANL_HOME', 'ANL_RANK', 'ANL_TRANSPORT', 'ANL_TEACHER', 'ANL_ADMISSIONS', 'ANL_ATTENDANCE', 'ANL_EXAMS', 'ANL_TIMETABLE', 'ANL_ACADEMICS', 'ANL_COMMS', 'ANL_CAMPUS', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE', 'ACA_CURRICULUM', 'STU_PORTFOLIO',
+  PRINCIPAL: ['PRJ_LINKS', 'DASH', 'OPS_CHANNELS', 'HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'STU_PROFILE', 'STU_REPORTCARD', 'STU_INS', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'STU_OFFICE', 'ACA_COORD', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'SELF_PROFILE', 'ANL_HOME', 'ANL_RANK', 'ANL_TRANSPORT', 'ANL_TEACHER', 'ANL_ADMISSIONS', 'ANL_ATTENDANCE', 'ANL_EXAMS', 'ANL_TIMETABLE', 'ANL_ACADEMICS', 'ANL_COMMS', 'ANL_CAMPUS', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE', 'ACA_CURRICULUM', 'STU_PORTFOLIO',
     'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_FORMATS', 'EXM_COSCH', 'EXM_PROFILE', 'FEE_INS', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_STRUCT', 'FEE_CONC',
     'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS', ...CMP.ALL],
   ACCOUNTANT: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'DASH', 'STU_LIST', 'STF_LIST', 'SELF_PROFILE', 'ANL_HOME', 'ANL_TRANSPORT', 'STF_INS', 'FEE_INS', 'FEE_COLLECT', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_RECEIPTS', 'FEE_STRUCT', 'FEE_CONC',

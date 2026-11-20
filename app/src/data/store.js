@@ -7,6 +7,7 @@ import { seedRelease12 } from './seedRelease12.js';
 import { seedRelease13 } from './seedRelease13.js';
 import { seedRelease14, seedRelease141 } from './seedRelease14.js';
 import { seedRelease15 } from './seedRelease15.js';
+import { seedRelease16 } from './seedRelease16.js';
 import { readTrial, applyTrial } from '../lib/delivery.js';
 
 const KEY = 'school-app-demo-v9';
@@ -15,7 +16,7 @@ const Ctx = createContext(null);
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) { const d = JSON.parse(raw); if (d.version === 9) { return withTrial(normalizeUsers(seedRelease15(seedRelease141(seedRelease14(seedRelease13(seedRelease12(d))))))); } }
+    if (raw) { const d = JSON.parse(raw); if (d.version === 9) { return withTrial(normalizeUsers(seedRelease16(seedRelease15(seedRelease141(seedRelease14(seedRelease13(seedRelease12(d)))))))); } }
   } catch (e) { /* storage blocked — run from memory only */ }
   return withTrial(buildSeed());
 }
@@ -23,7 +24,12 @@ function load() {
 function withTrial(db) {
   try {
     const p = typeof location !== 'undefined' && readTrial(location.hash);
-    if (p) { applyTrial(db, p); save(db); history.replaceState(null, '', location.pathname + location.search + '#/s/HOME'); }
+    if (p) {
+      applyTrial(db, p, location.hash); save(db);
+      // Release 16: the same link opens the school's website, phone app or requirements document
+      const to = /\?to=(site|app|req)/.exec(location.hash)?.[1];
+      history.replaceState(null, '', location.pathname + location.search + (to === 'site' ? '#/p/site' : to === 'app' ? '#/p/mobile' : to === 'req' ? '#/p/requirements' : '#/s/HOME'));
+    }
   } catch (e) { /* not a valid link: open as usual */ }
   return db;
 }
