@@ -1547,7 +1547,6 @@
     "Dashboard"
    ],
    "Students": [
-    "Insights",
     "All Students",
     "Student Profile",
     "Admissions & Enquiries",
@@ -1562,7 +1561,6 @@
     "Portfolios"
    ],
    "Staff": [
-    "Insights",
     "All Staff",
     "Staff Attendance",
     "Leave Requests"
@@ -1583,7 +1581,6 @@
     "Assessment Profiles"
    ],
    "Fees": [
-    "Insights",
     "Collect Fee",
     "Fee Request Emails",
     "Payment Matching",
@@ -1600,10 +1597,19 @@
    ],
    "Data Analytics": [
     "Report Catalogue",
+    "Student Insights",
+    "Admissions Funnel",
+    "Attendance",
+    "Exam Results",
     "Top & Bottom Performers",
-    "Transport Reports",
     "Teacher Performance",
-    "Admissions Funnel"
+    "Timetable & Cover",
+    "Syllabus Coverage",
+    "Staff Insights",
+    "Fee Insights",
+    "Transport Reports",
+    "Parent Communication",
+    "Campus Trends"
    ],
    "Payroll": [
     "Run Payroll",
@@ -1638,6 +1644,7 @@
     "Proposal Builder",
     "Demo Builder",
     "Client Delivery",
+    "Sales Analytics",
     "Competition Comparison",
     "Market Review & Roadmap"
    ],
@@ -1661,7 +1668,6 @@
     "Dashboard"
    ],
    "Students": [
-    "Insights",
     "All Students",
     "Student Profile",
     "Admissions & Enquiries",
@@ -1673,7 +1679,6 @@
     "Portfolios"
    ],
    "Staff": [
-    "Insights",
     "All Staff",
     "Staff Attendance",
     "Leave Requests"
@@ -1694,7 +1699,6 @@
     "Assessment Profiles"
    ],
    "Fees": [
-    "Insights",
     "Fee Request Emails",
     "Payment Matching",
     "Dues & Reminders",
@@ -1709,10 +1713,19 @@
    ],
    "Data Analytics": [
     "Report Catalogue",
+    "Student Insights",
+    "Admissions Funnel",
+    "Attendance",
+    "Exam Results",
     "Top & Bottom Performers",
-    "Transport Reports",
     "Teacher Performance",
-    "Admissions Funnel"
+    "Timetable & Cover",
+    "Syllabus Coverage",
+    "Staff Insights",
+    "Fee Insights",
+    "Transport Reports",
+    "Parent Communication",
+    "Campus Trends"
    ],
    "Payroll": [
     "Run Payroll",
@@ -1751,14 +1764,12 @@
     "Dashboard"
    ],
    "Students": [
-    "All Students",
-    "Student Profile"
+    "All Students"
    ],
    "Staff": [
     "All Staff"
    ],
    "Fees": [
-    "Insights",
     "Collect Fee",
     "Fee Request Emails",
     "Payment Matching",
@@ -1769,6 +1780,8 @@
    ],
    "Data Analytics": [
     "Report Catalogue",
+    "Staff Insights",
+    "Fee Insights",
     "Transport Reports"
    ],
    "Payroll": [
@@ -1826,7 +1839,11 @@
     "Assessment Profiles"
    ],
    "Data Analytics": [
-    "Top & Bottom Performers"
+    "Report Catalogue",
+    "Attendance",
+    "Exam Results",
+    "Top & Bottom Performers",
+    "Syllabus Coverage"
    ],
    "Campus Services": [
     "Events & Calendar",
@@ -1878,8 +1895,12 @@
     "Assessment Profiles"
    ],
    "Data Analytics": [
+    "Report Catalogue",
+    "Attendance",
+    "Exam Results",
     "Top & Bottom Performers",
-    "Teacher Performance"
+    "Teacher Performance",
+    "Syllabus Coverage"
    ],
    "Campus Services": [
     "Events & Calendar",
@@ -1931,8 +1952,12 @@
     "Assessment Profiles"
    ],
    "Data Analytics": [
+    "Report Catalogue",
+    "Attendance",
+    "Exam Results",
     "Top & Bottom Performers",
-    "Teacher Performance"
+    "Teacher Performance",
+    "Syllabus Coverage"
    ],
    "Campus Services": [
     "Events & Calendar",
@@ -2057,6 +2082,7 @@
     "Proposal Builder",
     "Demo Builder",
     "Client Delivery",
+    "Sales Analytics",
     "Competition Comparison",
     "Market Review & Roadmap"
    ],
@@ -2074,6 +2100,7 @@
     "Proposal Builder",
     "Demo Builder",
     "Client Delivery",
+    "Sales Analytics",
     "Competition Comparison",
     "Market Review & Roadmap"
    ],

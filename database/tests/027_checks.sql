@@ -5,7 +5,7 @@ SET client_min_messages = notice;
 BEGIN;
 DO $$ BEGIN
   ASSERT (SELECT count(*) FROM menus m JOIN menus p ON p.menu_id = m.parent_id WHERE p.code = 'CAMPUS') = 6, 'six Campus screens';
-  ASSERT (SELECT count(*) FROM menus m JOIN menus p ON p.menu_id = m.parent_id WHERE p.code = 'SERVICE_PROVIDER') = 6, 'six Service Provider screens (Client Delivery added in 030)';
+  ASSERT (SELECT count(*) FROM menus m JOIN menus p ON p.menu_id = m.parent_id WHERE p.code = 'SERVICE_PROVIDER') >= 6, 'six Service Provider screens (Client Delivery added in 030; Sales Analytics in 033)';
   ASSERT (SELECT string_agg(DISTINCT m.menu_group, ',' ORDER BY m.menu_group) FROM menus m JOIN menus p ON p.menu_id = m.parent_id WHERE p.code = 'SERVICE_PROVIDER') = 'Delivery,Market,Sales', 'grouped Sales / Delivery / Market (Delivery from 030)';
   ASSERT (SELECT min(p.tier_rank) FROM plan_features pf JOIN plans p USING (plan_id) JOIN features f USING (feature_id) WHERE f.code = 'CMP_HOSTEL') = 4, 'hostel in Enterprise';
   ASSERT (SELECT min(p.tier_rank) FROM plan_features pf JOIN plans p USING (plan_id) JOIN features f USING (feature_id) WHERE f.code = 'CMP_LIBRARY') = 2, 'library from Growth';

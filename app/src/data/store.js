@@ -6,6 +6,7 @@ import { normalizeUsers } from '../lib/users.js';
 import { seedRelease12 } from './seedRelease12.js';
 import { seedRelease13 } from './seedRelease13.js';
 import { seedRelease14, seedRelease141 } from './seedRelease14.js';
+import { seedRelease15 } from './seedRelease15.js';
 import { readTrial, applyTrial } from '../lib/delivery.js';
 
 const KEY = 'school-app-demo-v9';
@@ -14,7 +15,7 @@ const Ctx = createContext(null);
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) { const d = JSON.parse(raw); if (d.version === 9) { return withTrial(normalizeUsers(seedRelease141(seedRelease14(seedRelease13(seedRelease12(d)))))); } }
+    if (raw) { const d = JSON.parse(raw); if (d.version === 9) { return withTrial(normalizeUsers(seedRelease15(seedRelease141(seedRelease14(seedRelease13(seedRelease12(d))))))); } }
   } catch (e) { /* storage blocked — run from memory only */ }
   return withTrial(buildSeed());
 }

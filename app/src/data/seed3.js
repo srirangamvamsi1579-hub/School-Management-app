@@ -2,6 +2,7 @@
 import { seedRelease12 } from './seedRelease12.js';
 import { seedRelease13 } from './seedRelease13.js';
 import { seedRelease14, seedRelease141 } from './seedRelease14.js';
+import { seedRelease15 } from './seedRelease15.js';
 import { rng } from '../lib/format.js';
 import { hashPassword, syncDeptPerms } from '../lib/auth.js';
 import { seedPapers } from './seedPapers.js';
@@ -108,6 +109,7 @@ export function extendSeed3(db) {
   seedRelease13(db);
   seedRelease14(db);
   seedRelease141(db);
+  seedRelease15(db);
   normalizeUsers(db);
   return db;
 }

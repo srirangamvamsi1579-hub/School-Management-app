@@ -16,7 +16,8 @@ function feeFigures(db) {
   return { billed, paid, overdue, pct: Math.round((100 * paid) / (billed || 1)) };
 }
 
-export function Dashboard({ go }) {
+const REPORT_OF = { STUDENTS: ['STU_INS', 'Student Insights'], STAFF: ['STF_INS', 'Staff Insights'], TRANSPORT: ['ANL_TRANSPORT', 'Transport Reports'], FEES: ['FEE_INS', 'Fee Insights'], ENROL: ['ANL_ADMISSIONS', 'Admissions Funnel'] };
+export function Dashboard({ go, menus }) {
   const { db, session } = useStore();
   const t = tenantOf(db);
   const plan = PLANS.find((p) => p.code === t.plan);
@@ -33,6 +34,7 @@ export function Dashboard({ go }) {
   return (
     <Page title={`Good day — ${t.name}`} sub={`Academic year ${db.year} · compared with ${period} · ${plan.name} plan (${plan.range} students)`}>
       <div className="dash-tabs"><Tabs tabs={tabs} value={cur} onChange={pick} /></div>
+      {REPORT_OF[cur] && (menus || []).some((m) => m.items.some((i) => i[0] === REPORT_OF[cur][0])) && <p className="small noprint" style={{ margin: '0 0 10px' }}>The detail, with filters, drill-down and export: <button className="linkbtn" onClick={() => go(REPORT_OF[cur][0])}>Data Analytics › {REPORT_OF[cur][1]} →</button></p>}
       {cur === 'STUDENTS' && <StudentsSection period={period} plan={plan} />}
       {cur === 'STAFF' && <StaffSection period={period} />}
       {cur === 'TRANSPORT' && <TransportSection period={period} />}

@@ -4,7 +4,8 @@ import { Page, Card, Select, Stat, Bars, Progress, Switch } from '../components/
 import { canSharePerf } from '../lib/auth.js';
 import { log } from '../lib/logic.js';
 import { inr, num } from '../lib/format.js';
-import { SUBJECTS, TERMS } from '../data/seed2.js';
+import { SUBJECTS, TERMS, ADM_STATUSES } from '../data/seed2.js';
+import { AllReports } from './Reports.jsx';
 import { rankReport, transportReport, teacherPerformance, admissionsSummary, PASS } from '../lib/analytics.js';
 
 export const REPORTS = [
@@ -20,8 +21,10 @@ function GradeFilter({ db, classId, setClassId, all = false }) {
   return <label className="f">Grade<Select value={classId} onChange={(e) => setClassId(e.target.value)} options={[...(all ? [['', 'All grades']] : []), ...db.classes.map((c) => [c.id, c.name])]} /></label>;
 }
 
-export function ReportCatalogue({ go }) {
-  return <Page title="Data analytics" sub="Power BI reports for the school. Each opens with filters; the same reports are embedded here for staff who can see them.">
+export function ReportCatalogue({ go, menus }) {
+  return <Page title="Data analytics" sub="Every report, chart and trend of the school in one place. Each report has filters, drill-down and export; in production each is a Power BI page filtered to the school.">
+    <AllReports go={go} menus={menus} />
+    <h2 style={{ marginTop: 18 }}>Performance reports</h2>
     <div className="grid g2">{REPORTS.map((r) => <Card key={r.code} title={r.name} right={<button className="btn sm pri" onClick={() => go(r.code)}>Open</button>}>
       <table className="t"><tbody><tr><td className="muted">Power BI</td><td>{r.pbi}</td></tr><tr><td className="muted">Filters</td><td>{r.filters}</td></tr><tr><td className="muted">Data</td><td><code>{r.view}</code></td></tr><tr><td className="muted">Who sees it</td><td>{r.roles}</td></tr></tbody></table></Card>)}</div>
     <p className="small muted">Refresh: nightly at 02:00 IST plus on demand. Report definitions and measures: docs/powerbi/REPORTS.md in the code repository.</p>
@@ -109,6 +112,13 @@ export function AdmissionsFunnel({ go }) {
       <Card title="Reached each stage"><Bars data={sum.funnel.map((f) => [f.stage, f.count])} /></Card>
       <Card title="Applications by grade"><Bars data={sum.rows.map((r) => [r.grade.replace('Grade ', ''), r.total])} /></Card>
     </div>
+    <Card title="Status by grade (moved here from Admissions & Enquiries)">
+      <div className="tw"><table className="t"><thead><tr><th>Grade</th>{ADM_STATUSES.map((st) => <th key={st} className="num">{st}</th>)}<th className="num">Total</th><th className="num">Seats free</th></tr></thead>
+        <tbody>{sum.rows.map((r) => <tr key={r.grade}><td className="b">{r.grade}</td>{ADM_STATUSES.map((st) => <td key={st} className="num">{r[st] || <span className="muted">0</span>}</td>)}<td className="num b">{r.total}</td>
+          <td className="num" style={{ color: r.Offered + r.Enrolled > r.seats ? 'var(--bad)' : undefined }}>{r.seats}</td></tr>)}
+          <tr><td className="b">Total</td>{ADM_STATUSES.map((st) => <td key={st} className="num b">{sum.totals[st]}</td>)}<td className="num b">{sum.totals.total}</td><td /></tr></tbody></table></div>
+      <p className="small muted" style={{ marginTop: 8 }}>Seats free = 40 per section minus students already enrolled. Red means offers and enrolments are more than the free seats.</p>
+    </Card>
     <Card title="Where enquiries come from"><table className="t"><tbody>{['Website', 'Walk-in', 'Referral', 'Social media', 'School fair'].map((s) => { const l = db.enquiries.filter((e) => e.source === s); return <tr key={s}><td>{s}</td><td className="num">{l.length}</td><td className="num">{l.filter((e) => e.status === 'Enrolled').length} enrolled</td></tr>; })}</tbody></table></Card>
   </Page>;
 }

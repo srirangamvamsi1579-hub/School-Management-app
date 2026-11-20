@@ -71,7 +71,7 @@ test('public admission form: validates, then lands in the admissions pipeline', 
   await page.goto(server.url + '#/login');
   await demo(page, 'Admin');
   await page.locator('nav.side button.item', { hasText: 'Admissions & Enquiries' }).click();
-  await page.getByRole('tab', { name: /Applications/ }).click();
+  await page.getByPlaceholder(/Search child/).fill(ref);   // release 15.1: the list is the page now; summaries moved to Data Analytics
   assert.ok((await page.content()).includes(ref), 'enquiry visible to the school');
   await ctx.close();
 });
@@ -414,7 +414,7 @@ test('Access summary: each person with profile, department, designation and thei
   const row = page.locator('tr', { hasText: 'Manjunath Gowda' });
   const text = await row.innerText();
   assert.match(text, /Transport team[\s\S]*Transport[\s\S]*Transport In-charge/);
-  assert.match(text, /\b8\b/, '8 read-only Fees screens');
+  assert.match(text, /\b7\b/, '7 read-only Fees screens (Fee Insights moved to Data Analytics in 15.1)');
   await page.getByRole('button', { name: 'Show access of Manjunath Gowda' }).click();
   const details = page.locator('tr', { hasText: 'Access comes from the department (Transport)' });
   assert.match(await details.innerText(), /Collect Fee\s*Read only/);

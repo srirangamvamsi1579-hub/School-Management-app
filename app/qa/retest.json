@@ -1,7 +1,7 @@
 {
  "total": 390,
- "pass": 388,
- "fail": 2,
+ "pass": 389,
+ "fail": 1,
  "status": {
   "F01": "Fixed",
   "F02": "Fixed",
@@ -15,7 +15,7 @@
   "F10": "Fixed",
   "F11": "Fixed",
   "F12": "Fixed",
-  "F13": "Open \u2014 needs your decision",
+  "F13": "Fixed",
   "F14": "Open \u2014 needs your decision"
  }
 }

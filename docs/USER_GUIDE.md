@@ -41,14 +41,14 @@ Website menus and phone tabs with the recommended layout. Schools change this in
 | Role | Website (main menus and sub-menus) | Phone app tabs |
 | --- | --- | --- |
 | **Parent** | **Dashboard:** Dashboard<br>**Students:** Portfolios<br>**Academics:** Timetable<br>**Campus Services:** Events & Calendar, Homework, Online Classes<br>**My Space:** My Child, Requests to School, Fee Dues & Pay, My Account, My Preferences<br>**Help:** User Guide & Demo, FAQs | Home, Requests, Fees, My child, Homework, Events, Classes, Account |
-| **Teacher** | **Dashboard:** Dashboard<br>**Students:** All Students, Student Profile, Attendance, Coordinator Desk, Parent Meetings, Report Cards, Portfolios<br>**Academics:** Boards, Syllabus & Textbooks, Timetable, Curriculum Planning<br>**Exams:** Question Papers, Approved Papers, Question Bank, Co-Scholastic Grades, Assessment Profiles<br>**Data Analytics:** Top & Bottom Performers<br>**Campus Services:** Events & Calendar, Homework, Online Classes, Library<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**Settings:** Templates<br>**Help:** User Guide & Demo, FAQs | Home, Timetable, Attendance, Approvals, Meetings, Homework, Account |
+| **Teacher** | **Dashboard:** Dashboard<br>**Students:** All Students, Student Profile, Attendance, Coordinator Desk, Parent Meetings, Report Cards, Portfolios<br>**Academics:** Boards, Syllabus & Textbooks, Timetable, Curriculum Planning<br>**Exams:** Question Papers, Approved Papers, Question Bank, Co-Scholastic Grades, Assessment Profiles<br>**Data Analytics:** Report Catalogue, Attendance, Exam Results, Top & Bottom Performers, Syllabus Coverage<br>**Campus Services:** Events & Calendar, Homework, Online Classes, Library<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**Settings:** Templates<br>**Help:** User Guide & Demo, FAQs | Home, Timetable, Attendance, Approvals, Meetings, Homework, Account |
 | **Front Office** | **Dashboard:** Dashboard<br>**Students:** All Students, Student Profile, Admissions & Enquiries, New Admission, Office Requests, Gate Desk, Documents & ID Cards<br>**Fees:** Collect Fee, Dues & Reminders, Receipts<br>**Transport:** Pickup & Drop Changes<br>**Data Analytics:** Admissions Funnel<br>**Campus Services:** Events & Calendar, Library, Inventory & Store, Hostel<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**Settings:** Templates<br>**Help:** User Guide & Demo, FAQs | Home, Gate, Office, Bus changes, Account |
 | **Transport team** | **Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Transport Reports<br>**Campus Services:** Events & Calendar<br>**My Space:** My Leave, My Account, My Preferences<br>**Help:** User Guide & Demo, FAQs | Home, Route sheet, Manifest, Bus changes, Account |
-| **Principal** | **Dashboard:** Dashboard<br>**Students:** Insights, All Students, Student Profile, Admissions & Enquiries, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Report Cards, Portfolios<br>**Staff:** Insights, All Staff, Staff Attendance, Leave Requests<br>**Academics:** Classes & Sections, Class Coordinators, Boards, Syllabus & Textbooks, Timetable, Curriculum Planning<br>**Exams:** Question Papers, Approved Papers, Question Bank, Blueprints, Co-Scholastic Grades, Assessment Profiles<br>**Fees:** Insights, Fee Request Emails, Payment Matching, Dues & Reminders, Fee Structure, Concessions<br>**Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Account Statement, Income & Expenses<br>**Campus Services:** Events & Calendar, Homework, Online Classes, Library, Inventory & Store, Hostel<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**Settings:** Web & App Screens, Templates, Bank & Payment Details<br>**Help:** User Guide & Demo, FAQs | Home, Attendance, Approvals, Meetings, Office, Route sheet, Account |
-| **Accountant** | **Dashboard:** Dashboard<br>**Students:** All Students<br>**Staff:** All Staff<br>**Fees:** Insights, Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions<br>**Data Analytics:** Report Catalogue, Transport Reports<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Account Statement, Income & Expenses<br>**Campus Services:** Events & Calendar, Inventory & Store, Hostel<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**Settings:** Templates, Bank & Payment Details, Email & SMS Outbox<br>**Help:** User Guide & Demo, FAQs | Home, Payslips, Account |
-| **Admin** | **Dashboard:** Dashboard<br>**Students:** Insights, All Students, Student Profile, Admissions & Enquiries, New Admission, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Gate Desk, Report Cards, Documents & ID Cards, Portfolios<br>**Staff:** Insights, All Staff, Staff Attendance, Leave Requests<br>**Academics:** Classes & Sections, Class Coordinators, Boards, Syllabus & Textbooks, Timetable, Curriculum Planning<br>**Exams:** Question Papers, Approved Papers, Question Bank, Blueprints, Co-Scholastic Grades, Assessment Profiles<br>**Fees:** Insights, Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions<br>**Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Account Statement, Income & Expenses<br>**Campus Services:** Events & Calendar, Homework, Online Classes, Library, Inventory & Store, Hostel<br>**Operations:** Users, Roles & Permissions, Data Import, Help Documents & FAQs<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**View as Profile:** Parent, Teacher (class coordinator), Teacher + Vice Principal, Teacher + Head of Teaching Staff, Principal, Accountant, Front Office, Transport team<br>**Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Client Delivery, Competition Comparison, Market Review & Roadmap<br>**Settings:** Appearance & Branding, Website & Links, Web & App Screens, Templates, Bank & Payment Details, SMS Gateway, Email & SMS Outbox, Backups & Restore<br>**Help:** User Guide & Demo, FAQs | Home, Account |
-| **Platform team** | **Platform Console:** Schools & Plans<br>**Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Client Delivery, Competition Comparison, Market Review & Roadmap<br>**Settings:** Web & App Screens<br>**Help:** User Guide & Demo, FAQs | Website only |
-| **Sales & marketing** | **Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Client Delivery, Competition Comparison, Market Review & Roadmap<br>**Help:** User Guide & Demo, FAQs | Website only |
+| **Principal** | **Dashboard:** Dashboard<br>**Students:** All Students, Student Profile, Admissions & Enquiries, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Report Cards, Portfolios<br>**Staff:** All Staff, Staff Attendance, Leave Requests<br>**Academics:** Classes & Sections, Class Coordinators, Boards, Syllabus & Textbooks, Timetable, Curriculum Planning<br>**Exams:** Question Papers, Approved Papers, Question Bank, Blueprints, Co-Scholastic Grades, Assessment Profiles<br>**Fees:** Fee Request Emails, Payment Matching, Dues & Reminders, Fee Structure, Concessions<br>**Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Report Catalogue, Student Insights, Admissions Funnel, Attendance, Exam Results, Top & Bottom Performers, Teacher Performance, Timetable & Cover, Syllabus Coverage, Staff Insights, Fee Insights, Transport Reports, Parent Communication, Campus Trends<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Account Statement, Income & Expenses<br>**Campus Services:** Events & Calendar, Homework, Online Classes, Library, Inventory & Store, Hostel<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**Settings:** Web & App Screens, Templates, Bank & Payment Details<br>**Help:** User Guide & Demo, FAQs | Home, Attendance, Approvals, Meetings, Office, Route sheet, Account |
+| **Accountant** | **Dashboard:** Dashboard<br>**Students:** All Students<br>**Staff:** All Staff<br>**Fees:** Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions<br>**Data Analytics:** Report Catalogue, Staff Insights, Fee Insights, Transport Reports<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Account Statement, Income & Expenses<br>**Campus Services:** Events & Calendar, Inventory & Store, Hostel<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**Settings:** Templates, Bank & Payment Details, Email & SMS Outbox<br>**Help:** User Guide & Demo, FAQs | Home, Payslips, Account |
+| **Admin** | **Dashboard:** Dashboard<br>**Students:** All Students, Student Profile, Admissions & Enquiries, New Admission, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Gate Desk, Report Cards, Documents & ID Cards, Portfolios<br>**Staff:** All Staff, Staff Attendance, Leave Requests<br>**Academics:** Classes & Sections, Class Coordinators, Boards, Syllabus & Textbooks, Timetable, Curriculum Planning<br>**Exams:** Question Papers, Approved Papers, Question Bank, Blueprints, Co-Scholastic Grades, Assessment Profiles<br>**Fees:** Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions<br>**Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Report Catalogue, Student Insights, Admissions Funnel, Attendance, Exam Results, Top & Bottom Performers, Teacher Performance, Timetable & Cover, Syllabus Coverage, Staff Insights, Fee Insights, Transport Reports, Parent Communication, Campus Trends<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Account Statement, Income & Expenses<br>**Campus Services:** Events & Calendar, Homework, Online Classes, Library, Inventory & Store, Hostel<br>**Operations:** Users, Roles & Permissions, Data Import, Help Documents & FAQs<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**View as Profile:** Parent, Teacher (class coordinator), Teacher + Vice Principal, Teacher + Head of Teaching Staff, Principal, Accountant, Front Office, Transport team<br>**Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Client Delivery, Sales Analytics, Competition Comparison, Market Review & Roadmap<br>**Settings:** Appearance & Branding, Website & Links, Web & App Screens, Templates, Bank & Payment Details, SMS Gateway, Email & SMS Outbox, Backups & Restore<br>**Help:** User Guide & Demo, FAQs | Home, Account |
+| **Platform team** | **Platform Console:** Schools & Plans<br>**Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Client Delivery, Sales Analytics, Competition Comparison, Market Review & Roadmap<br>**Settings:** Web & App Screens<br>**Help:** User Guide & Demo, FAQs | Website only |
+| **Sales & marketing** | **Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Client Delivery, Sales Analytics, Competition Comparison, Market Review & Roadmap<br>**Help:** User Guide & Demo, FAQs | Website only |
 
 ## 3. Web & App Screens (choosing what goes on the website and in the app)
 
@@ -354,7 +354,6 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |
-| **Insights** <br>*Pro+* | Student numbers, attendance and fee trends (Power BI). | Use the grade and month filters; export from the report menu. | Principal, Admin | Website |
 | **All Students** | Every student with class, guardian and transport. | Search by name or admission number; click a student to open the profile. | Teacher, Front Office, Principal, Accountant, Admin | Website |
 | **Student Profile** | A student’s full profile: personal, academic, performance and attendance. | Find the student by grade, section or name; switch between the four tabs. Performance shows % per test and rank in the section and grade. | Teacher, Front Office, Principal, Admin | Website |
 | **Admissions & Enquiries** | Enquiries and applications for next year, from first call to enrolment, with a summary by grade. | Add an enquiry or application form; move it Submitted → In review → Offered → Enrolled, or Opted out with a reason. Website enquiries arrive here automatically. | Front Office, Principal, Admin | Website |
@@ -372,7 +371,6 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |
-| **Insights** <br>*Pro+* | Staff numbers, attendance and leave trends. | Filter by department. | Principal, Admin | Website |
 | **All Staff** | Every staff member, with Add staff and Edit on the same screen. | Search or filter by department and full / part time. Add staff (top right) creates the staff record and employee code; staff then register themselves with it. | Principal, Accountant, Admin | Website |
 | **Staff Attendance** | The staff attendance register. | Filter by department and pick a range. Tap a cell: Present → Absent → Half day. Approved leave shows as L. | Principal, Admin | Website |
 | **Leave Requests** | Approve staff leave; see all requests, leave taken by each person and the leave types. | Approvers are notified (🔔 and email). Approve, or Decline with a reason; the staff member is told. Admin and Principal change the yearly allowances. | Principal, Admin | Website (can be added to the app) |
@@ -402,7 +400,6 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |
-| **Insights** <br>*Pro+* | Fee collection, dues and trends (Power BI). | Filter by grade and month. | Principal, Accountant, Admin | Website |
 | **Collect Fee** | Take a fee payment at the counter. | Find the student, pick invoices, mode (cash / card / UPI), save; the receipt prints in the school’s format. | Front Office, Accountant, Admin | Website |
 | **Fee Request Emails** | Send fee request emails by grade with a personal pay link. | Pick grades and instalment → Preview → Send. Parents without email get an SMS. | Principal, Accountant, Admin | Website |
 | **Payment Matching** <br>*Pro+* | Match incoming bank / UPI / gateway payments to fee requests. | Most match automatically; for the rest pick the request and Match. Duplicates are flagged. | Principal, Accountant, Admin | Website |
@@ -424,11 +421,20 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |
-| **Report Catalogue** <br>*Pro+* | Catalogue of Power BI reports. | Open a report. | Principal, Accountant, Admin | Website |
+| **Report Catalogue** <br>*Pro+* | Every report and chart of the school in one place, with what moved here. | Open a report; each has filters, drill-down and export. | Teacher, Principal, Accountant, Admin | Website |
+| **Student Insights** <br>*Pro+* | Student numbers, attendance and fee trends (moved here from Students). | Use the grade and month filters; the attendance heatmap and other reports are below with drill-down and export. | Principal, Admin | Website |
+| **Admissions Funnel** <br>*Pro+* | Admissions funnel, conversion and status by grade (moved here from Admissions). | Filter by grade and source. | Front Office, Principal, Admin | Website |
+| **Attendance** <br>*Pro+* | Student attendance heatmap by class and week, and staff attendance and leave. | Set the filters in the row above the charts (dates, year, class, section and the rest); click a bar or cell to drill down; export the table to CSV or Excel. Teachers see their own sections. | Teacher, Principal, Admin | Website |
+| **Exam Results** <br>*Pro+* | Exam results by class, subject and exam, and the students who moved most between two exams. | Set the filters in the row above the charts (dates, year, class, section and the rest); click a bar or cell to drill down; export the table to CSV or Excel. Teachers see their own sections. | Teacher, Principal, Admin | Website |
 | **Top & Bottom Performers** <br>*Pro+* | Top 6 and bottom 6 per grade. | Pick grade (and sections, term, subject). | Teacher, Principal, Admin | Website |
-| **Transport Reports** <br>*Pro+* | Route use, cost per km, on-time and fee revenue. | Filter by grade. | Transport team, Principal, Accountant, Admin | Website |
 | **Teacher Performance** <br>*Pro+* | How each teacher’s students are doing. | Filter by grade and subject. The Principal or Head of Teaching Staff can share it with teachers (view only). | Principal, Admin | Website |
-| **Admissions Funnel** <br>*Pro+* | Admissions funnel and conversion. | Filter by grade and source. | Front Office, Principal, Admin | Website |
+| **Timetable & Cover** <br>*Pro+* | Teaching load per teacher and substitution cover. | Set the filters in the row above the charts (dates, year, class, section and the rest); click a bar or cell to drill down; export the table to CSV or Excel. | Principal, Admin | Website |
+| **Syllabus Coverage** <br>*Pro+* | Syllabus coverage across classes (moved here from Curriculum). | Set the filters in the row above the charts (dates, year, class, section and the rest); click a bar or cell to drill down; export the table to CSV or Excel. Teachers see their own sections. | Teacher, Principal, Admin | Website |
+| **Staff Insights** <br>*Pro+* | Staff numbers, attendance, leave, turnover and payroll trends (moved here from Staff). | Filter by department; the reports below have drill-down and export. | Principal, Accountant, Admin | Website |
+| **Fee Insights** <br>*Pro+* | Fee collection against target, dues ageing and payment modes (moved here from Fees). | Filter by grade and month; the reports below have drill-down and export. | Principal, Accountant, Admin | Website |
+| **Transport Reports** <br>*Pro+* | Route use, cost per km, on-time and fee revenue, with seat use and on-time reports. | Filter by grade. Set the filters in the row above the charts (dates, year, class, section and the rest); click a bar or cell to drill down; export the table to CSV or Excel. | Transport team, Principal, Accountant, Admin | Website |
+| **Parent Communication** <br>*Pro+* | Parent communication: messages sent, request turnaround and parent meetings. | Set the filters in the row above the charts (dates, year, class, section and the rest); click a bar or cell to drill down; export the table to CSV or Excel. | Principal, Admin | Website |
+| **Campus Trends** <br>*Pro+* | Campus trends: library, hostel, homework, online classes and events (moved here from Campus). | Set the filters in the row above the charts (dates, year, class, section and the rest); click a bar or cell to drill down; export the table to CSV or Excel. | Principal, Admin | Website |
 
 ### 5.9 Payroll (from the Pro plan)
 
@@ -504,6 +510,7 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 | **Proposal Builder** | Priced proposals: client and point of contact, plan, add-ons, hosting and discount, with price, operating cost, gross margin, profit and the maximum discount worked out as you go. | New proposal (or a plan’s Choose button) → fill in the school and contact → pick the plan and add-ons → discount on the plan and add-ons, and any additional discount on the final amount → Preview PDF or Download PDF → Email proposal. The client’s PDF shows only the discount applied and the amount payable. Choices save as you go. | Admin, Platform team, Sales & marketing | Website |
 | **Demo Builder** | Sets up a working demo school for a client visit in four steps, linked to a proposal: what you change here changes the proposal and the demo school. | Pick the client or New client → 1 check the service provider (pre-filled) → 2 school and point of contact → 3 plan → 4 add-ons and discount → Create demo school → Open as Principal, Teacher or Parent. End demo at the top brings you back. | Admin, Platform team, Sales & marketing | Website |
 | **Client Delivery** | Client delivery: a won proposal becomes a client project — the school set up as sold, eight documents (scope, website, app build, hosting and AWS, data migration, testing, go-live, links register), a starter website page, and every link with its environment, version and date. | Convert to client (or set a proposal to Won) → Links: fill in each placeholder as hosting, AWS and store builds become ready → Documents: Preview or Download PDF → Website: Download HTML → Share with customer (email with links and PDFs). If the proposal changes, Regenerate makes the next version. | Admin, Platform team, Sales & marketing | Website |
+| **Sales Analytics** | Sales analytics: proposals by stage and value, and conversion (moved here from Proposals and the market review). | Set the filters in the row above the charts (dates, year, class, section and the rest); click a bar or cell to drill down; export the table to CSV or Excel. | Admin, Platform team, Sales & marketing | Website |
 | **Competition Comparison** | Our features and price against Indian and global school software, with our edge and our gaps. | Enter the school’s student count to see each provider’s estimated yearly price at the top; filter Indian, global or all, and by feature group. Sources are listed at the bottom. | Admin, Platform team, Sales & marketing | Website |
 | **Market Review & Roadmap** | Indian and global market review (with each provider’s country) and the future enhancements we plan. | Read the Indian and Global tabs; Future enhancements lists each idea with where it comes from — set its priority and status as plans change. | Admin, Platform team, Sales & marketing | Website |
 
@@ -546,14 +553,6 @@ How to use each screen, in the order you click through it. In the app (Help → 
 - *Admin and Principal can change grade limits from the Students tab.*
 
 ### 6.2 Students
-
-**Insights** — Student numbers, attendance and fee trends (Power BI).
-
-1. Open Insights
-2. Choose grade and month
-3. Use the report menu to export
-
-- *Growth plan and above; a Power BI report filtered to your school.*
 
 **All Students** — Every student with class, guardian and transport.
 
@@ -668,11 +667,6 @@ How to use each screen, in the order you click through it. In the app (Help → 
 - *Portfolios add-on (in Pro+). Parents see shared items.*
 
 ### 6.3 Staff
-
-**Insights** — Staff numbers, attendance and leave trends.
-
-1. Open Insights
-2. Filter by department
 
 **All Staff** — Every staff member, with Add staff and Edit on the same screen.
 
@@ -790,11 +784,6 @@ How to use each screen, in the order you click through it. In the app (Help → 
 
 ### 6.6 Fees
 
-**Insights** — Fee collection, dues and trends (Power BI).
-
-1. Open Insights
-2. Filter by grade or month
-
 **Collect Fee** — Take a fee payment at the counter.
 
 1. Find the student
@@ -871,9 +860,22 @@ How to use each screen, in the order you click through it. In the app (Help → 
 
 ### 6.8 Data Analytics
 
-**Report Catalogue** — Catalogue of Power BI reports.
+**Report Catalogue** — Every report and chart of the school in one place, with what moved here.
 
 1. See every report, its filters and who it is for
+
+**Student Insights** — Student numbers, attendance and fee trends (moved here from Students).
+
+1. Open Insights
+2. Choose grade and month
+3. Use the report menu to export
+
+- *Growth plan and above; a Power BI report filtered to your school.*
+
+**Admissions Funnel** — Admissions funnel, conversion and status by grade (moved here from Admissions).
+
+1. Pick grade, source, year
+2. Read the funnel
 
 **Top & Bottom Performers** — Top 6 and bottom 6 per grade.
 
@@ -881,21 +883,26 @@ How to use each screen, in the order you click through it. In the app (Help → 
 2. Optionally pick sections, term, subject
 3. See top 6 and bottom 6
 
-**Transport Reports** — Route use, cost per km, on-time and fee revenue.
-
-1. Pick a grade
-2. See riders, seats, revenue and on-time % per route
-
 **Teacher Performance** — How each teacher’s students are doing.
 
 1. Pick grade and subject
 2. Compare each teacher’s classes with the grade
 3. Share with teachers (optional)
 
-**Admissions Funnel** — Admissions funnel and conversion.
+**Staff Insights** — Staff numbers, attendance, leave, turnover and payroll trends (moved here from Staff).
 
-1. Pick grade, source, year
-2. Read the funnel
+1. Open Insights
+2. Filter by department
+
+**Fee Insights** — Fee collection against target, dues ageing and payment modes (moved here from Fees).
+
+1. Open Insights
+2. Filter by grade or month
+
+**Transport Reports** — Route use, cost per km, on-time and fee revenue, with seat use and on-time reports.
+
+1. Pick a grade
+2. See riders, seats, revenue and on-time % per route
 
 ### 6.9 Payroll
 

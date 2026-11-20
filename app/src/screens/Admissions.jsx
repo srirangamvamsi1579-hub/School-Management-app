@@ -10,9 +10,9 @@ const KIND = { Enquiry: '', Submitted: 'info', 'In review': 'warn', Offered: 'wa
 const Pill = ({ s }) => <span className={'pill ' + (KIND[s] || '')}>{s}</span>;
 const gradeName = (n) => 'Grade ' + roman[n - 1];
 
-export function Admissions({ go }) {
+export function Admissions({ go, menus }) {
+  const canSee = (code) => (menus || []).some((m) => m.items.some((i) => i[0] === code));
   const { db, run, notify, session } = useStore();
-  const [tab, setTab] = useState('summary');
   const [grades, setGrades] = useState([]);
   const [status, setStatus] = useState('');
   const [q, setQ] = useState('');
@@ -33,30 +33,17 @@ export function Admissions({ go }) {
       <div className="grid g4" style={{ marginBottom: 14 }}>
         <Stat label="Enquiries & applications" value={sum.totals.total} sub={grades.length ? 'for the selected grades' : 'all grades'} />
         <Stat label="Waiting on the school" value={sum.totals.Submitted + sum.totals['In review']} sub="submitted or in review" />
-        <Stat label="Offers out" value={sum.totals.Offered} sub={`${sum.offerAccept}% of offers accepted so far`} />
-        <Stat label="Enrolled" value={sum.totals.Enrolled} sub={`${sum.conversion}% of all enquiries · ${sum.totals['Opted out']} opted out`} />
+        <Stat label="Offers out" value={sum.totals.Offered} />
+        <Stat label="Enrolled" value={sum.totals.Enrolled} sub={`${sum.totals['Opted out']} opted out`} />
       </div>
-      <Tabs tabs={[['summary', 'Summary by grade'], ['list', `Applications (${list.length})`]]} value={tab} onChange={setTab} />
-      {tab === 'summary' && <>
-        <Card title="Status by grade" right={<span className="small muted">Click a number to see those applications</span>}>
-          <div className="tw"><table className="t"><thead><tr><th>Grade</th>{ADM_STATUSES.map((s) => <th key={s} className="num">{s}</th>)}<th className="num">Total</th><th className="num">Seats free</th></tr></thead>
-            <tbody>{sum.rows.map((r) => <tr key={r.grade}><td className="b">{r.grade}</td>{ADM_STATUSES.map((s) => <td key={s} className="num">{r[s] ? <button className="btn sm" onClick={() => { setGrades([r.level]); setStatus(s); setTab('list'); }}>{r[s]}</button> : <span className="muted">0</span>}</td>)}
-              <td className="num b">{r.total}</td><td className="num" style={{ color: r.Offered + r.Enrolled > r.seats ? 'var(--bad)' : undefined }}>{r.seats}</td></tr>)}
-              <tr><td className="b">Total</td>{ADM_STATUSES.map((s) => <td key={s} className="num b">{sum.totals[s]}</td>)}<td className="num b">{sum.totals.total}</td><td /></tr></tbody></table></div>
-          <p className="small muted" style={{ marginTop: 8 }}>Seats free = 40 per section minus students already enrolled. Red means offers and enrolments are more than the free seats.</p>
-        </Card>
-        <Card title="Funnel — everyone who reached each stage">
-          {sum.funnel.map((f) => <div key={f.stage} className="row" style={{ marginBottom: 6 }}><span style={{ width: 90 }} className="small">{f.stage}</span>
-            <div style={{ flex: 1 }}><div style={{ height: 22, width: `${(100 * f.count) / (sum.funnel[0].count || 1)}%`, minWidth: 2, background: 'var(--brand)', opacity: 0.85, borderRadius: 4 }} /></div><span className="small b" style={{ width: 40, textAlign: 'right' }}>{f.count}</span></div>)}
-        </Card>
-      </>}
-      {tab === 'list' && <>
+      {canSee('ANL_ADMISSIONS') && <p className="small muted" style={{ marginTop: -6 }}>Status by grade, seats free, the funnel and conversion are in <button className="linkbtn" onClick={() => go('ANL_ADMISSIONS')}>Data Analytics › Admissions Funnel</button>.</p>}
+      <>
         <div className="row" style={{ marginBottom: 12 }}><Input placeholder="Search child, parent, mobile, APP no." value={q} onChange={(e) => setQ(e.target.value)} style={{ minWidth: 280 }} />
           <Select value={status} onChange={(e) => setStatus(e.target.value)} options={[['', 'All statuses'], ...ADM_STATUSES]} /></div>
         <div className="tw"><table className="t"><thead><tr><th>App no.</th><th>Child</th><th>Grade</th><th>Parent</th><th>Mobile</th><th>Source</th><th>Updated</th><th>Status</th><th /></tr></thead>
           <tbody>{list.map((e) => <tr key={e.id}><td>{e.no}</td><td className="b">{e.first} {e.last}</td><td>{roman[e.grade - 1]}</td><td>{e.parent}</td><td>{e.mobile}</td><td>{e.source}</td>
             <td className="small">{dmy(e.history.at(-1).at)}</td><td><Pill s={e.status} /></td><td><button className="btn sm" onClick={() => setOpen(e.id)}>Open</button></td></tr>)}</tbody></table></div>
-      </>}
+      </>
       {form && <EnquiryForm application={form.application} onClose={() => setForm(null)} onSave={(f) => { const e = run((d) => addEnquiry(d, f, by)); notify(`${e.no} saved${e.email ? ' — acknowledgement emailed' : ''}`); setForm(null); }} />}
       {open && <EnquiryDetail id={open} onClose={() => setOpen(null)} go={go} />}
     </Page>

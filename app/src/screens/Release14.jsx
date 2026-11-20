@@ -39,7 +39,7 @@ export function BoardBar() {
 }
 
 // ---------------------------------------------------------------- Curriculum Planning (LMS)
-export function Curriculum() {
+export function Curriculum({ go, menus }) {
   const { db, session } = useStore();
   const act = useAct();
   const [cls, setCls] = useState('C8');
@@ -62,6 +62,7 @@ export function Curriculum() {
       <Stat label="Syllabus covered" value={c.pct + '%'} sub={`${className} ${subject}`} />
       <Stat label="All subjects" value={coverage(all).pct + '%'} sub={`${className}, ${new Set(all.map((u) => u.subject)).size} subjects`} />
     </div>
+    {(menus || []).some((m) => m.items.some((i) => i[0] === 'ANL_ACADEMICS')) && <p className="small muted" style={{ marginTop: -6 }}>Coverage across all classes, with drill-down and export, is in <button className="linkbtn" onClick={() => go('ANL_ACADEMICS')}>Data Analytics › Syllabus Coverage</button>.</p>}
     <Card title={`${className} · ${subject}`}>{units.length ? <div className="tw"><table className="t"><thead><tr><th>Month</th><th>Unit</th><th>Learning outcomes</th><th>Periods</th><th>Taught</th><th>Status</th></tr></thead>
       <tbody>{units.map((u) => <tr key={u.id}><td>{u.month}</td><td className="b">{u.title}</td><td className="small">{u.outcomes || '—'}</td><td>{u.periods}</td>
         <td style={{ minWidth: 160 }}><div className="row"><Input type="number" min="0" max={u.periods} aria-label={`Periods taught: ${u.title}`} disabled={!can} value={u.taught} style={{ width: 70 }}

@@ -113,6 +113,16 @@ export const ROADMAP = [
   { code: 'LMS', title: 'Curriculum planning and student portfolios (LMS)', why: 'Needed for international and IB schools.', seenAt: 'Toddle, Classter', country: 'India / Greece', priority: 'Later', effort: 'L' },
   { code: 'INTL', title: 'International curricula and multiple currencies', why: 'Opens Gulf and South-East Asian schools that follow Indian or IB boards.', seenAt: 'Toddle, Classter', country: 'Global', priority: 'Later', effort: 'L' },
   { code: 'ALUMNI', title: 'Alumni records', why: 'Useful for fundraising and admissions marketing.', seenAt: 'Classter', country: 'Greece', priority: 'Later', effort: 'S' },
+  // Release 15.1: enhancements found in the November 2026 QA cycle, kept as backlog items until scheduled
+  { code: 'QA_API_RULES', title: 'Business rules in the API layer too', why: 'Imports and integrations must not bypass the checks the forms make.', seenAt: 'QA cycle, Nov 2026', country: 'Internal', priority: 'Now', effort: 'M', backlog: true },
+  { code: 'QA_PLAN_RECORD', title: 'Plan and add-on record per school', why: 'One source for billing and menus; shown in Schools & plans.', seenAt: 'QA cycle, Nov 2026', country: 'Internal', priority: 'Now', effort: 'M', backlog: true },
+  { code: 'QA_MERGE', title: 'Merge duplicate students and enquiries', why: 'Duplicates saved with “Save anyway” need a clean-up tool.', seenAt: 'QA cycle, Nov 2026', country: 'Internal', priority: 'Now', effort: 'M', backlog: true },
+  { code: 'QA_INLINE', title: 'Field messages next to each field', why: 'Faster data entry: every problem shown at once, where it is.', seenAt: 'QA cycle, Nov 2026', country: 'Internal', priority: 'Next', effort: 'M', backlog: true },
+  { code: 'QA_OVERPAY', title: 'Confirm unusually large fee amounts', why: 'Fewer cash-entry errors at the counter.', seenAt: 'QA cycle, Nov 2026', country: 'Internal', priority: 'Next', effort: 'S', backlog: true },
+  { code: 'QA_AGERULE', title: 'Age-for-class settings per school and board', why: 'States set different age cut-offs for Grade I.', seenAt: 'QA cycle, Nov 2026', country: 'Internal', priority: 'Next', effort: 'S', backlog: true },
+  { code: 'QA_ADDCOPIES', title: '“Add copies” from the duplicate-book message', why: 'One click instead of finding the book.', seenAt: 'QA cycle, Nov 2026', country: 'Internal', priority: 'Next', effort: 'S', backlog: true },
+  { code: 'QA_CAPS', title: 'Offer name capitalisation before saving', why: 'Tidy records (“KIRAN RAO” → “Kiran Rao”), shown first.', seenAt: 'QA cycle, Nov 2026', country: 'Internal', priority: 'Later', effort: 'S', backlog: true },
+  { code: 'QA_ALERTS', title: 'Screen-reader alerts for form errors', why: 'Accessibility: errors announced as they appear.', seenAt: 'QA cycle, Nov 2026', country: 'Internal', priority: 'Later', effort: 'S', backlog: true },
   { code: 'HEALTH', title: 'Health and infirmary records', why: 'Asked for by boarding schools with hostels.', seenAt: 'Classter (medical data)', country: 'Greece', priority: 'Later', effort: 'S' }
 ];
-export const ROADMAP_STATUS = ['Idea', 'Planned', 'In progress', 'Released'];
+export const ROADMAP_STATUS = ['Backlog', 'Idea', 'Planned', 'In progress', 'Released'];

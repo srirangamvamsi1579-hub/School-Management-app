@@ -317,7 +317,7 @@ function ProposalEditor({ id, back, go }) {
   </Page>;
 }
 
-export function ProposalBuilder({ go }) {
+export function ProposalBuilder({ go, menus }) {
   const { db, run, session } = useStore();
   const rc = rcOf(db);
   const list = db.provider?.proposals || [];
@@ -329,11 +329,10 @@ export function ProposalBuilder({ go }) {
   if (open && list.some((p) => p.id === open)) return <ProposalEditor id={open} back={() => setOpen(null)} go={go} />;
   const rows = list.filter((p) => filter === 'ALL' || p.status === filter);
   const yearOf = (p) => quote(rc, p.options).recurring;
-  const won = list.filter((p) => p.status === 'Won').reduce((s, p) => s + yearOf(p), 0);
-  const openSum = list.filter((p) => ['Draft', 'Sent'].includes(p.status)).reduce((s, p) => s + yearOf(p), 0);
   return <Page title="Proposals" sub="Build a priced proposal from a plan and add-ons, download it as a PDF or email it to the client, and track it to won or lost."
     actions={<><button className="btn" onClick={() => go('SP_RATES')}>Back to Pricing</button><button className="btn pri" onClick={() => create(null)}>New proposal</button></>}>
-    <div className="kpis"><Stat label="Proposals" value={list.length} /><Stat label="Open (draft or sent)" value={lakh(openSum)} sub="a year" /><Stat label="Won" value={lakh(won)} sub="a year" /><Stat label="Win rate" value={(() => { const d = list.filter((p) => ['Won', 'Lost'].includes(p.status)); return d.length ? Math.round((100 * d.filter((p) => p.status === 'Won').length) / d.length) + '%' : '—'; })()} /></div>
+    <div className="kpis">{PROPOSAL_STATUS.map((st) => <Stat key={st} label={st} value={list.filter((p) => p.status === st).length} />)}</div>
+    {(menus || []).some((m) => m.items.some((i) => i[0] === 'SP_ANALYTICS')) && <p className="small muted" style={{ marginTop: -6 }}>Pipeline value, won value and win rate are in <button className="linkbtn" onClick={() => go('SP_ANALYTICS')}>Service Provider › Sales Analytics</button>.</p>}
     <Card right={<Select aria-label="Status filter" value={filter} onChange={(e) => setFilter(e.target.value)} options={[['ALL', 'All'], ...PROPOSAL_STATUS]} />}>
       <div className="tw"><table className="t"><thead><tr><th>Proposal</th><th>School</th><th>Contact</th><th>Students</th><th>Plan</th><th>A year</th><th>Discount</th><th>Status</th><th /></tr></thead>
         <tbody>{rows.map((p) => { const x = quote(rc, p.options); return <tr key={p.id}><td className="b">{p.no}<div className="small muted">{dmy(p.created)} · {p.by}</div></td><td>{p.options.client || <span className="muted">Not named yet</span>}<div className="small muted">{p.options.city}</div></td>
@@ -498,7 +497,7 @@ export function MarketReview() {
   const { db, run, notify } = useStore();
   const [tab, setTab] = useState('india');
   const saved = db.provider?.roadmap || [];
-  const rows = ROADMAP.map((r) => ({ ...r, ...(saved.find((x) => x.code === r.code) || {}), status: saved.find((x) => x.code === r.code)?.status || 'Idea' }));
+  const rows = ROADMAP.map((r) => ({ ...r, ...(saved.find((x) => x.code === r.code) || {}), status: saved.find((x) => x.code === r.code)?.status || (r.backlog ? 'Backlog' : 'Idea') }));
   const setRow = (code, k, v) => { run((d) => { d.provider.roadmap = d.provider.roadmap || []; const x = d.provider.roadmap.find((y) => y.code === code); if (x) x[k] = v; else d.provider.roadmap.push({ code, [k]: v }); }); notify('Roadmap updated'); };
   const india = PROVIDERS.filter((p) => p.region === 'India' && !p.us); const global = PROVIDERS.filter((p) => p.region === 'Global');
   return <Page title="Market review & roadmap" sub={`The Indian and global school-software market, and the features we plan to add next, with where each idea comes from. As of ${dmy(AS_OF)}.`}>

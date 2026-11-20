@@ -114,7 +114,7 @@ export function seedRelease12(db) {
   // ---- Access: the new screens in every department's list; Add Staff now lives inside All Staff ----
   const swap = (list) => {
     let l = list.filter((c) => c !== 'STF_ADD').map((c) => (c === 'STU_PROMOTE' ? 'STU_REPORTCARD' : c));
-    if (l.includes('STU_LIST') && !l.includes('STU_PROFILE')) l.push('STU_PROFILE');
+    if (l.includes('STU_LIST') && !l.includes('STU_PROFILE') && !db.flags?.r15AccountantProfile) l.push('STU_PROFILE');   // release 15.1: once only, so a removal sticks
     if (l.includes('HELP_GUIDE') && !l.includes('HELP_FAQ')) l.push('HELP_FAQ');
     if (l.includes('EXM_PROFILE') && !l.includes('STU_REPORTCARD')) l.push('STU_REPORTCARD');
     if (l.includes('SELF_PAYSLIP') && !l.includes('SELF_LEAVE')) l.push('SELF_LEAVE');

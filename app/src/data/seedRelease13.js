@@ -134,7 +134,7 @@ export function seedRelease13(db) {
   ];
   db.seq.proposal = 3;
   db.provider.demos = [];
-  db.provider.roadmap = ROADMAP.map((r) => ({ code: r.code, status: r.code === 'WHATSAPP' ? 'Planned' : 'Idea', priority: r.priority }));
+  db.provider.roadmap = ROADMAP.map((r) => ({ code: r.code, status: r.backlog ? 'Backlog' : r.code === 'WHATSAPP' ? 'Planned' : 'Idea', priority: r.priority }));
 
   // ---- Access: the new screens in every department's list ----
   Object.values(departments(db)).forEach(({ name, profiles }) => {

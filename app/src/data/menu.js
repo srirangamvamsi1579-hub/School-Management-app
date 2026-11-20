@@ -30,22 +30,26 @@ export const isProvider = (role) => PROVIDER_ROLES.includes(role);
 export const MENU = [
   { code: 'DASHBOARD', label: 'Dashboard', icon: 'home', min: 1, items: [['DASH', 'Dashboard', 1]] },
   { code: 'STUDENTS', label: 'Students', icon: 'users', min: 1, items: [
-    ['STU_INS', 'Insights', 2], ['STU_LIST', 'All Students', 1], ['STU_PROFILE', 'Student Profile', 1], ['STU_ADMISSIONS', 'Admissions & Enquiries', 1], ['STU_ADMIT', 'New Admission', 1], ['STU_ATT', 'Attendance', 1], ['STU_REQUESTS', 'Coordinator Desk', 1], ['STU_MEETINGS', 'Parent Meetings', 1], ['STU_OFFICE', 'Office Requests', 1], ['STU_GATE', 'Gate Desk', 1],
+    ['STU_LIST', 'All Students', 1], ['STU_PROFILE', 'Student Profile', 1], ['STU_ADMISSIONS', 'Admissions & Enquiries', 1], ['STU_ADMIT', 'New Admission', 1], ['STU_ATT', 'Attendance', 1], ['STU_REQUESTS', 'Coordinator Desk', 1], ['STU_MEETINGS', 'Parent Meetings', 1], ['STU_OFFICE', 'Office Requests', 1], ['STU_GATE', 'Gate Desk', 1],
     ['STU_REPORTCARD', 'Report Cards', 1], ['STU_DOCS', 'Documents & ID Cards', 1], ['STU_PORTFOLIO', 'Portfolios', 3]] },
   { code: 'STAFF', label: 'Staff', icon: 'brief', min: 1, items: [
-    ['STF_INS', 'Insights', 2], ['STF_LIST', 'All Staff', 1], ['STF_ATT', 'Staff Attendance', 1], ['STF_LEAVE', 'Leave Requests', 1]] },
+    ['STF_LIST', 'All Staff', 1], ['STF_ATT', 'Staff Attendance', 1], ['STF_LEAVE', 'Leave Requests', 1]] },
   { code: 'ACADEMICS', label: 'Academics', icon: 'book', min: 1, items: [
     ['ACA_CLASS', 'Classes & Sections', 1], ['ACA_COORD', 'Class Coordinators', 1], ['ACA_SYLLABUS', 'Boards, Syllabus & Textbooks', 1], ['ACA_TIMETABLE', 'Timetable', 1], ['ACA_CURRICULUM', 'Curriculum Planning', 3]] },
   { code: 'EXAMS', label: 'Exams', icon: 'exam', min: 1, items: [
     ['#P', 'Papers'], ['EXM_QP', 'Question Papers', 1], ['EXM_APPROVED', 'Approved Papers', 1], ['EXM_QB', 'Question Bank', 1], ['EXM_FORMATS', 'Blueprints', 1],
     ['#C', 'Co-Scholastic'], ['EXM_COSCH', 'Co-Scholastic Grades', 1], ['#R', 'Reports'], ['EXM_PROFILE', 'Assessment Profiles', 1]] },
   { code: 'FEES', label: 'Fees', icon: 'receipt', min: 1, items: [
-    ['FEE_INS', 'Insights', 2], ['FEE_COLLECT', 'Collect Fee', 1], ['FEE_REQUESTS', 'Fee Request Emails', 1], ['FEE_MATCHING', 'Payment Matching', 2],
+    ['FEE_COLLECT', 'Collect Fee', 1], ['FEE_REQUESTS', 'Fee Request Emails', 1], ['FEE_MATCHING', 'Payment Matching', 2],
     ['FEE_DUES', 'Dues & Reminders', 1], ['FEE_RECEIPTS', 'Receipts', 1], ['FEE_STRUCT', 'Fee Structure', 1], ['FEE_CONC', 'Concessions', 2]] },
   { code: 'TRANSPORT', label: 'Transport', icon: 'bus', min: 1, items: [
     ['TRN_MANIFEST', 'Daily Bus Manifest', 1], ['TRN_SHEETS', 'Driver Route Sheets', 1], ['TRN_CHANGES', 'Pickup & Drop Changes', 1], ['TRN_ROUTES', 'Routes, Stops & Timings', 1]] },
   { code: 'ANALYTICS', label: 'Data Analytics', icon: 'chart', min: 2, items: [
-    ['ANL_HOME', 'Report Catalogue', 2], ['ANL_RANK', 'Top & Bottom Performers', 2], ['ANL_TRANSPORT', 'Transport Reports', 2], ['ANL_TEACHER', 'Teacher Performance', 2], ['ANL_ADMISSIONS', 'Admissions Funnel', 2]] },
+    // Release 15.1: every analytic, report and trend lives here (Insights moved from Students, Staff and Fees)
+    ['ANL_HOME', 'Report Catalogue', 2], ['#S', 'Students'], ['STU_INS', 'Student Insights', 2], ['ANL_ADMISSIONS', 'Admissions Funnel', 2], ['ANL_ATTENDANCE', 'Attendance', 2],
+    ['#E', 'Academics & exams'], ['ANL_EXAMS', 'Exam Results', 2], ['ANL_RANK', 'Top & Bottom Performers', 2], ['ANL_TEACHER', 'Teacher Performance', 2], ['ANL_TIMETABLE', 'Timetable & Cover', 2], ['ANL_ACADEMICS', 'Syllabus Coverage', 2],
+    ['#F', 'Staff & fees'], ['STF_INS', 'Staff Insights', 2], ['FEE_INS', 'Fee Insights', 2],
+    ['#O', 'Operations'], ['ANL_TRANSPORT', 'Transport Reports', 2], ['ANL_COMMS', 'Parent Communication', 2], ['ANL_CAMPUS', 'Campus Trends', 2]] },
   { code: 'PAYROLL', label: 'Payroll', icon: 'wallet', min: 2, items: [['PAY_RUN', 'Run Payroll', 2], ['PAY_SLIPS', 'Payslips', 2]] },
   { code: 'ACCOUNTS', label: 'Accounts', icon: 'chart', min: 1, items: [
     ['ACC_STMT', 'Account Statement', 3], ['ACC_EXP', 'Income & Expenses', 3]] },
@@ -65,7 +69,7 @@ export const MENU = [
   { code: 'SERVICE_PROVIDER', label: 'Service Provider', icon: 'brief', min: 1, items: [
     ['#S', 'Sales'], ['SP_RATES', 'Price List & Tiers', 1], ['SP_PROPOSAL', 'Proposal Builder', 1], ['SP_DEMO', 'Demo Builder', 1],
     ['#D', 'Delivery'], ['SP_DELIVERY', 'Client Delivery', 1],
-    ['#M', 'Market'], ['SP_COMPARE', 'Competition Comparison', 1], ['SP_MARKET', 'Market Review & Roadmap', 1]] },
+    ['#M', 'Market'], ['SP_ANALYTICS', 'Sales Analytics', 1], ['SP_COMPARE', 'Competition Comparison', 1], ['SP_MARKET', 'Market Review & Roadmap', 1]] },
   // Settings: how the school and the app are set up (branding, website, screens, templates, bank details, messages).
   { code: 'SETTINGS', label: 'Settings', icon: 'settings', min: 1, items: [
     ['#S', 'School setup'], ['OPS_APPEARANCE', 'Appearance & Branding', 1], ['OPS_WEBSITE', 'Website & Links', 1], ['OPS_CHANNELS', 'Web & App Screens', 1], ['OPS_TEMPLATES', 'Templates', 1], ['ACC_BANK', 'Bank & Payment Details', 1],
@@ -74,18 +78,20 @@ export const MENU = [
 ];
 
 const ALL = MENU.flatMap((m) => m.items.map((i) => i[0])).filter((c) => c[0] !== '#');
-export const SP_CODES = ['SP_RATES', 'SP_PROPOSAL', 'SP_DEMO', 'SP_DELIVERY', 'SP_COMPARE', 'SP_MARKET'];
+export const SP_CODES = ['SP_RATES', 'SP_PROPOSAL', 'SP_DEMO', 'SP_DELIVERY', 'SP_ANALYTICS', 'SP_COMPARE', 'SP_MARKET'];
+// Release 15.1 analytics screens (new codes) and who gets them by default
+export const ANL_NEW = ['ANL_ATTENDANCE', 'ANL_EXAMS', 'ANL_TIMETABLE', 'ANL_ACADEMICS', 'ANL_COMMS', 'ANL_CAMPUS'];
 const CMP = { ALL: ['CMP_EVENTS', 'CMP_HOMEWORK', 'CMP_CLASSES', 'CMP_LIBRARY', 'CMP_INVENTORY', 'CMP_HOSTEL'], TEACH: ['CMP_EVENTS', 'CMP_HOMEWORK', 'CMP_CLASSES', 'CMP_LIBRARY'],
   OFFICE: ['CMP_EVENTS', 'CMP_LIBRARY', 'CMP_INVENTORY', 'CMP_HOSTEL'], MONEY: ['CMP_EVENTS', 'CMP_INVENTORY', 'CMP_HOSTEL'], HOME: ['CMP_EVENTS', 'CMP_HOMEWORK', 'CMP_CLASSES'] };
 
 export const ACCESS = {
   ADMIN: ALL.filter((c) => !['SELF_CHILD', 'SELF_FEES', 'SELF_REQUESTS', 'SELF_MYPERF', 'PLT_SCHOOLS'].includes(c)),   // includes Service Provider (release 13.2)
-  PRINCIPAL: ['DASH', 'OPS_CHANNELS', 'HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'STU_PROFILE', 'STU_REPORTCARD', 'STU_INS', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'STU_OFFICE', 'ACA_COORD', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'SELF_PROFILE', 'ANL_HOME', 'ANL_RANK', 'ANL_TRANSPORT', 'ANL_TEACHER', 'ANL_ADMISSIONS', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE', 'ACA_CURRICULUM', 'STU_PORTFOLIO',
+  PRINCIPAL: ['DASH', 'OPS_CHANNELS', 'HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'STU_PROFILE', 'STU_REPORTCARD', 'STU_INS', 'STU_LIST', 'STU_ADMISSIONS', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'STU_OFFICE', 'ACA_COORD', 'TRN_MANIFEST', 'TRN_SHEETS', 'TRN_CHANGES', 'TRN_ROUTES', 'SELF_PROFILE', 'ANL_HOME', 'ANL_RANK', 'ANL_TRANSPORT', 'ANL_TEACHER', 'ANL_ADMISSIONS', 'ANL_ATTENDANCE', 'ANL_EXAMS', 'ANL_TIMETABLE', 'ANL_ACADEMICS', 'ANL_COMMS', 'ANL_CAMPUS', 'STF_INS', 'STF_LIST', 'STF_ATT', 'STF_LEAVE', 'ACA_CLASS', 'ACA_SYLLABUS', 'ACA_TIMETABLE', 'ACA_CURRICULUM', 'STU_PORTFOLIO',
     'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_FORMATS', 'EXM_COSCH', 'EXM_PROFILE', 'FEE_INS', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_STRUCT', 'FEE_CONC',
     'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS', ...CMP.ALL],
-  ACCOUNTANT: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'DASH', 'STU_LIST', 'STF_LIST', 'SELF_PROFILE', 'ANL_HOME', 'ANL_TRANSPORT', 'FEE_INS', 'FEE_COLLECT', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_RECEIPTS', 'FEE_STRUCT', 'FEE_CONC',
+  ACCOUNTANT: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'DASH', 'STU_LIST', 'STF_LIST', 'SELF_PROFILE', 'ANL_HOME', 'ANL_TRANSPORT', 'STF_INS', 'FEE_INS', 'FEE_COLLECT', 'FEE_REQUESTS', 'FEE_MATCHING', 'FEE_DUES', 'FEE_RECEIPTS', 'FEE_STRUCT', 'FEE_CONC',
     'PAY_RUN', 'PAY_SLIPS', 'ACC_BANK', 'ACC_STMT', 'ACC_EXP', 'OPS_TEMPLATES', 'OPS_OUTBOX', 'SELF_PAYSLIP', 'SELF_PREFS', ...CMP.MONEY],
-  TEACHER: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'DASH', 'STU_LIST', 'STU_PROFILE', 'STU_REPORTCARD', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'ANL_RANK', 'SELF_PROFILE', 'ACA_SYLLABUS', 'ACA_TIMETABLE', 'ACA_CURRICULUM', 'STU_PORTFOLIO', 'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_COSCH', 'EXM_PROFILE',
+  TEACHER: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'DASH', 'STU_LIST', 'STU_PROFILE', 'STU_REPORTCARD', 'STU_ATT', 'STU_REQUESTS', 'STU_MEETINGS', 'ANL_RANK', 'ANL_HOME', 'ANL_EXAMS', 'ANL_ATTENDANCE', 'ANL_ACADEMICS', 'SELF_PROFILE', 'ACA_SYLLABUS', 'ACA_TIMETABLE', 'ACA_CURRICULUM', 'STU_PORTFOLIO', 'EXM_QP', 'EXM_APPROVED', 'EXM_QB', 'EXM_COSCH', 'EXM_PROFILE',
     'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS', ...CMP.TEACH],
   FRONT_OFFICE: ['HELP_GUIDE', 'HELP_FAQ', 'SELF_LEAVE', 'DASH', 'STU_LIST', 'STU_PROFILE', 'STU_GATE', 'STU_OFFICE', 'TRN_CHANGES', 'SELF_PROFILE', 'STU_ADMISSIONS', 'STU_ADMIT', 'ANL_ADMISSIONS', 'STU_DOCS', 'FEE_COLLECT', 'FEE_DUES', 'FEE_RECEIPTS', 'OPS_TEMPLATES', 'SELF_PAYSLIP', 'SELF_PREFS', ...CMP.OFFICE],
   PARENT: ['HELP_GUIDE', 'HELP_FAQ', 'DASH', 'ACA_TIMETABLE', 'SELF_CHILD', 'SELF_REQUESTS', 'SELF_FEES', 'SELF_PROFILE', 'SELF_PREFS', ...CMP.HOME, 'STU_PORTFOLIO'],

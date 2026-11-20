@@ -369,3 +369,11 @@ nav.side .mod:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
 table.t tr.hl td { background: var(--brand-soft); }
 .provider-card { padding: 4px 0; }
 @media (max-width: 900px) { .tiers { grid-template-columns: 1fr; } .sticky-side { position: static; } }
+
+/* Release 15.1: Data Analytics reports */
+.linkbtn { background: none; border: 0; padding: 0; font: inherit; color: var(--brand); text-decoration: underline; cursor: pointer; }
+.linkbtn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.report-filters { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; margin-bottom: 12px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.report-filters .f { min-width: 130px; }
+.report .kpis { margin: 10px 0; }
+@media print { .report-filters, .report .btn { display: none; } }
