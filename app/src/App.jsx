@@ -108,7 +108,7 @@ export default function App() {
 
   const sideNav = (
     <nav className={'side' + (navOpen ? ' open' : '')} aria-label="Main menu">
-      <div className="school"><div className="logo">{tenant.name[0]}</div><div><div className="b" style={{ fontSize: 13 }}>{tenant.name}</div><div className="small" style={{ opacity: .7 }}>{tenant.demo ? tenant.demo.tier : PLANS.find((p) => p.rank === rank).name} plan</div></div></div>
+      <div className="school"><div className="logo">{tenant.name[0]}</div><div><div className="b" style={{ fontSize: 13 }}>{tenant.name}</div><div className="small" style={{ opacity: .7 }}>{tenant.demo ? tenant.demo.tier : tenant.trial ? tenant.trial.tier : PLANS.find((p) => p.rank === rank).name} plan</div></div></div>
       <button className={'item' + (screen === 'HOME' ? ' on' : '')} onClick={() => go('HOME')} aria-current={screen === 'HOME' ? 'page' : undefined}>⌂ Main menu</button>
       {links.filter((l) => l.under === 'TOP').map((l) => <a key={l.id} className="item" href={l.url} target="_blank" rel="noreferrer">{l.label}<span className="ext">↗</span></a>)}
       {visible.map((m) => {
@@ -157,6 +157,7 @@ export default function App() {
         </header>
         {viewBar}
         <DemoEndBar tenant={tenant} />
+        {tenant.trial && <div className="ro-bar" role="status" style={{ background: 'var(--info-bg, #e8f0fe)' }}>Customer test build: <b>{tenant.name}</b> · {tenant.trial.tier} plan · version {tenant.trial.version} · {tenant.trial.date} · demo data, kept in this browser only.</div>}
         {locked && <div className="ro-bar" role="status">Read only — you can view this screen but not change anything. Your school sets this in Roles &amp; Permissions.</div>}
         <main className={'content' + (locked ? ' ro' : '')}>{/^EXM_/.test(screen) && funcOn(tenant, 'FN_BOARD') && <BoardBar />}<Screen go={go} code={screen} menus={visible} /></main>
         <DemoBar />

@@ -3,6 +3,7 @@
 // backup history and the exam board. Safe to run more than once.
 import { ACCESS } from './menu.js';
 import { DEFAULT_RATE_CARD, blankOptions, upgradeOptions } from '../lib/pricing.js';
+import { convertProposal } from '../lib/delivery.js';
 import { departments, baseRoleOf } from '../lib/auth.js';
 
 export const NEW_CODES_14 = ['ACA_CURRICULUM', 'STU_PORTFOLIO', 'OPS_BACKUP'];
@@ -13,6 +14,7 @@ const addDays = (s, n) => { const d = new Date(s + 'T00:00:00'); d.setDate(d.get
 export const DEFAULT_PROFILE = {
   name: 'YourApp School Systems (example)', product: 'YourApp School Platform', contact: 'Sales team', designation: 'Sales & marketing',
   email: 'sales@yourapp.example.com', phone: '+91 80000 00000', website: 'https://yourapp.example.com', city: 'Bengaluru, Karnataka',
+  testSite: 'https://srirangamvamsi1579-hub.github.io/School-Management-app/',   // where customer test-build links open
   about: 'We build school software for Indian schools: admissions to report cards, fees, transport and a phone app for every parent. Your data stays in India, and our team sets the school up and trains your staff.'
 };
 
@@ -94,5 +96,22 @@ export function seedRelease14(db) {
   });
   if (db.perms) Object.keys(db.perms).forEach((r) => { db.perms[r] = [...new Set([...db.perms[r], ...(ACCESS[baseRoleOf(db, r)] || []).filter((c) => NEW_CODES_14.includes(c))])]; });
   db.release = 14;
+  return db;
+}
+
+// Release 14.1: Service Provider only for our company's Admin; client delivery; the Won sample proposal converted
+export function seedRelease141(db) {
+  if (db.release141) return db;
+  const admin = db.users.find((u) => u.role === 'ADMIN' && u.status === 'ACTIVE');
+  if (admin) admin.companyAdmin = true;                 // the test build's Admin is also our company's Admin
+  db.provider = db.provider || {};
+  db.provider.profile = { ...DEFAULT_PROFILE, ...(db.provider.profile || {}) };
+  if (!db.provider.profile.testSite) db.provider.profile.testSite = DEFAULT_PROFILE.testSite;
+  (db.provider.proposals || []).forEach((p) => { if (p.options && p.options.showInternal === true && !p.internalChosen) p.options.showInternal = false; });
+  db.provider.projects = db.provider.projects || [];
+  const won = (db.provider.proposals || []).find((p) => p.id === 'PR3');
+  if (won && !won.projectId && won.options?.poc?.email) { db.seq = db.seq || {}; convertProposal(db, won.id, 'Sales team'); }
+  if (db.perms?.ADMIN && !db.perms.ADMIN.includes('SP_DELIVERY')) db.perms.ADMIN.push('SP_DELIVERY');
+  db.release141 = true;
   return db;
 }

@@ -12,6 +12,8 @@ import {
 } from '../lib/pricing.js';
 import { DEFAULT_PROFILE } from '../data/seedRelease14.js';
 import { saveOptions, newProposal, makeDemo } from '../lib/proposals.js';
+import * as dlv from '../lib/delivery.js';
+import { saveFile } from '../lib/saveFile.js';
 import { PROVIDERS, FEATURES, AS_OF, FX, MARKET, ROADMAP, ROADMAP_STATUS, mark, priceRange } from '../data/providers.js';
 
 const rcOf = (db) => (db.provider?.rateCard?.version >= 2 ? db.provider.rateCard : DEFAULT_RATE_CARD);
@@ -292,10 +294,12 @@ function ProposalEditor({ id, back, go }) {
         <Field label="Hosting"><Select aria-label="Hosting" value={o.hosting} onChange={(e) => set({ ...o, hosting: e.target.value })} options={rc.hosting.map((h) => [h.code, h.name])} /></Field>
         <DiscountField o={o} set={set} q={q} />
         <label className="row small"><input type="checkbox" checked={!!o.interState} onChange={(e) => set({ ...o, interState: e.target.checked })} /> School is in another state (IGST)</label>
-        <label className="row small"><input type="checkbox" checked={o.showInternal !== false} onChange={(e) => set({ ...o, showInternal: e.target.checked })} /> Show margin, profit and operating cost in the PDF</label>
+        <label className="row small"><input type="checkbox" checked={o.showInternal === true} onChange={(e) => set({ ...o, showInternal: e.target.checked })} /> Internal copy: include margin, profit and operating cost in the PDF</label>
       </div></Card>
     </div><div className="sticky-side"><PriceSummary rc={rc} q={q} />
-      <Card title="Status"><Select aria-label="Proposal status" value={p.status} onChange={(e) => run((d) => { d.provider.proposals.find((x) => x.id === id).status = e.target.value; })} options={PROPOSAL_STATUS} />
+      <Card title="Status"><Select aria-label="Proposal status" value={p.status} onChange={(e) => { const v = e.target.value; if (v === 'Won' && !p.projectId) { if (!ready()) return; try { run((d) => dlv.convertProposal(d, id, session.name)); notify('Won: converted to a client — school, documents and links are ready in Client Delivery'); } catch (err) { notify(err.message); } return; } run((d) => { d.provider.proposals.find((x) => x.id === id).status = v; }); }} options={PROPOSAL_STATUS} />
+        {p.projectId ? <button className="btn sm pri" style={{ marginTop: 8 }} onClick={() => { stash('sp-open-project', p.projectId); go('SP_DELIVERY'); }}>Open client delivery</button>
+          : <button className="btn sm" style={{ marginTop: 8 }} onClick={() => { if (!ready()) return; try { const pr = run((d) => dlv.convertProposal(d, id, session.name)); notify(`Converted to client ${pr.no}`); stash('sp-open-project', pr.id); go('SP_DELIVERY'); } catch (err) { notify(err.message); } }}>Convert to client</button>}
         {(p.sent || []).map((s) => <div key={s.at} className="small muted" style={{ marginTop: 4 }}>Emailed to {s.to} · {dmy(s.at)} · {s.by}</div>)}
         {demo && <div className="small" style={{ marginTop: 6 }}>Demo school: <b>{demo.name}</b> (updates with this proposal)</div>}</Card>
     </div></div>
@@ -508,5 +512,96 @@ export function MarketReview() {
             <td><Select aria-label={`Priority of ${r.title}`} value={r.priority} onChange={(e) => setRow(r.code, 'priority', e.target.value)} options={['Now', 'Next', 'Later']} /></td>
             <td><Select aria-label={`Status of ${r.title}`} value={r.status} onChange={(e) => setRow(r.code, 'status', e.target.value)} options={ROADMAP_STATUS} /></td></tr>)}</tbody></table></div></Card>)}
       <p className="small muted">Released in this version (release 13): Library, Hostel, Homework, Online Classes, Inventory & Store, Events & Calendar — the gaps against Fedena, Devryon, Teachmint and Classter.</p></>}
+  </Page>;
+}
+
+// ================================================================ Client Delivery (release 14.1)
+const LINK_KIND = { Placeholder: 'warn', Planned: '', Ready: 'info', Shared: 'ok' };
+function DocPreview({ d }) {
+  return <div className="doc">
+    <h1 style={{ marginBottom: 2 }}>{d.title}</h1><p className="muted">{d.client} · {d.projectNo} · version {d.version} · {dlv.dmy(d.date)}</p>
+    {d.sections.map((s) => <div key={s.h}><h2>{s.h}</h2>{s.p && <p>{s.p}</p>}{s.bullets && <ul>{s.bullets.map((b) => <li key={b}>{b}</li>)}</ul>}
+      {s.table && <div className="tw"><table className="t">{s.table.cols.some(Boolean) && <thead><tr>{s.table.cols.map((c, i) => <th key={i}>{c}</th>)}</tr></thead>}<tbody>{s.table.rows.map((r, i) => <tr key={i}>{r.map((c, k) => <td key={k} className={k === 0 && !s.table.cols[0] ? 'b' : 'small'} style={{ wordBreak: 'break-all' }}>{c}</td>)}</tr>)}</tbody></table></div>}</div>)}
+  </div>;
+}
+const copyText = (t, notify) => { try { navigator.clipboard.writeText(t).then(() => notify('Link copied'), () => notify('Copy blocked here — select the link and copy it')); } catch (e) { notify('Copy blocked here — select the link and copy it'); } };
+
+function ProjectView({ id, back }) {
+  const { db, run, notify, session } = useStore();
+  const profile = profileOf(db);
+  const project = db.provider.projects.find((x) => x.id === id);
+  const tenant = db.tenants.find((t) => t.id === project.tenantId);
+  const [tab, setTab] = useState('links');
+  const [edit, setEdit] = useState(null);       // link being edited
+  const [view, setView] = useState(null);       // document code being previewed
+  const [share, setShare] = useState(null);
+  const changed = dlv.proposalChanged(db, project);
+  const act = (fn, msg) => { try { run(fn); notify(msg); return true; } catch (e) { notify(e.message); return false; } };
+  const html = useMemo(() => dlv.websiteHtml(db, project), [db, project]);
+  const ready = project.links.filter((l) => ['Ready', 'Shared'].includes(l.status)).length;
+  const docOf = (c) => dlv.buildDoc(db, project, c);
+  const pdf = (c) => import('../lib/docPdf.js').then((m) => m.downloadDocPdf(docOf(c), profile)).catch((e) => notify(e.message || 'The PDF could not be saved'));
+  return <Page title={`${project.client} · ${project.no}`} sub={`Converted from ${project.proposalNo} on ${dlv.dmy(project.created)}. ${project.tierName} plan · school code ${tenant.code} · version ${project.version} (${dlv.dmy(project.updated)}).`}
+    actions={<><button className="btn" onClick={back}>Back to clients</button><button className="btn pri" onClick={() => setShare({ to: project.options.poc?.email || '', cc: profile.email, links: project.links.filter((l) => l.group === 'Testing').map((l) => l.code), docs: ['UAT', 'LINKS'], message: `Dear ${project.options.poc?.name || 'Sir / Madam'},\n\nThank you for choosing ${profile.product}. Please find below the links for testing your school's set-up, and the documents for this version. Do get in touch with any questions.` })}>Share with customer</button></>}>
+    {changed && <div className="ro-bar" role="status" style={{ marginBottom: 10 }}>The proposal has changed since version {project.version}. <button className="btn sm pri" onClick={() => act((d) => dlv.regenerate(d, id, session.name), `Version ${dlv.bumpVersion(project.version)}: school, documents and links brought up to date`)}>Regenerate as version {dlv.bumpVersion(project.version)}</button></div>}
+    <div className="kpis">
+      <Stat label="Status" value={<Select aria-label="Project status" value={project.status} onChange={(e) => act((d) => { const p = d.provider.projects.find((x) => x.id === id); p.status = e.target.value; d.tenants.find((t) => t.id === p.tenantId).status = e.target.value === 'Live' ? 'Active' : e.target.value; p.log.unshift({ at: new Date().toISOString(), by: session.name, what: 'Status: ' + e.target.value }); }, 'Status: ' + e.target.value)} options={dlv.PROJECT_STATUS} />} />
+      <Stat label="Version" value={project.version} sub={dlv.dmy(project.updated)} />
+      <Stat label="Links live" value={`${ready} / ${project.links.length}`} sub={`${project.links.filter((l) => l.status === 'Planned').length} planned · ${project.links.filter((l) => l.status === 'Placeholder').length} placeholders to fill`} />
+      <Stat label="Shared with the customer" value={project.shares.length} sub={project.shares[0] ? dlv.dmy(project.shares[0].at) : 'not yet'} />
+    </div>
+    <Tabs tabs={[['links', 'Links'], ['docs', `Documents (${dlv.DOC_TYPES.length})`], ['site', 'Website'], ['log', 'History']]} value={tab} onChange={setTab} />
+    {tab === 'links' && dlv.LINK_GROUPS.map((g) => <Card key={g} title={g}>
+      <div className="tw"><table className="t"><thead><tr><th>Link</th><th>Environment</th><th>Address</th><th>Version</th><th>Date</th><th>Status</th><th /></tr></thead>
+        <tbody>{project.links.filter((l) => l.group === g).map((l) => <tr key={l.code}><td className="b">{l.label}{l.note && <div className="small muted">{l.note}</div>}</td><td>{l.env}</td>
+          <td className="small" style={{ wordBreak: 'break-all', maxWidth: 380 }}>{['Placeholder', 'Planned'].includes(l.status) ? <span className="muted">{l.url}</span> : <a href={l.url} target="_blank" rel="noreferrer">{l.url.length > 90 ? l.url.slice(0, 87) + '…' : l.url}</a>}{l.history?.length > 0 && <div className="muted">{l.history.length} earlier version{l.history.length > 1 ? 's' : ''}</div>}</td>
+          <td>{l.version}</td><td>{dlv.dmy(l.date)}</td><td><Pill kind={LINK_KIND[l.status]}>{l.status}</Pill></td>
+          <td><div className="row">{l.status !== 'Placeholder' && <button className="btn sm" onClick={() => copyText(l.url, notify)}>Copy</button>}{l.status === 'Planned' && <button className="btn sm" onClick={() => act((d) => dlv.setLink(d, id, l.code, { url: l.url, version: project.version, note: l.note }, session.name), `${l.label}: marked live`)}>Mark live</button>}{!l.auto && <button className="btn sm" onClick={() => setEdit({ code: l.code, url: l.url, version: l.version === '—' ? project.version : l.version, note: l.note || '', live: true })}>{l.status === 'Placeholder' ? 'Fill in' : 'Edit'}</button>}</div></td></tr>)}</tbody></table></div>
+      {g === 'Testing' && <p className="small muted">The test build link carries the school's set-up, so the customer opens exactly what was sold (with demo data) in their own browser. It changes with each version.</p>}
+      {g === 'Mobile' && <p className="small muted">{project.options.addons?.BRANDED_APP ? `Branded app ${'com.yourapp.'}…: fill in the store links once the builds are uploaded to internal testing and TestFlight.` : 'Shared app: the store links are the shared app’s; parents enter the school code.'}</p>}
+    </Card>)}
+    {tab === 'docs' && <Card title="Documents" right={<span className="small muted">Generated from the proposal and this project. Version {project.version}.</span>}>
+      <div className="tw"><table className="t"><thead><tr><th>Document</th><th>Version</th><th>Date</th><th /></tr></thead>
+        <tbody>{dlv.DOC_TYPES.map(([c, t]) => { const m = project.documents.find((d) => d.code === c); return <tr key={c}><td className="b">{t}</td><td>{m.version}</td><td>{dlv.dmy(m.date)}</td>
+          <td><div className="row"><button className="btn sm" onClick={() => setView(c)}>Preview</button><button className="btn sm" onClick={() => pdf(c)}>Download PDF</button></div></td></tr>; })}</tbody></table></div></Card>}
+    {tab === 'site' && <Card title="Starter website page" right={<div className="row"><button className="btn sm" onClick={() => saveFile(`${tenant.subdomain}-website-v${project.version}.html`, html).catch(() => {})}>Download HTML</button></div>}>
+      <p className="small muted">Generated for version {project.version} with the school's name, admissions, parent sign-in and app buttons. Buttons whose link is still a placeholder are greyed until it is filled in. Upload it to the school's website hosting, or send it to the school's web designer.</p>
+      <iframe title="Website preview" srcDoc={html} sandbox="" style={{ width: '100%', height: 560, border: '1px solid var(--line)', borderRadius: 8 }} /></Card>}
+    {tab === 'log' && <Card title="History"><ul className="small">{project.log.map((l, i) => <li key={i}>{new Date(l.at).toLocaleString('en-IN')} · {l.by} · {l.what}</li>)}</ul>
+      {project.shares.length > 0 && <><h3>Shared</h3><div className="tw"><table className="t"><thead><tr><th>When</th><th>To</th><th>Version</th><th>Links</th><th>Documents</th></tr></thead><tbody>{project.shares.map((s, i) => <tr key={i}><td>{dlv.dmy(s.at)}</td><td>{s.to}</td><td>{s.version}</td><td>{s.links.length}</td><td>{s.docs.length}</td></tr>)}</tbody></table></div></>}</Card>}
+    {edit && <Modal title="Link" onClose={() => setEdit(null)} actions={<button className="btn pri" onClick={() => { if (act((d) => dlv.setLink(d, id, edit.code, edit, session.name), 'Link saved')) setEdit(null); }}>Save</button>}>
+      <p className="small">{project.links.find((l) => l.code === edit.code).label}</p>
+      <div className="form"><Field label="Address" full><Input aria-label="Link address" value={edit.url} onChange={(e) => setEdit({ ...edit, url: e.target.value })} /></Field>
+        <Field label="Version"><Input aria-label="Link version" value={edit.version} onChange={(e) => setEdit({ ...edit, version: e.target.value })} /></Field>
+        <Field label="Note" full><Input aria-label="Link note" value={edit.note} onChange={(e) => setEdit({ ...edit, note: e.target.value })} placeholder="e.g. build 14, uploaded to internal testing" /></Field>
+        <label className="row small"><input type="checkbox" checked={edit.live} onChange={(e) => setEdit({ ...edit, live: e.target.checked })} /> This link is live now (otherwise it stays Planned)</label></div>
+      <p className="small muted">Replace the part in &lt; &gt; with the real value. The old address is kept in the link's history with its version and date.</p></Modal>}
+    {view && <Modal title={dlv.DOC_TYPES.find((d) => d[0] === view)[1]} onClose={() => setView(null)} actions={<button className="btn pri" onClick={() => pdf(view)}>Download PDF</button>}><DocPreview d={docOf(view)} /></Modal>}
+    {share && <Modal title={`Share with ${project.client}`} onClose={() => setShare(null)} actions={<><button className="btn" onClick={() => setShare(null)}>Cancel</button><button className="btn pri" onClick={() => { if (act((d) => dlv.shareWithCustomer(d, id, { to: share.to, cc: share.cc, linkCodes: share.links, docCodes: share.docs, message: share.message }, session.name), `Sent to ${share.to}`)) setShare(null); }}>Send email</button></>}>
+      <div className="form"><Field label="To" req><Input type="email" aria-label="Share to" value={share.to} onChange={(e) => setShare({ ...share, to: e.target.value })} /></Field><Field label="Cc"><Input aria-label="Share cc" value={share.cc} onChange={(e) => setShare({ ...share, cc: e.target.value })} /></Field>
+        <Field label="Message" full><textarea className="i" rows={5} aria-label="Share message" value={share.message} onChange={(e) => setShare({ ...share, message: e.target.value })} style={{ fontFamily: 'inherit' }} /></Field></div>
+      <h3>Links</h3>{project.links.map((l) => <label key={l.code} className="row small"><input type="checkbox" disabled={l.status === 'Placeholder'} checked={share.links.includes(l.code)} onChange={() => setShare({ ...share, links: share.links.includes(l.code) ? share.links.filter((x) => x !== l.code) : [...share.links, l.code] })} />{l.label} <span className="muted">({l.env}{l.status === 'Placeholder' ? ', placeholder' : l.status === 'Planned' ? ', planned address' : ''})</span></label>)}
+      <h3>Documents (attached as PDF)</h3>{dlv.DOC_TYPES.map(([c, t]) => <label key={c} className="row small"><input type="checkbox" checked={share.docs.includes(c)} onChange={() => setShare({ ...share, docs: share.docs.includes(c) ? share.docs.filter((x) => x !== c) : [...share.docs, c] })} />{t}</label>)}
+    </Modal>}
+  </Page>;
+}
+
+export function ClientDelivery({ go }) {
+  const { db, run, notify, session } = useStore();
+  const projects = db.provider?.projects || [];
+  const won = (db.provider?.proposals || []).filter((p) => !p.projectId && p.status !== 'Lost');
+  const [open, setOpen] = useState(() => { const id = unstash('sp-open-project'); return id && projects.some((p) => p.id === id) ? id : null; });
+  const [pick, setPick] = useState('');
+  if (open && projects.some((p) => p.id === open)) return <ProjectView id={open} back={() => setOpen(null)} />;
+  const convert = (pid) => { try { const p = run((d) => dlv.convertProposal(d, pid, session.name)); notify(`${p.client} converted: school, documents and links created`); setOpen(p.id); } catch (e) { notify(e.message); } };
+  return <Page title="Client delivery" sub="When a proposal is won, convert it: the school is set up as sold, the documents (scope, website, app build, hosting and AWS, data migration, testing, go-live, links) and a starter website are generated, and every link the customer and our team need is listed with its version and date."
+    actions={<button className="btn" onClick={() => go('SP_PROPOSAL')}>Back to proposals</button>}>
+    <Card title="Convert a proposal"><div className="row" style={{ flexWrap: 'wrap' }}>
+      <Select aria-label="Proposal to convert" value={pick} onChange={(e) => setPick(e.target.value)} options={[['', 'Pick a proposal…'], ...won.map((p) => [p.id, `${p.no} · ${p.options.client || 'Not named'} · ${p.status}`])]} />
+      <button className="btn pri" disabled={!pick} onClick={() => convert(pick)}>Convert to client</button>
+      <span className="small muted">Marks the proposal Won. Setting a proposal to Won converts it too.</span></div></Card>
+    <Card title={`Clients (${projects.length})`}>{projects.length ? <div className="tw"><table className="t"><thead><tr><th>Project</th><th>School</th><th>Plan</th><th>Version</th><th>Status</th><th>Links live</th><th>Last shared</th><th /></tr></thead>
+      <tbody>{projects.map((p) => <tr key={p.id}><td className="b">{p.no}<div className="small muted">{p.proposalNo} · {dlv.dmy(p.created)}</div></td><td>{p.client}</td><td>{p.tierName}</td><td>{p.version}{dlv.proposalChanged(db, p) && <> <Pill kind="warn">Proposal changed</Pill></>}</td><td>{p.status}</td>
+        <td>{p.links.filter((l) => ['Ready', 'Shared'].includes(l.status)).length} / {p.links.length}</td><td>{p.shares[0] ? dlv.dmy(p.shares[0].at) : '—'}</td><td><button className="btn sm" onClick={() => setOpen(p.id)}>Open</button></td></tr>)}</tbody></table></div> : <p className="muted">No clients yet. Convert a won proposal above.</p>}</Card>
   </Page>;
 }

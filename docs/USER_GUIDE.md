@@ -46,9 +46,9 @@ Website menus and phone tabs with the recommended layout. Schools change this in
 | **Transport team** | **Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Transport Reports<br>**Campus Services:** Events & Calendar<br>**My Space:** My Leave, My Account, My Preferences<br>**Help:** User Guide & Demo, FAQs | Home, Route sheet, Manifest, Bus changes, Account |
 | **Principal** | **Dashboard:** Dashboard<br>**Students:** Insights, All Students, Student Profile, Admissions & Enquiries, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Report Cards, Portfolios<br>**Staff:** Insights, All Staff, Staff Attendance, Leave Requests<br>**Academics:** Classes & Sections, Class Coordinators, Boards, Syllabus & Textbooks, Timetable, Curriculum Planning<br>**Exams:** Question Papers, Approved Papers, Question Bank, Blueprints, Co-Scholastic Grades, Assessment Profiles<br>**Fees:** Insights, Fee Request Emails, Payment Matching, Dues & Reminders, Fee Structure, Concessions<br>**Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Account Statement, Income & Expenses<br>**Campus Services:** Events & Calendar, Homework, Online Classes, Library, Inventory & Store, Hostel<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**Settings:** Web & App Screens, Templates, Bank & Payment Details<br>**Help:** User Guide & Demo, FAQs | Home, Attendance, Approvals, Meetings, Office, Route sheet, Account |
 | **Accountant** | **Dashboard:** Dashboard<br>**Students:** All Students<br>**Staff:** All Staff<br>**Fees:** Insights, Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions<br>**Data Analytics:** Report Catalogue, Transport Reports<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Account Statement, Income & Expenses<br>**Campus Services:** Events & Calendar, Inventory & Store, Hostel<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**Settings:** Templates, Bank & Payment Details, Email & SMS Outbox<br>**Help:** User Guide & Demo, FAQs | Home, Payslips, Account |
-| **Admin** | **Dashboard:** Dashboard<br>**Students:** Insights, All Students, Student Profile, Admissions & Enquiries, New Admission, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Gate Desk, Report Cards, Documents & ID Cards, Portfolios<br>**Staff:** Insights, All Staff, Staff Attendance, Leave Requests<br>**Academics:** Classes & Sections, Class Coordinators, Boards, Syllabus & Textbooks, Timetable, Curriculum Planning<br>**Exams:** Question Papers, Approved Papers, Question Bank, Blueprints, Co-Scholastic Grades, Assessment Profiles<br>**Fees:** Insights, Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions<br>**Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Account Statement, Income & Expenses<br>**Campus Services:** Events & Calendar, Homework, Online Classes, Library, Inventory & Store, Hostel<br>**Operations:** Users, Roles & Permissions, Data Import, Help Documents & FAQs<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**View as Profile:** Parent, Teacher (class coordinator), Teacher + Vice Principal, Teacher + Head of Teaching Staff, Principal, Accountant, Front Office, Transport team<br>**Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Competition Comparison, Market Review & Roadmap<br>**Settings:** Appearance & Branding, Website & Links, Web & App Screens, Templates, Bank & Payment Details, SMS Gateway, Email & SMS Outbox, Backups & Restore<br>**Help:** User Guide & Demo, FAQs | Home, Account |
-| **Platform team** | **Platform Console:** Schools & Plans<br>**Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Competition Comparison, Market Review & Roadmap<br>**Settings:** Web & App Screens<br>**Help:** User Guide & Demo, FAQs | Website only |
-| **Sales & marketing** | **Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Competition Comparison, Market Review & Roadmap<br>**Help:** User Guide & Demo, FAQs | Website only |
+| **Admin** | **Dashboard:** Dashboard<br>**Students:** Insights, All Students, Student Profile, Admissions & Enquiries, New Admission, Attendance, Coordinator Desk, Parent Meetings, Office Requests, Gate Desk, Report Cards, Documents & ID Cards, Portfolios<br>**Staff:** Insights, All Staff, Staff Attendance, Leave Requests<br>**Academics:** Classes & Sections, Class Coordinators, Boards, Syllabus & Textbooks, Timetable, Curriculum Planning<br>**Exams:** Question Papers, Approved Papers, Question Bank, Blueprints, Co-Scholastic Grades, Assessment Profiles<br>**Fees:** Insights, Collect Fee, Fee Request Emails, Payment Matching, Dues & Reminders, Receipts, Fee Structure, Concessions<br>**Transport:** Daily Bus Manifest, Driver Route Sheets, Pickup & Drop Changes, Routes, Stops & Timings<br>**Data Analytics:** Report Catalogue, Top & Bottom Performers, Transport Reports, Teacher Performance, Admissions Funnel<br>**Payroll:** Run Payroll, Payslips<br>**Accounts:** Account Statement, Income & Expenses<br>**Campus Services:** Events & Calendar, Homework, Online Classes, Library, Inventory & Store, Hostel<br>**Operations:** Users, Roles & Permissions, Data Import, Help Documents & FAQs<br>**My Space:** My Payslips, My Leave, My Account, My Preferences<br>**View as Profile:** Parent, Teacher (class coordinator), Teacher + Vice Principal, Teacher + Head of Teaching Staff, Principal, Accountant, Front Office, Transport team<br>**Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Client Delivery, Competition Comparison, Market Review & Roadmap<br>**Settings:** Appearance & Branding, Website & Links, Web & App Screens, Templates, Bank & Payment Details, SMS Gateway, Email & SMS Outbox, Backups & Restore<br>**Help:** User Guide & Demo, FAQs | Home, Account |
+| **Platform team** | **Platform Console:** Schools & Plans<br>**Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Client Delivery, Competition Comparison, Market Review & Roadmap<br>**Settings:** Web & App Screens<br>**Help:** User Guide & Demo, FAQs | Website only |
+| **Sales & marketing** | **Service Provider:** Price List & Tiers, Proposal Builder, Demo Builder, Client Delivery, Competition Comparison, Market Review & Roadmap<br>**Help:** User Guide & Demo, FAQs | Website only |
 
 ## 3. Web & App Screens (choosing what goes on the website and in the app)
 
@@ -354,7 +354,7 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |
-| **Insights** <br>*Growth+* | Student numbers, attendance and fee trends (Power BI). | Use the grade and month filters; export from the report menu. | Principal, Admin | Website |
+| **Insights** <br>*Pro+* | Student numbers, attendance and fee trends (Power BI). | Use the grade and month filters; export from the report menu. | Principal, Admin | Website |
 | **All Students** | Every student with class, guardian and transport. | Search by name or admission number; click a student to open the profile. | Teacher, Front Office, Principal, Accountant, Admin | Website |
 | **Student Profile** | A student’s full profile: personal, academic, performance and attendance. | Find the student by grade, section or name; switch between the four tabs. Performance shows % per test and rank in the section and grade. | Teacher, Front Office, Principal, Admin | Website |
 | **Admissions & Enquiries** | Enquiries and applications for next year, from first call to enrolment, with a summary by grade. | Add an enquiry or application form; move it Submitted → In review → Offered → Enrolled, or Opted out with a reason. Website enquiries arrive here automatically. | Front Office, Principal, Admin | Website |
@@ -366,13 +366,13 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 | **Gate Desk** | Gate Desk: today’s collections and expected late arrivals; checking new pickup people. | Check photo ID, enter the 4-digit gate code, Hand over. For late arrivals press Arrived. "Approve pickup people" checks new collectors. | Front Office, Admin | Website; app for Front Office |
 | **Report Cards** | Report cards (academic profile) for printing, saving as PDF and publishing to parents. | Pick grade, section, student (or all) and a term, the whole year or one exam → Generate → Print / save as PDF → Publish to parents. | Teacher, Principal, Admin | Website |
 | **Documents & ID Cards** | Documents and ID cards. | Upload or print certificates and ID cards from the school’s templates. | Front Office, Admin | Website |
-| **Portfolios** <br>*Professional+* | Student portfolios (add-on): best work, projects, reflections and certificates with a teacher’s comment. Shared items show to parents. | Find the student → Add to portfolio → title, kind, subject, date, comment → Share with parents → Save. | Parent, Teacher, Principal, Admin | Website |
+| **Portfolios** <br>*Pro++* | Student portfolios (add-on): best work, projects, reflections and certificates with a teacher’s comment. Shared items show to parents. | Find the student → Add to portfolio → title, kind, subject, date, comment → Share with parents → Save. | Parent, Teacher, Principal, Admin | Website |
 
 ### 5.3 Staff
 
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |
-| **Insights** <br>*Growth+* | Staff numbers, attendance and leave trends. | Filter by department. | Principal, Admin | Website |
+| **Insights** <br>*Pro+* | Staff numbers, attendance and leave trends. | Filter by department. | Principal, Admin | Website |
 | **All Staff** | Every staff member, with Add staff and Edit on the same screen. | Search or filter by department and full / part time. Add staff (top right) creates the staff record and employee code; staff then register themselves with it. | Principal, Accountant, Admin | Website |
 | **Staff Attendance** | The staff attendance register. | Filter by department and pick a range. Tap a cell: Present → Absent → Half day. Approved leave shows as L. | Principal, Admin | Website |
 | **Leave Requests** | Approve staff leave; see all requests, leave taken by each person and the leave types. | Approvers are notified (🔔 and email). Approve, or Decline with a reason; the staff member is told. Admin and Principal change the yearly allowances. | Principal, Admin | Website (can be added to the app) |
@@ -385,7 +385,7 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 | **Class Coordinators** | Primary and secondary class coordinator for each section. | Pick two different teachers per section; they receive that section’s parent requests. | Principal, Admin | Website |
 | **Boards, Syllabus & Textbooks** | Boards, textbooks, chapters and topics. | Pick the board and class; chapters feed question papers. | Teacher, Principal, Admin | Website |
 | **Timetable** | Class and teacher timetables. | Click a cell to set subject and teacher; clashes are flagged. Parents see their child’s. | Parent, Teacher, Principal, Admin | Website; app for Teacher |
-| **Curriculum Planning** <br>*Professional+* | Curriculum planning (LMS add-on): units for each class and subject by month, and how many periods are taught. | Pick the class and subject → Add a unit (month, periods, outcomes) → type the periods taught as you go; coverage updates. | Teacher, Principal, Admin | Website |
+| **Curriculum Planning** <br>*Pro++* | Curriculum planning (LMS add-on): units for each class and subject by month, and how many periods are taught. | Pick the class and subject → Add a unit (month, periods, outcomes) → type the periods taught as you go; coverage updates. | Teacher, Principal, Admin | Website |
 
 ### 5.5 Exams
 
@@ -402,14 +402,14 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |
-| **Insights** <br>*Growth+* | Fee collection, dues and trends (Power BI). | Filter by grade and month. | Principal, Accountant, Admin | Website |
+| **Insights** <br>*Pro+* | Fee collection, dues and trends (Power BI). | Filter by grade and month. | Principal, Accountant, Admin | Website |
 | **Collect Fee** | Take a fee payment at the counter. | Find the student, pick invoices, mode (cash / card / UPI), save; the receipt prints in the school’s format. | Front Office, Accountant, Admin | Website |
 | **Fee Request Emails** | Send fee request emails by grade with a personal pay link. | Pick grades and instalment → Preview → Send. Parents without email get an SMS. | Principal, Accountant, Admin | Website |
-| **Payment Matching** <br>*Growth+* | Match incoming bank / UPI / gateway payments to fee requests. | Most match automatically; for the rest pick the request and Match. Duplicates are flagged. | Principal, Accountant, Admin | Website |
+| **Payment Matching** <br>*Pro+* | Match incoming bank / UPI / gateway payments to fee requests. | Most match automatically; for the rest pick the request and Match. Duplicates are flagged. | Principal, Accountant, Admin | Website |
 | **Dues & Reminders** | Who owes what, with reminders. | Filter overdue; send reminders; open an invoice. | Front Office, Principal, Accountant, Admin | Website |
 | **Receipts** | All receipts. | Search, reprint or email a receipt. | Front Office, Accountant, Admin | Website |
 | **Fee Structure** | Fee heads and amounts per grade and instalment. | Edit heads and amounts for the year. | Principal, Accountant, Admin | Website |
-| **Concessions** <br>*Growth+* | Concessions and scholarships. | Add a concession for a student; it applies to new invoices. | Principal, Accountant, Admin | Website |
+| **Concessions** <br>*Pro+* | Concessions and scholarships. | Add a concession for a student; it applies to new invoices. | Principal, Accountant, Admin | Website |
 
 ### 5.7 Transport
 
@@ -420,29 +420,29 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 | **Pickup & Drop Changes** | Every request that changes the bus, today and coming days. | Read-only list for transport and front office. | Front Office, Transport team, Principal, Admin | Website; app for Front Office, Transport team |
 | **Routes, Stops & Timings** | Routes, stops, timings, the route map and route planning. | Pick a route. Plan the route compares orders of stops (shortest drive, farthest first, fewer stops). Pickup suggestions move riders to a nearer stop or add a new stop. Add or move stops on the map; times are worked out again. | Transport team, Principal, Admin | Website |
 
-### 5.8 Data Analytics (from the Growth plan)
+### 5.8 Data Analytics (from the Pro plan)
 
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |
-| **Report Catalogue** <br>*Growth+* | Catalogue of Power BI reports. | Open a report. | Principal, Accountant, Admin | Website |
-| **Top & Bottom Performers** <br>*Growth+* | Top 6 and bottom 6 per grade. | Pick grade (and sections, term, subject). | Teacher, Principal, Admin | Website |
-| **Transport Reports** <br>*Growth+* | Route use, cost per km, on-time and fee revenue. | Filter by grade. | Transport team, Principal, Accountant, Admin | Website |
-| **Teacher Performance** <br>*Growth+* | How each teacher’s students are doing. | Filter by grade and subject. The Principal or Head of Teaching Staff can share it with teachers (view only). | Principal, Admin | Website |
-| **Admissions Funnel** <br>*Growth+* | Admissions funnel and conversion. | Filter by grade and source. | Front Office, Principal, Admin | Website |
+| **Report Catalogue** <br>*Pro+* | Catalogue of Power BI reports. | Open a report. | Principal, Accountant, Admin | Website |
+| **Top & Bottom Performers** <br>*Pro+* | Top 6 and bottom 6 per grade. | Pick grade (and sections, term, subject). | Teacher, Principal, Admin | Website |
+| **Transport Reports** <br>*Pro+* | Route use, cost per km, on-time and fee revenue. | Filter by grade. | Transport team, Principal, Accountant, Admin | Website |
+| **Teacher Performance** <br>*Pro+* | How each teacher’s students are doing. | Filter by grade and subject. The Principal or Head of Teaching Staff can share it with teachers (view only). | Principal, Admin | Website |
+| **Admissions Funnel** <br>*Pro+* | Admissions funnel and conversion. | Filter by grade and source. | Front Office, Principal, Admin | Website |
 
-### 5.9 Payroll (from the Growth plan)
+### 5.9 Payroll (from the Pro plan)
 
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |
-| **Run Payroll** <br>*Growth+* | Monthly payroll. | Pick the month → check → Approve → Post to accounts; payslips are released. | Principal, Accountant, Admin | Website |
-| **Payslips** <br>*Growth+* | All payslips. | Search and print. | Principal, Accountant, Admin | Website |
+| **Run Payroll** <br>*Pro+* | Monthly payroll. | Pick the month → check → Approve → Post to accounts; payslips are released. | Principal, Accountant, Admin | Website |
+| **Payslips** <br>*Pro+* | All payslips. | Search and print. | Principal, Accountant, Admin | Website |
 
 ### 5.10 Accounts
 
 | Sub-menu | What it is for | How to use it | Who can open it | Where |
 | --- | --- | --- | --- | --- |
-| **Account Statement** <br>*Professional+* | Account statement with running balance. | Pick account and dates. | Principal, Accountant, Admin | Website |
-| **Income & Expenses** <br>*Professional+* | Income and expenses. | Add expenses; see the summary. | Principal, Accountant, Admin | Website |
+| **Account Statement** <br>*Pro++* | Account statement with running balance. | Pick account and dates. | Principal, Accountant, Admin | Website |
+| **Income & Expenses** <br>*Pro++* | Income and expenses. | Add expenses; see the summary. | Principal, Accountant, Admin | Website |
 
 ### 5.11 Campus Services
 
@@ -450,10 +450,10 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 | --- | --- | --- | --- | --- |
 | **Events & Calendar** | The school calendar: events, exams, parent meetings, circulars and holidays. | Add event → title, type, dates, who it is for → Save. Then “Send to …” puts it in the app for parents and/or staff. Tick Show past for earlier events. | Parent, Teacher, Front Office, Transport team, Principal, Accountant, Admin | Website; app for Parent |
 | **Homework** | Homework for each class, and who has done it. Parents see their child’s homework and status. | Set homework → class, subject, what to do, due date → Save. Open Mark to tick Done, Late or Missing for each student. | Parent, Teacher, Principal, Admin | Website; app for Parent, Teacher |
-| **Online Classes** <br>*Growth+* | Live online classes with a Google Meet, Zoom or Teams link, and who attended. | Schedule a class → class, subject, date, time, minutes, meeting link. Students and parents join from Coming up. After the class, Held → Attendance. | Parent, Teacher, Principal, Admin | Website; app for Parent |
-| **Library** <br>*Growth+* | Library catalogue, issue and return, overdue books and fines. | Issue & return → find the student, pick a book → Issue. Return shows any fine. Catalogue → Add book. Overdue → Remind parent. | Teacher, Front Office, Principal, Admin | Website |
-| **Inventory & Store** <br>*Professional+* | Uniforms, books and stationery: stock, sales to students, re-ordering. | Receive stock when a delivery arrives; Sell to a student → find the student, item, quantity → Save shows the amount to collect. Items at or below the re-order level are flagged. | Front Office, Principal, Accountant, Admin | Website |
-| **Hostel** <br>*Enterprise+* | Hostel blocks, rooms and beds, residents and monthly hostel fees. | Give a bed → find the student → pick a room with a free bed in the right block → mess yes or no → Save. Vacate frees the bed. | Front Office, Principal, Accountant, Admin | Website |
+| **Online Classes** <br>*Pro+* | Live online classes with a Google Meet, Zoom or Teams link, and who attended. | Schedule a class → class, subject, date, time, minutes, meeting link. Students and parents join from Coming up. After the class, Held → Attendance. | Parent, Teacher, Principal, Admin | Website; app for Parent |
+| **Library** <br>*Pro+* | Library catalogue, issue and return, overdue books and fines. | Issue & return → find the student, pick a book → Issue. Return shows any fine. Catalogue → Add book. Overdue → Remind parent. | Teacher, Front Office, Principal, Admin | Website |
+| **Inventory & Store** <br>*Pro++* | Uniforms, books and stationery: stock, sales to students, re-ordering. | Receive stock when a delivery arrives; Sell to a student → find the student, item, quantity → Save shows the amount to collect. Items at or below the re-order level are flagged. | Front Office, Principal, Accountant, Admin | Website |
+| **Hostel** <br>*Pro+ Enterprise+* | Hostel blocks, rooms and beds, residents and monthly hostel fees. | Give a bed → find the student → pick a room with a free bed in the right block → mess yes or no → Save. Vacate frees the bed. | Front Office, Principal, Accountant, Admin | Website |
 
 ### 5.12 Operations
 
@@ -471,9 +471,9 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 | **My Child** | Your child’s profile, attendance and results. | Pick the child if you have more than one. | Parent | Website; app for Parent |
 | **Requests to School** | Send the school a request: leave, late arrival, pickup or drop in person, early leave, own transport, meet a teacher, certificate or query. | Pick the request card → fill the form → Send. Track status and gate codes below; cancel while open. | Parent | Website; app for Parent |
 | **Fee Dues & Pay** | Fee dues and payment. | Pay online, or pay by bank transfer and enter the UTR. | Parent | Website; app for Parent |
-| **My Payslips** <br>*Growth+* | Your payslips. | Open and print. | Teacher, Front Office, Principal, Accountant, Admin | Website; app for Accountant |
+| **My Payslips** <br>*Pro+* | Your payslips. | Open and print. | Teacher, Front Office, Principal, Accountant, Admin | Website; app for Accountant |
 | **My Leave** | Your leave: what is left of each type, apply, and your requests. | Pick the leave type and dates (or a half day), give a reason and send. The approvers are notified; you are told when they decide. | Teacher, Front Office, Transport team, Principal, Accountant, Admin | Website (can be added to the app) |
-| **My Teaching Performance** <br>*Growth+* | Your own teaching results (only when shared). | Read-only. |  | Website |
+| **My Teaching Performance** <br>*Pro+* | Your own teaching results (only when shared). | Read-only. |  | Website |
 | **My Account** | Your account: name, email or mobile, password, notifications, linked children; delete your account. | Change details (a code confirms new email or mobile). | Parent, Teacher, Front Office, Transport team, Principal, Accountant, Admin | Website; app for Parent, Teacher, Front Office, Transport team, Principal, Accountant, Admin |
 | **My Preferences** | Your display preferences. | Pick layout density and theme. | Parent, Teacher, Front Office, Transport team, Principal, Accountant, Admin | Website |
 
@@ -503,6 +503,7 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 | **Price List & Tiers** | Pricing: the Starter, Pro and Pro+ plans with price per student a year in bands, what a year costs by school size, a plan comparison, every add-on with its price, and the cost, margin and discount rules. | Pick a plan (Start with Starter, Choose Pro, Choose Pro+) to start a proposal with it. Platform team or Admin: Edit prices → change → Save prices, or Back to Pricing to leave without saving. | Admin, Platform team, Sales & marketing | Website |
 | **Proposal Builder** | Priced proposals: client and point of contact, plan, add-ons, hosting and discount, with price, operating cost, gross margin, profit and the maximum discount worked out as you go. | New proposal (or a plan’s Choose button) → fill in the school and contact → pick the plan and add-ons → discount → Preview PDF or Download PDF → Email proposal. Choices save as you go. | Admin, Platform team, Sales & marketing | Website |
 | **Demo Builder** | Sets up a working demo school for a client visit in four steps, linked to a proposal: what you change here changes the proposal and the demo school. | Pick the client or New client → 1 check the service provider (pre-filled) → 2 school and point of contact → 3 plan → 4 add-ons and discount → Create demo school → Open as Principal, Teacher or Parent. End demo at the top brings you back. | Admin, Platform team, Sales & marketing | Website |
+| **Client Delivery** | Client delivery: a won proposal becomes a client project — the school set up as sold, eight documents (scope, website, app build, hosting and AWS, data migration, testing, go-live, links register), a starter website page, and every link with its environment, version and date. | Convert to client (or set a proposal to Won) → Links: fill in each placeholder as hosting, AWS and store builds become ready → Documents: Preview or Download PDF → Website: Download HTML → Share with customer (email with links and PDFs). If the proposal changes, Regenerate makes the next version. | Admin, Platform team, Sales & marketing | Website |
 | **Competition Comparison** | Our features and price against Indian and global school software, with our edge and our gaps. | Enter the school’s student count to see each provider’s estimated yearly price at the top; filter Indian, global or all, and by feature group. Sources are listed at the bottom. | Admin, Platform team, Sales & marketing | Website |
 | **Market Review & Roadmap** | Indian and global market review (with each provider’s country) and the future enhancements we plan. | Read the Indian and Global tabs; Future enhancements lists each idea with where it comes from — set its priority and status as plans change. | Admin, Platform team, Sales & marketing | Website |
 
@@ -517,7 +518,7 @@ In the app: **Help → User Guide & Demo → Guided demos → Start**. Each step
 | **Bank & Payment Details** | The school’s bank and UPI details shown on invoices. | Edit; a second person (Principal) approves before it is used. | Principal, Accountant, Admin | Website |
 | **SMS Gateway** | Connect an SMS provider (MSG91, Amazon SNS, Gupshup, Twilio or your own API). | Choose provider → DLT template IDs → Dry run → Go live. | Admin | Website |
 | **Email & SMS Outbox** | Every email and SMS the app has sent (test inbox). | Open a message to read it. | Accountant, Admin | Website |
-| **Backups & Restore** <br>*Growth+* | Backups & restore (add-on): nightly automatic backups kept 30 days, a backup on demand, and restore from a backup file. | Back up now downloads the backup file. To restore: Choose backup file → check what it contains → Restore. Only the Admin can restore. | Admin | Website |
+| **Backups & Restore** <br>*Pro+* | Backups & restore (add-on): nightly automatic backups kept 30 days, a backup on demand, and restore from a backup file. | Back up now downloads the backup file. To restore: Choose backup file → check what it contains → Restore. Only the Admin can restore. | Admin | Website |
 
 ### 5.18 Help
 
@@ -1118,6 +1119,19 @@ How to use each screen, in the order you click through it. In the app (Help → 
 - *Every change saves to the linked proposal and sets the demo school up again.*
 - *Remove demo schools after the visit.*
 
+**Client Delivery** — Client delivery: a won proposal becomes a client project — the school set up as sold, eight documents (scope, website, app build, hosting and AWS, data migration, testing, go-live, links register), a starter website page, and every link with its environment, version and date.
+
+1. Convert to client (or set the proposal to Won)
+2. Links: test build ready at once; fill in website, hosting, AWS and store placeholders
+3. Documents: preview or download each PDF
+4. Website: preview and download the starter page
+5. Share with customer: pick links and documents → Send email
+6. Proposal changed? Regenerate as the next version
+7. Status: Onboarding → Customer testing → Live
+
+- *The test build link carries the school's set-up, so the customer sees exactly what was sold in their own browser.*
+- *Placeholder links can't be shared until they are filled in; every change keeps the old link with its version and date.*
+
 **Competition Comparison** — Our features and price against Indian and global school software, with our edge and our gaps.
 
 1. Enter the student count
@@ -1380,6 +1394,9 @@ Demo Builder → pick the client (or New client) → check the service provider,
 
 **Can I change prices?** *(Sales & marketing, Platform team, Admin)*  
 Only the platform team and the Admin can: Price List & Tiers → Edit prices → Save prices (Back to Pricing leaves without saving). Nothing can be free. Sales can give up to 10% discount, never more than the maximum the proposal shows; more than 10% needs the owner’s approval.
+
+**What happens when a proposal is won?** *(Sales & marketing, Platform team, Admin)*  
+Set it to Won or press Convert to client. Client Delivery then has the school set up as sold, eight documents (scope, website, app build, hosting and AWS, data migration, testing, go-live, links), a starter website page and every link with its version and date. Fill in placeholders as hosting and store builds go live, then Share with customer.
 
 **Why does WhatsApp say “No service needed”?** *(Sales & marketing, Platform team, Admin)*  
 WhatsApp messages go from the school’s phone to the parent’s phone (click to chat), not through our app or website, so there is no provider to pay. The add-on still has a price for the feature.

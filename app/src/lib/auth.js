@@ -1,7 +1,7 @@
 // Accounts, sign-up, OTP and sign-in rules for the test build.
 // Production: Amazon Cognito user pool per client (school) — passwords hashed by Cognito, email codes via SES,
 // SMS codes via an Indian DLT-registered SMS gateway. The flow and statuses below are the same.
-import { isProvider, ACCESS } from '../data/menu.js';
+import { isProvider, ACCESS, SP_CODES } from '../data/menu.js';
 import { departmentOf } from '../data/designations.js';
 import { queueSms } from './sms.js';
 
@@ -152,13 +152,16 @@ export function syncDeptPerms(d) {
 }
 
 // Screens a person can open = their role's permissions + their designation's extras + screens given to them by name
+// A demo school, a customer's test build or a client school: our company's menus never show there
+const inClientSchool = (db) => { const t = db.tenants?.find((x) => x.id === db.tenantId); return !!(t && (t.demo || t.trial || t.client)); };
 export function screensFor(db, user, role) {
   const base = rolePerms(db, role);
   const extra = [...(user && db.designationAccess?.[user.designation] || []), ...(user?.extra || [])];
   // Teachers see their own performance only when the Principal / Head of Teaching Staff has shared it
   if (role === 'TEACHER' && db.settings?.teacherPerfShared) extra.push('SELF_MYPERF');
   // "View as Profile" is for the Admin role only — never given by designation, grant or edited permissions
-  return [...new Set([...base, ...extra])].filter((c) => !c.startsWith('VA_') || role === 'ADMIN');
+  // Service Provider is for our own company's Admin only (release 14.1), never a school's Admin
+  return [...new Set([...base, ...extra])].filter((c) => (!c.startsWith('VA_') || role === 'ADMIN') && !(role === 'ADMIN' && SP_CODES.includes(c) && (!user?.companyAdmin || inClientSchool(db))));
 }
 // Access to one screen: 'FULL', 'READ' (can look, can't change) or null. Admin and Platform: always full.
 // The department sets the level; screens given by designation or personally are full access.

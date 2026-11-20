@@ -44,7 +44,7 @@ export function Users() {
   const allowed = canManageUsers(db, me, session.role);
   const canReset = canResetPasswords(me, session.role);
   // The Admin also manages the Sales & marketing team's accounts (release 13.2); the Platform team stays with the platform
-  const roles = allRoles(db).filter((r) => !isProvider(r.code) || isProvider(session.role) || (session.role === 'ADMIN' && r.code === 'SALES'));
+  const roles = allRoles(db).filter((r) => !isProvider(r.code) || isProvider(session.role) || (session.role === 'ADMIN' && me?.companyAdmin && r.code === 'SALES'));
   const roleOf = (u) => u.role || u.requestedRole;
   const filter = (fn) => (e) => { fn(e.target.value); setPage(0); };
   const depts = [...new Set(db.users.filter((u) => u.status !== 'DELETED').map((u) => departmentOf(db, roleOf(u))).filter(Boolean))].sort();
@@ -80,7 +80,7 @@ export function Users() {
       const wasPending = u.status === 'PENDING';
       const kids = (edit.childrenText || '').split(/[\s,]+/).map((x) => x.trim().toUpperCase()).filter(Boolean);
       const changes = [u.role !== edit.role && 'role', (u.designation || '') !== (edit.designation || '') && 'designation', u.status !== edit.status && 'status', u.name !== edit.name && 'name'].filter(Boolean);
-      Object.assign(u, { name: edit.name, email: (edit.email || '').toLowerCase(), mobile: edit.mobile || '', role: edit.role, designation: edit.role === 'PARENT' ? 'Parent' : edit.designation || null, status: edit.status, extra: edit.extra, perms: edit.perms, children: edit.role === 'PARENT' ? kids : [], linkedStudent: edit.role === 'PARENT' ? kids[0] || null : null });
+      Object.assign(u, { name: edit.name, email: (edit.email || '').toLowerCase(), mobile: edit.mobile || '', role: edit.role, designation: edit.role === 'PARENT' ? 'Parent' : edit.designation || null, status: edit.status, extra: edit.extra, perms: edit.perms, companyAdmin: edit.role === 'ADMIN' && !!edit.companyAdmin, children: edit.role === 'PARENT' ? kids : [], linkedStudent: edit.role === 'PARENT' ? kids[0] || null : null });
       if (u.loginType === 'EMAIL' && u.email) u.login = u.email;
       if (u.loginType === 'MOBILE' && u.mobile) u.login = u.mobile;
       if (u.status === 'ACTIVE') u.failed = 0;
@@ -161,6 +161,9 @@ export function Users() {
       <p className="small muted">On top of the role{edit.designation && db.designationAccess[edit.designation] ? ` and the ${edit.designation} designation (${db.designationAccess[edit.designation].map((c) => LABEL[c]).join(', ')})` : ''}.</p>
       <div className="row">{['OPS_USERS', 'OPS_ROLES', 'STU_ADMISSIONS', 'ANL_RANK', 'ANL_TEACHER', 'ANL_TRANSPORT', 'FEE_DUES'].map((c) => <label key={c} className="row small" style={{ marginRight: 10 }}>
         <input type="checkbox" checked={edit.extra.includes(c)} onChange={() => setEdit({ ...edit, extra: edit.extra.includes(c) ? edit.extra.filter((x) => x !== c) : [...edit.extra, c] })} />{LABEL[c]}</label>)}</div>
+      {session.role === 'ADMIN' && me?.companyAdmin && edit.role === 'ADMIN' && <>
+        <h3 style={{ marginTop: 14 }}>Our company</h3>
+        <label className="row small"><input type="checkbox" checked={!!edit.companyAdmin} onChange={(e) => setEdit({ ...edit, companyAdmin: e.target.checked })} />Our company's Admin: sees Service Provider (prices, proposals, demos, client delivery). Never tick this for a school's Admin.</label></>}
       {session.role === 'ADMIN' && edit.role !== 'ADMIN' && edit.role !== 'PARENT' && <>
         <h3 style={{ marginTop: 14 }}>Permissions</h3>
         <label className="row small"><input type="checkbox" checked={edit.perms.includes(RESET_PW)} onChange={() => setEdit({ ...edit, perms: edit.perms.includes(RESET_PW) ? edit.perms.filter((x) => x !== RESET_PW) : [...edit.perms, RESET_PW] })} />Can reset passwords in Users (the Admin role always can)</label></>}

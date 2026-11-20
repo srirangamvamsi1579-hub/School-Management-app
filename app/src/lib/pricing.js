@@ -113,7 +113,7 @@ export const blankOptions = (rc = DEFAULT_RATE_CARD) => ({
   client: '', city: '', board: 'CBSE', students: 400, buses: 0, residents: 0,
   poc: { name: '', designation: 'Principal', email: '', phone: '' },
   tier: (rc.tiers.find((t) => t.pick) || rc.tiers[0]).code, addons: {}, hosting: 'SHARED',
-  discountPct: 0, interState: false, showInternal: true
+  discountPct: 0, interState: false, showInternal: false   // margin, profit and operating cost stay out of the client's PDF unless ticked
 });
 
 // Add-ons that apply: chosen, or included in the tier. Timings only with Transport.
@@ -260,5 +260,5 @@ export function upgradeOptions(o) {
   if (o.transport === 'PLUS') addons.TIMINGS = true;
   return { client: o.client || '', city: o.city || '', board: o.board || 'CBSE', students: o.students || 400, buses: o.buses || 0, residents: o.residents || 0,
     poc: { name: '', designation: o.contact || 'Principal', email: '', phone: '' }, tier, addons, hosting: o.hosting === 'NON_AWS' ? 'DEDICATED_STACK' : (o.hosting || 'SHARED'),
-    discountPct: +o.discountPct || 0, interState: !!o.interState, showInternal: true };
+    discountPct: +o.discountPct || 0, interState: !!o.interState, showInternal: false };
 }

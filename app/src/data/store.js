@@ -5,7 +5,8 @@ import { buildSeed } from './seed.js';
 import { normalizeUsers } from '../lib/users.js';
 import { seedRelease12 } from './seedRelease12.js';
 import { seedRelease13 } from './seedRelease13.js';
-import { seedRelease14 } from './seedRelease14.js';
+import { seedRelease14, seedRelease141 } from './seedRelease14.js';
+import { readTrial, applyTrial } from '../lib/delivery.js';
 
 const KEY = 'school-app-demo-v9';
 const Ctx = createContext(null);
@@ -13,9 +14,17 @@ const Ctx = createContext(null);
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) { const d = JSON.parse(raw); if (d.version === 9) { return normalizeUsers(seedRelease14(seedRelease13(seedRelease12(d)))); } }
+    if (raw) { const d = JSON.parse(raw); if (d.version === 9) { return withTrial(normalizeUsers(seedRelease141(seedRelease14(seedRelease13(seedRelease12(d)))))); } }
   } catch (e) { /* storage blocked — run from memory only */ }
-  return buildSeed();
+  return withTrial(buildSeed());
+}
+// A customer test-build link (#/try/…) carries a school's set-up: add that school to this browser's data and open it
+function withTrial(db) {
+  try {
+    const p = typeof location !== 'undefined' && readTrial(location.hash);
+    if (p) { applyTrial(db, p); save(db); history.replaceState(null, '', location.pathname + location.search + '#/s/HOME'); }
+  } catch (e) { /* not a valid link: open as usual */ }
+  return db;
 }
 function save(db) {
   try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { /* ignore */ }

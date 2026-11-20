@@ -4,9 +4,9 @@
 
 export const PLANS = [
   { code: 'STARTER', name: 'Starter', rank: 1, range: 'Up to 250 students', cap: 250 },
-  { code: 'GROWTH', name: 'Growth', rank: 2, range: '251 – 500', cap: 500 },
-  { code: 'PROFESSIONAL', name: 'Professional', rank: 3, range: '501 – 1,000', cap: 1000 },
-  { code: 'ENTERPRISE', name: 'Enterprise', rank: 4, range: '1,000+', cap: null }
+  { code: 'GROWTH', name: 'Pro', rank: 2, range: '251 – 500', cap: 500 },
+  { code: 'PROFESSIONAL', name: 'Pro+', rank: 3, range: '501 – 1,000', cap: 1000 },
+  { code: 'ENTERPRISE', name: 'Pro+ Enterprise', rank: 4, range: '1,000+', cap: null }
 ];
 
 // Demo sign-in shortcuts (the real sign-in uses accounts — see lib/auth.js)
@@ -64,6 +64,7 @@ export const MENU = [
   // Your company's sales and marketing team: price list, proposals, demos, competitors, market and roadmap
   { code: 'SERVICE_PROVIDER', label: 'Service Provider', icon: 'brief', min: 1, items: [
     ['#S', 'Sales'], ['SP_RATES', 'Price List & Tiers', 1], ['SP_PROPOSAL', 'Proposal Builder', 1], ['SP_DEMO', 'Demo Builder', 1],
+    ['#D', 'Delivery'], ['SP_DELIVERY', 'Client Delivery', 1],
     ['#M', 'Market'], ['SP_COMPARE', 'Competition Comparison', 1], ['SP_MARKET', 'Market Review & Roadmap', 1]] },
   // Settings: how the school and the app are set up (branding, website, screens, templates, bank details, messages).
   { code: 'SETTINGS', label: 'Settings', icon: 'settings', min: 1, items: [
@@ -73,7 +74,7 @@ export const MENU = [
 ];
 
 const ALL = MENU.flatMap((m) => m.items.map((i) => i[0])).filter((c) => c[0] !== '#');
-export const SP_CODES = ['SP_RATES', 'SP_PROPOSAL', 'SP_DEMO', 'SP_COMPARE', 'SP_MARKET'];
+export const SP_CODES = ['SP_RATES', 'SP_PROPOSAL', 'SP_DEMO', 'SP_DELIVERY', 'SP_COMPARE', 'SP_MARKET'];
 const CMP = { ALL: ['CMP_EVENTS', 'CMP_HOMEWORK', 'CMP_CLASSES', 'CMP_LIBRARY', 'CMP_INVENTORY', 'CMP_HOSTEL'], TEACH: ['CMP_EVENTS', 'CMP_HOMEWORK', 'CMP_CLASSES', 'CMP_LIBRARY'],
   OFFICE: ['CMP_EVENTS', 'CMP_LIBRARY', 'CMP_INVENTORY', 'CMP_HOSTEL'], MONEY: ['CMP_EVENTS', 'CMP_INVENTORY', 'CMP_HOSTEL'], HOME: ['CMP_EVENTS', 'CMP_HOMEWORK', 'CMP_CLASSES'] };
 

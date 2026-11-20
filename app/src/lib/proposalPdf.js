@@ -167,7 +167,7 @@ export function buildProposalPdf({ proposal, rc, profile }) {
     ['Discount applied to this proposal', q.discount ? `${pct(q.discountPct)} (${rupees(q.discount)})` : 'None'],
     ['Maximum allowable discount for this proposal', pct(e.maxDiscountPct)],
     ['Discount the sales team can approve', `up to ${pct(e.salesDiscount)}`]]);
-  if (o.showInternal !== false) {
+  if (o.showInternal === true) {
     h2('Commercial summary', `How the price covers the cost of running the service. Gross margin is compared with the industry standard for software-as-a-service companies (${e.industry[0]}–${e.industry[1]}%).`);
     table([{ label: 'A year, after discount', w: CW - 52 }, { label: 'Amount', w: 52, align: 'right' }], [
       ['Revenue', rupees(e.revenue)],

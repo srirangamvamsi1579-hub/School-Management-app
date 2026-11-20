@@ -176,3 +176,54 @@ test('add-ons in a school: backups, WhatsApp, board, curriculum, portfolios', as
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('client delivery: convert a proposal, fill a link, documents, website, share, and the customer opens the test build', async () => {
+  const { ctx, page, errors } = await start();
+  await as(page, 'Sales & marketing');
+  await go(page, 'SP_DELIVERY');
+  await page.getByRole('heading', { name: 'Client delivery' }).waitFor();
+  await page.getByRole('cell', { name: 'Little Steps School (example)' }).waitFor();   // the Won sample, converted
+  const pick = page.getByLabel('Proposal to convert');
+  await pick.selectOption(await pick.locator('option', { hasText: 'PROP-2026-001' }).getAttribute('value'));
+  await page.getByRole('button', { name: 'Convert to client' }).click();
+  await page.getByText(/Sample Public School \(example\) converted/).waitFor();
+  await page.getByRole('heading', { name: /Sample Public School \(example\) · CP-/ }).waitFor();
+  const testRow = page.getByRole('row', { name: /Customer test build/ });
+  assert.match(await testRow.innerText(), /Ready/);
+  const trial = await testRow.getByRole('link').getAttribute('href');
+  assert.match(trial, /#\/try\//);
+  const tf = page.getByRole('row', { name: /Apple TestFlight/ });
+  assert.match(await tf.innerText(), /Placeholder/);
+  await tf.getByRole('button', { name: 'Fill in' }).click();
+  await page.getByLabel('Link address').fill('https://testflight.apple.com/join/AbC123');
+  await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click();
+  await page.getByText('Link saved').waitFor();
+  assert.match(await page.getByRole('row', { name: /Apple TestFlight/ }).innerText(), /Ready/);
+  await page.getByRole('tab', { name: /Documents/ }).click();
+  await page.getByRole('row', { name: /Customer testing \(UAT\) plan/ }).getByRole('button', { name: 'Preview' }).click();
+  await page.getByRole('dialog').getByRole('heading', { name: 'Where to test' }).waitFor();
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.getByRole('dialog').getByRole('button', { name: 'Download PDF' }).click()]);
+  assert.match(dl.suggestedFilename(), /^CP-\d{4}-\d{3}-UAT-v1\.0\.pdf$/);
+  await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('tab', { name: 'Website' }).click();
+  assert.match(await page.locator('iframe[title="Website preview"]').getAttribute('srcdoc'), /Welcome to Sample Public School/);
+  await page.getByRole('button', { name: 'Share with customer' }).click();
+  const share = page.getByRole('dialog', { name: /Share with/ });
+  assert.equal(await share.getByLabel('Share to').inputValue(), 'principal@samplepublic.example.com');
+  assert.ok(await share.getByRole('checkbox', { name: /Google Play internal testing/ }).isDisabled(), 'placeholders cannot be shared');
+  await share.getByRole('button', { name: 'Send email' }).click();
+  await page.getByText('Sent to principal@samplepublic.example.com').waitFor();
+  await page.getByRole('tab', { name: 'Links' }).click();
+  assert.match(await page.getByRole('row', { name: /Customer test build/ }).innerText(), /Shared/);
+  // The customer opens the test build in their own browser
+  const cust = await browser.newContext({ viewport: { width: 1300, height: 900 } });
+  const cp = await cust.newPage(); const cerr = [];
+  cp.on('pageerror', (e) => cerr.push(e.message));
+  await cp.goto(server.url + trial.slice(trial.indexOf('#')));
+  await cp.getByText(/Customer test build: Sample Public School/).waitFor();
+  const nav = await cp.locator('nav.side').innerText();
+  assert.match(nav, /Sample Public School[\s\S]*Pro plan/); assert.doesNotMatch(nav, /Service Provider/i);
+  await cust.close();
+  assert.deepEqual([...errors, ...cerr], []);
+  await ctx.close();
+});

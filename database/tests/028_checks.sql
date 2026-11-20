@@ -3,7 +3,7 @@
 BEGIN;
 DO $$ BEGIN
   ASSERT (SELECT count(*) FROM role_menu_permissions p JOIN roles r USING (role_id) JOIN menus m USING (menu_id)
-          WHERE r.code = 'ADMIN' AND r.tenant_id IS NULL AND m.code LIKE 'SP\_%' AND p.can_edit) = 5, 'Admin has all five Service Provider screens';
+          WHERE r.code = 'ADMIN' AND r.tenant_id IS NULL AND m.code LIKE 'SP\_%' AND p.can_edit) = 6, 'Admin has all six Service Provider screens (030 adds Client Delivery)';
   BEGIN
     INSERT INTO role_menu_permissions (role_id, menu_id, can_view) SELECT r.role_id, m.menu_id, TRUE FROM roles r, menus m WHERE r.code = 'TEACHER' AND r.tenant_id IS NULL AND m.code = 'SP_PROPOSAL';
     RAISE EXCEPTION 'teacher given a company menu';
