@@ -7,6 +7,7 @@ import { PLANS, PHONE_READY, RECOMMENDED, LABEL, MENU, FUNCTIONS } from '../data
 import { DEFAULT_RATE_CARD, quote, offering, tierOf, demoConfig, rupees, pct, activeAddons, BASIC, ALWAYS } from './pricing.js';
 import { TEMPLATES } from './importTemplates.js';
 import { proposalProblems } from './proposals.js';
+import { assignRegNos } from './schoolLogin.js';
 
 const rcOf = (db) => (db.provider?.rateCard?.version >= 2 ? db.provider.rateCard : DEFAULT_RATE_CARD);
 const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -36,7 +37,7 @@ const unb64 = (s) => { const t = s.replace(/-/g, '+').replace(/_/g, '/'); return
 // Short: the add-ons that are on (included in the plan or bought); the screens follow from them
 export function trialPayload(tenant, project, rc = DEFAULT_RATE_CARD) {
   return { v: 2, c: tenant.code, n: tenant.name, s: tenant.subdomain, p: tenant.plan, t: project.tierName, b: tenant.examBoard || 'CBSE', ver: project.version, d: project.updated || project.created,
-    a: tenant.delivery?.addons || activeAddons(rc, project.options), k: tenant.env || 'UAT', no: project.no, sa: tenant.overrides?.SP_ADDONS ? 1 : undefined, x: Object.keys(tenant.delivery?.screens || {}).length ? tenant.delivery.screens : undefined,
+    a: tenant.delivery?.addons || activeAddons(rc, project.options), k: tenant.env || 'UAT', no: project.no, sa: tenant.overrides?.SP_ADDONS ? 1 : undefined, rg: tenant.regNo, x: Object.keys(tenant.delivery?.screens || {}).length ? tenant.delivery.screens : undefined,
     l: Object.fromEntries((project.links || []).filter((l) => PROJECT_MENU_LINKS.includes(l.code) && !TRIAL_CODES.includes(l.code) && !['TEST_GUIDE', 'BRANCH'].includes(l.code) && ['Ready', 'Shared'].includes(l.status) && !isPlaceholder(l.url)).map((l) => [l.code, l.url])), r: project.release?.branch };
 }
 // Links shown in the school's own Project → Project Links menu
@@ -56,6 +57,7 @@ export function applyTrial(db, p, hash = '') {
   const addons = Object.fromEntries(p.a.filter((c) => rc.addons.some((x) => x.code === c)).map((c) => [c, true]));
   const { overrides } = demoConfig({ ...rc, tiers: rc.tiers.map((t) => ({ ...t, includes: [] })) }, { tier: 'STARTER', addons });
   overrides.PROJECT = true; overrides.PRJ_LINKS = true;
+  const regNo = p.rg;
   if (p.sa) { overrides.SP_ADDONS = true; overrides.SP_FEATURES = true; }   // release 16.2/16.4: the provider's own menus for this school
   if (p.x) for (const [c, on] of Object.entries(p.x)) { if (LOCKED.has(c)) continue; overrides[c] = !!on; const mod = moduleOf(c); if (on && mod) overrides[mod] = true; }
   // The client's own website: the side menu's "School website" opens it, and the phone app starts on this school
@@ -63,7 +65,7 @@ export function applyTrial(db, p, hash = '') {
     (db.links || []).filter((l) => l.label === 'School website').forEach((l) => { l.url = p.l.SITE; });
     if (db.website) db.website.url = p.l.SITE;
   }
-  const t = { id: 'TT-' + p.c, code: p.c, name: p.n, subdomain: p.s, plan: PLANS.some((x) => x.code === p.p) ? p.p : 'ENTERPRISE', status: 'Customer testing', overrides, examBoard: p.b,
+  const t = { id: 'TT-' + p.c, regNo, code: p.c, name: p.n, subdomain: p.s, plan: PLANS.some((x) => x.code === p.p) ? p.p : 'ENTERPRISE', status: 'Customer testing', overrides, examBoard: p.b,
     mobile: { enabled: p.m, appStatus: 'Shared app' }, renews: '—', trial: { tier: p.t, version: p.ver, date: p.d }, env: p.k || 'UAT',
     delivery: { projectNo: p.no, version: p.ver, date: p.d, tier: p.t, addons: p.a, branch: p.r, links: p.l || {}, screens: p.x || {}, trial: String(hash).replace(/\?.*$/, '') } };
   db.tenants = db.tenants.filter((x) => x.id !== t.id);
@@ -311,6 +313,7 @@ export function convertProposal(db, proposalId, by) {
     plan: APP_PLAN[o.tier] || 'GROWTH', status: 'Customer testing', overrides: cfg.overrides, examBoard: o.board || 'CBSE',
     mobile: { enabled: true, appStatus: cfg.branded ? 'Branded app (to build)' : 'Shared app' }, renews: '—', client: { proposalId } };
   db.tenants.push(tenant);
+  assignRegNos(db);                                   // release 17: the school's registration number (101, 102, …)
   db.seq.project = (db.seq.project || 0) + 1;
   const project = { id: 'CP' + db.seq.project, no: `CP-${todayIso().slice(0, 4)}-${String(db.seq.project).padStart(3, '0')}`, proposalId, proposalNo: p.no, tenantId: tenant.id, uatTenantId: tenant.id, liveTenantId: null,
     client: o.client, tierName: tierOf(rc, o.tier).name, options: structuredClone(o), optionsHash: optionsHash(o), version: '1.0', status: 'UAT / Demo', created: todayIso(), updated: todayIso(), by, shares: [], signoffs: [], live: null,
@@ -348,7 +351,7 @@ export function signOff(db, projectId, { signedBy, designation, date, reference 
   let live = db.tenants.find((t) => t.id === project.liveTenantId);
   if (!live) {
     db.seq.client = (db.seq.client || 0) + 1;
-    live = { id: 'TC' + db.seq.client, code: uat.liveCode || uat.code.replace(/-UAT$/, ''), name: `${name} – ${ENV_NAME.LIVE} (${dmy(on)})`, schoolName: name, env: 'LIVE', subdomain: uat.liveSubdomain || uat.subdomain.replace(/^uat-/, ''),
+    live = { id: 'TC' + db.seq.client, regNo: uat.regNo, code: uat.liveCode || uat.code.replace(/-UAT$/, ''), name: `${name} – ${ENV_NAME.LIVE} (${dmy(on)})`, schoolName: name, env: 'LIVE', subdomain: uat.liveSubdomain || uat.subdomain.replace(/^uat-/, ''),
       plan: uat.plan, status: 'Onboarding', overrides: structuredClone(uat.overrides), examBoard: uat.examBoard, mobile: structuredClone(uat.mobile), renews: addDays(on, 365), client: { proposalId: project.proposalId } };
     db.tenants.push(live);
     project.liveTenantId = live.id;

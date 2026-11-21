@@ -5,11 +5,12 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { withAutoAdmin } from './autologin.mjs';
 import { serve } from '../store/serve.mjs';
 
 const DIST = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../dist');
 let server, browser;
-before(async () => { server = await serve(DIST); browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ['--no-sandbox'] }); });
+before(async () => { server = await serve(DIST); browser = withAutoAdmin(await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ['--no-sandbox'] })); });
 after(async () => { await browser?.close(); server?.close(); });
 
 // Most tests click through the side menu, so they start with every group expanded (the default is collapsed;
@@ -176,7 +177,7 @@ test('every step of every guided demo opens the right screen for the right perso
   await ctx.close();
 });
 
-test('opens straight on the Main menu as Admin; Main menu button works from any screen', async () => {
+test('signed in as Admin it opens on the Main menu; Main menu button works from any screen', async () => {
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
   const { page, errors } = await open(ctx, '');
   await page.getByRole('heading', { name: 'Main menu' }).waitFor();

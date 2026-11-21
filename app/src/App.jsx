@@ -11,6 +11,7 @@ import { SCREENS, Placeholder } from './screens/index.js';
 import { alertsFor, unreadFor, markRead } from './lib/alerts.js';
 import { PublicEnquiry, PrivacyPolicy, DeleteAccountRequest } from './screens/Public.jsx';
 import { PublicSite, RequirementsPage } from './screens/Project.jsx';
+import { ClientsScreen, clientsMenu, PlatformRequirements } from './screens/Clients.jsx';
 import MobileApp from './mobile/MobileApp.jsx';
 import HelpGuide, { DemoBar } from './screens/Guide.jsx';
 import { parseHash } from './lib/links.js';
@@ -39,7 +40,7 @@ export default function App() {
     const next = arr.slice(k + 1).find((x) => x[0][0] === '#');
     const until = next ? arr.indexOf(next) : arr.length;
     return arr.slice(k + 1, until).some((x) => show(x[0]));
-  }) })).filter((m) => m.items.some((i) => i[0][0] !== '#')) : []), [role, rank, tenant, perms]);
+  }) })).filter((m) => m.items.some((i) => i[0][0] !== '#')).concat(clientsMenu(db, me, role)) : []), [role, rank, tenant, perms, db.provider?.clients, db.provider?.projects, db.tenants]);
   const links = db.links.filter((l) => role && l.roles.includes(role));
   // Read-only screens: the person can look but not change anything (set per department in Roles & Permissions)
   const level = role && screen ? accessLevel(db, me, role, screen) : null;
@@ -71,6 +72,7 @@ export default function App() {
   if (link?.kind === 'p' && link.code === 'delete') return <DeleteAccountRequest />;
   if (link?.kind === 'p' && link.code === 'site') return <PublicSite />;
   if (link?.kind === 'p' && link.code === 'requirements') return <RequirementsPage />;
+  if (link?.kind === 'p' && link.code === 'platform') return <PlatformRequirements />;
   if (link?.kind === 'p' && link.code === 'mobile') return <MobileApp preview={window.innerWidth > 500} />;
   if (link?.kind === 'p' && link.code === 'guide' && !session) return <HelpGuide />;
   if (!session) return <><Login next={link?.kind === 's' ? LABEL[link.code] : null} /><DemoBar /></>;
@@ -105,7 +107,7 @@ export default function App() {
       <MobileApp preview school={tenant.code} />
     </div>
   );
-  const Screen = SCREENS[screen] || Placeholder;
+  const Screen = SCREENS[screen] || (screen?.startsWith('CLI_') ? ClientsScreen : Placeholder);
   const topnav = db.theme.template === 'TOPNAV';
   const user = ROLES.find((r) => r.code === role);
 
