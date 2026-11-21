@@ -1,0 +1,110 @@
+{
+  "school": "Vijayanikethan High School – UAT/DEMO",
+  "code": "VHS-UAT",
+  "project": "CP-2026-002",
+  "generated": "2026-11-21",
+  "links": {
+    "TEST_BUILD": {
+      "label": "Customer test build (the school as sold, demo data)",
+      "url": "https://srirangamvamsi1579-hub.github.io/School-Management-app/vijayanikethan/#/try/eyJ2IjoyLCJjIjoiVkhTLVVBVCIsIm4iOiJWaWpheWFuaWtldGhhbiBIaWdoIFNjaG9vbCDigJMgVUFUL0RFTU8iLCJzIjoidWF0LXZpamF5YW5pa2V0aGFuIiwicCI6IlNUQVJURVIiLCJ0IjoiU3RhcnRlciIsImIiOiJDQlNFIiwidmVyIjoiMS4wIiwiZCI6IjIwMjYtMTEtMjEiLCJhIjpbXSwiayI6IlVBVCIsIm5vIjoiQ1AtMjAyNi0wMDIiLCJsIjp7IlNJVEUiOiJodHRwczovL3d3dy52aWpheWFuaWtldGhhbmNic2UuY29tLyJ9LCJyIjoic2Nob29sL3ZpamF5YW5pa2V0aGFuIn0",
+      "status": "Ready",
+      "version": "1.0"
+    },
+    "TEST_SITE": {
+      "label": "UAT website (starter page with this school's links)",
+      "url": "https://srirangamvamsi1579-hub.github.io/School-Management-app/vijayanikethan/#/try/eyJ2IjoyLCJjIjoiVkhTLVVBVCIsIm4iOiJWaWpheWFuaWtldGhhbiBIaWdoIFNjaG9vbCDigJMgVUFUL0RFTU8iLCJzIjoidWF0LXZpamF5YW5pa2V0aGFuIiwicCI6IlNUQVJURVIiLCJ0IjoiU3RhcnRlciIsImIiOiJDQlNFIiwidmVyIjoiMS4wIiwiZCI6IjIwMjYtMTEtMjEiLCJhIjpbXSwiayI6IlVBVCIsIm5vIjoiQ1AtMjAyNi0wMDIiLCJsIjp7IlNJVEUiOiJodHRwczovL3d3dy52aWpheWFuaWtldGhhbmNic2UuY29tLyJ9LCJyIjoic2Nob29sL3ZpamF5YW5pa2V0aGFuIn0?to=site",
+      "status": "Ready",
+      "version": "1.0"
+    },
+    "TEST_APP": {
+      "label": "UAT phone app (school code VHS-UAT)",
+      "url": "https://srirangamvamsi1579-hub.github.io/School-Management-app/vijayanikethan/#/try/eyJ2IjoyLCJjIjoiVkhTLVVBVCIsIm4iOiJWaWpheWFuaWtldGhhbiBIaWdoIFNjaG9vbCDigJMgVUFUL0RFTU8iLCJzIjoidWF0LXZpamF5YW5pa2V0aGFuIiwicCI6IlNUQVJURVIiLCJ0IjoiU3RhcnRlciIsImIiOiJDQlNFIiwidmVyIjoiMS4wIiwiZCI6IjIwMjYtMTEtMjEiLCJhIjpbXSwiayI6IlVBVCIsIm5vIjoiQ1AtMjAyNi0wMDIiLCJsIjp7IlNJVEUiOiJodHRwczovL3d3dy52aWpheWFuaWtldGhhbmNic2UuY29tLyJ9LCJyIjoic2Nob29sL3ZpamF5YW5pa2V0aGFuIn0?to=app",
+      "status": "Ready",
+      "version": "1.0"
+    },
+    "REQ_DOC": {
+      "label": "Requirements document (scope of the school as agreed)",
+      "url": "https://srirangamvamsi1579-hub.github.io/School-Management-app/vijayanikethan/#/try/eyJ2IjoyLCJjIjoiVkhTLVVBVCIsIm4iOiJWaWpheWFuaWtldGhhbiBIaWdoIFNjaG9vbCDigJMgVUFUL0RFTU8iLCJzIjoidWF0LXZpamF5YW5pa2V0aGFuIiwicCI6IlNUQVJURVIiLCJ0IjoiU3RhcnRlciIsImIiOiJDQlNFIiwidmVyIjoiMS4wIiwiZCI6IjIwMjYtMTEtMjEiLCJhIjpbXSwiayI6IlVBVCIsIm5vIjoiQ1AtMjAyNi0wMDIiLCJsIjp7IlNJVEUiOiJodHRwczovL3d3dy52aWpheWFuaWtldGhhbmNic2UuY29tLyJ9LCJyIjoic2Nob29sL3ZpamF5YW5pa2V0aGFuIn0?to=req",
+      "status": "Ready",
+      "version": "1.0"
+    },
+    "TEST_GUIDE": {
+      "label": "User guide and guided demos",
+      "url": "https://srirangamvamsi1579-hub.github.io/School-Management-app/vijayanikethan/#/p/guide",
+      "status": "Ready",
+      "version": "1.0"
+    },
+    "SITE": {
+      "label": "School website (starter page)",
+      "url": "https://www.vijayanikethancbse.com/",
+      "status": "Ready",
+      "version": "—"
+    },
+    "PORTAL": {
+      "label": "Parent and staff sign-in",
+      "url": "https://vijayanikethan.yourapp.com/",
+      "status": "Planned",
+      "version": "1.0"
+    },
+    "ADMISSION": {
+      "label": "Admission enquiry form",
+      "url": "https://vijayanikethan.yourapp.com/#/p/apply",
+      "status": "Planned",
+      "version": "1.0"
+    },
+    "PRIVACY": {
+      "label": "Privacy policy (needed by the stores)",
+      "url": "https://vijayanikethan.yourapp.com/#/p/privacy",
+      "status": "Planned",
+      "version": "1.0"
+    },
+    "DELETE": {
+      "label": "Delete an account (needed by the stores)",
+      "url": "https://vijayanikethan.yourapp.com/#/p/delete",
+      "status": "Planned",
+      "version": "1.0"
+    },
+    "WEB_DEV": {
+      "label": "Web app — development",
+      "url": "https://dev-vijayanikethan.yourapp.com/",
+      "status": "Planned",
+      "version": "1.0"
+    },
+    "WEB_PREPROD": {
+      "label": "Web app — pre-production (customer sign-off)",
+      "url": "https://preprod-vijayanikethan.yourapp.com/",
+      "status": "Planned",
+      "version": "1.0"
+    },
+    "WEB_PROD": {
+      "label": "Web app — production",
+      "url": "https://vijayanikethan.yourapp.com/",
+      "status": "Planned",
+      "version": "1.0"
+    },
+    "AWS_DB": {
+      "label": "Database",
+      "url": "Shared Aurora PostgreSQL cluster (ap-south-1), school row-level security",
+      "status": "Planned",
+      "version": "1.0"
+    },
+    "PLAY": {
+      "label": "Google Play listing",
+      "url": "https://play.google.com/store/apps/details?id=com.yourapp.school",
+      "status": "Planned",
+      "version": "1.0"
+    },
+    "BRANCH": {
+      "label": "School branch (from dev)",
+      "url": "https://github.com/srirangamvamsi1579-hub/School-Management-app/tree/school/vijayanikethan",
+      "status": "Ready",
+      "version": "1.0"
+    },
+    "UAT_TAG": {
+      "label": "UAT build tag",
+      "url": "https://github.com/srirangamvamsi1579-hub/School-Management-app/releases/tag/vijayanikethan-uat-v1.0",
+      "status": "Ready",
+      "version": "1.0"
+    }
+  }
+}

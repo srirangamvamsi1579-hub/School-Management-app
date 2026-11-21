@@ -1,0 +1,20 @@
+{
+  "appUrl": "https://srirangamvamsi1579-hub.github.io/School-Management-app/vijayanikethan/",
+  "options": {
+    "client": "Vijayanikethan High School",
+    "board": "CBSE",
+    "students": 200,
+    "tier": "STARTER",
+    "addons": {},
+    "poc": {
+      "name": "Principal (to confirm)",
+      "designation": "Principal",
+      "email": "principal@vijayanikethan.example.com",
+      "phone": "9000000000"
+    }
+  },
+  "links": {
+    "SITE": "https://www.vijayanikethancbse.com/"
+  },
+  "subdomain": "vijayanikethan"
+}
