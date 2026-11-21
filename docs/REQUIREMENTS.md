@@ -997,6 +997,21 @@ Every client school is built the same way: from the basic features, plus exactly
    The rebuild makes the next version (1.0 → 1.1 → …), and every output changes automatically: the side menu and Main menu, the phone app, the requirements document, the website, Project Links and the shared test links. It also updates the plan label (*All features*, *Basic + N add-ons* or *Basic*). Each build is listed with its version, date, who built it, and what was added and removed.
 3. **Publish for everyone:** *Download build file* saves `rebuild.json`. Commit it to `schools/<sub>/` on the school's branch. `.github/workflows/school-release.yml` then tests the app, rebuilds it with those add-ons (`app/scripts/client-app.mjs` reads `rebuild.json`) and republishes it at `…/<sub>/` on GitHub Pages. Each published version keeps its own saved data, so everyone opens the new version.
 
+### Release 16.4 — Roles & Permissions under Service Provider
+
+In a client's own app, Service Provider › School set-up has two screens: **Add-ons for this School** and **Roles & Permissions**. Only the school's Admin sees them, and only in that client's app.
+
+- **Roles & Permissions (provider)** lists every main menu, sub-menu and function of the app as a tree, with search, ticks per menu and per item, Select all, Unselect all and **Follow add-ons**.
+  - **Basic** screens are locked on.
+  - Any other screen or function can be ticked or unticked on its own. It then becomes an add-on of its own for this school, whatever its add-on says (for example Library without the rest of Campus, or Transport without the Daily Bus Manifest).
+  - Each row shows where it comes from (*Basic*, its add-on, *Plan* or *Set here*) and its state (*In the app*, *Shown · rebuild to add*, *Hidden · rebuild to remove* or *Not in the app*).
+  - Menus show or hide at once. Switching a whole add-on on or off clears the single-screen marks for that add-on's screens.
+- **Rebuild applies to both screens.** A change made on either screen is listed with the other changes, the bottom bar shows it, and **Rebuild app** makes the next version.
+  - The build history lists the add-ons and the single menus added and removed.
+  - The plan label notes "(N menus set by hand)".
+  - The marks are carried in the shared links and in `rebuild.json` (`screens`), and `client-app.mjs` applies them when the app is republished.
+- **The school's own Operations › Roles & Permissions** follows the provider. In Permissions by department it lists only the menus and functions switched on for the school: the basic ones plus whatever the provider marked or added. Screens the school doesn't have aren't shown.
+
 ## Backlog (from the QA cycle, November 2026)
 
 | Priority | Enhancement | Why |

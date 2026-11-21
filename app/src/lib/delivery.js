@@ -3,8 +3,8 @@
 // hosting and AWS, data migration, testing, go-live, links register), a starter website page is made, and a
 // register of every link the customer and our team need — test build, website, hosting, AWS, Play Store, App Store —
 // each with an environment, a version and a date. Links not yet known are placeholders until the team fills them in.
-import { PLANS, PHONE_READY, RECOMMENDED, LABEL } from '../data/menu.js';
-import { DEFAULT_RATE_CARD, quote, offering, tierOf, demoConfig, rupees, pct, activeAddons } from './pricing.js';
+import { PLANS, PHONE_READY, RECOMMENDED, LABEL, MENU, FUNCTIONS } from '../data/menu.js';
+import { DEFAULT_RATE_CARD, quote, offering, tierOf, demoConfig, rupees, pct, activeAddons, BASIC, ALWAYS } from './pricing.js';
 import { TEMPLATES } from './importTemplates.js';
 import { proposalProblems } from './proposals.js';
 
@@ -36,7 +36,7 @@ const unb64 = (s) => { const t = s.replace(/-/g, '+').replace(/_/g, '/'); return
 // Short: the add-ons that are on (included in the plan or bought); the screens follow from them
 export function trialPayload(tenant, project, rc = DEFAULT_RATE_CARD) {
   return { v: 2, c: tenant.code, n: tenant.name, s: tenant.subdomain, p: tenant.plan, t: project.tierName, b: tenant.examBoard || 'CBSE', ver: project.version, d: project.updated || project.created,
-    a: tenant.delivery?.addons || activeAddons(rc, project.options), k: tenant.env || 'UAT', no: project.no, sa: tenant.overrides?.SP_ADDONS ? 1 : undefined,
+    a: tenant.delivery?.addons || activeAddons(rc, project.options), k: tenant.env || 'UAT', no: project.no, sa: tenant.overrides?.SP_ADDONS ? 1 : undefined, x: Object.keys(tenant.delivery?.screens || {}).length ? tenant.delivery.screens : undefined,
     l: Object.fromEntries((project.links || []).filter((l) => PROJECT_MENU_LINKS.includes(l.code) && !TRIAL_CODES.includes(l.code) && !['TEST_GUIDE', 'BRANCH'].includes(l.code) && ['Ready', 'Shared'].includes(l.status) && !isPlaceholder(l.url)).map((l) => [l.code, l.url])), r: project.release?.branch };
 }
 // Links shown in the school's own Project → Project Links menu
@@ -56,7 +56,8 @@ export function applyTrial(db, p, hash = '') {
   const addons = Object.fromEntries(p.a.filter((c) => rc.addons.some((x) => x.code === c)).map((c) => [c, true]));
   const { overrides } = demoConfig({ ...rc, tiers: rc.tiers.map((t) => ({ ...t, includes: [] })) }, { tier: 'STARTER', addons });
   overrides.PROJECT = true; overrides.PRJ_LINKS = true;
-  if (p.sa) overrides.SP_ADDONS = true;            // release 16.2: the provider switches add-ons for this school
+  if (p.sa) { overrides.SP_ADDONS = true; overrides.SP_FEATURES = true; }   // release 16.2/16.4: the provider's own menus for this school
+  if (p.x) for (const [c, on] of Object.entries(p.x)) { if (LOCKED.has(c)) continue; overrides[c] = !!on; const mod = moduleOf(c); if (on && mod) overrides[mod] = true; }
   // The client's own website: the side menu's "School website" opens it, and the phone app starts on this school
   if (p.l?.SITE && /^https:\/\//.test(p.l.SITE)) {
     (db.links || []).filter((l) => l.label === 'School website').forEach((l) => { l.url = p.l.SITE; });
@@ -64,7 +65,7 @@ export function applyTrial(db, p, hash = '') {
   }
   const t = { id: 'TT-' + p.c, code: p.c, name: p.n, subdomain: p.s, plan: PLANS.some((x) => x.code === p.p) ? p.p : 'ENTERPRISE', status: 'Customer testing', overrides, examBoard: p.b,
     mobile: { enabled: p.m, appStatus: 'Shared app' }, renews: '—', trial: { tier: p.t, version: p.ver, date: p.d }, env: p.k || 'UAT',
-    delivery: { projectNo: p.no, version: p.ver, date: p.d, tier: p.t, addons: p.a, branch: p.r, links: p.l || {}, trial: String(hash).replace(/\?.*$/, '') } };
+    delivery: { projectNo: p.no, version: p.ver, date: p.d, tier: p.t, addons: p.a, branch: p.r, links: p.l || {}, screens: p.x || {}, trial: String(hash).replace(/\?.*$/, '') } };
   db.tenants = db.tenants.filter((x) => x.id !== t.id);
   db.tenants.push(t);
   db.tenantId = t.id;
@@ -370,6 +371,29 @@ export function setProjectStatus(db, projectId, status, by) {
   return project;
 }
 // Release 16.2: switch add-ons on or off for one school (Service Provider › Add-ons for this School). The basic features stay on.
+// Release 16.4: the provider can also switch single menus and functions (Service Provider › Roles & Permissions):
+// any screen or function outside the basic features can be marked on or off for this school, on top of the add-ons.
+const KEEP_FLAGS = ['PROJECT', 'PRJ_LINKS', 'SP_ADDONS', 'SP_FEATURES'];
+export const LOCKED = new Set([...BASIC.flatMap((b) => b[2]), ...ALWAYS, 'HOME', 'PRJ_LINKS', 'SP_ADDONS', 'SP_FEATURES', 'HELP_GUIDE', 'HELP_FAQ',
+  'SELF_ACCOUNT', 'SELF_PREFS', 'SELF_CHILD', 'SELF_REQUESTS', 'SELF_FEES', 'SELF_LEAVE']);
+const moduleOf = (code) => MENU.find((m) => m.items.some((i) => i[0] === code))?.code || FUNCTIONS.find((f) => f.code === code)?.module;
+// Every switchable thing in the app: screens (by menu) and functions
+export const SWITCHABLE = [...MENU.filter((m) => !['PLATFORM', 'SERVICE_PROVIDER', 'VIEWAS', 'PROJECT'].includes(m.code)).flatMap((m) => m.items.filter((i) => i[0][0] !== '#').map((i) => i[0])), ...FUNCTIONS.map((f) => f.code)];
+export const addonOfScreen = (code) => DEFAULT_RATE_CARD.addons.find((a) => (a.menus || []).includes(code) || (a.functions || []).includes(code));
+function computeOverrides(t) {
+  const rc = DEFAULT_RATE_CARD;
+  const d = t.delivery || {};
+  const { overrides } = demoConfig({ ...rc, tiers: rc.tiers.map((x) => ({ ...x, includes: [] })) }, { tier: 'STARTER', addons: Object.fromEntries((d.addons || []).map((c) => [c, true])) });
+  for (const [code, on] of Object.entries(d.screens || {})) {
+    if (LOCKED.has(code)) continue;
+    overrides[code] = !!on;
+    const mod = moduleOf(code);
+    if (on && mod) overrides[mod] = true;
+  }
+  const keep = Object.fromEntries(KEEP_FLAGS.filter((k) => t.overrides?.[k]).map((k) => [k, true]));
+  return { ...overrides, ...keep };
+}
+const snapshot = (t) => { if (t.delivery && !t.delivery.builtOverrides) t.delivery.builtOverrides = { ...t.overrides }; };
 export function setSchoolAddons(db, tenantId, codes, by) {
   const rc = DEFAULT_RATE_CARD;
   const t = db.tenants.find((x) => x.id === tenantId);
@@ -378,10 +402,14 @@ export function setSchoolAddons(db, tenantId, codes, by) {
   let set = new Set([...codes].filter((c) => known.has(c)));
   rc.addons.forEach((a) => { if (a.needs && set.has(a.code) && !set.has(a.needs)) set.delete(a.code); });   // Timings needs Transport
   const before = new Set(t.delivery?.addons || []);
-  const { overrides } = demoConfig({ ...rc, tiers: rc.tiers.map((x) => ({ ...x, includes: [] })) }, { tier: 'STARTER', addons: Object.fromEntries([...set].map((c) => [c, true])) });
-  const keep = Object.fromEntries(['PROJECT', 'PRJ_LINKS', 'SP_ADDONS'].filter((k) => t.overrides?.[k]).map((k) => [k, true]));
-  t.overrides = { ...overrides, ...keep };
-  t.delivery = { ...(t.delivery || {}), builtAddons: t.delivery?.builtAddons || [...before], addons: [...set] };   // the last build stays recorded while menus change
+  t.delivery = { ...(t.delivery || {}), builtAddons: t.delivery?.builtAddons || [...before] };
+  snapshot(t);
+  // an add-on switched on or off takes its own screens with it (single-screen marks for them are cleared)
+  const changed = [...set].filter((c) => !before.has(c)).concat([...before].filter((c) => !set.has(c)));
+  const screens = { ...(t.delivery.screens || {}) };
+  changed.forEach((c) => { const a = rc.addons.find((x) => x.code === c); [...(a?.menus || []), ...(a?.functions || [])].forEach((m) => delete screens[m]); });
+  t.delivery = { ...t.delivery, addons: [...set], screens };
+  t.overrides = computeOverrides(t);
   const added = [...set].filter((c) => !before.has(c)), removed = [...before].filter((c) => !set.has(c));
   const name = (c) => rc.addons.find((a) => a.code === c)?.name || c;
   if (added.length || removed.length) {
@@ -389,6 +417,31 @@ export function setSchoolAddons(db, tenantId, codes, by) {
   }
   return t;
 }
+// Mark single screens or functions on (true) or off (false) for the school; null puts one back to what its add-on decides
+export function setSchoolScreens(db, tenantId, changes, by) {
+  const t = db.tenants.find((x) => x.id === tenantId);
+  if (!t) throw new Error('School not found');
+  const locked = Object.keys(changes).filter((c) => LOCKED.has(c));
+  if (locked.length) throw new Error(`${locked.map((c) => LABEL[c] || c).join(', ')} ${locked.length > 1 ? 'are' : 'is'} basic and always in the app`);
+  t.delivery = { ...(t.delivery || {}), builtAddons: t.delivery?.builtAddons || [...(t.delivery?.addons || [])] };
+  snapshot(t);
+  const screens = { ...(t.delivery.screens || {}) };
+  const fromAddons = computeOverrides({ ...t, delivery: { ...t.delivery, screens: {} } });
+  for (const [c, on] of Object.entries(changes)) {
+    if (on === null || !!on === !!fromAddons[c]) delete screens[c]; else screens[c] = !!on;
+  }
+  t.delivery.screens = screens;
+  t.overrides = computeOverrides(t);
+  return t;
+}
+// What is switched on now, compared with the last build
+export function pendingChanges(t) {
+  const built = t.delivery?.builtOverrides || t.overrides;
+  const on = (o, c) => !!o[c];
+  const diff = SWITCHABLE.filter((c) => on(t.overrides, c) !== on(built, c));
+  return { shown: diff.filter((c) => on(t.overrides, c)), hidden: diff.filter((c) => !on(t.overrides, c)) };
+}
+export const switchName = (c) => LABEL[c] || FUNCTIONS.find((f) => f.code === c)?.name || c;
 
 // Release 16.3: Rebuild the app from the add-ons selected — a new version, with every output following it:
 // menus and screens, phone tabs, requirements document, website, Project Links and the build file for the school's branch.
@@ -399,8 +452,9 @@ export function rebuildSchool(db, tenantId, codes, by) {
   const t = db.tenants.find((x) => x.id === tenantId);
   if (!t) throw new Error('School not found');
   if (codes) setSchoolAddons(db, tenantId, codes, by);
+  const pend = pendingChanges(t);
   const built = [...builtAddons(t)].sort().join();
-  if (built === [...(t.delivery?.addons || [])].sort().join()) throw new Error('Nothing to rebuild — select or unselect an add-on first');
+  if (built === [...(t.delivery?.addons || [])].sort().join() && !pend.shown.length && !pend.hidden.length) throw new Error('Nothing to rebuild — select or unselect an add-on, menu or function first');
   const prev = new Set(builtAddons(t));
   const d = t.delivery;
   const version = nextVersion(d.version);
@@ -408,9 +462,12 @@ export function rebuildSchool(db, tenantId, codes, by) {
   const menus = Object.entries(t.overrides).filter(([k, v]) => v && LABEL[k]).length;
   d.version = version; d.date = new Date().toISOString().slice(0, 10);
   const nm = (c) => rc.addons.find((a) => a.code === c)?.name || c;
-  d.builds = [{ version, at: new Date().toISOString(), by, addons: d.addons.length, menus, added: d.addons.filter((c) => !prev.has(c)).map(nm), removed: [...prev].filter((c) => !d.addons.includes(c)).map(nm) }, ...(d.builds || [])].slice(0, 30);
+  d.builds = [{ version, at: new Date().toISOString(), by, addons: d.addons.length, menus, added: d.addons.filter((c) => !prev.has(c)).map(nm), removed: [...prev].filter((c) => !d.addons.includes(c)).map(nm),
+    shown: pend.shown.map(switchName), hidden: pend.hidden.map(switchName) }, ...(d.builds || [])].slice(0, 30);
   d.builtAddons = [...d.addons];
-  const label = d.addons.length === rc.addons.length ? 'All features' : d.addons.length ? `Basic + ${d.addons.length} add-ons` : 'Basic';
+  d.builtOverrides = { ...t.overrides };
+  const marks = Object.keys(d.screens || {}).length;
+  const label = (d.addons.length === rc.addons.length && !marks ? 'All features' : d.addons.length ? `Basic + ${d.addons.length} add-ons` : 'Basic') + (marks ? ` (${marks} menu${marks > 1 ? 's' : ''} set by hand)` : '');
   if (t.trial) Object.assign(t.trial, { version, tier: label });
   d.tier = label;
   const project = (db.provider?.projects || []).find((p) => [p.tenantId, p.uatTenantId, p.liveTenantId].includes(t.id));
@@ -420,7 +477,7 @@ export function rebuildSchool(db, tenantId, codes, by) {
 // The file that rebuilds and republishes this school's app for everyone (commit it as schools/<sub>/config.json)
 export function rebuildConfig(t, base = {}) {
   const d = t.delivery || {};
-  return { ...base, school: t.schoolName || t.name.replace(/ – .*$/, ''), version: d.version, addons: d.addons || [], addonsMenu: !!t.overrides?.SP_ADDONS, allAddons: false, built: d.date };
+  return { ...base, school: t.schoolName || t.name.replace(/ – .*$/, ''), version: d.version, addons: d.addons || [], screens: d.screens || {}, addonsMenu: !!t.overrides?.SP_ADDONS, allAddons: false, built: d.date };
 }
 
 // The school's file on its branch (schools/<subdomain>/school.json): what the build for this school switches on
