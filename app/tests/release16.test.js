@@ -138,7 +138,12 @@ test('Roles & Permissions (provider): any non-basic menu or function switched on
   D.setSchoolAddons(db, t.id, ['TRANSPORT'], 'P');
   t.delivery.builtAddons = [...t.delivery.addons]; t.delivery.builtOverrides = { ...t.overrides };
   assert.ok(sees(t, 'SP_FEATURES') && !sees(t, 'SP_FEATURES', 'PRINCIPAL'));
-  assert.throws(() => D.setSchoolScreens(db, t.id, { STU_ADMISSIONS: false }, 'P'), /basic/);
+  assert.throws(() => D.setSchoolScreens(db, t.id, { OPS_USERS: false }, 'P'), /needed to run and manage/);
+  // basic screens can be switched off too, and back on
+  D.setSchoolScreens(db, t.id, { STU_ADMISSIONS: false, FEE_COLLECT: false }, 'P');
+  assert.ok(!sees(t, 'STU_ADMISSIONS') && !sees(t, 'FEE_COLLECT') && sees(t, 'STU_LIST'));
+  D.setSchoolScreens(db, t.id, { STU_ADMISSIONS: true, FEE_COLLECT: true }, 'P');
+  assert.ok(sees(t, 'STU_ADMISSIONS') && sees(t, 'FEE_COLLECT'));
   // one screen of an add-on that is not bought, and one screen of a bought add-on taken away
   D.setSchoolScreens(db, t.id, { CMP_LIBRARY: true, TRN_MANIFEST: false, FN_WHATSAPP: true }, 'P');
   assert.ok(sees(t, 'CMP_LIBRARY'), 'one screen of an add-on not bought');

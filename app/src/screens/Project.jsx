@@ -87,7 +87,8 @@ export function RequirementsPage() {
     <p className="muted">{ENV_LABEL[tenant.env] || 'School'} · {d.tier || PLANS.find((p) => p.code === tenant.plan)?.name} plan · version {d.version || project?.version || '1.0'}{d.date ? ' · ' + dlv.dmy(d.date) : ''}{d.projectNo ? ' · project ' + d.projectNo : ''} · board {tenant.examBoard || 'CBSE'}</p>
     <div className="row noprint" style={{ margin: '10px 0 18px' }}><button className="btn pri" onClick={() => window.print()}>Print / save as PDF</button><a className="btn" href="#/s/HOME">Open the test build</a></div>
     <h2>1. Basic features (every school)</h2>
-    <ul>{BASIC.map(([c, t]) => <li key={c}>{t}</li>)}<li>Always there: {ALWAYS.map((c) => LABEL[c]).join(', ')}</li></ul>
+    <ul>{BASIC.map(([c, t, menus]) => { const off = menus.filter((m) => !on(m)); return <li key={c}>{t}{off.length === menus.length ? ' — switched off for this school' : off.length ? ` — without ${off.map((m) => LABEL[m] || m).join(', ')}` : ''}</li>; })}
+      <li>Always there: {ALWAYS.filter(on).map((c) => LABEL[c]).join(', ')}</li></ul>
     <h2>2. Add-ons agreed with the school</h2>
     {addons.length ? <ul>{addons.map((c) => <li key={c}>{rc.addons.find((a) => a.code === c)?.name || c}</li>)}</ul> : <p>None — the basic features only.</p>}
     <h2>3. Menus in this school</h2>
@@ -133,7 +134,7 @@ function useRebuild() {
   const RebuildButton = () => <button className="btn pri" disabled={!pending || busy} onClick={rebuild}>Rebuild app (v{dlv.nextVersion(d.version)})</button>;
   const Status = ({ go }) => <Card title={pending ? `Changes not built yet (${pending})` : 'Everything is built'}>
     {pending ? <><p className="small">{summary}</p><div className="row"><RebuildButton /><button className="btn" disabled={busy} onClick={undo}>Undo changes</button></div></>
-      : !build?.done && <p className="small muted">Tick or untick — the menus show or hide at once — then Rebuild. The basic features are always in the app.</p>}
+      : !build?.done && <p className="small muted">Tick or untick — the menus show or hide at once — then Rebuild.</p>}
     {build && <ol className="small" style={{ marginTop: 10 }} aria-label="Rebuild steps">{STEPS.map((x, i) => <li key={x}>{i < build.step || build.done ? '✓ ' : i === build.step ? '… ' : '○ '}{x}</li>)}</ol>}
     {build?.done && <div className="note" role="status" style={{ marginTop: 10 }}>
       <b>Version {build.result.version} is built</b> — {build.result.addons.length} add-ons, {build.result.menus} screens and menus. The app has changed:
@@ -176,7 +177,8 @@ export function SchoolAddons({ go }) {
         <li><b>Publish for everyone</b>: download the build file and commit it to the school's branch; the hosted app is rebuilt and republished by GitHub.</li></ol>
     </Card>
     <Status go={go} />
-    <Card title="Basic features (always in the app)"><ul className="small" style={{ margin: 0 }}>{BASIC.map(([c, t]) => <li key={c}>{t}</li>)}</ul></Card>
+    <Card title="Basic features"><ul className="small" style={{ margin: 0 }}>{BASIC.map(([c, t]) => <li key={c}>{t}</li>)}</ul>
+      <p className="small muted" style={{ marginTop: 8 }}>In every school. Any basic screen can still be switched off for this school in <button className="linkbtn" onClick={() => go('SP_FEATURES')}>Roles & Permissions</button>.</p></Card>
     {groups.map((g) => <Card key={g} title={g}>
       <div className="tw"><table className="t"><thead><tr><th style={{ width: 70 }}>Select</th><th>Add-on</th><th>What it adds</th><th>Now</th></tr></thead>
         <tbody>{rc.addons.filter((a) => a.group === g).map((a) => <tr key={a.code}>
@@ -203,7 +205,8 @@ export function SchoolFeatures({ go }) {
   const mods = MENU.filter((m) => !['PLATFORM', 'SERVICE_PROVIDER', 'VIEWAS', 'PROJECT'].includes(m.code));
   const set = (codes, on) => act((db2) => dlv.setSchoolScreens(db2, tenant.id, Object.fromEntries(codes.filter((c) => !dlv.LOCKED.has(c)).map((c) => [c, on])), by),
     `${codes.length === 1 ? dlv.switchName(codes[0]) : codes.filter((c) => !dlv.LOCKED.has(c)).length + ' menus and functions'} ${on ? 'shown' : 'hidden'} — rebuild to make it the next version`);
-  const source = (c) => dlv.LOCKED.has(c) ? <Pill kind="ok">Basic</Pill> : marks[c] !== undefined ? <Pill kind="info">Set here{marks[c] ? ' (add-on of its own)' : ''}</Pill>
+  const source = (c) => dlv.LOCKED.has(c) ? <Pill kind="ok">Always on</Pill> : marks[c] !== undefined ? <Pill kind="info">{dlv.BASIC_SCREENS.has(c) ? (marks[c] ? 'Basic' : 'Basic · switched off here') : marks[c] ? 'Set here (add-on of its own)' : 'Set here'}</Pill>
+    : dlv.BASIC_SCREENS.has(c) ? <Pill kind="ok">Basic</Pill>
     : dlv.addonOfScreen(c) ? <Pill>{dlv.addonOfScreen(c).name}</Pill> : <Pill kind="muted">Plan</Pill>;
   const state = (c) => !!built[c] === !!o[c] ? (o[c] ? <Pill kind="ok">In the app</Pill> : <Pill kind="muted">Not in the app</Pill>)
     : o[c] ? <Pill kind="info">Shown · rebuild to add</Pill> : <Pill kind="warn">Hidden · rebuild to remove</Pill>;
@@ -214,7 +217,7 @@ export function SchoolFeatures({ go }) {
       <button className="btn" disabled={busy || !counts.hand} onClick={() => act((db2) => dlv.setSchoolScreens(db2, tenant.id, Object.fromEntries(Object.keys(marks).map((c) => [c, null])), by), 'Every menu follows its add-on again')}>Follow add-ons</button><RebuildButton /></>}>
     <Card title="How it works">
       <ul className="small" style={{ margin: 0 }}>
-        <li>Every menu, sub-menu and function of the app. <b>Basic</b> ones are always on. Any other can be ticked or unticked on its own — it becomes an add-on of its own for this school, whatever its add-on says.</li>
+        <li>Every menu, sub-menu and function of the app — <b>basic ones included</b>. Tick or untick any of them on its own: a screen ticked here becomes an add-on of its own for this school, an unticked one (even a basic one) leaves the app. Only Main menu, Users, Roles & Permissions, My Account and these provider screens stay on, so the app can still be run and managed.</li>
         <li>The menus show or hide at once; <b>Rebuild app</b> makes it the next version, as for <button className="linkbtn" onClick={() => go('SP_ADDONS')}>Add-ons</button>.</li>
         <li>The school’s own <button className="linkbtn" onClick={() => go('OPS_ROLES')}>Operations › Roles & Permissions</button> lists only the menus switched on here, so the school gives its departments only what it has.</li></ul>
     </Card>

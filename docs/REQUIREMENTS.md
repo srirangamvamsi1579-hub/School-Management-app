@@ -1012,6 +1012,13 @@ In a client's own app, Service Provider › School set-up has two screens: **Add
   - The marks are carried in the shared links and in `rebuild.json` (`screens`), and `client-app.mjs` applies them when the app is republished.
 - **The school's own Operations › Roles & Permissions** follows the provider. In Permissions by department it lists only the menus and functions switched on for the school: the basic ones plus whatever the provider marked or added. Screens the school doesn't have aren't shown.
 
+### Release 16.5 — basic screens can be switched off by the provider too
+
+- In Service Provider › Roles & Permissions, basic screens and functions can now be unticked as well. Examples: no Admissions & Enquiries, or no Collect Fee for a school that collects fees elsewhere.
+- Only what keeps the app usable and manageable stays locked on: Main menu, Users, Roles & Permissions, My Account (account deletion is required by the app stores), Project Links and the two provider screens.
+- A basic screen that has been switched off shows "Basic · switched off here". The requirements document names it, for example "Admissions: enquiry to enrolment — without Admissions & Enquiries".
+- Rebuild, the build file, the shared links and the school's own Roles & Permissions treat these like any other change.
+
 ## Backlog (from the QA cycle, November 2026)
 
 | Priority | Enhancement | Why |

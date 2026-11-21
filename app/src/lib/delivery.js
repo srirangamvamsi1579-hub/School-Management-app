@@ -374,8 +374,11 @@ export function setProjectStatus(db, projectId, status, by) {
 // Release 16.4: the provider can also switch single menus and functions (Service Provider › Roles & Permissions):
 // any screen or function outside the basic features can be marked on or off for this school, on top of the add-ons.
 const KEEP_FLAGS = ['PROJECT', 'PRJ_LINKS', 'SP_ADDONS', 'SP_FEATURES'];
-export const LOCKED = new Set([...BASIC.flatMap((b) => b[2]), ...ALWAYS, 'HOME', 'PRJ_LINKS', 'SP_ADDONS', 'SP_FEATURES', 'HELP_GUIDE', 'HELP_FAQ',
-  'SELF_ACCOUNT', 'SELF_PREFS', 'SELF_CHILD', 'SELF_REQUESTS', 'SELF_FEES', 'SELF_LEAVE']);
+// Release 16.5: basic features can be switched off by the provider too. Only what keeps the app usable and manageable stays on:
+// the Main menu, the provider's own two screens, users and roles (to manage the school), My Account (account deletion,
+// required by the app stores) and Project Links.
+export const LOCKED = new Set(['HOME', 'PRJ_LINKS', 'SP_ADDONS', 'SP_FEATURES', 'OPS_USERS', 'OPS_ROLES', 'SELF_ACCOUNT']);
+export const BASIC_SCREENS = new Set([...BASIC.flatMap((b) => b[2]), ...ALWAYS]);
 const moduleOf = (code) => MENU.find((m) => m.items.some((i) => i[0] === code))?.code || FUNCTIONS.find((f) => f.code === code)?.module;
 // Every switchable thing in the app: screens (by menu) and functions
 export const SWITCHABLE = [...MENU.filter((m) => !['PLATFORM', 'SERVICE_PROVIDER', 'VIEWAS', 'PROJECT'].includes(m.code)).flatMap((m) => m.items.filter((i) => i[0][0] !== '#').map((i) => i[0])), ...FUNCTIONS.map((f) => f.code)];
@@ -422,7 +425,7 @@ export function setSchoolScreens(db, tenantId, changes, by) {
   const t = db.tenants.find((x) => x.id === tenantId);
   if (!t) throw new Error('School not found');
   const locked = Object.keys(changes).filter((c) => LOCKED.has(c));
-  if (locked.length) throw new Error(`${locked.map((c) => LABEL[c] || c).join(', ')} ${locked.length > 1 ? 'are' : 'is'} basic and always in the app`);
+  if (locked.length) throw new Error(`${locked.map((c) => LABEL[c] || c).join(', ')} ${locked.length > 1 ? 'are' : 'is'} needed to run and manage the app, so ${locked.length > 1 ? 'they stay' : 'it stays'} on`);
   t.delivery = { ...(t.delivery || {}), builtAddons: t.delivery?.builtAddons || [...(t.delivery?.addons || [])] };
   snapshot(t);
   const screens = { ...(t.delivery.screens || {}) };
