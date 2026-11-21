@@ -96,3 +96,37 @@ export function RequirementsPage() {
     <p>{tenant.env === 'LIVE' && d.signedBy ? `Signed off by ${d.signedBy} for version ${d.version}. The live school is built from this version.` : 'After testing, the school signs off this version; the live school is then built with exactly these menus.'}</p>
   </div>;
 }
+
+// Release 16.2: Service Provider › Add-ons for this School — the only provider screen in a client's own app.
+// Tick an add-on to switch its menus on for this school, untick to take them off. The basic features always stay.
+export function SchoolAddons() {
+  const { db, run, notify, session } = useStore();
+  const tenant = tenantOf(db);
+  const rc = DEFAULT_RATE_CARD;
+  const on = new Set(tenant.delivery?.addons || []);
+  const save = (codes, msg) => { try { run((d) => dlv.setSchoolAddons(d, tenant.id, codes, session?.name || 'Service provider')); notify(msg); } catch (e) { notify(e.message); } };
+  const toggle = (a) => {
+    const next = new Set(on);
+    if (next.has(a.code)) { next.delete(a.code); rc.addons.filter((x) => x.needs === a.code).forEach((x) => next.delete(x.code)); }
+    else { next.add(a.code); if (a.needs) next.add(a.needs); }
+    save(next, `${a.name}: ${on.has(a.code) ? 'switched off' : 'switched on'} for ${tenant.schoolName || tenant.name}`);
+  };
+  const groups = [...new Set(rc.addons.map((a) => a.group))];
+  const log = tenant.delivery?.addonLog || [];
+  return <Page title="Add-ons for this School" sub={`${tenant.name} · ${on.size} of ${rc.addons.length} add-ons on. Tick to add a feature, untick to remove it; the menus change at once.`}
+    actions={<><button className="btn" onClick={() => save(rc.addons.map((a) => a.code), 'Every add-on switched on')}>Select all</button><button className="btn" onClick={() => save([], 'Every add-on switched off — basic features only')}>Clear all</button></>}>
+    <Card title="Basic features (always included)">
+      <ul className="small" style={{ margin: 0 }}>{BASIC.map(([c, t]) => <li key={c}>{t}</li>)}</ul>
+    </Card>
+    {groups.map((g) => <Card key={g} title={g}>
+      <div className="tw"><table className="t"><thead><tr><th style={{ width: 70 }}>On</th><th>Add-on</th><th>What it adds</th></tr></thead>
+        <tbody>{rc.addons.filter((a) => a.group === g).map((a) => <tr key={a.code}>
+          <td><input type="checkbox" aria-label={a.name} checked={on.has(a.code)} onChange={() => toggle(a)} /></td>
+          <td className="b">{a.name}{a.needs && <div className="small muted">Needs {rc.addons.find((x) => x.code === a.needs)?.name}</div>}</td>
+          <td className="small">{[...(a.menus || []).map((m) => LABEL[m] || m), ...(a.functions?.length ? ['(function switched on inside its screens)'] : [])].join(', ') || a.blurb || '—'}</td></tr>)}</tbody></table></div>
+    </Card>)}
+    <Card title="Changes">{log.length ? <div className="tw"><table className="t"><thead><tr><th>When</th><th>By</th><th>Added</th><th>Removed</th></tr></thead>
+      <tbody>{log.map((x, i) => <tr key={i}><td className="small">{new Date(x.at).toLocaleString('en-IN')}</td><td>{x.by}</td><td className="small">{x.added.join(', ') || '—'}</td><td className="small">{x.removed.join(', ') || '—'}</td></tr>)}</tbody></table></div>
+      : <p className="small muted">No changes yet.</p>}</Card>
+  </Page>;
+}

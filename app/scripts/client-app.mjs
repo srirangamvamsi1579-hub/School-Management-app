@@ -23,6 +23,13 @@ if (cfg.subdomain) {                                              // a cleaner a
   D.refreshLinks(db, cp, 'Release script');
 }
 for (const [code, url] of Object.entries(cfg.links || {})) D.setLink(db, cp.id, code, { url }, 'Release script');
+if (cfg.allAddons) {                                              // every feature, and the add-ons menu to switch them per school
+  const t = db.tenants.find((x) => x.id === cp.uatTenantId);
+  t.overrides.SP_ADDONS = true;
+  D.setSchoolAddons(db, t.id, RC.addons.map((a) => a.code), 'Release script');
+  t.delivery.addonLog = [];
+  t.plan = 'ENTERPRISE'; cp.tierName = 'All features';
+}
 D.refreshLinks(db, cp, 'Release script');                         // the test-build links now carry the filled links
 const uat = db.tenants.find((t) => t.id === cp.uatTenantId);
 const sub = uat.liveSubdomain;
@@ -36,11 +43,12 @@ fs.writeFileSync(path.join(dir, 'links.json'), JSON.stringify({ school: uat.name
 const trial = cp.links.find((l) => l.code === 'TEST_BUILD').url;
 const hash = trial.slice(trial.indexOf('#'));
 const html = fs.readFileSync(path.join(root, 'app/dist-single/index.html'), 'utf8');
-const boot = `<script>window.__SCHOOL_APP__={storeKey:'school-app-${sub}',school:${JSON.stringify(uat.name)}};` +
-  `(function(){var h=location.hash,k='school-app-${sub}',to={'#/p/site':'?to=site','#/p/mobile':'?to=app','#/p/requirements':'?to=req'};` +
+const boot = `<script>window.__SCHOOL_APP__={storeKey:'school-app-${sub}${cfg.storeVersion ? '-' + cfg.storeVersion : ''}',school:${JSON.stringify(uat.name)}};` +
+  `(function(){var h=location.hash,k='school-app-${sub}${cfg.storeVersion ? '-' + cfg.storeVersion : ''}',to={'#/p/site':'?to=site','#/p/mobile':'?to=app','#/p/requirements':'?to=req'};` +
   `if(h.indexOf('#/try/')===0)return;` +
   `var saved=null;try{saved=localStorage.getItem(k)}catch(e){}` +
-  `if(!saved||!h||h==='#'||h==='#/')location.replace(location.pathname+location.search+${JSON.stringify(hash)}+(to[h]||''));})();</script>`;
+  `if(!saved)location.replace(location.pathname+location.search+${JSON.stringify(hash)}+(to[h]||''));` +
+  `else if(!h||h==='#'||h==='#/')location.replace(location.pathname+location.search+'#/s/HOME');})();</script>`;
 const out = html.replace('<head>', '<head>' + boot).replace(/<title>[^<]*<\/title>/, `<title>${uat.name}</title>`);
 const outDir = path.join(root, 'app/dist-client', sub);
 fs.mkdirSync(outDir, { recursive: true });
