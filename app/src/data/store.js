@@ -8,6 +8,7 @@ import { seedRelease13 } from './seedRelease13.js';
 import { seedRelease14, seedRelease141 } from './seedRelease14.js';
 import { seedRelease15 } from './seedRelease15.js';
 import { seedRelease16 } from './seedRelease16.js';
+import { seedRelease17 } from './seedRelease17.js';
 import { readTrial, applyTrial } from '../lib/delivery.js';
 
 // Release 16.1: a client's own app (its own address) keeps its data apart from the main test build on the same site
@@ -17,7 +18,7 @@ const Ctx = createContext(null);
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) { const d = JSON.parse(raw); if (d.version === 9) { return withTrial(normalizeUsers(seedRelease16(seedRelease15(seedRelease141(seedRelease14(seedRelease13(seedRelease12(d)))))))); } }
+    if (raw) { const d = JSON.parse(raw); if (d.version === 9) { return withTrial(normalizeUsers(seedRelease17(seedRelease16(seedRelease15(seedRelease141(seedRelease14(seedRelease13(seedRelease12(d))))))))); } }
   } catch (e) { /* storage blocked — run from memory only */ }
   return withTrial(buildSeed());
 }
@@ -52,8 +53,7 @@ export function StoreProvider({ children }) {
     if (s !== null && s !== undefined) return s.signedOut ? null : s;
     if (typeof location !== 'undefined' && /^#\/(p\/|login)/.test(location.hash)) return null;
     if ((typeof import.meta.env !== 'undefined' && import.meta.env.VITE_TARGET === 'mobile') || (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.())) return null;   // the phone app always asks who you are
-    const a = load().users.find((u) => u.role === 'ADMIN' && u.status === 'ACTIVE');
-    return a ? { role: a.role, userId: a.id, name: a.name, auto: true } : null;
+    return null;   // release 17: every visit starts on the School login page (registration no., username, password)
   });
   // Admin "View as": see the app exactly as another profile sees it. Read-only unless the Admin switches on "act as".
   const [viewAs, setViewAsState] = useState(() => { try { return JSON.parse(sessionStorage.getItem(KEY + '-va')) || null; } catch (e) { return null; } });

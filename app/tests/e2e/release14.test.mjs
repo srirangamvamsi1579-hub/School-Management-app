@@ -8,11 +8,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { withAutoAdmin } from './autologin.mjs';
 import { serve } from '../store/serve.mjs';
 
 const DIST = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../dist');
 let server, browser;
-before(async () => { server = await serve(DIST); browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ['--no-sandbox'] }); });
+before(async () => { server = await serve(DIST); browser = withAutoAdmin(await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ['--no-sandbox'] })); });
 after(async () => { await browser?.close(); server?.close(); });
 
 async function start() {

@@ -154,7 +154,8 @@ export function syncDeptPerms(d) {
 
 // Screens a person can open = their role's permissions + their designation's extras + screens given to them by name
 // A demo school, a customer's test build or a client school: our company's menus never show there
-const inClientSchool = (db) => { const t = db.tenants?.find((x) => x.id === db.tenantId); return !!(t && (t.demo || t.trial || t.client)); };
+// Our company's menus open only in the service provider's own school (registration no. 100); every other school is a client
+const inClientSchool = (db) => { const t = db.tenants?.find((x) => x.id === db.tenantId); return !!(t && (t.demo || t.trial || t.client || (t.regNo && String(t.regNo) !== '100'))); };
 export function screensFor(db, user, role) {
   const base = rolePerms(db, role);
   const extra = [...(user && db.designationAccess?.[user.designation] || []), ...(user?.extra || [])];
