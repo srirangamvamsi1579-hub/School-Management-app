@@ -274,7 +274,11 @@ function DeptPermissions() {
   const hasAdmin = dept.profiles.some((p) => p.code === 'ADMIN');
   const others = dept.profiles.filter((p) => p.code !== 'ADMIN');
   const who = session.name || session.role;
-  const mods = MENU.filter((m) => !PROVIDER_MODULES.includes(m.code));
+  // Release 16.4: in a school whose menus the provider sets (its own app), list only the menus switched on for it
+  const providerSet = !!t.overrides?.SP_ADDONS;
+  const offered = (c) => !providerSet || canSee(c, 'ADMIN', rank, t.overrides, null) || ['SELF_CHILD', 'SELF_FEES', 'SELF_MYPERF'].includes(c) && canSee(c, 'PARENT', rank, t.overrides, null) || c.startsWith('VA_');
+  const mods = MENU.filter((m) => !PROVIDER_MODULES.includes(m.code) && (!providerSet || m.items.some((i) => i[0][0] !== '#' && offered(i[0]))))
+    .map((m) => providerSet ? { ...m, items: m.items.filter((i) => i[0][0] === '#' || offered(i[0])) } : m);
   const groupsOf = (m) => { const out = []; let cur = { key: m.code + ':_', title: null, items: [] };
     for (const i of m.items) { if (i[0][0] === '#') { if (cur.items.length || cur.title) out.push(cur); cur = { key: m.code + ':' + i[0], title: i[1], items: [] }; } else cur.items.push(i); }
     out.push(cur); return out.filter((g) => g.items.length); };

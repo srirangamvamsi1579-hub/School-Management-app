@@ -71,7 +71,7 @@ export const MENU = [
     ['#D', 'Delivery'], ['SP_DELIVERY', 'Client Delivery', 1],
     ['#M', 'Market'], ['SP_ANALYTICS', 'Sales Analytics', 1], ['SP_COMPARE', 'Competition Comparison', 1], ['SP_MARKET', 'Market Review & Roadmap', 1],
     // Release 16.2: in a client's own app, the Service Provider menu has only this — switch each add-on on or off for the school
-    ['#A', 'School set-up'], ['SP_ADDONS', 'Add-ons for this School', 1]] },
+    ['#A', 'School set-up'], ['SP_ADDONS', 'Add-ons for this School', 1], ['SP_FEATURES', 'Roles & Permissions', 1]] },
   // Settings: how the school and the app are set up (branding, website, screens, templates, bank details, messages).
   { code: 'SETTINGS', label: 'Settings', icon: 'settings', min: 1, items: [
     ['#S', 'School setup'], ['OPS_APPEARANCE', 'Appearance & Branding', 1], ['OPS_WEBSITE', 'Website & Links', 1], ['OPS_CHANNELS', 'Web & App Screens', 1], ['OPS_TEMPLATES', 'Templates', 1], ['ACC_BANK', 'Bank & Payment Details', 1],
@@ -133,7 +133,7 @@ export function canSee(code, role, rank, overrides = {}, perms = null) {
   if (!list.includes(code)) return false;
   const mod = MENU.find((m) => m.items.some((i) => i[0] === code));
   // Company menus: the platform and sales teams, and the Admin for Service Provider (release 13.2). Never a school switch.
-  if (code === 'SP_ADDONS') return (role === 'ADMIN' || isProvider(role)) && overrides.SP_ADDONS === true;
+  if (code === 'SP_ADDONS' || code === 'SP_FEATURES') return (role === 'ADMIN' || isProvider(role)) && overrides.SP_ADDONS === true;   // only in a client app the provider controls
   if (PROVIDER_MODULES.includes(mod.code)) return isProvider(role) || (role === 'ADMIN' && mod.code === 'SERVICE_PROVIDER');
   const modOn = ALWAYS_ON.includes(mod.code) || (overrides[mod.code] !== undefined ? overrides[mod.code] : rank >= mod.min);
   if (!modOn && !isProvider(role)) return false;

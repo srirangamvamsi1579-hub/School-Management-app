@@ -13,7 +13,7 @@ import * as D from '../src/lib/delivery.js';
 const cfg = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 // Release 16.3: a rebuild.json next to the config (downloaded from Add-ons for this School › Rebuild app) sets the add-ons and version
 const rebuildFile = path.join(path.dirname(path.resolve(process.argv[2])), 'rebuild.json');
-if (fs.existsSync(rebuildFile)) { const r = JSON.parse(fs.readFileSync(rebuildFile, 'utf8')); Object.assign(cfg, { addons: r.addons, version: r.version, addonsMenu: r.addonsMenu ?? cfg.addonsMenu, allAddons: false }); }
+if (fs.existsSync(rebuildFile)) { const r = JSON.parse(fs.readFileSync(rebuildFile, 'utf8')); Object.assign(cfg, { addons: r.addons, screens: r.screens || {}, version: r.version, addonsMenu: r.addonsMenu ?? cfg.addonsMenu, allAddons: false }); }
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const db = buildSeed();
 db.provider.profile.testSite = cfg.appUrl;                       // every generated link points into the client's own app
@@ -28,9 +28,10 @@ if (cfg.subdomain) {                                              // a cleaner a
 for (const [code, url] of Object.entries(cfg.links || {})) D.setLink(db, cp.id, code, { url }, 'Release script');
 if (cfg.allAddons || Array.isArray(cfg.addons)) {                                              // every feature, and the add-ons menu to switch them per school
   const t = db.tenants.find((x) => x.id === cp.uatTenantId);
-  if (cfg.allAddons || cfg.addonsMenu) t.overrides.SP_ADDONS = true;
+  if (cfg.allAddons || cfg.addonsMenu) { t.overrides.SP_ADDONS = true; t.overrides.SP_FEATURES = true; }
   D.setSchoolAddons(db, t.id, cfg.allAddons ? RC.addons.map((a) => a.code) : cfg.addons, 'Release script');
-  t.delivery.addonLog = []; t.delivery.builtAddons = [...t.delivery.addons];   // the published build
+  if (cfg.screens && Object.keys(cfg.screens).length) D.setSchoolScreens(db, t.id, cfg.screens, 'Release script');
+  t.delivery.addonLog = []; t.delivery.builtAddons = [...t.delivery.addons]; t.delivery.builtOverrides = { ...t.overrides };   // the published build
   t.plan = 'ENTERPRISE'; cp.tierName = cfg.allAddons || cfg.addons.length === RC.addons.length ? 'All features' : `Basic + ${cfg.addons.length} add-ons`;
 }
 if (cfg.version) {                                                // the version from the rebuild

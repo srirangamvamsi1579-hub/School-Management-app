@@ -114,7 +114,7 @@ test('Rebuild app: the selection becomes a new version and every output follows 
   const t = db.tenants.find((x) => x.id === cp.uatTenantId);
   t.overrides.SP_ADDONS = true;
   D.setSchoolAddons(db, t.id, RC.addons.map((a) => a.code), 'P');
-  t.delivery.builtAddons = [...t.delivery.addons];            // as published
+  t.delivery.builtAddons = [...t.delivery.addons]; t.delivery.builtOverrides = { ...t.overrides };   // as published
   assert.throws(() => D.rebuildSchool(db, t.id, RC.addons.map((a) => a.code), 'P'), /Nothing to rebuild/);
   const r = D.rebuildSchool(db, t.id, RC.addons.map((a) => a.code).filter((c) => c !== 'DASHBOARD'), 'P');
   assert.equal(r.version, '1.1'); assert.equal(t.delivery.version, '1.1'); assert.equal(cp.version, '1.1');
@@ -128,4 +128,35 @@ test('Rebuild app: the selection becomes a new version and every output follows 
   assert.equal(p.ver, '1.1'); assert.ok(!p.a.includes('DASHBOARD'), 'the shared links carry the rebuilt app');
   const f = D.rebuildConfig(t);
   assert.equal(f.version, '1.1'); assert.ok(!f.addons.includes('DASHBOARD')); assert.equal(f.addonsMenu, true);
+});
+
+test('Roles & Permissions (provider): any non-basic menu or function switched on its own; Rebuild applies it; basics locked', () => {
+  const db = buildSeed();
+  const cp = D.convertProposal(db, newProposal(db, o(), 'S').id, 'S');
+  const t = db.tenants.find((x) => x.id === cp.uatTenantId);
+  t.overrides.SP_ADDONS = true; t.overrides.SP_FEATURES = true;
+  D.setSchoolAddons(db, t.id, ['TRANSPORT'], 'P');
+  t.delivery.builtAddons = [...t.delivery.addons]; t.delivery.builtOverrides = { ...t.overrides };
+  assert.ok(sees(t, 'SP_FEATURES') && !sees(t, 'SP_FEATURES', 'PRINCIPAL'));
+  assert.throws(() => D.setSchoolScreens(db, t.id, { STU_ADMISSIONS: false }, 'P'), /basic/);
+  // one screen of an add-on that is not bought, and one screen of a bought add-on taken away
+  D.setSchoolScreens(db, t.id, { CMP_LIBRARY: true, TRN_MANIFEST: false, FN_WHATSAPP: true }, 'P');
+  assert.ok(sees(t, 'CMP_LIBRARY'), 'one screen of an add-on not bought');
+  assert.ok(!sees(t, 'TRN_MANIFEST'), 'hidden at once'); assert.ok(sees(t, 'TRN_ROUTES'), 'the rest of Transport stays');
+  assert.equal(t.overrides.FN_WHATSAPP, true);
+  const pend = D.pendingChanges(t);
+  assert.ok(pend.hidden.includes('TRN_MANIFEST') && pend.shown.includes('FN_WHATSAPP'));
+  const r = D.rebuildSchool(db, t.id, null, 'P');
+  assert.equal(r.version, '1.1'); assert.ok(t.delivery.builds[0].hidden.length >= 1);
+  assert.deepEqual(D.pendingChanges(t), { shown: [], hidden: [] });
+  assert.match(t.delivery.tier, /set by hand/);
+  // the marks travel in the shared link and the build file
+  const p = D.readTrial(cp.links.find((l) => l.code === 'TEST_BUILD').url.replace(/^[^#]*/, ''));
+  assert.equal(p.x.TRN_MANIFEST, false); assert.equal(p.x.FN_WHATSAPP, true);
+  const other = buildSeed(); const t2 = D.applyTrial(other, p, '');
+  assert.equal(t2.overrides.TRN_MANIFEST, false); assert.equal(t2.overrides.SP_FEATURES, true);
+  assert.equal(D.rebuildConfig(t).screens.TRN_MANIFEST, false);
+  // switching the add-on off and on again resets its single-screen marks
+  D.setSchoolAddons(db, t.id, [], 'P'); D.setSchoolAddons(db, t.id, ['TRANSPORT'], 'P');
+  assert.ok(sees(t, 'TRN_MANIFEST'));
 });
