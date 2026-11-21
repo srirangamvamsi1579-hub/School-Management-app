@@ -381,7 +381,7 @@ export function setSchoolAddons(db, tenantId, codes, by) {
   const { overrides } = demoConfig({ ...rc, tiers: rc.tiers.map((x) => ({ ...x, includes: [] })) }, { tier: 'STARTER', addons: Object.fromEntries([...set].map((c) => [c, true])) });
   const keep = Object.fromEntries(['PROJECT', 'PRJ_LINKS', 'SP_ADDONS'].filter((k) => t.overrides?.[k]).map((k) => [k, true]));
   t.overrides = { ...overrides, ...keep };
-  t.delivery = { ...(t.delivery || {}), addons: [...set] };
+  t.delivery = { ...(t.delivery || {}), builtAddons: t.delivery?.builtAddons || [...before], addons: [...set] };   // the last build stays recorded while menus change
   const added = [...set].filter((c) => !before.has(c)), removed = [...before].filter((c) => !set.has(c));
   const name = (c) => rc.addons.find((a) => a.code === c)?.name || c;
   if (added.length || removed.length) {
@@ -393,19 +393,23 @@ export function setSchoolAddons(db, tenantId, codes, by) {
 // Release 16.3: Rebuild the app from the add-ons selected — a new version, with every output following it:
 // menus and screens, phone tabs, requirements document, website, Project Links and the build file for the school's branch.
 export const nextVersion = (v = '1.0') => { const [a, b] = String(v).split('.').map(Number); return `${a || 1}.${(b || 0) + 1}`; };
+// Menus change as add-ons are ticked (setSchoolAddons); Rebuild turns what changed since the last build into the next version.
+export const builtAddons = (t) => t.delivery?.builtAddons || t.delivery?.addons || [];
 export function rebuildSchool(db, tenantId, codes, by) {
   const t = db.tenants.find((x) => x.id === tenantId);
   if (!t) throw new Error('School not found');
-  const before = [...(t.delivery?.addons || [])].sort().join();
-  const want = [...new Set(codes)].sort().join();
-  if (before === want) throw new Error('Nothing to rebuild — select or unselect an add-on first');
-  setSchoolAddons(db, tenantId, codes, by);
+  if (codes) setSchoolAddons(db, tenantId, codes, by);
+  const built = [...builtAddons(t)].sort().join();
+  if (built === [...(t.delivery?.addons || [])].sort().join()) throw new Error('Nothing to rebuild — select or unselect an add-on first');
+  const prev = new Set(builtAddons(t));
   const d = t.delivery;
   const version = nextVersion(d.version);
   const rc = DEFAULT_RATE_CARD;
   const menus = Object.entries(t.overrides).filter(([k, v]) => v && LABEL[k]).length;
   d.version = version; d.date = new Date().toISOString().slice(0, 10);
-  d.builds = [{ version, at: new Date().toISOString(), by, addons: d.addons.length, menus, added: d.addonLog?.[0]?.added || [], removed: d.addonLog?.[0]?.removed || [] }, ...(d.builds || [])].slice(0, 30);
+  const nm = (c) => rc.addons.find((a) => a.code === c)?.name || c;
+  d.builds = [{ version, at: new Date().toISOString(), by, addons: d.addons.length, menus, added: d.addons.filter((c) => !prev.has(c)).map(nm), removed: [...prev].filter((c) => !d.addons.includes(c)).map(nm) }, ...(d.builds || [])].slice(0, 30);
+  d.builtAddons = [...d.addons];
   const label = d.addons.length === rc.addons.length ? 'All features' : d.addons.length ? `Basic + ${d.addons.length} add-ons` : 'Basic';
   if (t.trial) Object.assign(t.trial, { version, tier: label });
   d.tier = label;

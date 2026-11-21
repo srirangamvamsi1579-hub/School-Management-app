@@ -985,7 +985,7 @@ Every client school is built the same way: from the basic features, plus exactly
 
 **Add-ons for this School** is now a three-step workflow:
 
-1. **Select or unselect** add-ons. Nothing changes yet. Each row shows *In the app*, *Add on rebuild*, *Remove on rebuild* or *Not in the app*, and a box lists the changes waiting. Discard changes puts the selection back.
+1. **Select or unselect** add-ons. Their menus show or hide straight away. **Select all**, **Unselect all** and **Rebuild app** sit together at the top, and a bar stays at the bottom while changes aren't built yet. Each row shows *In the app*, *Shown · rebuild to add*, *Hidden · rebuild to remove* or *Not in the app*. **Undo changes** returns to the last build.
 2. **Rebuild app (vN.N)** runs six visible steps:
    1. check the selection (add-ons that need each other);
    2. switch the menus and screens;

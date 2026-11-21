@@ -30,7 +30,7 @@ if (cfg.allAddons || Array.isArray(cfg.addons)) {                               
   const t = db.tenants.find((x) => x.id === cp.uatTenantId);
   if (cfg.allAddons || cfg.addonsMenu) t.overrides.SP_ADDONS = true;
   D.setSchoolAddons(db, t.id, cfg.allAddons ? RC.addons.map((a) => a.code) : cfg.addons, 'Release script');
-  t.delivery.addonLog = [];
+  t.delivery.addonLog = []; t.delivery.builtAddons = [...t.delivery.addons];   // the published build
   t.plan = 'ENTERPRISE'; cp.tierName = cfg.allAddons || cfg.addons.length === RC.addons.length ? 'All features' : `Basic + ${cfg.addons.length} add-ons`;
 }
 if (cfg.version) {                                                // the version from the rebuild

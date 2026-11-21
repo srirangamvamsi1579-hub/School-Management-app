@@ -114,10 +114,15 @@ test('Rebuild app: the selection becomes a new version and every output follows 
   const t = db.tenants.find((x) => x.id === cp.uatTenantId);
   t.overrides.SP_ADDONS = true;
   D.setSchoolAddons(db, t.id, RC.addons.map((a) => a.code), 'P');
+  t.delivery.builtAddons = [...t.delivery.addons];            // as published
   assert.throws(() => D.rebuildSchool(db, t.id, RC.addons.map((a) => a.code), 'P'), /Nothing to rebuild/);
   const r = D.rebuildSchool(db, t.id, RC.addons.map((a) => a.code).filter((c) => c !== 'DASHBOARD'), 'P');
   assert.equal(r.version, '1.1'); assert.equal(t.delivery.version, '1.1'); assert.equal(cp.version, '1.1');
   assert.ok(!sees(t, 'DASH'));
+  assert.deepEqual(t.delivery.builtAddons, t.delivery.addons);
+  D.setSchoolAddons(db, t.id, t.delivery.addons.filter((c) => c !== 'PAYROLL'), 'P');   // menus hide at once…
+  assert.ok(!sees(t, 'PAY_RUN')); assert.ok(t.delivery.builtAddons.includes('PAYROLL'), '…the build is unchanged until Rebuild');
+  D.setSchoolAddons(db, t.id, t.delivery.builtAddons, 'P'); // undo
   assert.equal(t.delivery.builds[0].removed[0], 'Dashboard menu');
   const p = D.readTrial(cp.links.find((l) => l.code === 'TEST_BUILD').url.replace(/^[^#]*/, ''));
   assert.equal(p.ver, '1.1'); assert.ok(!p.a.includes('DASHBOARD'), 'the shared links carry the rebuilt app');
