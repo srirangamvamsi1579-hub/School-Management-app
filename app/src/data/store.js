@@ -10,7 +10,8 @@ import { seedRelease15 } from './seedRelease15.js';
 import { seedRelease16 } from './seedRelease16.js';
 import { readTrial, applyTrial } from '../lib/delivery.js';
 
-const KEY = 'school-app-demo-v9';
+// Release 16.1: a client's own app (its own address) keeps its data apart from the main test build on the same site
+const KEY = (typeof window !== 'undefined' && window.__SCHOOL_APP__?.storeKey) || 'school-app-demo-v9';
 const Ctx = createContext(null);
 
 function load() {

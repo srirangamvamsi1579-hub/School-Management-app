@@ -42,7 +42,7 @@ export function trialPayload(tenant, project, rc = DEFAULT_RATE_CARD) {
 // Links shown in the school's own Project → Project Links menu
 // The four links that are the test build itself (they open from the trial link, so they are never carried inside it)
 export const TRIAL_CODES = ['TEST_BUILD', 'TEST_SITE', 'TEST_APP', 'REQ_DOC'];
-export const PROJECT_MENU_LINKS = ['TEST_BUILD', 'TEST_SITE', 'TEST_APP', 'REQ_DOC', 'TEST_GUIDE', 'WEB_PROD', 'PLAY', 'APPSTORE', 'BRANCH'];
+export const PROJECT_MENU_LINKS = ['SITE', 'TEST_BUILD', 'TEST_SITE', 'TEST_APP', 'REQ_DOC', 'TEST_GUIDE', 'WEB_PROD', 'PLAY', 'APPSTORE', 'BRANCH'];
 export const trialLink = (base, tenant, project, rc) => `${String(base).replace(/#.*$/, '')}#/try/${b64(JSON.stringify(trialPayload(tenant, project, rc)))}`;
 export function readTrial(hash) {
   const m = /^#\/try\/([A-Za-z0-9_-]+)/.exec(hash || '');
@@ -56,6 +56,11 @@ export function applyTrial(db, p, hash = '') {
   const addons = Object.fromEntries(p.a.filter((c) => rc.addons.some((x) => x.code === c)).map((c) => [c, true]));
   const { overrides } = demoConfig({ ...rc, tiers: rc.tiers.map((t) => ({ ...t, includes: [] })) }, { tier: 'STARTER', addons });
   overrides.PROJECT = true; overrides.PRJ_LINKS = true;
+  // The client's own website: the side menu's "School website" opens it, and the phone app starts on this school
+  if (p.l?.SITE && /^https:\/\//.test(p.l.SITE)) {
+    (db.links || []).filter((l) => l.label === 'School website').forEach((l) => { l.url = p.l.SITE; });
+    if (db.website) db.website.url = p.l.SITE;
+  }
   const t = { id: 'TT-' + p.c, code: p.c, name: p.n, subdomain: p.s, plan: PLANS.some((x) => x.code === p.p) ? p.p : 'ENTERPRISE', status: 'Customer testing', overrides, examBoard: p.b,
     mobile: { enabled: p.m, appStatus: 'Shared app' }, renews: '—', trial: { tier: p.t, version: p.ver, date: p.d }, env: p.k || 'UAT',
     delivery: { projectNo: p.no, version: p.ver, date: p.d, tier: p.t, addons: p.a, branch: p.r, links: p.l || {}, trial: String(hash).replace(/\?.*$/, '') } };

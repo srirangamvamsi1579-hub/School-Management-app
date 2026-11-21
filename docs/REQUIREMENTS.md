@@ -956,6 +956,20 @@ Every client school is built the same way: from the basic features, plus exactly
 - **Existing projects** become UAT/demo schools on the next load (a project that was Live keeps its school as the live one).
 - **Database (`034_release16_uat_live.sql`):** `tenants.environment` (UAT / LIVE), menu PROJECT / PRJ_LINKS for Admin and Principal, `client_projects.live_tenant_id`, `git_base`, `git_branch` (`school/<sub>`), `live_version`, statuses *UAT / Demo*, *Signed off*, *Live*; `client_project_signoffs` (one per version, date not in the future); a live school or the Signed off / Live status is refused until that version is signed; `v_client_environments` with the UAT and live tags.
 
+### Release 16.1 — a client's own app (first client: Vijayanikethan High School)
+
+- `node app/scripts/client-app.mjs <config.json>` sets up a client in one step. It creates the proposal, converts it to the UAT/DEMO school, fills the client's own website, and writes three things:
+  - `schools/<sub>/school.json`
+  - `schools/<sub>/links.json`
+  - the client's own single-file app.
+- **Publishing:** the app is published at `…/School-Management-app/<sub>/`. It opens straight into that school and keeps its saved data apart from the main test build. The short links `#/p/site`, `#/p/mobile` and `#/p/requirements` work on first visit.
+- **Live links:** Project Links shows the client's own website under Live. The side menu's School website opens it, and the phone app starts with the school's code.
+- **Vijayanikethan High School – UAT/DEMO:**
+  - Plan and features: Starter plan, basic features only, no add-ons, so there is no Dashboard and no Data Analytics. Service Provider never shows in a client school.
+  - School and board: code `VHS-UAT`, CBSE.
+  - Website: https://www.vijayanikethancbse.com/
+  - Branch: `school/vijayanikethan`, cut from `dev`.
+
 ## Backlog (from the QA cycle, November 2026)
 
 | Priority | Enhancement | Why |

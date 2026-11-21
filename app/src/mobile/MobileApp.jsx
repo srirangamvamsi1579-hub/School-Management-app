@@ -80,7 +80,9 @@ export default function MobileApp({ preview = false, school: fixedSchool = null 
 
 function SchoolPicker({ onPick }) {
   const { db } = useStore();
-  const [code, setCode] = useState('');
+  // A client's test build (or its own app) starts on that school's code
+  const own = db.tenants.find((t) => t.id === db.tenantId && t.env);
+  const [code, setCode] = useState(own?.code || '');
   const [err, setErr] = useState('');
   const pick = () => { const t = db.tenants.find((x) => x.code.toLowerCase() === code.trim().toLowerCase() || x.subdomain === code.trim().toLowerCase()); if (!t) { setErr('No school with that code. The school office can tell you the code.'); return; } onPick(t.code); };
   return <main className="m-center">
@@ -88,7 +90,7 @@ function SchoolPicker({ onPick }) {
     <label className="m-field"><span>School code</span><input className="i" autoCapitalize="characters" autoComplete="off" value={code} onChange={(e) => { setCode(e.target.value); setErr(''); }} onKeyDown={(e) => e.key === 'Enter' && pick()} /></label>
     {err && <p className="note warn" role="alert">{err}</p>}
     <button className="btn pri m-wide" onClick={pick}>Continue</button>
-    <p className="small muted">Demo code: GVS (Green Valley School)</p>
+    <p className="small muted">{own ? `Your school: ${own.code} (${own.name})` : 'Demo code: GVS (Green Valley School)'}</p>
     <p className="small"><a href="#/p/privacy">Privacy policy</a></p>
   </main>;
 }

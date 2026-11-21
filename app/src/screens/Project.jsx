@@ -36,6 +36,7 @@ export function schoolLinks(db, tenant) {
     ['Test', 'TEST_APP', 'Phone app', `The app as parents and staff see it (school code ${tenant.code})`],
     ['Test', 'REQ_DOC', 'Requirements document', 'What this school includes: basic features, add-ons agreed and every menu'],
     ['Test', 'TEST_GUIDE', 'User guide and guided demos', 'How each screen works, step by step'],
+    ['Live', 'SITE', 'School website', 'The school’s own website'],
     ['Live', 'WEB_PROD', 'Live website and sign-in', 'Opens after go-live'],
     ['Live', 'PLAY', 'Google Play', 'The app on Android'],
     ['Live', 'APPSTORE', 'App Store', 'The app on iPhone'],

@@ -7,3 +7,4 @@ __pycache__/
 .env
 app/dist-mobile/
 app/tests/store/last-report.json
+app/dist-client/
