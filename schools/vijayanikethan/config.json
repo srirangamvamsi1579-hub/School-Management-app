@@ -16,5 +16,7 @@
   "links": {
     "SITE": "https://www.vijayanikethancbse.com/"
   },
-  "subdomain": "vijayanikethan"
+  "subdomain": "vijayanikethan",
+  "allAddons": true,
+  "storeVersion": 2
 }
