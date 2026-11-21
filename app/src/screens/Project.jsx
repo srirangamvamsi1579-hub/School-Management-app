@@ -3,7 +3,8 @@
 //   phone app, requirements document and the release links, for the client and our team.
 // • #/p/site: the school's starter website; #/p/requirements: the requirements (scope) document of the school as agreed.
 // Both work in the customer's own browser, from the set-up carried by the test-build link.
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { saveFile } from '../lib/saveFile.js';
 import { useStore } from '../data/store.js';
 import { tenantOf } from '../lib/logic.js';
 import { Page, Card, Pill } from '../components/ui.jsx';
@@ -97,36 +98,79 @@ export function RequirementsPage() {
   </div>;
 }
 
-// Release 16.2: Service Provider › Add-ons for this School — the only provider screen in a client's own app.
-// Tick an add-on to switch its menus on for this school, untick to take them off. The basic features always stay.
-export function SchoolAddons() {
+// Release 16.3: Service Provider › Add-ons for this School — select / unselect, then Rebuild app.
+// The rebuild makes a new version and every output follows it: menus and screens, phone tabs, requirements document,
+// website, Project Links, and the build file that republishes the hosted app for everyone.
+const STEPS = ['Check the selection (add-ons that need each other)', 'Switch the menus and screens', 'Update the phone app tabs', 'Rewrite the requirements document',
+  'Update the website and Project Links', 'Make the build file for the school’s branch'];
+export function SchoolAddons({ go }) {
   const { db, run, notify, session } = useStore();
   const tenant = tenantOf(db);
   const rc = DEFAULT_RATE_CARD;
-  const on = new Set(tenant.delivery?.addons || []);
-  const save = (codes, msg) => { try { run((d) => dlv.setSchoolAddons(d, tenant.id, codes, session?.name || 'Service provider')); notify(msg); } catch (e) { notify(e.message); } };
+  const d = tenant.delivery || {};
+  const current = new Set(d.addons || []);
+  const [draft, setDraft] = useState(() => new Set(current));
+  const [build, setBuild] = useState(null);           // { step, done, result }
+  const added = [...draft].filter((c) => !current.has(c)), removed = [...current].filter((c) => !draft.has(c));
+  const name = (c) => rc.addons.find((a) => a.code === c)?.name || c;
   const toggle = (a) => {
-    const next = new Set(on);
+    const next = new Set(draft);
     if (next.has(a.code)) { next.delete(a.code); rc.addons.filter((x) => x.needs === a.code).forEach((x) => next.delete(x.code)); }
     else { next.add(a.code); if (a.needs) next.add(a.needs); }
-    save(next, `${a.name}: ${on.has(a.code) ? 'switched off' : 'switched on'} for ${tenant.schoolName || tenant.name}`);
+    setDraft(next); setBuild(null);
+  };
+  const rebuild = async () => {
+    for (let i = 0; i < STEPS.length; i++) { setBuild({ step: i }); await new Promise((r) => setTimeout(r, 350)); }
+    try {
+      let result;
+      run((db2) => { result = dlv.rebuildSchool(db2, tenant.id, [...draft], session?.name || 'Service provider'); });
+      setBuild({ step: STEPS.length, done: true, result });
+      notify(`App rebuilt: version ${result.version}`);
+    } catch (e) { setBuild(null); notify(e.message); }
+  };
+  const downloadConfig = () => {
+    const file = JSON.stringify(dlv.rebuildConfig(tenantOf(db)), null, 2);
+    saveFile('rebuild.json', file).then(() => notify(`rebuild.json saved — commit it to schools/${tenant.liveSubdomain || tenant.subdomain}/ on the school's branch; GitHub rebuilds and republishes the app for everyone`)).catch(() => {});
   };
   const groups = [...new Set(rc.addons.map((a) => a.group))];
-  const log = tenant.delivery?.addonLog || [];
-  return <Page title="Add-ons for this School" sub={`${tenant.name} · ${on.size} of ${rc.addons.length} add-ons on. Tick to add a feature, untick to remove it; the menus change at once.`}
-    actions={<><button className="btn" onClick={() => save(rc.addons.map((a) => a.code), 'Every add-on switched on')}>Select all</button><button className="btn" onClick={() => save([], 'Every add-on switched off — basic features only')}>Clear all</button></>}>
-    <Card title="Basic features (always included)">
+  const pending = added.length + removed.length;
+  return <Page title="Add-ons for this School" sub={`${tenant.name} · build v${d.version || '1.0'} (${d.date ? dlv.dmy(d.date) : '—'}) · ${current.size} of ${rc.addons.length} add-ons on`}
+    actions={<><button className="btn" onClick={() => { setDraft(new Set(rc.addons.map((a) => a.code))); setBuild(null); }}>Select all</button><button className="btn" onClick={() => { setDraft(new Set()); setBuild(null); }}>Unselect all</button></>}>
+    <Card title="How it works">
+      <ol className="small" style={{ margin: 0 }}><li><b>Select or unselect</b> add-ons below. Nothing changes yet.</li><li><b>Rebuild app</b>: a new version is built and the menus, phone app, requirements document, website and Project Links change automatically.</li>
+        <li><b>Publish for everyone</b>: download the build file and commit it to the school's branch; the hosted app is rebuilt and republished by GitHub.</li></ol>
+    </Card>
+    <Card title={pending ? `Changes waiting to be built (${pending})` : 'No changes waiting'}>
+      {pending ? <>
+        {added.length > 0 && <p className="small"><b>Add:</b> {added.map(name).join(', ')}</p>}
+        {removed.length > 0 && <p className="small"><b>Remove:</b> {removed.map(name).join(', ')}</p>}
+        <div className="row"><button className="btn pri" disabled={!!build && !build.done} onClick={rebuild}>Rebuild app (v{dlv.nextVersion(d.version)})</button>
+          <button className="btn" disabled={!!build && !build.done} onClick={() => { setDraft(new Set(current)); setBuild(null); }}>Discard changes</button></div>
+      </> : !build?.done && <p className="small muted">Select or unselect add-ons, then rebuild. The basic features are always in the app.</p>}
+      {build && <ol className="small" style={{ marginTop: 10 }} aria-label="Rebuild steps">{STEPS.map((x, i) => <li key={x}>{i < build.step || build.done ? '✓ ' : i === build.step ? '… ' : '○ '}{x}</li>)}</ol>}
+      {build?.done && <div className="note" role="status" style={{ marginTop: 10 }}>
+        <b>Version {build.result.version} is built</b> — {build.result.addons.length} add-ons, {build.result.menus} screens and menus. The app has changed:
+        <div className="row" style={{ marginTop: 8, flexWrap: 'wrap' }}>
+          <button className="btn sm" onClick={() => go('HOME')}>Main menu</button>
+          <a className="btn sm" href="#/p/requirements" target="_blank" rel="noreferrer">Requirements document</a>
+          <a className="btn sm" href="#/p/site" target="_blank" rel="noreferrer">Website</a>
+          <a className="btn sm" href="#/p/mobile" target="_blank" rel="noreferrer">Phone app</a>
+          <button className="btn sm" onClick={() => go('PRJ_LINKS')}>Project Links</button>
+          <button className="btn sm pri" onClick={downloadConfig}>Download build file (publish for everyone)</button></div></div>}
+    </Card>
+    <Card title="Basic features (always in the app)">
       <ul className="small" style={{ margin: 0 }}>{BASIC.map(([c, t]) => <li key={c}>{t}</li>)}</ul>
     </Card>
     {groups.map((g) => <Card key={g} title={g}>
-      <div className="tw"><table className="t"><thead><tr><th style={{ width: 70 }}>On</th><th>Add-on</th><th>What it adds</th></tr></thead>
+      <div className="tw"><table className="t"><thead><tr><th style={{ width: 70 }}>Select</th><th>Add-on</th><th>What it adds</th><th>Now</th></tr></thead>
         <tbody>{rc.addons.filter((a) => a.group === g).map((a) => <tr key={a.code}>
-          <td><input type="checkbox" aria-label={a.name} checked={on.has(a.code)} onChange={() => toggle(a)} /></td>
-          <td className="b">{a.name}{a.needs && <div className="small muted">Needs {rc.addons.find((x) => x.code === a.needs)?.name}</div>}</td>
-          <td className="small">{[...(a.menus || []).map((m) => LABEL[m] || m), ...(a.functions?.length ? ['(function switched on inside its screens)'] : [])].join(', ') || a.blurb || '—'}</td></tr>)}</tbody></table></div>
+          <td><input type="checkbox" aria-label={a.name} checked={draft.has(a.code)} onChange={() => toggle(a)} /></td>
+          <td className="b">{a.name}{a.needs && <div className="small muted">Needs {name(a.needs)}</div>}</td>
+          <td className="small">{(a.menus || []).map((m) => LABEL[m] || m).join(', ') || (a.functions?.length ? 'Switched on inside its screens' : '—')}</td>
+          <td>{current.has(a.code) ? (draft.has(a.code) ? <Pill kind="ok">In the app</Pill> : <Pill kind="warn">Remove on rebuild</Pill>) : draft.has(a.code) ? <Pill kind="info">Add on rebuild</Pill> : <Pill kind="muted">Not in the app</Pill>}</td></tr>)}</tbody></table></div>
     </Card>)}
-    <Card title="Changes">{log.length ? <div className="tw"><table className="t"><thead><tr><th>When</th><th>By</th><th>Added</th><th>Removed</th></tr></thead>
-      <tbody>{log.map((x, i) => <tr key={i}><td className="small">{new Date(x.at).toLocaleString('en-IN')}</td><td>{x.by}</td><td className="small">{x.added.join(', ') || '—'}</td><td className="small">{x.removed.join(', ') || '—'}</td></tr>)}</tbody></table></div>
-      : <p className="small muted">No changes yet.</p>}</Card>
+    <Card title="Builds">{(d.builds || []).length ? <div className="tw"><table className="t"><thead><tr><th>Version</th><th>When</th><th>By</th><th>Added</th><th>Removed</th><th className="num">Add-ons</th></tr></thead>
+      <tbody>{d.builds.map((x) => <tr key={x.version + x.at}><td className="b">v{x.version}</td><td className="small">{new Date(x.at).toLocaleString('en-IN')}</td><td>{x.by}</td><td className="small">{x.added.join(', ') || '—'}</td><td className="small">{x.removed.join(', ') || '—'}</td><td className="num">{x.addons}</td></tr>)}</tbody></table></div>
+      : <p className="small muted">First build v{d.version || '1.0'}. Each rebuild is listed here.</p>}</Card>
   </Page>;
 }
