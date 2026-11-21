@@ -1,17 +1,23 @@
-# Release 16: one branch per school (school/<subdomain>, cut from dev).
-# Every push to a school branch is tested and built; a UAT tag (<sub>-uat-v1.0) or a live tag (<sub>-v1.0, after the
-# client signs off) keeps the built site as a release artifact. Deploying it uses deploy.yml's approvals (pre-prod, prod).
+# One branch per school (school/<subdomain>, cut from dev).
+# Release 16.3 — Rebuild: when schools/<sub>/config.json or rebuild.json changes on the school's branch (rebuild.json is
+# downloaded from the app: Service Provider › Add-ons for this School › Rebuild app), the school's app is rebuilt with
+# the add-ons selected and republished at https://<owner>.github.io/<repo>/<sub>/ — the hosted app changes automatically.
+# Every push is tested; UAT tags (<sub>-uat-vN.N) and live tags (<sub>-vN.N) keep the built app as an artifact.
 name: School release
 on:
   push:
     branches: ['school/**']
     tags: ['*-uat-v*', '*-v*']
   workflow_dispatch:
+permissions:
+  contents: write          # to republish the school's app on gh-pages
+concurrency: { group: school-release-${{ github.ref }}, cancel-in-progress: false }
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 2 }
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - name: Which school
@@ -19,14 +25,26 @@ jobs:
         run: |
           ref="${GITHUB_REF_NAME}"
           sub="${ref#school/}"; sub="${sub%-uat-v*}"; sub="${sub%-v*}"
-          test -f "schools/$sub/school.json" || { echo "schools/$sub/school.json is missing on this branch"; exit 1; }
-          node -e "const f=require('./schools/$sub/school.json'); if(!f.school||!f.branch||!Array.isArray(f.addons)) process.exit(1); console.log(f.school, f.version, f.addons.join(','))"
+          test -f "schools/$sub/school.json" -o -f "schools/$sub/config.json" || { echo "schools/$sub/ has no school.json or config.json"; exit 1; }
           echo "sub=$sub" >> "$GITHUB_OUTPUT"
+          if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE "^schools/$sub/(config|rebuild)\.json$"; then echo "rebuild=true" >> "$GITHUB_OUTPUT"; fi
       - run: cd app && npm ci && npm test
       - run: cd app && npm run build:single
+      - name: Rebuild the school's app with its add-ons
+        if: hashFiles(format('schools/{0}/config.json', steps.school.outputs.sub)) != ''
+        run: cd app && node scripts/client-app.mjs ../schools/${{ steps.school.outputs.sub }}/config.json
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.school.outputs.sub }}-${{ github.ref_name == format('school/{0}', steps.school.outputs.sub) && 'branch' || github.ref_name }}
+          name: ${{ steps.school.outputs.sub }}-${{ github.run_number }}
           path: |
-            app/dist-single/index.html
-            schools/${{ steps.school.outputs.sub }}/school.json
+            app/dist-client/${{ steps.school.outputs.sub }}/index.html
+            schools/${{ steps.school.outputs.sub }}/*.json
+      - name: Republish the app (gh-pages/<sub>/)
+        if: steps.school.outputs.rebuild == 'true' || github.event_name == 'workflow_dispatch'
+        run: |
+          sub=${{ steps.school.outputs.sub }}
+          git config user.name "school-release"; git config user.email "school-release@users.noreply.github.com"
+          git fetch origin gh-pages --depth 1
+          git worktree add /tmp/pages origin/gh-pages
+          mkdir -p /tmp/pages/$sub && cp app/dist-client/$sub/index.html /tmp/pages/$sub/index.html
+          cd /tmp/pages && git add $sub && git commit -m "Rebuild $sub app from ${GITHUB_SHA::7}" && git push origin HEAD:gh-pages || echo "No change to publish"

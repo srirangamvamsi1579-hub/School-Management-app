@@ -981,6 +981,22 @@ Every client school is built the same way: from the basic features, plus exactly
   - Only the school's Admin sees this screen, and only in a client app set up with it (`allAddons` in the client config). It is not shown in any other school.
 - **Vijayanikethan High School – UAT/DEMO** was rebuilt with **all features**: the basic features plus all 22 add-ons, and the add-ons screen. It uses the same addresses and saves its data separately from the basic-only first version.
 
+### Release 16.3 — Rebuild the app from the add-ons selected
+
+**Add-ons for this School** is now a three-step workflow:
+
+1. **Select or unselect** add-ons. Nothing changes yet. Each row shows *In the app*, *Add on rebuild*, *Remove on rebuild* or *Not in the app*, and a box lists the changes waiting. Discard changes puts the selection back.
+2. **Rebuild app (vN.N)** runs six visible steps:
+   1. check the selection (add-ons that need each other);
+   2. switch the menus and screens;
+   3. update the phone app tabs;
+   4. rewrite the requirements document;
+   5. update the website and Project Links;
+   6. make the build file.
+
+   The rebuild makes the next version (1.0 → 1.1 → …), and every output changes automatically: the side menu and Main menu, the phone app, the requirements document, the website, Project Links and the shared test links. It also updates the plan label (*All features*, *Basic + N add-ons* or *Basic*). Each build is listed with its version, date, who built it, and what was added and removed.
+3. **Publish for everyone:** *Download build file* saves `rebuild.json`. Commit it to `schools/<sub>/` on the school's branch. `.github/workflows/school-release.yml` then tests the app, rebuilds it with those add-ons (`app/scripts/client-app.mjs` reads `rebuild.json`) and republishes it at `…/<sub>/` on GitHub Pages. Each published version keeps its own saved data, so everyone opens the new version.
+
 ## Backlog (from the QA cycle, November 2026)
 
 | Priority | Enhancement | Why |

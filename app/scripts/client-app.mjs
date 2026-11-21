@@ -11,6 +11,9 @@ import { newProposal } from '../src/lib/proposals.js';
 import * as D from '../src/lib/delivery.js';
 
 const cfg = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+// Release 16.3: a rebuild.json next to the config (downloaded from Add-ons for this School › Rebuild app) sets the add-ons and version
+const rebuildFile = path.join(path.dirname(path.resolve(process.argv[2])), 'rebuild.json');
+if (fs.existsSync(rebuildFile)) { const r = JSON.parse(fs.readFileSync(rebuildFile, 'utf8')); Object.assign(cfg, { addons: r.addons, version: r.version, addonsMenu: r.addonsMenu ?? cfg.addonsMenu, allAddons: false }); }
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const db = buildSeed();
 db.provider.profile.testSite = cfg.appUrl;                       // every generated link points into the client's own app
@@ -23,12 +26,16 @@ if (cfg.subdomain) {                                              // a cleaner a
   D.refreshLinks(db, cp, 'Release script');
 }
 for (const [code, url] of Object.entries(cfg.links || {})) D.setLink(db, cp.id, code, { url }, 'Release script');
-if (cfg.allAddons) {                                              // every feature, and the add-ons menu to switch them per school
+if (cfg.allAddons || Array.isArray(cfg.addons)) {                                              // every feature, and the add-ons menu to switch them per school
   const t = db.tenants.find((x) => x.id === cp.uatTenantId);
-  t.overrides.SP_ADDONS = true;
-  D.setSchoolAddons(db, t.id, RC.addons.map((a) => a.code), 'Release script');
+  if (cfg.allAddons || cfg.addonsMenu) t.overrides.SP_ADDONS = true;
+  D.setSchoolAddons(db, t.id, cfg.allAddons ? RC.addons.map((a) => a.code) : cfg.addons, 'Release script');
   t.delivery.addonLog = [];
-  t.plan = 'ENTERPRISE'; cp.tierName = 'All features';
+  t.plan = 'ENTERPRISE'; cp.tierName = cfg.allAddons || cfg.addons.length === RC.addons.length ? 'All features' : `Basic + ${cfg.addons.length} add-ons`;
+}
+if (cfg.version) {                                                // the version from the rebuild
+  const t = db.tenants.find((x) => x.id === cp.uatTenantId);
+  cp.version = cfg.version; t.delivery.version = cfg.version;
 }
 D.refreshLinks(db, cp, 'Release script');                         // the test-build links now carry the filled links
 const uat = db.tenants.find((t) => t.id === cp.uatTenantId);
@@ -43,8 +50,8 @@ fs.writeFileSync(path.join(dir, 'links.json'), JSON.stringify({ school: uat.name
 const trial = cp.links.find((l) => l.code === 'TEST_BUILD').url;
 const hash = trial.slice(trial.indexOf('#'));
 const html = fs.readFileSync(path.join(root, 'app/dist-single/index.html'), 'utf8');
-const boot = `<script>window.__SCHOOL_APP__={storeKey:'school-app-${sub}${cfg.storeVersion ? '-' + cfg.storeVersion : ''}',school:${JSON.stringify(uat.name)}};` +
-  `(function(){var h=location.hash,k='school-app-${sub}${cfg.storeVersion ? '-' + cfg.storeVersion : ''}',to={'#/p/site':'?to=site','#/p/mobile':'?to=app','#/p/requirements':'?to=req'};` +
+const boot = `<script>window.__SCHOOL_APP__={storeKey:'school-app-${sub}${cfg.storeVersion ? '-' + cfg.storeVersion : ''}-v${cp.version}',school:${JSON.stringify(uat.name)}};` +
+  `(function(){var h=location.hash,k='school-app-${sub}${cfg.storeVersion ? '-' + cfg.storeVersion : ''}-v${cp.version}',to={'#/p/site':'?to=site','#/p/mobile':'?to=app','#/p/requirements':'?to=req'};` +
   `if(h.indexOf('#/try/')===0)return;` +
   `var saved=null;try{saved=localStorage.getItem(k)}catch(e){}` +
   `if(!saved)location.replace(location.pathname+location.search+${JSON.stringify(hash)}+(to[h]||''));` +

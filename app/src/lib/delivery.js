@@ -390,6 +390,35 @@ export function setSchoolAddons(db, tenantId, codes, by) {
   return t;
 }
 
+// Release 16.3: Rebuild the app from the add-ons selected — a new version, with every output following it:
+// menus and screens, phone tabs, requirements document, website, Project Links and the build file for the school's branch.
+export const nextVersion = (v = '1.0') => { const [a, b] = String(v).split('.').map(Number); return `${a || 1}.${(b || 0) + 1}`; };
+export function rebuildSchool(db, tenantId, codes, by) {
+  const t = db.tenants.find((x) => x.id === tenantId);
+  if (!t) throw new Error('School not found');
+  const before = [...(t.delivery?.addons || [])].sort().join();
+  const want = [...new Set(codes)].sort().join();
+  if (before === want) throw new Error('Nothing to rebuild — select or unselect an add-on first');
+  setSchoolAddons(db, tenantId, codes, by);
+  const d = t.delivery;
+  const version = nextVersion(d.version);
+  const rc = DEFAULT_RATE_CARD;
+  const menus = Object.entries(t.overrides).filter(([k, v]) => v && LABEL[k]).length;
+  d.version = version; d.date = new Date().toISOString().slice(0, 10);
+  d.builds = [{ version, at: new Date().toISOString(), by, addons: d.addons.length, menus, added: d.addonLog?.[0]?.added || [], removed: d.addonLog?.[0]?.removed || [] }, ...(d.builds || [])].slice(0, 30);
+  const label = d.addons.length === rc.addons.length ? 'All features' : d.addons.length ? `Basic + ${d.addons.length} add-ons` : 'Basic';
+  if (t.trial) Object.assign(t.trial, { version, tier: label });
+  d.tier = label;
+  const project = (db.provider?.projects || []).find((p) => [p.tenantId, p.uatTenantId, p.liveTenantId].includes(t.id));
+  if (project) { project.version = version; project.updated = d.date; if (t.overrides.SP_ADDONS) project.tierName = label; refreshLinks(db, project, by); }
+  return { tenant: t, version, addons: d.addons.map((c) => rc.addons.find((a) => a.code === c)?.name || c), menus };
+}
+// The file that rebuilds and republishes this school's app for everyone (commit it as schools/<sub>/config.json)
+export function rebuildConfig(t, base = {}) {
+  const d = t.delivery || {};
+  return { ...base, school: t.schoolName || t.name.replace(/ – .*$/, ''), version: d.version, addons: d.addons || [], addonsMenu: !!t.overrides?.SP_ADDONS, allAddons: false, built: d.date };
+}
+
 // The school's file on its branch (schools/<subdomain>/school.json): what the build for this school switches on
 export function schoolFile(db, project) {
   const rc = rcOf(db);

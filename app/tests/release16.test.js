@@ -107,3 +107,20 @@ test('a client app with every feature: Service Provider has only “Add-ons for 
   const p = D.readTrial(D.trialLink('https://x.example/', t, cp).replace(/^[^#]*/, ''));
   assert.equal(p.sa, 1); assert.ok(!p.a.includes('DASHBOARD'));
 });
+
+test('Rebuild app: the selection becomes a new version and every output follows it', () => {
+  const db = buildSeed();
+  const cp = D.convertProposal(db, newProposal(db, o(), 'S').id, 'S');
+  const t = db.tenants.find((x) => x.id === cp.uatTenantId);
+  t.overrides.SP_ADDONS = true;
+  D.setSchoolAddons(db, t.id, RC.addons.map((a) => a.code), 'P');
+  assert.throws(() => D.rebuildSchool(db, t.id, RC.addons.map((a) => a.code), 'P'), /Nothing to rebuild/);
+  const r = D.rebuildSchool(db, t.id, RC.addons.map((a) => a.code).filter((c) => c !== 'DASHBOARD'), 'P');
+  assert.equal(r.version, '1.1'); assert.equal(t.delivery.version, '1.1'); assert.equal(cp.version, '1.1');
+  assert.ok(!sees(t, 'DASH'));
+  assert.equal(t.delivery.builds[0].removed[0], 'Dashboard menu');
+  const p = D.readTrial(cp.links.find((l) => l.code === 'TEST_BUILD').url.replace(/^[^#]*/, ''));
+  assert.equal(p.ver, '1.1'); assert.ok(!p.a.includes('DASHBOARD'), 'the shared links carry the rebuilt app');
+  const f = D.rebuildConfig(t);
+  assert.equal(f.version, '1.1'); assert.ok(!f.addons.includes('DASHBOARD')); assert.equal(f.addonsMenu, true);
+});
