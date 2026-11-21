@@ -22,7 +22,7 @@ async function start() {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-  await page.goto(server.url + '#/login');
+  await page.goto(server.url + '#/login?demo');
   return { ctx, page, errors };
 }
 async function as(page, label) {

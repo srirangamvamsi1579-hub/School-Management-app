@@ -5,13 +5,13 @@
 // • #/p/platform: every function of the platform, with what it is for, how to use it, who gets it and how it is sold.
 import { useMemo, useState } from 'react';
 import { useStore } from '../data/store.js';
-import { Page, Card, Pill, Tabs } from '../components/ui.jsx';
+import { Page, Card, Pill, Tabs, Field, Input } from '../components/ui.jsx';
 import { MENU, LABEL, MODULE_OF, FUNCTIONS, ACCESS, ROLES, canSee, PLANS } from '../data/menu.js';
 import { SCREEN_HELP } from '../data/guide.js';
 import { BASIC, ALWAYS, DEFAULT_RATE_CARD, demoConfig } from '../lib/pricing.js';
 import * as dlv from '../lib/delivery.js';
 import { PROVIDER_REG } from '../lib/schoolLogin.js';
-import { clientList, clientsMenu, menusOf } from '../lib/clients.js';
+import { clientList, clientsMenu, menusOf, SHARE_LINKS, shareClientLinks } from '../lib/clients.js';
 export { clientsMenu };
 
 const REQ_DOC = 'https://claude.ai/artifact/7s89uC65LFcsiKfvBBeLdy';
@@ -30,9 +30,9 @@ const A = ({ href, children }) => (href ? <a href={href} target="_blank" rel="no
 function AllClients({ list, go }) {
   const base = here();
   return <Page title="All clients & links" sub={`${list.length} client${list.length === 1 ? '' : 's'}. The provider's links cover every function of the platform; each client's links show only what that school has.`}>
-    <Card title="Service provider links (registration no. 100)">
+    <Card title="Service provider links">
       <div className="tw"><table className="t"><thead><tr><th>Link</th><th>What it shows</th><th>Address</th></tr></thead><tbody>
-        <tr><td className="b">Provider app</td><td className="small">Every menu and function, the Service Provider menus (sales, delivery, market) and Clients. Sign in with registration no. 100.</td><td className="small"><A href={base}>{base}</A></td></tr>
+        <tr><td className="b">Provider app</td><td className="small">Every menu and function, the Service Provider menus (sales, delivery, market) and Clients. Sign in with the provider's own login.</td><td className="small"><A href={base}>{base}</A></td></tr>
         <tr><td className="b">Platform requirements — every function</td><td className="small">Every menu, sub-menu and function: what it is for, how to use it, who gets it, basic or which add-on</td><td className="small"><A href={base + '#/p/platform'}>{base}#/p/platform</A></td></tr>
         <tr><td className="b">Full requirements document</td><td className="small">All releases, rules, database, hosting and testing</td><td className="small"><A href={REQ_DOC}>{REQ_DOC}</A></td></tr>
         <tr><td className="b">User guide and guided demos</td><td className="small">Every screen, step by step</td><td className="small"><A href={base + '#/p/guide'}>{base}#/p/guide</A></td></tr>
@@ -58,7 +58,8 @@ function ClientView({ c, db }) {
   const menus = useMemo(() => menusOf(t), [t]);
   const rc = DEFAULT_RATE_CARD;
   return <Page title={`${c.name}`} sub={`Registration no. ${c.regNo} · ${c.env} · ${c.plan} · version ${c.version} · school code ${c.code}${c.ownApp ? ' · runs in its own app' : ''}`}>
-    <Tabs tabs={[['web', 'Their webpage'], ['app', 'Their app'], ['links', 'Links'], ['what', 'What they have']]} value={tab} onChange={setTab} />
+    <Tabs tabs={[['web', 'Their webpage'], ['app', 'Their app'], ['links', 'Links'], ['share', 'Share by email'], ['what', 'What they have']]} value={tab} onChange={setTab} />
+    {tab === 'share' && <ShareLinks c={c} />}
     {tab === 'web' && <Card title="What the school's webpage looks like" right={<A href={c.links.website}>Open in a new tab</A>}>
       <iframe title={`${c.name} webpage preview`} srcDoc={site} sandbox="" style={{ width: '100%', height: 640, border: '1px solid var(--line)', borderRadius: 8, background: '#fff' }} />
       {c.links.own && <p className="small" style={{ marginTop: 8 }}>The school's own website: <A href={c.links.own}>{c.links.own}</A></p>}
@@ -75,7 +76,7 @@ function ClientView({ c, db }) {
             <div className="small muted">{m.items.slice(0, 5).map((i) => i[1]).join(' · ')}{m.items.length > 5 ? ` · +${m.items.length - 5} more` : ''}</div></div>)}</div>
         </div>
       </div>
-      <p className="small muted" style={{ marginTop: 8 }}>{menus.length} menus, {menus.reduce((n, m) => n + m.items.length, 0)} screens. {c.ownApp ? `Sign in to the app with registration no. ${c.regNo}; the school's Admin chooses the password at first sign-in.` : `Registration no. ${c.regNo}.`}</p>
+      <p className="small muted" style={{ marginTop: 8 }}>{menus.length} menus, {menus.reduce((n, m) => n + m.items.length, 0)} screens. {`Registration no. ${c.regNo}. Login details are kept by the service provider and are not shared with the school.`}</p>
     </Card>}
     {tab === 'links' && <Card title="Links for this client">
       <div className="tw"><table className="t"><tbody>
@@ -88,6 +89,36 @@ function ClientView({ c, db }) {
       <div className="tw"><table className="t"><thead><tr><th>Menu</th><th>Screens</th></tr></thead><tbody>{menus.map((m) => <tr key={m.code}><td className="b">{m.label}</td><td className="small">{m.items.map((i) => i[1]).join(', ')}</td></tr>)}</tbody></table></div>
     </Card>}
   </Page>;
+}
+
+// Share this client's links with others by email — links only, never login details
+function ShareLinks({ c }) {
+  const { db, run, notify, session } = useStore();
+  const [f, setF] = useState({ emails: '', codes: SHARE_LINKS.filter(([k]) => c.links[k]).map(([k]) => k), message: '' });
+  const [err, setErr] = useState('');
+  const send = () => {
+    setErr('');
+    try { let r; run((d) => { r = shareClientLinks(d, c.id, f, session?.name || 'Service provider'); }); notify(`Links sent to ${r.to.join(', ')}`); setF({ ...f, emails: '', message: '' }); }
+    catch (e) { setErr(e.message); }
+  };
+  const history = (db.provider?.clientShares || []).filter((x) => x.clientId === c.id);
+  return <>
+    <Card title={`Share ${c.name}'s links`}>
+      <p className="small">Send the links to anyone — the school's staff, parents' representatives, a reviewer. <b>Only links are sent; login details are never included.</b></p>
+      <div className="form">
+        <Field label="Email addresses (separate with commas)" req><Input aria-label="Email addresses" value={f.emails} onChange={(e) => setF({ ...f, emails: e.target.value })} placeholder="name@example.com, other@example.com" /></Field>
+        <fieldset className="f" style={{ border: 0, padding: 0 }}><legend className="small b">Links to include</legend>
+          {SHARE_LINKS.filter(([k]) => c.links[k]).map(([k, l]) => <label key={k} className="row small"><input type="checkbox" aria-label={l} checked={f.codes.includes(k)} onChange={(e) => setF({ ...f, codes: e.target.checked ? [...f.codes, k] : f.codes.filter((x) => x !== k) })} />{l}</label>)}</fieldset>
+        <Field label="Message (optional)"><Input aria-label="Message" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} placeholder={`Here are the links for ${c.name}.`} /></Field>
+      </div>
+      {err && <p className="err" role="alert">{err}</p>}
+      <button className="btn pri" onClick={send}>Send links</button>
+      <p className="small muted" style={{ marginTop: 8 }}>In the test build the email is kept in Settings › Email & SMS Outbox; in production it goes out through Amazon SES.</p>
+    </Card>
+    <Card title="Shared before">{history.length ? <div className="tw"><table className="t"><thead><tr><th>When</th><th>To</th><th>Links</th><th>By</th></tr></thead>
+      <tbody>{history.map((x, i) => <tr key={i}><td className="small">{new Date(x.at).toLocaleString('en-IN')}</td><td className="small">{x.to.join(', ')}</td><td className="small">{x.links.map((k) => SHARE_LINKS.find(([a]) => a === k)?.[1]).join(', ')}</td><td>{x.by}</td></tr>)}</tbody></table></div>
+      : <p className="small muted">Not shared yet.</p>}</Card>
+  </>;
 }
 
 // #/p/platform — every function of the platform, for the service provider
