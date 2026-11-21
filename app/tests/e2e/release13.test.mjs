@@ -76,6 +76,7 @@ test('homework reaches the parent; online class scheduled; events sent', async (
   await oc.getByRole('button', { name: 'Save' }).click();
   await page.getByText(/must start with https/).waitFor();
   await oc.getByLabel('Meeting link').fill('https://meet.example.com/test-class');
+  await oc.getByLabel('Date').fill(new Date(Date.now() + 864e5).toISOString().slice(0, 10));   // a time that hasn't passed, whatever the clock
   await oc.getByLabel('Time').fill('19:15');
   await oc.getByRole('button', { name: 'Save' }).click();
   await page.getByText('Class scheduled').waitFor();

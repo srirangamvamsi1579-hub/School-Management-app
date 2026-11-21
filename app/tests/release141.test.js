@@ -28,7 +28,7 @@ test('Service Provider is for our company\'s Admin only, and never inside a clie
   assert.ok(company, 'the test build Admin is our company Admin');
   assert.ok(screensFor(db, company, 'ADMIN').includes('SP_DELIVERY'));
   const school = { ...company, companyAdmin: false };
-  assert.ok(!screensFor(db, school, 'ADMIN').some((c) => c.startsWith('SP_')), 'a school Admin never sees our menus');
+  assert.ok(!screensFor(db, school, 'ADMIN').some((c) => c.startsWith('SP_')), 'a school Admin never sees our menus (Add-ons for this School only in a client app set up for it)');
   assert.ok(!canSee('SP_RATES', 'ADMIN', 4, {}, { ADMIN: screensFor(db, school, 'ADMIN') }));
   db.tenantId = db.provider.projects[0].tenantId;                // inside the converted client's school
   assert.ok(!screensFor(db, company, 'ADMIN').some((c) => c.startsWith('SP_')));

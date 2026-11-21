@@ -88,3 +88,22 @@ test('saved projects from before are upgraded: UAT school, branch, Project Links
   assert.equal(cp.release.branch, 'school/hillviewschool'); assert.equal(t.overrides.PRJ_LINKS, true);
   seedRelease16(db); assert.equal(t.code, 'HSS-UAT', 'runs once');
 });
+
+test('a client app with every feature: Service Provider has only “Add-ons for this School”, which switches add-ons per school', () => {
+  const db = buildSeed();
+  const cp = D.convertProposal(db, newProposal(db, o(), 'S').id, 'S');
+  const t = db.tenants.find((x) => x.id === cp.uatTenantId);
+  assert.ok(!sees(t, 'SP_ADDONS'), 'off unless set up for the client');
+  t.overrides.SP_ADDONS = true;
+  D.setSchoolAddons(db, t.id, RC.addons.map((a) => a.code), 'P');
+  assert.ok(sees(t, 'SP_ADDONS') && sees(t, 'DASH') && sees(t, 'PAY_RUN') && sees(t, 'TRN_ROUTES'));
+  ['SP_RATES', 'SP_PROPOSAL', 'SP_DEMO', 'SP_DELIVERY', 'SP_ANALYTICS', 'SP_COMPARE', 'SP_MARKET'].forEach((c) => assert.ok(!(D.schoolFile(db, cp).screens.includes(c)), c));
+  assert.ok(!sees(t, 'SP_ADDONS', 'PRINCIPAL'), 'Admin only');
+  D.setSchoolAddons(db, t.id, RC.addons.map((a) => a.code).filter((c) => !['DASHBOARD', 'PAYROLL', 'TRANSPORT'].includes(c)), 'P');
+  assert.ok(!sees(t, 'DASH') && !sees(t, 'PAY_RUN') && !sees(t, 'TRN_ROUTES'), 'switched off');
+  assert.ok(!t.delivery.addons.includes('TIMINGS'), 'Timings goes with Transport');
+  assert.ok(sees(t, 'STU_ADMISSIONS') && sees(t, 'PRJ_LINKS') && sees(t, 'SP_ADDONS'), 'basics, Project Links and the add-ons menu stay');
+  assert.equal(t.delivery.addonLog[0].removed.length, 4);
+  const p = D.readTrial(D.trialLink('https://x.example/', t, cp).replace(/^[^#]*/, ''));
+  assert.equal(p.sa, 1); assert.ok(!p.a.includes('DASHBOARD'));
+});

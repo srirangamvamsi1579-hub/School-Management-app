@@ -38,7 +38,7 @@ export function Placeholder({ code }) {
 }
 
 import { AnalyticsScreen, withReports } from './Reports.jsx';
-import { ProjectLinks } from './Project.jsx';
+import { ProjectLinks, SchoolAddons } from './Project.jsx';
 const InsightsR = withReports(Insights);
 
 export const SCREENS = {
@@ -58,5 +58,5 @@ export const SCREENS = {
   SP_RATES: PriceList, SP_PROPOSAL: ProposalBuilder, SP_DEMO: DemoBuilder, SP_COMPARE: Competition, SP_MARKET: MarketReview, SP_DELIVERY: ClientDelivery,
   ACA_CURRICULUM: Curriculum, STU_PORTFOLIO: Portfolios, OPS_BACKUP: Backups,
   ANL_ATTENDANCE: AnalyticsScreen, ANL_EXAMS: AnalyticsScreen, ANL_TIMETABLE: AnalyticsScreen, ANL_ACADEMICS: AnalyticsScreen, ANL_COMMS: AnalyticsScreen, ANL_CAMPUS: AnalyticsScreen, SP_ANALYTICS: AnalyticsScreen,
-  PRJ_LINKS: ProjectLinks
+  PRJ_LINKS: ProjectLinks, SP_ADDONS: SchoolAddons
 };

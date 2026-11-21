@@ -162,7 +162,8 @@ export function screensFor(db, user, role) {
   if (role === 'TEACHER' && db.settings?.teacherPerfShared) extra.push('SELF_MYPERF');
   // "View as Profile" is for the Admin role only — never given by designation, grant or edited permissions
   // Service Provider is for our own company's Admin only (release 14.1), never a school's Admin
-  return [...new Set([...base, ...extra])].filter((c) => (!c.startsWith('VA_') || role === 'ADMIN') && !(role === 'ADMIN' && SP_CODES.includes(c) && (!user?.companyAdmin || inClientSchool(db))));
+  return [...new Set([...base, ...extra])].filter((c) => (!c.startsWith('VA_') || role === 'ADMIN') && !(role === 'ADMIN' && SP_CODES.includes(c) && (!user?.companyAdmin || inClientSchool(db)))
+    && (c !== 'SP_ADDONS' || !!db.tenants?.find((x) => x.id === db.tenantId)?.overrides?.SP_ADDONS));   // release 16.2: only in a client's own app
 }
 // Access to one screen: 'FULL', 'READ' (can look, can't change) or null. Admin and Platform: always full.
 // The department sets the level; screens given by designation or personally are full access.

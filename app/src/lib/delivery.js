@@ -36,7 +36,7 @@ const unb64 = (s) => { const t = s.replace(/-/g, '+').replace(/_/g, '/'); return
 // Short: the add-ons that are on (included in the plan or bought); the screens follow from them
 export function trialPayload(tenant, project, rc = DEFAULT_RATE_CARD) {
   return { v: 2, c: tenant.code, n: tenant.name, s: tenant.subdomain, p: tenant.plan, t: project.tierName, b: tenant.examBoard || 'CBSE', ver: project.version, d: project.updated || project.created,
-    a: activeAddons(rc, project.options), k: tenant.env || 'UAT', no: project.no,
+    a: tenant.delivery?.addons || activeAddons(rc, project.options), k: tenant.env || 'UAT', no: project.no, sa: tenant.overrides?.SP_ADDONS ? 1 : undefined,
     l: Object.fromEntries((project.links || []).filter((l) => PROJECT_MENU_LINKS.includes(l.code) && !TRIAL_CODES.includes(l.code) && !['TEST_GUIDE', 'BRANCH'].includes(l.code) && ['Ready', 'Shared'].includes(l.status) && !isPlaceholder(l.url)).map((l) => [l.code, l.url])), r: project.release?.branch };
 }
 // Links shown in the school's own Project → Project Links menu
@@ -56,6 +56,7 @@ export function applyTrial(db, p, hash = '') {
   const addons = Object.fromEntries(p.a.filter((c) => rc.addons.some((x) => x.code === c)).map((c) => [c, true]));
   const { overrides } = demoConfig({ ...rc, tiers: rc.tiers.map((t) => ({ ...t, includes: [] })) }, { tier: 'STARTER', addons });
   overrides.PROJECT = true; overrides.PRJ_LINKS = true;
+  if (p.sa) overrides.SP_ADDONS = true;            // release 16.2: the provider switches add-ons for this school
   // The client's own website: the side menu's "School website" opens it, and the phone app starts on this school
   if (p.l?.SITE && /^https:\/\//.test(p.l.SITE)) {
     (db.links || []).filter((l) => l.label === 'School website').forEach((l) => { l.url = p.l.SITE; });
@@ -368,13 +369,34 @@ export function setProjectStatus(db, projectId, status, by) {
   project.log.unshift({ at: new Date().toISOString(), by, what: 'Status: ' + status });
   return project;
 }
+// Release 16.2: switch add-ons on or off for one school (Service Provider › Add-ons for this School). The basic features stay on.
+export function setSchoolAddons(db, tenantId, codes, by) {
+  const rc = DEFAULT_RATE_CARD;
+  const t = db.tenants.find((x) => x.id === tenantId);
+  if (!t) throw new Error('School not found');
+  const known = new Set(rc.addons.map((a) => a.code));
+  let set = new Set([...codes].filter((c) => known.has(c)));
+  rc.addons.forEach((a) => { if (a.needs && set.has(a.code) && !set.has(a.needs)) set.delete(a.code); });   // Timings needs Transport
+  const before = new Set(t.delivery?.addons || []);
+  const { overrides } = demoConfig({ ...rc, tiers: rc.tiers.map((x) => ({ ...x, includes: [] })) }, { tier: 'STARTER', addons: Object.fromEntries([...set].map((c) => [c, true])) });
+  const keep = Object.fromEntries(['PROJECT', 'PRJ_LINKS', 'SP_ADDONS'].filter((k) => t.overrides?.[k]).map((k) => [k, true]));
+  t.overrides = { ...overrides, ...keep };
+  t.delivery = { ...(t.delivery || {}), addons: [...set] };
+  const added = [...set].filter((c) => !before.has(c)), removed = [...before].filter((c) => !set.has(c));
+  const name = (c) => rc.addons.find((a) => a.code === c)?.name || c;
+  if (added.length || removed.length) {
+    t.delivery.addonLog = [{ at: new Date().toISOString(), by, added: added.map(name), removed: removed.map(name) }, ...(t.delivery.addonLog || [])].slice(0, 50);
+  }
+  return t;
+}
+
 // The school's file on its branch (schools/<subdomain>/school.json): what the build for this school switches on
 export function schoolFile(db, project) {
   const rc = rcOf(db);
   const uat = db.tenants.find((t) => t.id === project.uatTenantId || t.id === project.tenantId);
   const live = db.tenants.find((t) => t.id === project.liveTenantId);
   return { school: uat.schoolName || project.client, project: project.no, proposal: project.proposalNo, version: project.version, plan: project.tierName, board: uat.examBoard,
-    addons: activeAddons(rc, project.options), branch: project.release?.branch, base: project.release?.base || 'dev',
+    addons: uat.delivery?.addons || activeAddons(rc, project.options), branch: project.release?.branch, base: project.release?.base || 'dev',
     uat: { code: uat.code, subdomain: uat.subdomain, name: uat.name },
     live: live ? { code: live.code, subdomain: live.subdomain, name: live.name, signedVersion: project.live?.version, signedOn: project.live?.date } : null,
     screens: Object.entries(uat.overrides).filter(([, v]) => v).map(([k]) => k).sort() };

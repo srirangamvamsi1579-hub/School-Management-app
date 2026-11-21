@@ -970,6 +970,17 @@ Every client school is built the same way: from the basic features, plus exactly
   - Website: https://www.vijayanikethancbse.com/
   - Branch: `school/vijayanikethan`, cut from `dev`.
 
+### Release 16.2 — every feature, with add-ons switched per school
+
+- **Service Provider in a client's own app** has one screen only: **Add-ons for this School**. Sales, Delivery and Market are never shown there.
+  - Every add-on from the price list is listed by group (screens, data, transport, messages, academics, office, campus), each with a tick box and what it adds.
+  - Tick an add-on to switch its menus on for the school; untick it to take them off. The menus change at once.
+  - Select all / Clear all. The basic features always stay on.
+  - Add-ons that depend on each other follow each other: Timings is ticked with Transport and taken off with it.
+  - Every change is listed with who made it and what was added and removed.
+  - Only the school's Admin sees this screen, and only in a client app set up with it (`allAddons` in the client config). It is not shown in any other school.
+- **Vijayanikethan High School – UAT/DEMO** was rebuilt with **all features**: the basic features plus all 22 add-ons, and the add-ons screen. It uses the same addresses and saves its data separately from the basic-only first version.
+
 ## Backlog (from the QA cycle, November 2026)
 
 | Priority | Enhancement | Why |
