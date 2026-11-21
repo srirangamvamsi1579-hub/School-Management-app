@@ -7,7 +7,7 @@ import { idType, normId, isGmail, isEmail, isMobile, normMobile, passwordProblem
 import { designationsFor, fitDesignation, designationProblem, signupRoles } from '../data/designations.js';
 import { roleName } from '../lib/auth.js';
 import { tenantOf, log } from '../lib/logic.js';
-import { schoolSignIn, noteWrongTry, clearTries, passwordFor, storePassword, sha256Hex, tenantByReg, lockedReg, PROVIDER_REG } from '../lib/schoolLogin.js';
+import { schoolSignIn, noteWrongTry, clearTries, lockedReg } from '../lib/schoolLogin.js';
 
 const WHAT = {
   ADMIN: 'Everything for the school: setup, users, templates, data import, branding',
@@ -27,6 +27,20 @@ export default function Login({ next = null }) {
   const clientApp = typeof window !== 'undefined' && !!window.__SCHOOL_APP__;
   const [peek, setPeek] = useState('');           // address whose test inbox is shown
   const t = tenantOf(db);
+  // Release 17.1: the login page is just username and password. The full test page (other sign-in ways, demo quick access,
+  // school picker) opens only with #/login?demo, for testing.
+  let full = false;
+  try { if (/[?&]demo\b/.test(location.hash)) sessionStorage.setItem('login-full', '1'); full = sessionStorage.getItem('login-full') === '1'; } catch (e) { /* ignore */ }
+  if (!full || clientApp) {
+    const own = clientApp ? t : null;
+    return <div className="login"><div className="box" style={{ maxWidth: 460 }}>
+      <div className="row" style={{ gap: 12, marginBottom: 14 }}>
+        <div className="logo" style={{ width: 42, height: 42, fontSize: 18 }}>{(own ? own.name : 'S')[0]}</div>
+        <div><h1 style={{ margin: 0, fontSize: 22 }}>{own ? own.name : 'School Management Platform'}</h1>{next && <div className="small muted">Sign in to continue to {next}</div>}</div>
+      </div>
+      <SchoolLogin />
+    </div></div>;
+  }
   return (
     <div className="login">
       <div className="box" style={{ maxWidth: 980 }}>
@@ -40,7 +54,7 @@ export default function Login({ next = null }) {
           <Select value={db.tenantId} onChange={(e) => mutate((d) => { d.tenantId = e.target.value; })} options={db.tenants.map((x) => [x.id, `${x.name} (${PLANS.find((p) => p.code === x.plan).name})`])} />
         </div>
         {next && <div className="note" role="status" style={{ marginBottom: 10 }}>Sign in to continue to <b>{next}</b>.</div>}
-        <Tabs tabs={[['school', 'School login'], ['signin', 'Sign in'], ['signup', 'Create account'], ...(clientApp ? [] : [['demo', 'Demo quick access']])]} value={tab} onChange={setTab} />
+        <Tabs tabs={[['school', 'Login'], ['signin', 'Sign in'], ['signup', 'Create account'], ...(clientApp ? [] : [['demo', 'Demo quick access']])]} value={tab} onChange={setTab} />
         <div className={'grid' + (tab === 'demo' || tab === 'school' ? '' : ' g-side')} style={{ alignItems: 'start' }}>
           {tab === 'school' && <SchoolLogin />}
           {tab === 'signin' && <SignIn onPeek={setPeek} onSignup={() => setTab('signup')} />}
@@ -270,58 +284,31 @@ function Demo() {
 }
 
 
-// Release 17: School login — registration number, username and password
+// Release 17.1: login with username and password only (Admin for the service provider, Client<no> for a client)
 function SchoolLogin() {
   const { db, run, login, notify } = useStore();
   const fixed = lockedReg();
-  const [f, setF] = useState({ regNo: fixed || '', username: '', password: '' });
-  const [first, setFirst] = useState(null);         // tenant id whose Admin sets a password now
-  const [pw, setPw] = useState({ a: '', b: '' });
+  const [f, setF] = useState({ username: '', password: '' });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
-  const school = tenantByReg(db, f.regNo);
-  const enter = (r) => {
-    run((d) => { clearTries(d, r.tenantId); d.tenantId = r.tenantId; });
-    const u = db.users.find((x) => x.id === r.userId);
-    login({ role: u.role, userId: u.id, name: u.name, regNo: f.regNo.trim(), provider: !!r.provider });
-    try { history.replaceState(null, '', '#/s/HOME'); } catch (e) { /* ignore */ }
-    notify(r.provider ? 'Signed in as the service provider' : `Signed in to ${db.tenants.find((t) => t.id === r.tenantId)?.name}`);
-  };
   const submit = async (e) => {
     e.preventDefault(); setErr(''); setBusy(true);
     try {
       const r = await schoolSignIn(db, f);
-      if (r.needsPassword) { setFirst(r.tenantId); return; }
       if (r.error) { if (r.wrong) run((d) => noteWrongTry(d, r.tenantId)); setErr(r.error); return; }
-      enter(r);
+      run((d) => { clearTries(d, r.tenantId); d.tenantId = r.tenantId; });
+      const u = db.users.find((x) => x.id === r.userId);
+      login({ role: u.role, userId: u.id, name: u.name, regNo: r.regNo, provider: !!r.provider });
+      try { history.replaceState(null, '', '#/s/HOME'); } catch (x) { /* ignore */ }
+      notify(r.provider ? 'Signed in as the service provider' : `Signed in to ${db.tenants.find((t) => t.id === r.tenantId)?.name}`);
     } finally { setBusy(false); }
   };
-  const setFirstPassword = async (e) => {
-    e.preventDefault();
-    const p = passwordFor(pw.a, pw.b);
-    if (p) { setErr(p); return; }
-    const h = await sha256Hex(pw.a);
-    run((d) => storePassword(d, first, h));
-    const r = await schoolSignIn({ ...db, tenants: db.tenants.map((t) => t.id === first ? { ...t, adminLogin: { username: 'admin', pwHash: h } } : t) }, { ...f, password: pw.a });
-    if (r.ok) enter(r); else setErr(r.error || 'Try signing in again');
-  };
-  if (first) return <form className="card" onSubmit={setFirstPassword} style={{ maxWidth: 460 }} aria-label="Set the Admin password">
-    <h2 style={{ marginTop: 0 }}>Set the Admin password</h2>
-    <p className="small">First sign-in for <b>{db.tenants.find((t) => t.id === first)?.name}</b> (registration no. {f.regNo}). Choose the password for username <b>admin</b>. It is never emailed or shown.</p>
-    <Field label="New password" req><Input type="password" autoComplete="new-password" aria-label="New password" value={pw.a} onChange={(e) => setPw({ ...pw, a: e.target.value })} /></Field>
-    <Field label="Type it again" req><Input type="password" autoComplete="new-password" aria-label="Confirm password" value={pw.b} onChange={(e) => setPw({ ...pw, b: e.target.value })} /></Field>
-    <p className="small muted">8 or more characters with upper and lower case, a number and a symbol.</p>
-    {err && <p className="err" role="alert">{err}</p>}
-    <div className="row"><button className="btn pri" type="submit">Save and sign in</button><button className="btn" type="button" onClick={() => { setFirst(null); setErr(''); }}>Back</button></div>
-  </form>;
-  return <form className="card" onSubmit={submit} style={{ maxWidth: 460 }} aria-label="School login">
-    <h2 style={{ marginTop: 0 }}>School login</h2>
-    <Field label="School registration no." req><Input aria-label="School registration no." inputMode="numeric" value={f.regNo} disabled={!!fixed} onChange={(e) => setF({ ...f, regNo: e.target.value })} placeholder="e.g. 101" /></Field>
-    {school && <p className="small muted" style={{ marginTop: -6 }}>{String(school.regNo) === PROVIDER_REG ? 'Service provider' : school.name}</p>}
+  return <form className="card" onSubmit={submit} style={{ maxWidth: 420 }} aria-label="Login">
+    <h2 style={{ marginTop: 0 }}>Login</h2>
     <Field label="Username" req><Input aria-label="Username" autoComplete="username" value={f.username} onChange={(e) => setF({ ...f, username: e.target.value })} /></Field>
-    <Field label="Password"><Input type="password" aria-label="Password" autoComplete="current-password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /></Field>
+    <Field label="Password" req><Input type="password" aria-label="Password" autoComplete="current-password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /></Field>
     {err && <p className="err" role="alert">{err}</p>}
     <button className="btn pri" type="submit" disabled={busy}>Sign in</button>
-    <p className="small muted" style={{ marginTop: 10 }}>{fixed ? `This app is for registration no. ${fixed}.` : 'The service provider signs in with its own registration number.'} A school's Admin chooses the password at the first sign-in.</p>
+    <p className="small muted" style={{ marginTop: 10 }}>{fixed ? 'Sign in with the login details for this school.' : 'Sign in with the login details you were given.'}</p>
   </form>;
 }

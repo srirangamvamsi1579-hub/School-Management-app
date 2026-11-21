@@ -17,7 +17,7 @@ after(async () => { await browser?.close(); server?.close(); });
 // see the 'side menu starts collapsed' test). Set once per tab; a test's own toggles are kept.
 const { MENU: ALL_MENUS } = await import('../../src/data/menu.js');
 const EXPANDED = JSON.stringify(Object.fromEntries(ALL_MENUS.map((m) => [m.code, true])));
-async function open(ctx, hash = '#/login', { collapsed = false } = {}) {
+async function open(ctx, hash = '#/login?demo', { collapsed = false } = {}) {
   if (!collapsed && !ctx._expanded) { ctx._expanded = true; await ctx.addInitScript((v) => { if (!sessionStorage.getItem('school-side-open')) sessionStorage.setItem('school-side-open', v); }, EXPANDED); }
   const page = await ctx.newPage(); page.setDefaultTimeout(8000);
   const errors = [];
@@ -69,7 +69,7 @@ test('public admission form: validates, then lands in the admissions pipeline', 
   await page.getByLabel(/may contact me/).check();
   await page.getByRole('button', { name: 'Send enquiry' }).click();
   const ref = (await page.getByRole('status').innerText()).match(/APP-\d{4}-\d{4}/)[0];
-  await page.goto(server.url + '#/login');
+  await page.goto(server.url + '#/login?demo');
   await demo(page, 'Admin');
   await page.locator('nav.side button.item', { hasText: 'Admissions & Enquiries' }).click();
   await page.getByPlaceholder(/Search child/).fill(ref);   // release 15.1: the list is the page now; summaries moved to Data Analytics
@@ -114,14 +114,14 @@ test('web & app screens: admin drafts, principal approves, menus change on the w
   await page.getByText('Waiting for approval').first().waitFor();
   assert.ok(!(await page.getByRole('button', { name: 'Approve and publish' }).count()), 'the editor cannot approve');
   // Principal approves
-  await page.evaluate(() => { sessionStorage.clear(); location.hash = '#/login'; location.reload(); });
+  await page.evaluate(() => { sessionStorage.clear(); location.hash = '#/login?demo'; location.reload(); });
   await demo(page, 'Principal');
   await page.locator('nav.side button.item', { hasText: 'Web & App Screens' }).click();
   await page.getByRole('button', { name: 'Approve and publish' }).click();
   await page.locator('.modal').getByRole('button', { name: 'Publish' }).click();
   await page.locator('.toast', { hasText: 'Published as version 2' }).waitFor();
   // Front Office no longer has the Gate Desk on the website
-  await page.evaluate(() => { sessionStorage.clear(); location.hash = '#/login'; location.reload(); });
+  await page.evaluate(() => { sessionStorage.clear(); location.hash = '#/login?demo'; location.reload(); });
   await demo(page, 'Front Office');
   const items = await page.locator('nav.side button.item').allInnerTexts();
   assert.ok(!items.includes('Gate Desk'), 'gate desk is app only now');

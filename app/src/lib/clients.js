@@ -46,3 +46,24 @@ export function menusOf(t) {
     .filter((m) => m.items.length && (m.code !== 'SERVICE_PROVIDER' || m.items.every((i) => ['SP_ADDONS', 'SP_FEATURES'].includes(i[0]))));
 }
 
+
+// Release 17.1: share a client's links with other people by email. Only links go out — never login details;
+// the service provider does not give login details to schools.
+export const SHARE_LINKS = [['app', 'App (test build)'], ['website', 'Website'], ['phone', 'Phone app'], ['requirements', 'Requirements document'], ['own', "School's own website"]];
+export function shareClientLinks(db, clientId, { emails, codes, message }, by) {
+  const c = clientList(db).find((x) => x.id === clientId);
+  if (!c) throw new Error('Client not found');
+  const list = String(emails || '').split(/[,;\s]+/).map((e) => e.trim()).filter(Boolean);
+  if (!list.length) throw new Error('Enter at least one email address');
+  const bad = list.filter((e) => !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(e));
+  if (bad.length) throw new Error(`Check ${bad.length > 1 ? 'these email addresses' : 'this email address'}: ${bad.join(', ')}`);
+  const chosen = SHARE_LINKS.filter(([k]) => (codes || []).includes(k) && c.links[k]);
+  if (!chosen.length) throw new Error('Choose at least one link to share');
+  const to = [...new Set(list.map((e) => e.toLowerCase()))];
+  const body = [`Hello,`, '', `${String(message || '').trim() || `Here are the links for ${c.name}.`}`, '',
+    ...chosen.map(([k, l]) => `${l}: ${c.links[k]}`), '', 'Login details are not included in this email.', '', `${db.provider?.profile?.name || 'Service provider'}`].join('\n');
+  db.outbox.unshift({ id: 'M' + (db.outbox.length + 1) + '-' + Math.random().toString(36).slice(2, 6), to: to.join(', '), kind: 'Client links', status: 'SENT', at: new Date().toISOString(),
+    related: `${c.name} (${c.regNo})`, subject: `${c.name}: links (version ${c.version})`, body });
+  db.provider.clientShares = [{ at: new Date().toISOString(), clientId, school: c.name, to, links: chosen.map(([k]) => k), by }, ...(db.provider.clientShares || [])].slice(0, 200);
+  return { to, links: chosen.length, body };
+}

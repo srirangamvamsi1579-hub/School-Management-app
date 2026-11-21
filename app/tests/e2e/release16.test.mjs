@@ -19,7 +19,7 @@ async function start() {
   const page = await ctx.newPage(); page.setDefaultTimeout(8000);
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto(server.url + '#/login');
+  await page.goto(server.url + '#/login?demo');
   return { ctx, page, errors };
 }
 async function as(page, label) {
