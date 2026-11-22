@@ -1341,6 +1341,20 @@ One-time setup: create the dev, preprod and prod environments in GitHub, add req
 - [ ] Admin: Appearance → change template and colour → Publish
 - [ ] Platform team: switch Payroll off for a school, then sign in as Accountant there
 
+## 18. Add-ons and Roles & Permissions in the service provider's own app; Apply (release 18)
+
+Requested: the service provider's app should also have a menu for add-ons and a Roles & Permissions menu with its sub-functions, so any existing function can be marked as an add-on; basic functions can be marked as add-ons too, and unchecked; an Apply function applies add-ons and basic items alike; a school's Roles & Permissions follows what the service provider selects and applies, not the client type.
+
+- **Service Provider › Add-ons** and **Service Provider › Roles & Permissions (provider)** now appear in the provider's own app (Admin, registration no. 100) as well as in each client's own app. Only the provider sees them; a school Admin never does.
+- **Which school:** in the provider app, a **School** picker at the top lists every client school the provider sets up (converted UAT/DEMO and Live schools, and Vijayanikethan High School, which runs in its own app). The choice is kept while you move between the two screens. In a client's own app the screens set up that school.
+- **Add-ons:** every add-on with a tick box, plus a **Basic features** table: each basic feature has a tick box (basic items can be unchecked) and **Mark as add-on**.
+- **Roles & Permissions (provider):** every menu, sub-menu and function, basic ones included. Each shows where it comes from: Basic, Basic · marked as add-on, an add-on's name, or Add-on of its own. Any item can be ticked or unticked; basic items have **Mark as add-on** / **Basic again**. Main menu, Users, Roles & Permissions, My Account and the provider's own screens always stay, so the school can still be run and managed.
+- **Mark as add-on:** the basic item stops being basic for that school and is unselected; selecting it again later keeps it as an add-on (sold separately). **Basic again** undoes the mark.
+- **Apply (v1.x)** replaces Rebuild app: the selection — add-ons and basic items alike — becomes the next version, listed under Applied versions with who applied it. Until Apply, each change shows as "Selected · Apply to add" or "Unselected · Apply to remove"; Undo changes goes back to the last applied version.
+- **The school's Roles & Permissions** (Operations › Roles & Permissions) in every school the provider sets up lists exactly what was applied — never what the school's plan or client type would give it. Two schools on different plans with the same selection offer the same screens.
+- **Client's own app:** after Apply in the provider app, Vijayanikethan's own app picks up the applied version the next time it is opened in the same browser (both run on the same web address). To publish for everyone, download the build file and commit it to the school's branch; GitHub rebuilds and republishes the app.
+- Clients › a client shows the applied version and add-ons.
+
 ## Open questions
 
 - Payment gateway: Razorpay or Cashfree? Who holds the merchant account, our company or each school?

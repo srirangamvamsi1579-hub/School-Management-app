@@ -51,7 +51,7 @@ export default function Login({ next = null }) {
         </div>
         <div className="row small" style={{ margin: '8px 0 14px' }}>
           <span className="muted">Test build — pretend this page is for:</span>
-          <Select value={db.tenantId} onChange={(e) => mutate((d) => { d.tenantId = e.target.value; })} options={db.tenants.map((x) => [x.id, `${x.name} (${PLANS.find((p) => p.code === x.plan).name})`])} />
+          <Select value={db.tenantId} onChange={(e) => mutate((d) => { d.tenantId = e.target.value; })} options={db.tenants.filter((x) => !x.ownApp).map((x) => [x.id, `${x.name} (${PLANS.find((p) => p.code === x.plan).name})`])} />
         </div>
         {next && <div className="note" role="status" style={{ marginBottom: 10 }}>Sign in to continue to <b>{next}</b>.</div>}
         <Tabs tabs={[['school', 'Login'], ['signin', 'Sign in'], ['signup', 'Create account'], ...(clientApp ? [] : [['demo', 'Demo quick access']])]} value={tab} onChange={setTab} />

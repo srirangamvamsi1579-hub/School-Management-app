@@ -1,4 +1,5 @@
 import { WEBSITE_LINKS, linkFor, buttonSnippet, iframeSnippet } from '../lib/links.js';
+import * as dlv from '../lib/delivery.js';
 import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../data/store.js';
 import { Page, Card, Field, Input, Select, Status, Modal, Html, Tabs, Switch } from '../components/ui.jsx';
@@ -275,8 +276,11 @@ function DeptPermissions() {
   const others = dept.profiles.filter((p) => p.code !== 'ADMIN');
   const who = session.name || session.role;
   // Release 16.4: in a school whose menus the provider sets (its own app), list only the menus switched on for it
-  const providerSet = !!t.overrides?.SP_ADDONS;
-  const offered = (c) => !providerSet || canSee(c, 'ADMIN', rank, t.overrides, null) || ['SELF_CHILD', 'SELF_FEES', 'SELF_MYPERF'].includes(c) && canSee(c, 'PARENT', rank, t.overrides, null) || c.startsWith('VA_');
+  // Release 18: in every school the service provider sets up, list exactly what the provider selected and applied —
+  // not what the school's plan or client type would give it
+  const providerSet = !!t.delivery || (!!t.overrides?.SP_ADDONS && t.id !== 'T1');
+  const applied = providerSet ? dlv.appliedSet(t) : null;
+  const offered = (c) => !providerSet || applied.has(c) || c.startsWith('VA_');
   const mods = MENU.filter((m) => !PROVIDER_MODULES.includes(m.code) && (!providerSet || m.items.some((i) => i[0][0] !== '#' && offered(i[0]))))
     .map((m) => providerSet ? { ...m, items: m.items.filter((i) => i[0][0] === '#' || offered(i[0])) } : m);
   const groupsOf = (m) => { const out = []; let cur = { key: m.code + ':_', title: null, items: [] };
@@ -316,7 +320,7 @@ function DeptPermissions() {
             <span className="small muted">{isVa ? 'Admin only' : countOf(codes)}</span>
             <LevelSelect value={isVa ? (hasAdmin ? 'FULL' : 'NONE') : levelOfAll(codes)} disabled={isVa} label={'Access to all of ' + m.label} onChange={(v) => set(codes, v)} /></div>
           {open[m.code] && <div role="group">{groupsOf(m).map((g) => { const gc = g.items.map((i) => i[0]);
-            const rows = g.items.map((i) => { const inPlan = canSee(i[0], 'ADMIN', rank, t.overrides, null) || ['SELF_CHILD', 'SELF_FEES', 'SELF_MYPERF'].includes(i[0]) || i[0].startsWith('VA_');
+            const rows = g.items.map((i) => { const inPlan = providerSet ? offered(i[0]) : canSee(i[0], 'ADMIN', rank, t.overrides, null) || ['SELF_CHILD', 'SELF_FEES', 'SELF_MYPERF'].includes(i[0]) || i[0].startsWith('VA_');
               return <div key={i[0]} role="treeitem" className={'tree-row leaf' + (g.title ? ' deep' : '')}><span style={{ flex: 1 }}>{i[1]}</span>
                 {!inPlan && <span className="pill">Not in plan</span>}
                 <LevelSelect value={isVa ? (hasAdmin ? 'FULL' : 'NONE') : levelOf(i[0])} disabled={isVa} label={'Access to ' + i[1]} onChange={(v) => set([i[0]], v)} /></div>; });
@@ -516,7 +520,7 @@ export function Platform() {
   const toggle = (code, min) => mutate((d) => { const x = d.tenants.find((y) => y.id === sel); const now = x.overrides[code] !== undefined ? x.overrides[code] : planDefault(code, rank, min); x.overrides = { ...x.overrides, [code]: !now }; });
   return <Page title="Schools & plans" sub="Your company's console. Plan sets the default switches; turn any module or sub-menu on (add-on) or off per school.">
     <div className="grid" style={{ gridTemplateColumns: '300px 1fr' }}>
-      <Card title="Schools">{db.tenants.map((x) => <button key={x.id} className={'btn' + (sel === x.id ? ' pri' : '')} style={{ display: 'block', width: '100%', textAlign: 'left', marginBottom: 6 }} onClick={() => setSel(x.id)}>{x.name}<div className="small" style={{ opacity: .8 }}>{PLANS.find((p) => p.code === x.plan).name} · {x.subdomain}.yourapp.com</div></button>)}</Card>
+      <Card title="Schools">{db.tenants.filter((x) => !x.ownApp).map((x) => <button key={x.id} className={'btn' + (sel === x.id ? ' pri' : '')} style={{ display: 'block', width: '100%', textAlign: 'left', marginBottom: 6 }} onClick={() => setSel(x.id)}>{x.name}<div className="small" style={{ opacity: .8 }}>{PLANS.find((p) => p.code === x.plan).name} · {x.subdomain}.yourapp.com</div></button>)}</Card>
       <div>
         <Card title={t.name} right={<Select value={t.plan} onChange={(e) => { mutate((d) => { d.tenants.find((y) => y.id === sel).plan = e.target.value; }); notify('Plan changed — menus update straight away'); }} options={PLANS.map((p) => [p.code, `${p.name} (${p.range})`])} />}>
           <p className="small muted">Renews {t.renews}. Changes are written to the config audit log. Sign in to this school as any role to see the result.</p>

@@ -9,6 +9,8 @@ import { seedRelease14, seedRelease141 } from './seedRelease14.js';
 import { seedRelease15 } from './seedRelease15.js';
 import { seedRelease16 } from './seedRelease16.js';
 import { seedRelease17 } from './seedRelease17.js';
+import { seedRelease18 } from './seedRelease18.js';
+import { receiveApplied, applyKey } from '../lib/delivery.js';
 import { readTrial, applyTrial } from '../lib/delivery.js';
 
 // Release 16.1: a client's own app (its own address) keeps its data apart from the main test build on the same site
@@ -18,9 +20,20 @@ const Ctx = createContext(null);
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) { const d = JSON.parse(raw); if (d.version === 9) { return withTrial(normalizeUsers(seedRelease17(seedRelease16(seedRelease15(seedRelease141(seedRelease14(seedRelease13(seedRelease12(d))))))))); } }
+    if (raw) { const d = JSON.parse(raw); if (d.version === 9) { return pullApplied(withTrial(normalizeUsers(seedRelease18(seedRelease17(seedRelease16(seedRelease15(seedRelease141(seedRelease14(seedRelease13(seedRelease12(d))))))))))); } }
   } catch (e) { /* storage blocked — run from memory only */ }
-  return withTrial(buildSeed());
+  return pullApplied(withTrial(buildSeed()));
+}
+// Release 18: in a client's own app, take what the service provider applied for this school in the provider app
+function pullApplied(db) {
+  try {
+    const app = typeof window !== 'undefined' && window.__SCHOOL_APP__;
+    const sub = app && (app.sub || /^school-app-([a-z0-9]+)/.exec(app.storeKey || '')?.[1]);
+    if (!sub) return db;
+    const p = JSON.parse(localStorage.getItem(applyKey(sub)) || 'null');
+    if (p && receiveApplied(db, db.tenantId, p)) save(db);
+  } catch (e) { /* nothing applied */ }
+  return db;
 }
 // A customer test-build link (#/try/…) carries a school's set-up: add that school to this browser's data and open it
 function withTrial(db) {

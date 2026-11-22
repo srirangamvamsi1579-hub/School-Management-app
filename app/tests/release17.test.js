@@ -10,9 +10,10 @@ test('registration numbers: 100 the provider, 101 Vijayanikethan, 102+ converted
   const db = buildSeed();
   assert.equal(tenantByReg(db, '100').id, 'T1');
   assert.equal(db.provider.clients.find((c) => c.id === 'VHS').regNo, '101');
-  const regs = db.tenants.map((t) => t.regNo);
+  const regs = db.tenants.filter((t) => !t.ownApp).map((t) => t.regNo);
+  assert.equal(db.tenants.find((t) => t.ownApp === 'VHS').regNo, '101', 'kept as a school the provider sets up, under its own number');
   assert.equal(new Set(regs).size, regs.length, 'unique');
-  assert.ok(db.tenants.filter((t) => t.env).every((t) => Number(t.regNo) >= 102 && Number(t.regNo) < 200));
+  assert.ok(db.tenants.filter((t) => t.env && !t.ownApp).every((t) => Number(t.regNo) >= 102 && Number(t.regNo) < 200));
   assert.equal(regOfUsername('Admin'), '100'); assert.equal(regOfUsername('Client101'), '101'); assert.equal(regOfUsername('teacher'), null);
   assert.equal(usernameFor('102'), 'Client102');
 });

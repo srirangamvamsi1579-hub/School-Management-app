@@ -13,7 +13,7 @@ export async function sha256Hex(text) {
 }
 const onlyReg = () => (typeof window !== 'undefined' && window.__SCHOOL_APP__?.regNo) || null;
 export const lockedReg = onlyReg;
-export const tenantByReg = (db, reg) => { const all = db.tenants.filter((t) => String(t.regNo) === String(reg).trim()); return all.find((t) => t.env === 'LIVE') || all.find((t) => t.trial) || all[0]; };   // UAT and live share the school's number; live wins once built
+export const tenantByReg = (db, reg) => { const all = db.tenants.filter((t) => !t.ownApp && String(t.regNo) === String(reg).trim()); return all.find((t) => t.env === 'LIVE') || all.find((t) => t.trial) || all[0]; };   // UAT and live share the school's number; live wins once built
 const adminOf = (db) => db.users.find((u) => u.role === 'ADMIN' && u.status === 'ACTIVE');
 
 // Which school a username signs in to: Admin → 100, Client101 → 101

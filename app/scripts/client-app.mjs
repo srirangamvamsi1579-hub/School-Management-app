@@ -52,7 +52,7 @@ fs.writeFileSync(path.join(dir, 'links.json'), JSON.stringify({ school: uat.name
 const trial = cp.links.find((l) => l.code === 'TEST_BUILD').url;
 const hash = trial.slice(trial.indexOf('#'));
 const html = fs.readFileSync(path.join(root, 'app/dist-single/index.html'), 'utf8');
-const boot = `<script>window.__SCHOOL_APP__={regNo:${JSON.stringify(String(cfg.regNo || ''))},storeKey:'school-app-${sub}${cfg.storeVersion ? '-' + cfg.storeVersion : ''}-v${cp.version}',school:${JSON.stringify(uat.name)}};` +
+const boot = `<script>window.__SCHOOL_APP__={regNo:${JSON.stringify(String(cfg.regNo || ''))},sub:${JSON.stringify(sub)},storeKey:'school-app-${sub}${cfg.storeVersion ? '-' + cfg.storeVersion : ''}-v${cp.version}',school:${JSON.stringify(uat.name)}};` +
   `(function(){var h=location.hash,k='school-app-${sub}${cfg.storeVersion ? '-' + cfg.storeVersion : ''}-v${cp.version}',to={'#/p/site':'?to=site','#/p/mobile':'?to=app','#/p/requirements':'?to=req'};` +
   `if(h.indexOf('#/try/')===0)return;` +
   `var saved=null;try{saved=localStorage.getItem(k)}catch(e){}` +
