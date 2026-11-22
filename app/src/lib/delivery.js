@@ -386,7 +386,7 @@ const moduleOf = (code) => MENU.find((m) => m.items.some((i) => i[0] === code))?
 // Every switchable thing in the app: screens (by menu) and functions
 export const SWITCHABLE = [...MENU.filter((m) => !['PLATFORM', 'SERVICE_PROVIDER', 'VIEWAS', 'PROJECT'].includes(m.code)).flatMap((m) => m.items.filter((i) => i[0][0] !== '#').map((i) => i[0])), ...FUNCTIONS.map((f) => f.code)];
 export const addonOfScreen = (code) => DEFAULT_RATE_CARD.addons.find((a) => (a.menus || []).includes(code) || (a.functions || []).includes(code));
-function computeOverrides(t) {
+export function computeOverrides(t) {
   const rc = DEFAULT_RATE_CARD;
   const d = t.delivery || {};
   const { overrides } = demoConfig({ ...rc, tiers: rc.tiers.map((x) => ({ ...x, includes: [] })) }, { tier: 'STARTER', addons: Object.fromEntries((d.addons || []).map((c) => [c, true])) });
@@ -483,7 +483,7 @@ export function rebuildSchool(db, tenantId, codes, by) {
 // The file that rebuilds and republishes this school's app for everyone (commit it as schools/<sub>/config.json)
 export function rebuildConfig(t, base = {}) {
   const d = t.delivery || {};
-  return { ...base, school: t.schoolName || t.name.replace(/ – .*$/, ''), version: d.version, addons: d.addons || [], screens: d.screens || {}, addonsMenu: !!t.overrides?.SP_ADDONS, allAddons: false, built: d.date };
+  return { ...base, school: t.schoolName || t.name.replace(/ – .*$/, ''), version: d.version, addons: d.addons || [], screens: d.screens || {}, asAddon: d.asAddon || [], addonsMenu: !!t.overrides?.SP_ADDONS, allAddons: false, built: d.date };
 }
 
 // The school's file on its branch (schools/<subdomain>/school.json): what the build for this school switches on
@@ -541,3 +541,49 @@ export function shareWithCustomer(db, projectId, { to, cc, linkCodes, docCodes, 
   project.log.unshift({ at: new Date().toISOString(), by, what: `Shared ${links.length} links and ${docs.length} documents with ${to}` });
   return project;
 }
+
+// Release 18: what the service provider has applied for a school (the last build). The school's own Roles & Permissions
+// offers exactly this — never what its plan or client type would give it.
+export const appliedOverrides = (t) => t?.delivery?.builtOverrides || t?.overrides || {};
+export function appliedSet(t) {
+  const built = appliedOverrides(t);
+  return new Set(SWITCHABLE.filter((c) => LOCKED.has(c) || !!built[c]).concat([...LOCKED]));
+}
+// Release 18: schools the service provider sets up from its own app (Service Provider › Add-ons / Roles & Permissions)
+export const managedSchools = (db) => (db.tenants || []).filter((t) => t.delivery && t.id !== 'T1' && String(t.regNo) !== '100');
+// A client that runs in its own app on the same web address picks up what the provider applied (same browser):
+// the provider app writes it under this key, the client app reads it when it opens.
+export const applyKey = (sub) => 'school-app-applied-' + sub;
+export const appliedPayload = (t) => ({ version: t.delivery?.version || '1.0', addons: [...(t.delivery?.addons || [])], screens: { ...(t.delivery?.screens || {}) }, asAddon: [...(t.delivery?.asAddon || [])], at: new Date().toISOString(), school: t.schoolName || t.name });
+export function receiveApplied(db, tenantId, p) {
+  const t = db.tenants.find((x) => x.id === tenantId);
+  if (!t || !p || !Array.isArray(p.addons)) return false;
+  const d = t.delivery = t.delivery || {};
+  if (d.appliedAt && d.appliedAt >= p.at) return false;
+  const known = new Set(DEFAULT_RATE_CARD.addons.map((a) => a.code));
+  d.addons = p.addons.filter((c) => known.has(c));
+  d.screens = Object.fromEntries(Object.entries(p.screens || {}).filter(([c]) => !LOCKED.has(c) && SWITCHABLE.includes(c)));
+  d.asAddon = (p.asAddon || []).filter((c) => BASIC_SCREENS.has(c));
+  t.overrides = computeOverrides(t);
+  const prev = d.version;
+  d.version = p.version || nextVersion(prev); d.date = p.at.slice(0, 10); d.appliedAt = p.at;
+  d.builtAddons = [...d.addons]; d.builtOverrides = { ...t.overrides };
+  d.builds = [{ version: d.version, at: p.at, by: 'Service provider (applied from the provider app)', addons: d.addons.length, menus: Object.entries(t.overrides).filter(([k, v]) => v && LABEL[k]).length, added: [], removed: [], shown: [], hidden: [] }, ...(d.builds || [])].slice(0, 30);
+  if (t.trial) Object.assign(t.trial, { version: d.version });
+  return true;
+}
+// Release 18: the provider can mark basic items as add-ons for a school. A marked item stops being basic there: it is
+// unselected (Apply removes it) and can be selected again later as an add-on of its own. "Basic again" undoes the mark.
+export function markAsAddon(db, tenantId, codes, flag, by) {
+  const t = db.tenants.find((x) => x.id === tenantId);
+  if (!t) throw new Error('School not found');
+  const list = [].concat(codes).filter((c) => BASIC_SCREENS.has(c) && !LOCKED.has(c));
+  if (!list.length) throw new Error('Only basic items can be marked as add-ons (Main menu, Users, Roles & Permissions and My Account stay basic)');
+  t.delivery = { ...(t.delivery || {}) };
+  const marked = new Set(t.delivery.asAddon || []);
+  list.forEach((c) => (flag ? marked.add(c) : marked.delete(c)));
+  t.delivery.asAddon = [...marked];
+  setSchoolScreens(db, tenantId, Object.fromEntries(list.map((c) => [c, flag ? false : null])), by);
+  return t;
+}
+export const isMarkedAddon = (t, c) => (t?.delivery?.asAddon || []).includes(c);

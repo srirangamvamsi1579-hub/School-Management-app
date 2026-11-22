@@ -71,7 +71,7 @@ export const MENU = [
     ['#D', 'Delivery'], ['SP_DELIVERY', 'Client Delivery', 1],
     ['#M', 'Market'], ['SP_ANALYTICS', 'Sales Analytics', 1], ['SP_COMPARE', 'Competition Comparison', 1], ['SP_MARKET', 'Market Review & Roadmap', 1],
     // Release 16.2: in a client's own app, the Service Provider menu has only this — switch each add-on on or off for the school
-    ['#A', 'School set-up'], ['SP_ADDONS', 'Add-ons for this School', 1], ['SP_FEATURES', 'Roles & Permissions', 1]] },
+    ['#A', 'School set-up'], ['SP_ADDONS', 'Add-ons', 1], ['SP_FEATURES', 'Roles & Permissions (provider)', 1]] },
   // Settings: how the school and the app are set up (branding, website, screens, templates, bank details, messages).
   { code: 'SETTINGS', label: 'Settings', icon: 'settings', min: 1, items: [
     ['#S', 'School setup'], ['OPS_APPEARANCE', 'Appearance & Branding', 1], ['OPS_WEBSITE', 'Website & Links', 1], ['OPS_CHANNELS', 'Web & App Screens', 1], ['OPS_TEMPLATES', 'Templates', 1], ['ACC_BANK', 'Bank & Payment Details', 1],

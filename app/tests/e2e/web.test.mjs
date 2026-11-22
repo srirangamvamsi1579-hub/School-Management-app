@@ -182,7 +182,7 @@ test('signed in as Admin it opens on the Main menu; Main menu button works from 
   const { page, errors } = await open(ctx, '');
   await page.getByRole('heading', { name: 'Main menu' }).waitFor();
   assert.ok((await page.locator('main section.card').count()) >= 12, 'every menu shown as a tile');
-  await page.locator('main').getByRole('button', { name: 'Roles & Permissions' }).click();
+  await page.locator('main').getByRole('button', { name: 'Roles & Permissions', exact: true }).click();
   await page.locator('.crumbs', { hasText: 'Operations / Roles & Permissions' }).waitFor();
   await page.getByRole('button', { name: 'Main menu' }).first().click();
   await page.getByRole('heading', { name: 'Main menu' }).waitFor();
@@ -318,7 +318,7 @@ test('User management: remove any designation (blocked while someone holds it), 
   const opts = await page.locator('.modal').getByRole('combobox', { name: /Designation/ }).locator('option').allInnerTexts();
   assert.ok(!opts.includes('Cleaner') && opts.includes('Driver'), opts.join());
   await page.locator('.modal').getByRole('button', { name: 'Close' }).click();
-  await page.locator('nav.side button.item', { hasText: 'Roles & Permissions' }).click();
+  await page.locator('nav.side button.item', { hasText: /^Roles & Permissions$/ }).click();
   await page.getByLabel('New designation for Transport team').fill('cleaner');
   await page.getByLabel('New designation for Transport team').press('Enter');
   await page.locator('tr', { hasText: 'Transport team' }).getByRole('button', { name: 'Remove Cleaner from Transport team' }).waitFor();
@@ -340,7 +340,7 @@ test('side menu starts collapsed; groups open on click or Enter; no Expand all; 
   await side.locator('button.item', { hasText: 'Collect Fee' }).waitFor();
   await side.getByRole('button', { name: /^Fees/ }).press('Enter');
   assert.equal(await side.locator('button.item', { hasText: 'Collect Fee' }).count(), 0, 'keyboard collapses it');
-  await page.locator('main').getByRole('button', { name: 'Roles & Permissions' }).click();
+  await page.locator('main').getByRole('button', { name: 'Roles & Permissions', exact: true }).click();
   await page.locator('.crumbs', { hasText: 'Operations / Roles & Permissions' }).waitFor();
   assert.equal(await side.locator('[aria-expanded="true"]').count(), 0, 'opening a screen does not expand the menu');
   await side.getByRole('button', { name: /^Transport/ }).click();

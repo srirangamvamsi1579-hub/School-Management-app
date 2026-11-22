@@ -21,9 +21,9 @@ export function clientList(db) {
   }).filter(Boolean);
   const own = (db.provider?.clients || []).map((c) => {
     const { overrides } = demoConfig({ ...rc, tiers: rc.tiers.map((x) => ({ ...x, includes: [] })) }, { tier: 'STARTER', addons: Object.fromEntries((c.addons || []).map((a) => [a, true])) });
-    const tenant = { id: 'OWN-' + c.id, regNo: c.regNo, code: c.code, name: `${c.name} – ${c.env}`, schoolName: c.name, plan: 'ENTERPRISE', examBoard: c.board, env: 'UAT', overrides: { ...overrides, PROJECT: true, PRJ_LINKS: true, SP_ADDONS: true, SP_FEATURES: true },
+    const tenant = db.tenants.find((t) => t.id === 'OWN-' + c.id) || { id: 'OWN-' + c.id, regNo: c.regNo, code: c.code, name: `${c.name} – ${c.env}`, schoolName: c.name, plan: 'ENTERPRISE', examBoard: c.board, env: 'UAT', overrides: { ...overrides, PROJECT: true, PRJ_LINKS: true, SP_ADDONS: true, SP_FEATURES: true },
       delivery: { projectNo: c.id, version: c.version, date: c.since, addons: c.addons, links: { SITE: c.website } } };
-    return { id: c.id, regNo: c.regNo, name: c.name, env: c.env, version: c.version, plan: c.plan, code: c.code, tenant, addons: c.addons, ownApp: true,
+    return { id: c.id, regNo: c.regNo, name: c.name, env: c.env, version: tenant.delivery?.version || c.version, plan: tenant.delivery?.tier || c.plan, code: c.code, tenant, addons: tenant.delivery?.addons || c.addons, ownApp: true, sub: c.sub,
       links: { app: c.appUrl, website: c.appUrl + '#/p/site', phone: c.appUrl + '#/p/mobile', requirements: c.appUrl + '#/p/requirements', own: c.website,
         branch: `${dlv.DEFAULT_REPO}/tree/${c.branch}`, claude: c.artifact } };
   });
